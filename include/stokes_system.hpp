@@ -101,7 +101,7 @@ public:
           //Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity_x.space_dimension(); ++trial)
           {
-            // assemble pressure related part of momentum equation
+            // assemble continuity equation
             const unsigned global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
             const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
             evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->first, trial, quadIter->first);
