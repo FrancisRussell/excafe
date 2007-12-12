@@ -4,9 +4,7 @@
 #include <map>
 #include <utility>
 #include <set>
-#include <iterator>
 #include <algorithm>
-#include <functional>
 #include <boost/tuple/tuple.hpp>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"

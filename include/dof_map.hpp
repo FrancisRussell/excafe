@@ -4,11 +4,9 @@
 #include "simple_cfd_fwd.hpp"
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <cassert>
 #include <map>
 #include <set>
-#include <algorithm>
-#include <iterator>
-#include <boost/lambda/lambda.hpp>
 
 namespace cfd
 {
@@ -24,6 +22,10 @@ private:
   local2global_map mapping;
 
 public:
+  dof_map()
+  {
+  }
+
   dof_map(const std::set<const finite_element_type*>& e, const local2global_map& m) : elements(e), mapping(m)
   {
   }
@@ -39,6 +41,13 @@ public:
     for(typename local2global_map::const_iterator mapIter(mapping.begin()); mapIter!=mapping.end(); ++mapIter)
       dofs.insert(mapIter->second);
     return dofs.size();
+  }
+
+  unsigned getGlobalIndex(const boost::tuple<const finite_element_type*, cell_id, unsigned>& dof) const
+  {
+    const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
+    assert(mappingIter != mapping.end());
+    return mappingIter->second;
   }
 };
 

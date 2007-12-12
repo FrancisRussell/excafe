@@ -38,7 +38,7 @@ private:
     return mapIter->second;
   }
 
-  std::vector<vertex_type> getCoordinates(const std::map<vertex_id, vertex_type>& vertexMap)
+  std::vector<vertex_type> getCoordinates(const std::map<vertex_id, vertex_type>& vertexMap) const
   {
     const std::vector<vertex_id> vertex_ids(getIndices());
     std::vector< vertex<dimension> > coords;
@@ -63,18 +63,30 @@ public:
     return indices;
   }
 
-  static std::map<vertex<dimension>, double> generateReferenceQuadrature()
+  static std::map<vertex_type, double> getReferenceQuadrature()
   {
     /* Cubic Gaussian quadrature values from "Finite Elements: A Gentle Introduction" by Henwood and Bonet */
     /* These co-ordinates are defined on the reference triangle {(0,0), (0,1), (0,1)} */ 
-    std::map<vertex<dimension>, double> weightings;
-    weightings[vertex<dimension>(0.0, 0.0)] = 3.0/120.0;
-    weightings[vertex<dimension>(1.0, 0.0)] = 3.0/120.0;
-    weightings[vertex<dimension>(0.0, 1.0)] = 3.0/120.0;
-    weightings[vertex<dimension>(0.5, 0.0)] = 8.0/120.0;
-    weightings[vertex<dimension>(0.5, 0.5)] = 8.0/120.0;
-    weightings[vertex<dimension>(0.0, 0.5)] = 8.0/120.0;
-    weightings[vertex<dimension>(1.0/3, 1.0/3)] = 27.0/120.0;
+    std::map<vertex_type, double> weightings;
+    weightings[vertex_type(0.0, 0.0)] = 3.0/120.0;
+    weightings[vertex_type(1.0, 0.0)] = 3.0/120.0;
+    weightings[vertex_type(0.0, 1.0)] = 3.0/120.0;
+    weightings[vertex_type(0.5, 0.0)] = 8.0/120.0;
+    weightings[vertex_type(0.5, 0.5)] = 8.0/120.0;
+    weightings[vertex_type(0.0, 0.5)] = 8.0/120.0;
+    weightings[vertex_type(1.0/3, 1.0/3)] = 27.0/120.0;
+    return weightings;
+  }
+
+  std::map<vertex_type, double> getQuadrature(const std::map<vertex_id, vertex_type>& vertexMap) const
+  {
+    const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
+    const double scaling = getArea(vertexMap) / 0.5; // 0.5 is area of reference triangle
+    std::map<vertex_type, double> weightings;
+
+    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+      weightings[reference_to_physical(vertexMap, refIter->first)] = refIter->second * scaling;
+
     return weightings;
   }
 
@@ -84,7 +96,16 @@ public:
       out << "Vertex: " << vertex_ids[i] << std::endl;
   }
 
-  vertex_type reference_to_physical(const std::map<vertex_id, vertex_type>& vertexMap, const vertex_type& vertex)
+  double getArea(const std::map<vertex_id, vertex_type>& vertexMap) const
+  {
+    const std::vector<vertex_type> vertices(getCoordinates(vertexMap));
+    const double area = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
+                        vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
+                        vertices[2][0] * (vertices[0][1] - vertices[1][1]);
+    return area;
+  }
+
+  vertex_type reference_to_physical(const std::map<vertex_id, vertex_type>& vertexMap, const vertex_type& vertex) const
   {
     const std::vector<vertex_type> vertices(getCoordinates(vertexMap));
 
