@@ -3,14 +3,16 @@
 
 #include <iostream>
 #include <map>
-#include <boost/tuple/tuple.hpp>
 #include "mesh.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "dof_map_builder.hpp"
 #include "dof_map.hpp"
 #include "lagrange_triangle_linear.hpp"
 #include "lagrange_triangle_quadratic.hpp"
-#include "matrix.hpp"
+#include <boost/tuple/tuple.hpp>
+#include <boost/numeric/ublas/matrix_sparse.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 namespace cfd
 {
@@ -28,7 +30,8 @@ private:
   lagrange_triangle_quadratic velocity_x;
   lagrange_triangle_quadratic velocity_y;
   dof_map<cell_type> dofMap;
-  matrix<double> system_matrix;
+  boost::numeric::ublas::compressed_matrix<double> stiffness_matrix;
+  boost::numeric::ublas::vector<double> load_vector;
 
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m)
@@ -48,7 +51,8 @@ public:
   {
     const std::map<cell_id, cell_type> cells(m.getCells());
     const unsigned dofs = dofMap.getDegreesOfFreedom();
-    system_matrix.resize(dofs, dofs);
+    stiffness_matrix.resize(dofs, dofs, false);
+    load_vector.resize(dofs, false);
 
     // Iterate over cells
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
@@ -73,8 +77,8 @@ public:
 
             evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->first, trial, quadIter->first);
 
-            system_matrix(global_test_x, global_trial_x) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
-            system_matrix(global_test_y, global_trial_y) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
+            stiffness_matrix(global_test_x, global_trial_x) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
+            stiffness_matrix(global_test_y, global_trial_y) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
           }
           
           // Iterate over linear trial functions
@@ -84,8 +88,8 @@ public:
             const unsigned global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
             evaluated_basis evaluated_trial = pressure.evaluate_basis(cellIter->first, trial, quadIter->first);
 
-            system_matrix(global_test_x, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dx;
-            system_matrix(global_test_y, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dy;
+            stiffness_matrix(global_test_x, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dx;
+            stiffness_matrix(global_test_y, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dy;
           }
         }
           
@@ -106,8 +110,8 @@ public:
             const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
             evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->first, trial, quadIter->first);
 
-            system_matrix(global_test, global_trial_x) += quadIter->second * evaluated_test.value * evaluated_trial.dx;
-            system_matrix(global_test, global_trial_y) += quadIter->second * evaluated_test.value * evaluated_trial.dy;
+            stiffness_matrix(global_test, global_trial_x) += quadIter->second * evaluated_test.value * evaluated_trial.dx;
+            stiffness_matrix(global_test, global_trial_y) += quadIter->second * evaluated_test.value * evaluated_trial.dy;
           }
         }
       }
@@ -116,7 +120,7 @@ public:
 
   void print() const
   {
-    std::cout << system_matrix << std::endl;
+    std::cout << stiffness_matrix << std::endl;
   }
 };
 
