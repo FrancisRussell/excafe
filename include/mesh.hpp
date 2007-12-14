@@ -8,6 +8,7 @@
 #include <utility>
 #include <boost/lambda/lambda.hpp>
 #include "simple_cfd_fwd.hpp"
+#include "utility.hpp"
 #include "cell.hpp"
 #include "dof_map.hpp"
 #include "matrix.hpp"
@@ -142,6 +143,27 @@ public:
       incident.insert(localIncident.begin(), localIncident.end());
     }
     return incident;
+  }
+
+  std::set< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
+  {
+    std::map< std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > facetCount;
+    for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
+    {
+      const std::set< std::pair<vertex_id, vertex_id> > facets(cellIter->second.getFacets());
+      for(std::set< std::pair<vertex_id, vertex_id> >::const_iterator facetIter(facets.begin()); facetIter!=facets.end(); ++facetIter)
+        ++facetCount[*facetIter];
+    }
+
+    std::set< std::pair<vertex_id, vertex_id> > facets;
+    for(std::map< std::pair<vertex_id, vertex_id>, unsigned >::const_iterator facetCountIter(facetCount.begin()); facetCountIter!=facetCount.end(); ++facetCountIter)
+    {
+      // We only want facets that are not adjacent to other facets
+      if (facetCountIter->second == 1)
+        facets.insert(facetCountIter->first);
+    }
+
+    return facets;
   }
 
   std::vector< vertex<dimension> > getCoordinates(const cell_id cid) const

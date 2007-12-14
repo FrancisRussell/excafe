@@ -118,6 +118,18 @@ public:
     }   
   }
 
+  void applyBoundaryConditions()
+  {
+    const std::set< std::pair<vertex_id, vertex_id> > edgeFacets(m.getEdgeFacets());
+    std::set<vertex_id> boundaryNodes;
+
+    for(std::set< std::pair<vertex_id, vertex_id> >::const_iterator edgeIter(edgeFacets.begin()); edgeIter!=edgeFacets.end(); ++edgeIter)
+    {
+      boundaryNodes.insert(edgeIter->first);
+      boundaryNodes.insert(edgeIter->second);
+    }
+  }
+
   void print() const
   {
     std::cout << stiffness_matrix << std::endl;

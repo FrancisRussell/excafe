@@ -105,6 +105,16 @@ public:
     return area;
   }
 
+  std::set< std::pair<vertex_id, vertex_id> > getFacets() const
+  {
+    std::set< std::pair<vertex_id, vertex_id> > facets;
+
+    for(unsigned i=0; i<vertex_count; ++i)
+      facets.insert(std::make_pair(vertex_ids[i], vertex_ids[(i+1)%vertex_count]));
+    
+    return facets;
+  }
+
   vertex_type reference_to_physical(const std::map<vertex_id, vertex_type>& vertexMap, const vertex_type& vertex) const
   {
     const std::vector<vertex_type> vertices(getCoordinates(vertexMap));

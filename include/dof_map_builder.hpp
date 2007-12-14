@@ -47,31 +47,6 @@ public:
 
   void handleCells(const std::map<cell_id, cell_type>& cells)
   {
-/*  // Find cells which have vertices in common
-    std::map< vertex_id, std::set<cell_id> > adjacencyByVertex;
-
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter = cells.begin(); cellIter!=cells.end(); ++cellIter)
-    {
-      const std::vector<vertex_id> indices(cellIter->second.getIndices());
-      for(std::vector<vertex_id>::const_iterator vertexIter = indices.begin(); vertexIter != indices.end(); ++vertexIter)
-      {
-        adjacencyByVertex[*vertexIter].insert(cellIter->first);
-      }
-    }
-
-    // Create a cell adjacency set
-    typedef std::set< std::pair<cell_id, cell_id>, unordered_pair_compare<cell_id> > adjacency_set;
-    adjacency_set cellAdjacency;
-    for(std::map< vertex_id, std::set<cell_id> >::const_iterator abvIter = adjacencyByVertex.begin(); abvIter!=adjacencyByVertex.end(); ++abvIter)
-    {
-      const std::set<cell_id> adjacentCells(abvIter->second);
-      for(std::set<cell_id>::iterator cellIter = adjacentCells.begin(); cellIter!=adjacentCells.end(); ++cellIter)
-      {
-        for(std::set<cell_id>::iterator cellIter2 = adjacentCells.begin(); cellIter2!=adjacentCells.end(); ++cellIter2)
-          cellAdjacency.insert(std::make_pair(*cellIter, *cellIter2));
-      }
-    }
-*/
     // Iterate over all cells in order
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter = cells.begin(); cellIter!=cells.end(); ++cellIter)
     {
