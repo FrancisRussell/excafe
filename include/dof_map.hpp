@@ -37,7 +37,7 @@ public:
     return mapping.size();
   }
 
-  std::size_t getDegreesOfFreedom() const
+  std::size_t getDegreesOfFreedomCount() const
   {
     std::set<unsigned> dofs;
     for(typename local2global_map::const_iterator mapIter(mapping.begin()); mapIter!=mapping.end(); ++mapIter)
@@ -45,9 +45,21 @@ public:
     return dofs.size();
   }
 
-  std::size_t getBoundaryDegreesOfFreedom() const
+  std::size_t getBoundaryDegreesOfFreedomCount() const
   {
     return boundaryDofs.size();
+  }
+
+  std::map< unsigned, std::set< boost::tuple<cell_id, unsigned> > > getBoundaryDegreesOfFreedom(const finite_element_type* const element) const
+  {
+    std::map< unsigned, std::set<boost::tuple<cell_id, unsigned> > > global2local;
+    for(typename local2global_map::const_iterator mappingIter(mapping.begin()); mappingIter != mapping.end(); ++mappingIter)
+    {
+      // TODO: Work out why tuple.get<N>() won't compile
+      if (boost::get<0>(mappingIter->first) == element); 
+        global2local[mappingIter->second].insert(boost::make_tuple(boost::get<1>(mappingIter->first), boost::get<2>(mappingIter->first)));
+    }
+    return global2local;
   }
 
   unsigned getGlobalIndex(const boost::tuple<const finite_element_type*, cell_id, unsigned>& dof) const

@@ -44,14 +44,14 @@ public:
     dofMap = mapBuilder.getDofMap();
     
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
-    std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedom() << std::endl;
-    std::cout << "Degrees of freedom on boundary: " << dofMap.getBoundaryDegreesOfFreedom() << std::endl;
+    std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;
+    std::cout << "Degrees of freedom on boundary: " << dofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
   }
 
   void assemble()
   {
     const std::map<cell_id, cell_type> cells(m.getCells());
-    const unsigned dofs = dofMap.getDegreesOfFreedom();
+    const unsigned dofs = dofMap.getDegreesOfFreedomCount();
     stiffness_matrix.resize(dofs, dofs, false);
     load_vector.resize(dofs, false);
 
@@ -121,6 +121,9 @@ public:
 
   void applyBoundaryConditions()
   {
+    const std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > pressure_dofs(dofMap.getBoundaryDegreesOfFreedom(&pressure));
+    const std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > velocity_x_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity_x));
+    const std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > velocity_y_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity_y));
   }
 
   void print() const
