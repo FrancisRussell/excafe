@@ -58,7 +58,7 @@ public:
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
     {
       // Iterate over quadrature points
-      const std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getVertices()));
+      const std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
       {
         // Iterate over quadratic test functions

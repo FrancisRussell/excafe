@@ -8,6 +8,7 @@
 #include <utility>
 #include <boost/lambda/lambda.hpp>
 #include "simple_cfd_fwd.hpp"
+#include "mesh_geometry.hpp"
 #include "utility.hpp"
 #include "cell.hpp"
 #include "dof_map.hpp"
@@ -33,7 +34,7 @@ public:
 private:
   int x_size;
   int y_size;
-  std::map<vertex_id, vertex_type> vertices;
+  mesh_geometry<dimension> geometry;
   std::map<cell_id, cell_type> cells;
   std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
 
@@ -111,7 +112,7 @@ public:
   
   void addVertex(const vertex_id vid, const vertex_type& v)
   {
-    vertices.insert(std::make_pair(vid, v));
+    geometry.insert(vid, v);
   }
 
   void addCell(const cell_id cid, const cell_type& c)
@@ -179,7 +180,7 @@ public:
 
   void print(std::ostream& out = std::cout) const
   {
-    out << "Nodes: " << vertices.size() << std::endl;
+    out << "Nodes: " << geometry.size() << std::endl;
     out << "Cells: " << cells.size() << std::endl;
     out << std::endl;
 
@@ -201,9 +202,7 @@ public:
 
   vertex_type getVertex(const vertex_id vid) const
   {
-    const std::map<vertex_id, vertex_type>::const_iterator vertexIter = vertices.find(vid);
-    assert(vertexIter != vertices.end());
-    return vertexIter->second;
+    return geometry[vid];
   }
 
   std::map<cell_id, cell_type> getCells() const
@@ -211,9 +210,9 @@ public:
     return cells;
   }
 
-  std::map<vertex_id, vertex_type> getVertices() const
+  mesh_geometry<dimension> getGeometry() const
   {
-    return vertices;
+    return geometry;
   }
 
   virtual ~mesh()

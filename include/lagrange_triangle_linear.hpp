@@ -27,7 +27,7 @@ public:
   evaluated_basis evaluate_basis(const cell_id cid, const unsigned int i, const vertex_type& v) const
   {
     const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getCell(cid).getArea(m->getVertices());
+    const double area = m->getCell(cid).getArea(m->getGeometry());
 
     const int ip1 = (i+1) % 3;
     const int ip2 = (i+2) % 3;

@@ -31,21 +31,14 @@ public:
 private:
   boost::array<vertex_id, vertex_count> vertex_ids;
 
-  static vertex_type getVertex(const std::map<vertex_id, vertex_type>& vertexMap, const vertex_id vid)
-  {
-    const std::map<vertex_id, vertex_type>::const_iterator mapIter = vertexMap.find(vid);
-    assert(mapIter != vertexMap.end());
-    return mapIter->second;
-  }
-
-  std::vector<vertex_type> getCoordinates(const std::map<vertex_id, vertex_type>& vertexMap) const
+  std::vector<vertex_type> getCoordinates(const mesh_geometry<dimension>& geometry) const
   {
     const std::vector<vertex_id> vertex_ids(getIndices());
     std::vector< vertex<dimension> > coords;
 
     for(std::vector<vertex_id>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
     {
-      coords.push_back(getVertex(vertexMap, *vertexIter));
+      coords.push_back(geometry[*vertexIter]);
     }
     return coords;
   }
@@ -78,14 +71,14 @@ public:
     return weightings;
   }
 
-  std::map<vertex_type, double> getQuadrature(const std::map<vertex_id, vertex_type>& vertexMap) const
+  std::map<vertex_type, double> getQuadrature(const mesh_geometry<dimension>& geometry) const
   {
     const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
-    const double scaling = getArea(vertexMap) / 0.5; // 0.5 is area of reference triangle
+    const double scaling = getArea(geometry) / 0.5; // 0.5 is area of reference triangle
     std::map<vertex_type, double> weightings;
 
     for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
-      weightings[reference_to_physical(vertexMap, refIter->first)] = refIter->second * scaling;
+      weightings[reference_to_physical(geometry, refIter->first)] = refIter->second * scaling;
 
     return weightings;
   }
@@ -96,9 +89,9 @@ public:
       out << "Vertex: " << vertex_ids[i] << std::endl;
   }
 
-  double getArea(const std::map<vertex_id, vertex_type>& vertexMap) const
+  double getArea(const mesh_geometry<dimension>& geometry) const
   {
-    const std::vector<vertex_type> vertices(getCoordinates(vertexMap));
+    const std::vector<vertex_type> vertices(getCoordinates(geometry));
     const double area = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
                         vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                         vertices[2][0] * (vertices[0][1] - vertices[1][1]);
@@ -115,9 +108,9 @@ public:
     return facets;
   }
 
-  vertex_type reference_to_physical(const std::map<vertex_id, vertex_type>& vertexMap, const vertex_type& vertex) const
+  vertex_type reference_to_physical(const mesh_geometry<dimension>& geometry, const vertex_type& vertex) const
   {
-    const std::vector<vertex_type> vertices(getCoordinates(vertexMap));
+    const std::vector<vertex_type> vertices(getCoordinates(geometry));
 
     const double xsi = vertex[0];
     const double eta = vertex[1];

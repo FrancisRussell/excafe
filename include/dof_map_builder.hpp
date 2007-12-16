@@ -26,10 +26,6 @@ private:
   std::set<const finite_element_type*> elements;
   local2global_map local2global;
 
-  void addDof(const boost::tuple<finite_element<cell_type>*, cell_id, unsigned>& dof)
-  {
-  }
-
 public:
   dof_map_builder(const mesh<cell_type>& _m) : m(_m), counter(0)
   {

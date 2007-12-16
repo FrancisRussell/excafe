@@ -27,9 +27,10 @@ struct shape_dimensions<triangle>
 };
 
 // Mesh related types
+template<typename C> class mesh;
+template<unsigned D> class mesh_geometry;
 template<shape s> class cell;
 template<unsigned int D> class vertex;
-template<typename C> class mesh;
 template<typename C> class finite_element;
 
 // Basis function types
