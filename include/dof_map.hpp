@@ -20,13 +20,15 @@ private:
   typedef std::map<boost::tuple<const finite_element_type*, cell_id, unsigned>, unsigned> local2global_map;
   std::set<const finite_element_type*> elements;
   local2global_map mapping;
+  std::set<unsigned> boundaryDofs;
 
 public:
   dof_map()
   {
   }
 
-  dof_map(const std::set<const finite_element_type*>& e, const local2global_map& m) : elements(e), mapping(m)
+  dof_map(const std::set<const finite_element_type*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+          elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
 
@@ -41,6 +43,11 @@ public:
     for(typename local2global_map::const_iterator mapIter(mapping.begin()); mapIter!=mapping.end(); ++mapIter)
       dofs.insert(mapIter->second);
     return dofs.size();
+  }
+
+  std::size_t getBoundaryDegreesOfFreedom() const
+  {
+    return boundaryDofs.size();
   }
 
   unsigned getGlobalIndex(const boost::tuple<const finite_element_type*, cell_id, unsigned>& dof) const

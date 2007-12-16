@@ -25,6 +25,7 @@ private:
   unsigned counter;
   std::set<const finite_element_type*> elements;
   local2global_map local2global;
+  std::set<unsigned> boundaryDofs;
 
 public:
   dof_map_builder(const mesh<cell_type>& _m) : m(_m), counter(0)
@@ -38,7 +39,7 @@ public:
 
   dof_map<cell_type> getDofMap() const
   {
-    return dof_map<cell_type>(elements, local2global);
+    return dof_map<cell_type>(elements, local2global, boundaryDofs);
   }
 
   void handleCells(const std::map<cell_id, cell_type>& cells)
@@ -93,6 +94,22 @@ public:
       else
       {
         mapIter->second = newMappingIter->second;
+      }
+    }
+
+    // Record degrees of freedom that lie on a boundary
+    const std::vector< std::pair<vertex_id, vertex_id> > boundary(m.getEdgeFacets());
+    for(typename std::map<cell_id, cell_type>::const_iterator cellIter = cells.begin(); cellIter!=cells.end(); ++cellIter)
+    {
+      for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
+      {
+        const std::vector<unsigned> localDofs((*elementIter)->getBoundaryDegreesOfFreedom(cellIter->first, boundary));
+        for(std::vector<unsigned>::const_iterator localDofIter(localDofs.begin()); localDofIter!=localDofs.end(); ++localDofIter)
+        {
+          const typename local2global_map::const_iterator globalDofIter(local2global.find(boost::make_tuple(*elementIter, cellIter->first, *localDofIter)));
+          assert(globalDofIter != local2global.end());
+          boundaryDofs.insert(globalDofIter->second);
+        }
       }
     }
   }

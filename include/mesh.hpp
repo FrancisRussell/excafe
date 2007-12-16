@@ -146,7 +146,7 @@ public:
     return incident;
   }
 
-  std::set< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
+  std::vector< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
   {
     std::map< std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > facetCount;
     for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
@@ -156,12 +156,12 @@ public:
         ++facetCount[*facetIter];
     }
 
-    std::set< std::pair<vertex_id, vertex_id> > facets;
+    std::vector< std::pair<vertex_id, vertex_id> > facets;
     for(std::map< std::pair<vertex_id, vertex_id>, unsigned >::const_iterator facetCountIter(facetCount.begin()); facetCountIter!=facetCount.end(); ++facetCountIter)
     {
       // We only want facets that are not adjacent to other facets
       if (facetCountIter->second == 1)
-        facets.insert(facetCountIter->first);
+        facets.push_back(facetCountIter->first);
     }
 
     return facets;
@@ -189,7 +189,6 @@ public:
       out << "Cell: " << cellIter->first << std::endl;
       cellIter->second.print(out);
       out << std::endl;
-      //printArea(cellIter->second);
     }
   }
   

@@ -45,6 +45,7 @@ public:
     
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedom() << std::endl;
+    std::cout << "Degrees of freedom on boundary: " << dofMap.getBoundaryDegreesOfFreedom() << std::endl;
   }
 
   void assemble()
@@ -120,14 +121,6 @@ public:
 
   void applyBoundaryConditions()
   {
-    const std::set< std::pair<vertex_id, vertex_id> > edgeFacets(m.getEdgeFacets());
-    std::set<vertex_id> boundaryNodes;
-
-    for(std::set< std::pair<vertex_id, vertex_id> >::const_iterator edgeIter(edgeFacets.begin()); edgeIter!=edgeFacets.end(); ++edgeIter)
-    {
-      boundaryNodes.insert(edgeIter->first);
-      boundaryNodes.insert(edgeIter->second);
-    }
   }
 
   void print() const

@@ -68,6 +68,29 @@ public:
     }
     return common;
   }
+
+  std::vector<unsigned> getBoundaryDegreesOfFreedom(const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
+  {
+    // Create set of vertices on boundary
+    std::set<vertex_id> boundaryVertices;
+    for(std::vector< std::pair<vertex_id, vertex_id> >::const_iterator edgeIter(boundary.begin()); edgeIter!=boundary.end(); ++edgeIter)
+    {
+      boundaryVertices.insert(edgeIter->first);
+      boundaryVertices.insert(edgeIter->second);
+    }
+
+    // Create list of local vertices
+    const std::vector<vertex_id> vertexIndices(m->getCell(cid).getIndices());
+
+    // Find vertices on boundary
+    std::vector<unsigned> dofs;
+    for(unsigned i=0; i<vertexIndices.size(); ++i)
+    {
+      if (boundaryVertices.find(vertexIndices[i]) != boundaryVertices.end())
+        dofs.push_back(i);
+    }
+    return dofs;
+  }
 };
 
 }
