@@ -55,9 +55,12 @@ public:
     std::map< unsigned, std::set<boost::tuple<cell_id, unsigned> > > global2local;
     for(typename local2global_map::const_iterator mappingIter(mapping.begin()); mappingIter != mapping.end(); ++mappingIter)
     {
-      // TODO: Work out why tuple.get<N>() won't compile
-      if (boost::get<0>(mappingIter->first) == element); 
-        global2local[mappingIter->second].insert(boost::make_tuple(boost::get<1>(mappingIter->first), boost::get<2>(mappingIter->first)));
+      if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
+      {
+        // TODO: Work out why tuple.get<N>() won't compile
+        if (boost::get<0>(mappingIter->first) == element); 
+          global2local[mappingIter->second].insert(boost::make_tuple(boost::get<1>(mappingIter->first), boost::get<2>(mappingIter->first)));
+      }
     }
     return global2local;
   }
