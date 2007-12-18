@@ -12,4 +12,6 @@ int main(int argc, char* argv[])
   stokes_system<cell_type> system(m);
   system.assemble();
   system.applyBoundaryConditions();
+
+  system.solve();
 }

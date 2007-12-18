@@ -58,7 +58,7 @@ public:
       if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
       {
         // TODO: Work out why tuple.get<N>() won't compile
-        if (boost::get<0>(mappingIter->first) == element); 
+        if (boost::get<0>(mappingIter->first) == element)
           global2local[mappingIter->second].insert(boost::make_tuple(boost::get<1>(mappingIter->first), boost::get<2>(mappingIter->first)));
       }
     }

@@ -11,6 +11,8 @@
 #include "lagrange_triangle_quadratic.hpp"
 #include <boost/tuple/tuple.hpp>
 #include <mtl/mtl.h>
+#include <itl/interface/mtl.h>
+#include <itl/krylov/cgs.h>
 
 namespace cfd
 {
@@ -32,6 +34,7 @@ private:
   typedef mtl::dense1D<double> vector_type;
   const unsigned dofs;
   matrix_type stiffness_matrix;
+  vector_type unknown_vector;
   vector_type load_vector;
 
   enum Location
@@ -66,7 +69,7 @@ public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
                                              dofMap(buildDofMap(m, pressure, velocity_x, velocity_y)),
                                              dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs),
-                                             load_vector(dofs)
+                                             unknown_vector(dofs), load_vector(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;
@@ -223,9 +226,21 @@ public:
     }
   }
 
+  void solve()
+  {
+    const int max_iter = 256;
+    itl::identity_preconditioner precond;
+    itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
+    itl::cgs(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
+  }
+
   void print() const
   {
+    std::cout << "Stiffness Matrix: " << std::endl;
     print_all_matrix(stiffness_matrix);
+    std::cout << std::endl << "Load Vector: " << std::endl;
+    print_vector(load_vector);
+    std::cout << std::endl;
   }
 };
 
