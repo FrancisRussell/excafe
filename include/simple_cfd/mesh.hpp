@@ -12,7 +12,6 @@
 #include "utility.hpp"
 #include "cell.hpp"
 #include "dof_map.hpp"
-#include "matrix.hpp"
 
 namespace cfd
 {

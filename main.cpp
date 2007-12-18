@@ -1,5 +1,5 @@
-#include <mesh.hpp>
-#include <stokes_system.hpp>
+#include <simple_cfd/mesh.hpp>
+#include <simple_cfd/stokes_system.hpp>
 
 using namespace cfd;
 
