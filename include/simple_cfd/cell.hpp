@@ -92,10 +92,10 @@ public:
   double getArea(const mesh_geometry<dimension>& geometry) const
   {
     const std::vector<vertex_type> vertices(getCoordinates(geometry));
-    const double area = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
-                        vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
-                        vertices[2][0] * (vertices[0][1] - vertices[1][1]);
-    return area;
+    const double doubleArea = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
+                              vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
+                              vertices[2][0] * (vertices[0][1] - vertices[1][1]);
+    return doubleArea / 2.0;
   }
 
   std::set< std::pair<vertex_id, vertex_id> > getFacets() const
