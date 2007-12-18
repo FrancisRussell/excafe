@@ -35,9 +35,9 @@ public:
     evaluated_basis result;
 
     result.value = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
-                    (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / area;
-    result.dx = -(vertices[ip2][1] - vertices[ip1][1]) / area;
-    result.dy =  (vertices[ip2][0] - vertices[ip1][0]) / area;
+                    (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / (2.0 * area);
+    result.dx = -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
+    result.dy =  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
 
     return result;
   }
