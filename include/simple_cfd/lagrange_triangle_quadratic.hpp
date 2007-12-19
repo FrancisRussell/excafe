@@ -64,7 +64,7 @@ public:
       k2 = (i-3+2)%3;
     }
 
-    const double gf = (v[0] - vertices[j1][1]) * (vertices[j2][1] - vertices[j1][1]) -
+    const double gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
                       (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
 
     const double gn = (vertices[i][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
