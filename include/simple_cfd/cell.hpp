@@ -115,15 +115,11 @@ public:
     const double xsi = vertex[0];
     const double eta = vertex[1];
 
-    const double x = (1.0 - xsi - eta) * vertices[0][0] +
-                     xsi * vertices[1][0] +
-                     eta * vertices[2][0];
+    const vertex_type v = (1.0 - xsi - eta) * vertices[0] +
+                          xsi * vertices[1] +
+                          eta *vertices[2];
 
-    const double y = (1.0 - xsi - eta) * vertices[0][0] +
-                     xsi * vertices[1][1] +
-                     eta * vertices[2][1];
-
-    return vertex_type(x, y);
+    return v;
   }
 };
 
