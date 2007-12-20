@@ -80,21 +80,27 @@ public:
     }
 
     // Now we must renumber the global degrees of freedom so they aren't sparse
-    unsigned newCounter = 0;
-    std::map<unsigned, unsigned> newMapping;
+    // We do this in three phases because we want to try to preserve the order of the dofs,
+    // keeping the matrix more diagonally dominant (maybe).
+    // TODO: Implement some sort of renumbering scheme
+
+    std::set<unsigned> dofs;
+    for(typename local2global_map::const_iterator mapIter = local2global.begin(); mapIter!=local2global.end(); ++mapIter)
+      dofs.insert(mapIter->second);
+
+    unsigned newCounter=0;
+    std::map<unsigned, unsigned> renumbering;
+    for(std::set<unsigned>::const_iterator dofIter(dofs.begin()); dofIter!=dofs.end(); ++dofIter)
+    {
+      renumbering[*dofIter] = newCounter;
+      ++newCounter;
+    }
+
     for(typename local2global_map::iterator mapIter = local2global.begin(); mapIter!=local2global.end(); ++mapIter)
     {
-      const std::map<unsigned, unsigned>::const_iterator newMappingIter = newMapping.find(mapIter->second);
-      if (newMappingIter == newMapping.end())
-      {
-        newMapping[mapIter->second] = newCounter;
-        mapIter->second = newCounter;
-        ++newCounter;
-      }
-      else
-      {
-        mapIter->second = newMappingIter->second;
-      }
+      const std::map<unsigned, unsigned>::const_iterator renumberingIter = renumbering.find(mapIter->second);
+      assert(renumberingIter != renumbering.end());
+      mapIter->second = renumberingIter->second;
     }
 
     // Record degrees of freedom that lie on a boundary

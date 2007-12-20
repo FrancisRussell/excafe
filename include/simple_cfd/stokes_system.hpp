@@ -1,14 +1,15 @@
 #ifndef SIMPLE_CFD_STOKES_SYSTEM
 #define SIMPLE_CFD_STOKES_SYSTEM
 
-#include <iostream>
-#include <map>
 #include "mesh.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "dof_map_builder.hpp"
 #include "dof_map.hpp"
 #include "lagrange_triangle_linear.hpp"
 #include "lagrange_triangle_quadratic.hpp"
+#include <iostream>
+#include <map>
+#include <algorithm>
 #include <boost/tuple/tuple.hpp>
 #include <mtl/mtl.h>
 #include <itl/interface/mtl.h>
@@ -61,7 +62,7 @@ private:
 
   static void zeroRow(matrix_type& m, const unsigned row)
   {
-    mtl::scale(mtl::rows(m)[row], 0.0);
+    std::fill(mtl::rows(m)[row].begin(), mtl::rows(m)[row].end(), 0.0);
   }
 
 
@@ -185,6 +186,9 @@ public:
     stiffness_matrix(pressureGlobalDof, pressureGlobalDof) = 1.0;
     load_vector[pressureGlobalDof] = 1.0;
 
+    //To help convergence
+    unknown_vector[pressureGlobalDof] = load_vector[pressureGlobalDof];
+
     // Assign values for the x velocity degrees of freedom (x^2 + y^2 around the entire boundary)
     for(dof_map::const_iterator velocity_x_iter(velocity_x_dofs.begin()); velocity_x_iter!=velocity_x_dofs.end(); ++velocity_x_iter)
     {
@@ -203,7 +207,10 @@ public:
       const unsigned velocity_x_globalDof(velocity_x_iter->first);
       zeroRow(stiffness_matrix, velocity_x_globalDof);
       stiffness_matrix(velocity_x_globalDof, velocity_x_globalDof) = 1.0;
-      load_vector[velocity_x_globalDof] = position[0] * position[0] + position[1] * position[1]; // y^2 + y^2
+      load_vector[velocity_x_globalDof] = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
+
+      // To help convergence
+      unknown_vector[velocity_x_globalDof] = load_vector[velocity_x_globalDof]; 
     }
 
     // Assign values for the y velocity degrees of freedom (zero along top and bottom edges) 
@@ -216,7 +223,7 @@ public:
       // Check this really is an edge cell
       assert(location != BODY);
 
-      if (location == TOP_EDGE || location == BOTTOM_EDGE)
+      if (location == LEFT_EDGE || location == RIGHT_EDGE)
       {
         const unsigned velocity_y_globalDof(velocity_y_iter->first);
         zeroRow(stiffness_matrix, velocity_y_globalDof);
@@ -228,7 +235,7 @@ public:
 
   void solve()
   {
-    const int max_iter = 256;
+    const int max_iter = 2048;
     itl::identity_preconditioner precond;
     itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
     itl::cgs(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
