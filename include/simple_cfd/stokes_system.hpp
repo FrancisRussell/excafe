@@ -274,8 +274,8 @@ public:
 
         for(unsigned dof=0; dof<velocity_x.space_dimension(); ++dof)
         {
-          xVelocity += unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
-          yVelocity += unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
+          xVelocity += velocity_x.evaluate_basis(cellIter->first, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
+          yVelocity += velocity_y.evaluate_basis(cellIter->first, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
         }
         return std::make_pair(xVelocity, yVelocity);
       }
