@@ -7,6 +7,8 @@
 #include<boost/array.hpp>
 #include<ostream>
 #include<iostream>
+#include<algorithm>
+#include<numeric>
 #include"mesh.hpp"
 #include"vertex.hpp"
 #include"simple_cfd_fwd.hpp"
@@ -120,6 +122,35 @@ public:
                           eta *vertices[2];
 
     return v;
+  }
+
+  bool contains(const mesh_geometry<dimension>& geometry, const vertex_type& v) const
+  {
+    const std::vector<vertex_type> vertices(getCoordinates(geometry));
+    bool contained = true;
+
+    for(unsigned vid=0; vid<vertex_count; ++vid)
+    {
+      const unsigned v1_ind = vid;
+      const unsigned v2_ind = (vid+1)%vertex_count;
+      const unsigned v3_ind = (vid+2)%vertex_count;
+
+      std::vector<double> edgeVector;
+      std::transform(vertices[v1_ind].begin(), vertices[v1_ind].end(), vertices[v2_ind].begin(), std::back_inserter(edgeVector), std::minus<double>());
+
+      // We calculate the perpendicular to the edge which gives us the coefficients for the place
+      std::vector<double> edgeNormal(edgeVector.size());
+      edgeNormal[0] = -edgeVector[1];
+      edgeNormal[1] = edgeVector[0];
+
+      const double d = std::inner_product(edgeNormal.begin(), edgeNormal.end(), vertices[v1_ind].begin(), 0.0);
+      const double vDotProd = std::inner_product(edgeNormal.begin(), edgeNormal.end(), v.begin(), 0.0) - d;
+      const double v3DotProd = std::inner_product(edgeNormal.begin(), edgeNormal.end(), vertices[v3_ind].begin(), 0.0) - d;
+
+      if ((vDotProd<0 && v3DotProd>0) || (vDotProd>0 && v3DotProd<0))
+        contained = false;
+    }
+   return contained;
   }
 };
 

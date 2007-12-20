@@ -10,6 +10,9 @@
 #include <iostream>
 #include <map>
 #include <algorithm>
+#include <ostream>
+#include <fstream>
+#include <utility>
 #include <boost/tuple/tuple.hpp>
 #include <mtl/mtl.h>
 #include <itl/interface/mtl.h>
@@ -248,6 +251,68 @@ public:
     std::cout << std::endl << "Load Vector: " << std::endl;
     print_vector(load_vector);
     std::cout << std::endl;
+  }
+
+  void outputToFile(const std::string& filename)
+  {
+    std::ofstream outFile(filename.c_str());
+    render(10, 10, outFile);
+    outFile.close();
+  }
+
+  std::pair<double, double> getVelocityVector(const vertex_type& vertex) const
+  {
+    const std::map<cell_id, cell_type> cells(m.getCells());
+    const mesh_geometry<mesh<cell_type>::dimension> geometry(m.getGeometry());
+    typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin());
+
+    while(cellIter!=cells.end())
+    {
+      if (cellIter->second.contains(geometry, vertex))
+      {
+        double xVelocity(0.0), yVelocity(0.0);
+
+        for(unsigned dof=0; dof<velocity_x.space_dimension(); ++dof)
+        {
+          xVelocity += unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
+          yVelocity += unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
+        }
+        return std::make_pair(xVelocity, yVelocity);
+      }
+      else
+      {
+        ++cellIter;
+      }
+    }
+    return std::make_pair(0.0, 0.0);
+  }
+
+  void render(const unsigned xPoints, const unsigned yPoints, std::ostream& out)
+  {
+    const double xSpacing = 1.0/xPoints;
+    const double ySpacing = 1.0/yPoints;
+
+    out << "# vtk DataFile Version 2.0" << std::endl;
+    out << "Simple Stokes Solver" << std::endl;
+    out << "ASCII" << std::endl;
+    out << "DATASET STRUCTURED_POINTS" << std::endl;
+    out << "DIMENSIONS " << xPoints << " " << yPoints << " " << 1 << std::endl;
+    out << "ORIGIN " << 0.0 << " " << 0.0 << " " << 0.0 << std::endl;
+    out << "SPACING " << xSpacing << " " << ySpacing << " " << 0.0 << std::endl;
+    out << "POINT_DATA " << xPoints * yPoints << std::endl;
+    out << "VECTORS velocity_field DOUBLE" << std::endl;
+
+    for(unsigned yPoint=0; yPoint<yPoints; ++yPoint)
+    {
+      for(unsigned xPoint=0; xPoint<xPoints; ++xPoint)
+      {
+        const double x = static_cast<double>(xPoint)/(xPoints-1);
+        const double y = static_cast<double>(yPoint)/(yPoints-1);
+
+        const std::pair<double, double> velocity(getVelocityVector(vertex_type(x, y)));
+        out << velocity.first << " " << velocity.second << " " << 0.0 << std::endl;
+      }
+    }
   }
 };
 

@@ -22,6 +22,8 @@ class vertex :  private boost::less_than_comparable< vertex<D> >,
 {
 public:
   static const unsigned int dimension = D;
+  typedef typename boost::array<double, dimension>::iterator iterator;
+  typedef typename boost::array<double, dimension>::const_iterator const_iterator;
 
 private:
   boost::array<double, dimension> values;
@@ -96,6 +98,26 @@ public:
   {
     std::transform(values.begin(), values.end(), values.begin(), boost::lambda::_1 * d);
     return *this;
+  }
+
+  iterator begin()
+  {
+    return values.begin();
+  }
+
+  const_iterator begin() const
+  {
+    return values.begin();
+  }
+
+  iterator end()
+  {
+    return values.end();
+  }
+
+  const_iterator end() const
+  {
+    return values.end();
   }
 };
 
