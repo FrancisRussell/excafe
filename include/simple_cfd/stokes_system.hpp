@@ -289,8 +289,8 @@ public:
 
   void render(const unsigned xPoints, const unsigned yPoints, std::ostream& out)
   {
-    const double xSpacing = 1.0/xPoints;
-    const double ySpacing = 1.0/yPoints;
+    const double xSpacing = 1.0/(xPoints-1);
+    const double ySpacing = 1.0/(yPoints-1);
 
     out << "# vtk DataFile Version 2.0" << std::endl;
     out << "Simple Stokes Solver" << std::endl;
