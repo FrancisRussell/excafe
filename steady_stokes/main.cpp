@@ -13,5 +13,5 @@ int main(int argc, char* argv[])
   system.applyBoundaryConditions();
 
   system.solve();
-  system.outputToFile("/tmp/out.vtk");
+  system.outputToFile("./steady_stokes.vtk");
 }

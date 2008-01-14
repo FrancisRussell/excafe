@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT(simple_cfd, 0.1, fpr02@doc.ic.ac.uk)
-AC_CONFIG_SRCDIR([main.cpp])
+AC_CONFIG_SRCDIR([steady_stokes/main.cpp])
 AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
 AC_LANG_CPLUSPLUS
@@ -52,4 +52,5 @@ AC_MSG_CHECKING([for MTL])
 AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESULT([no]); AC_MSG_ERROR([Failed to find MTL.]))
 
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([steady_stokes/Makefile])
 AC_OUTPUT
