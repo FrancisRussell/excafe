@@ -53,4 +53,5 @@ AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESUL
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([steady_stokes/Makefile])
+AC_CONFIG_FILES([steady_stokes_dolfin/Makefile])
 AC_OUTPUT

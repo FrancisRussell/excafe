@@ -1,1 +1,1 @@
-SUBDIRS = steady_stokes
+SUBDIRS = steady_stokes steady_stokes_dolfin
