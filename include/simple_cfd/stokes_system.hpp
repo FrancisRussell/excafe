@@ -149,26 +149,22 @@ public:
   }
 
 
-  Location getLocation(const cell_id cid)
+  Location getLocation(const vertex_type& v)
   {
     // TODO: make me into a function that doesn't depend on the specifics of the mesh generation
 
     Location location = BODY;
-    const typename std::vector<vertex_type> coords(m.getCoordinates(cid));
-    for(typename std::vector<vertex_type>::const_iterator vertexIter(coords.begin()); vertexIter!=coords.end(); ++vertexIter)
-    {
-      if ((*vertexIter)[0] == 0.0)
-        location = LEFT_EDGE;
+    if (v[0] == 0.0)
+      location = LEFT_EDGE;
 
-      if ((*vertexIter)[0] == 1.0)
-        location = RIGHT_EDGE;
+    if (v[0] == 1.0)
+      location = RIGHT_EDGE;
 
-      if ((*vertexIter)[1] == 0.0)
-        location = BOTTOM_EDGE;
+    if (v[1] == 0.0)
+      location = BOTTOM_EDGE;
 
-      if ((*vertexIter)[1] == 1.0)
-        location = TOP_EDGE;
-    }
+    if (v[1] == 1.0)
+      location = TOP_EDGE;
 
     return location;
   }
@@ -198,10 +194,11 @@ public:
       assert(!velocity_x_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_x_iter->second.begin());
       
-      // Check this really is an edge cell
-      assert(getLocation(boost::get<0>(dofInfo)) != BODY);
 
       const vertex_type position(velocity_x.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      // Check this really is an edge cell
+      assert(getLocation(position) != BODY);
+
       const unsigned velocity_x_globalDof(velocity_x_iter->first);
       zeroRow(stiffness_matrix, velocity_x_globalDof);
       stiffness_matrix(velocity_x_globalDof, velocity_x_globalDof) = 1.0;
@@ -216,7 +213,8 @@ public:
     {
       assert(!velocity_y_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_y_iter->second.begin());
-      const Location location = getLocation(boost::get<0>(dofInfo));
+      const vertex_type position(velocity_y.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      const Location location = getLocation(position);
 
       // Check this really is an edge cell
       assert(location != BODY);
