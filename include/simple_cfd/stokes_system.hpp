@@ -201,12 +201,7 @@ public:
       // Check this really is an edge cell
       assert(getLocation(boost::get<0>(dofInfo)) != BODY);
 
-      // TODO: Use actual location of vertex corresponding to degree of freedom rather than the first vertex
-      // on the cell
-      const std::vector<vertex_type> vertices(m.getCoordinates(boost::get<0>(dofInfo)));
-      assert(!vertices.empty());
-      const vertex_type position(vertices[0]);
-
+      const vertex_type position(velocity_x.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       const unsigned velocity_x_globalDof(velocity_x_iter->first);
       zeroRow(stiffness_matrix, velocity_x_globalDof);
       stiffness_matrix(velocity_x_globalDof, velocity_x_globalDof) = 1.0;

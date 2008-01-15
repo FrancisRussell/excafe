@@ -187,6 +187,23 @@ public:
 
     return dofs;
   }
+  
+  vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
+  {
+    assert(dof>=0 && dof<6);
+    if (dof<3)
+    {
+      return m->getCoordinates(cid)[dof];
+    }
+    else
+    {
+      const std::vector<vertex_type> coordinates(m->getCoordinates(cid));
+      const int vid1 = (dof - 3)%3;
+      const int vid2 = (dof - 2)%3;
+      return (coordinates[vid1] + coordinates[vid2])/2;
+    }
+  }
+
 };
 
 }

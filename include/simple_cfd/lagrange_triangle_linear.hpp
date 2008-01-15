@@ -91,6 +91,12 @@ public:
     }
     return dofs;
   }
+
+  vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
+  {
+    assert(dof>=0 && dof<3);
+    return m->getCoordinates(cid)[dof];
+  }
 };
 
 }
