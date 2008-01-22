@@ -16,7 +16,8 @@
 #include <boost/tuple/tuple.hpp>
 #include <mtl/mtl.h>
 #include <itl/interface/mtl.h>
-#include <itl/krylov/cgs.h>
+#include <itl/krylov/bicgstab.h>
+#include <itl/preconditioner/ilu.h>
 
 namespace cfd
 {
@@ -123,9 +124,6 @@ public:
           }
         }
           
-        // TODO: work out why we're using linear test functions,
-        // even though we're dealing with velocity in this formula.
-        
         // Iterate over linear test functions 
         for(unsigned test=0; test<pressure.space_dimension(); ++test)
         {
@@ -176,17 +174,24 @@ public:
     const dof_map velocity_x_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity_x));
     const dof_map velocity_y_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity_y));
 
-    // Assign a value for one of the pressure degrees of freedom
-    const dof_map::const_iterator pressureIter(pressure_dofs.begin());
-    assert(pressureIter != pressure_dofs.end());
+    // Assign a value for the pressure degrees around the edges
+    for(dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
+    {
+      const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
+      const vertex_type position(pressure.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      const Location location = getLocation(position);
 
-    const unsigned pressureGlobalDof(pressureIter->first);
-    zeroRow(stiffness_matrix, pressureGlobalDof);
-    stiffness_matrix(pressureGlobalDof, pressureGlobalDof) = 1.0;
-    load_vector[pressureGlobalDof] = 1.0;
+      if (location == BOTTOM_EDGE || location == TOP_EDGE)
+      {
+        const unsigned pressureGlobalDof(pressureIter->first);
+        zeroRow(stiffness_matrix, pressureGlobalDof);
+        stiffness_matrix(pressureGlobalDof, pressureGlobalDof) = 1.0;
+        load_vector[pressureGlobalDof] = 0.0;
 
-    //To help convergence
-    unknown_vector[pressureGlobalDof] = load_vector[pressureGlobalDof];
+        //To help convergence
+        unknown_vector[pressureGlobalDof] = load_vector[pressureGlobalDof];
+      }
+    }
 
     // Assign values for the x velocity degrees of freedom (x^2 + y^2 around the entire boundary)
     for(dof_map::const_iterator velocity_x_iter(velocity_x_dofs.begin()); velocity_x_iter!=velocity_x_dofs.end(); ++velocity_x_iter)
@@ -205,7 +210,7 @@ public:
       load_vector[velocity_x_globalDof] = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
 
       // To help convergence
-      unknown_vector[velocity_x_globalDof] = load_vector[velocity_x_globalDof]; 
+      unknown_vector[velocity_x_globalDof] = load_vector[velocity_x_globalDof];
     }
 
     // Assign values for the y velocity degrees of freedom (zero along top and bottom edges) 
@@ -225,6 +230,9 @@ public:
         zeroRow(stiffness_matrix, velocity_y_globalDof);
         stiffness_matrix(velocity_y_globalDof, velocity_y_globalDof) = 1.0;
         load_vector[velocity_y_globalDof] = 0.0;
+        
+        // To help convergence
+        unknown_vector[velocity_y_globalDof] = load_vector[velocity_y_globalDof];
       }
     }
   }
@@ -232,9 +240,9 @@ public:
   void solve()
   {
     const int max_iter = 2048;
-    itl::identity_preconditioner precond;
+    itl::ILU<matrix_type> precond;
     itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
-    itl::cgs(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
+    itl::bicgstab(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
   }
 
   void print() const

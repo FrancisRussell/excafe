@@ -18,10 +18,10 @@ public:
   }
 };
 
-class VelocityYBC : public Function
+class ZeroBC : public Function
 {
 public:
-  VelocityYBC(Mesh& mesh) :  Function(mesh)
+  ZeroBC(Mesh& mesh) :  Function(mesh)
   {
   }
 
@@ -54,6 +54,20 @@ public:
   }
 };
 
+class TopBottomBoundary : public SubDomain
+{
+private:
+  const double EPSILON;
+public:
+  TopBottomBoundary() : EPSILON(1e-9)
+  {
+  }
+
+  bool inside(const real* x, bool on_boundary) const
+  {
+    return on_boundary && (std::abs(x[1]) < EPSILON || std::abs(x[1]-1.0) < EPSILON);
+  }
+};
 
 int main(int argc, char* argv[])
 {
@@ -62,9 +76,12 @@ int main(int argc, char* argv[])
 
   // Create functions for boundary conditions
   VelocityXBC velocityXBC(mesh);
-  VelocityYBC velocityYBC(mesh);
+  ZeroBC zeroBC(mesh);
+
+  // Functions defining boundaries
   Boundary boundary;
   LeftRightBoundary leftRightBoundary;
+  TopBottomBoundary topBottomBoundary;
   
   // Define sub systems for boundary conditions
   SubSystem velocity_x(0, 0);
@@ -73,13 +90,14 @@ int main(int argc, char* argv[])
 
   // Velocity boundary condition
   DirichletBC velocity_x_bc(velocityXBC, mesh, boundary, velocity_x);
-  DirichletBC velocity_y_bc(velocityYBC, mesh, leftRightBoundary, velocity_y);
+  DirichletBC velocity_y_bc(zeroBC, mesh, leftRightBoundary, velocity_y);
+  DirichletBC pressure_bc(zeroBC, mesh, topBottomBoundary, pressure);
 
   // Set up PDE
   Function f(mesh, 0.0);
   SteadyStokesBilinearForm a;
   SteadyStokesLinearForm L(f);
-  Array<BoundaryCondition*> bcs(&velocity_x_bc, &velocity_y_bc);
+  Array<BoundaryCondition*> bcs(&velocity_x_bc, &velocity_y_bc, &pressure_bc);
   LinearPDE pde(a, L, mesh, bcs);
   
   // Solve PDE

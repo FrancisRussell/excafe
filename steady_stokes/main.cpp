@@ -6,7 +6,7 @@ using namespace cfd;
 int main(int argc, char* argv[])
 {
   typedef cell<triangle> cell_type;
-  mesh<cell_type> m(7,7);
+  mesh<cell_type> m(10,10);
 
   stokes_system<cell_type> system(m);
   system.assemble();
