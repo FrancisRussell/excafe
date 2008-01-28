@@ -33,18 +33,6 @@ public:
 private:
   boost::array<vertex_id, vertex_count> vertex_ids;
 
-  std::vector<vertex_type> getCoordinates(const mesh_geometry<dimension>& geometry) const
-  {
-    const std::vector<vertex_id> vertex_ids(getIndices());
-    std::vector< vertex<dimension> > coords;
-
-    for(std::vector<vertex_id>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
-    {
-      coords.push_back(geometry[*vertexIter]);
-    }
-    return coords;
-  }
-
 public:
   cell(const std::vector<vertex_id>& vertices)
   {
@@ -56,6 +44,16 @@ public:
   {
     const std::vector<vertex_id> indices(vertex_ids.begin(), vertex_ids.end());
     return indices;
+  }
+
+  std::vector<vertex_type> getCoordinates(const mesh_geometry<dimension>& geometry) const
+  {
+    std::vector< vertex<dimension> > coords;
+
+    for(boost::array<vertex_id, vertex_count>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
+      coords.push_back(geometry[*vertexIter]);
+
+    return coords;
   }
 
   static std::map<vertex_type, double> getReferenceQuadrature()

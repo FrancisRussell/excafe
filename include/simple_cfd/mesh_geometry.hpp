@@ -5,7 +5,7 @@
 #include <utility>
 #include <cassert>
 #include <cstddef>
-#include <map>
+#include <tr1/unordered_map>
 
 namespace cfd
 {
@@ -17,7 +17,7 @@ public:
   static const unsigned int dimension = D;
 
 private:
-  std::map<vertex_id, vertex<dimension> > values;
+  std::tr1::unordered_map<vertex_id, vertex<dimension> > values;
 
 public:
   mesh_geometry()
@@ -41,7 +41,7 @@ public:
 
   const vertex<dimension> operator[](const vertex_id vid) const
   {
-    const typename std::map<vertex_id, vertex<dimension> >::const_iterator vertexIter(values.find(vid));
+    const typename std::tr1::unordered_map<vertex_id, vertex<dimension> >::const_iterator vertexIter(values.find(vid));
 
     if (vertexIter != values.end())
     {

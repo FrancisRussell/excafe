@@ -97,7 +97,7 @@ public:
         {
           const unsigned global_test_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, test));
           const unsigned global_test_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, test));
-          evaluated_basis evaluated_test = velocity_x.evaluate_basis(cellIter->first, test, quadIter->first);
+          evaluated_basis evaluated_test = velocity_x.evaluate_basis(cellIter->second, test, quadIter->first);
 
           // Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity_x.space_dimension(); ++trial)
@@ -106,7 +106,7 @@ public:
             const unsigned global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
             const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
 
-            evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->first, trial, quadIter->first);
+            evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->second, trial, quadIter->first);
 
             stiffness_matrix(global_test_x, global_trial_x) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
             stiffness_matrix(global_test_y, global_trial_y) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
@@ -117,7 +117,7 @@ public:
           {
             // assemble pressure related part of momentum equation
             const unsigned global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
-            evaluated_basis evaluated_trial = pressure.evaluate_basis(cellIter->first, trial, quadIter->first);
+            evaluated_basis evaluated_trial = pressure.evaluate_basis(cellIter->second, trial, quadIter->first);
 
             stiffness_matrix(global_test_x, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dx;
             stiffness_matrix(global_test_y, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dy;
@@ -128,7 +128,7 @@ public:
         for(unsigned test=0; test<pressure.space_dimension(); ++test)
         {
           const unsigned global_test = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, test));
-          evaluated_basis evaluated_test = pressure.evaluate_basis(cellIter->first, test, quadIter->first);
+          evaluated_basis evaluated_test = pressure.evaluate_basis(cellIter->second, test, quadIter->first);
 
           //Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity_x.space_dimension(); ++trial)
@@ -136,7 +136,7 @@ public:
             // assemble continuity equation
             const unsigned global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
             const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
-            evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->first, trial, quadIter->first);
+            evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->second, trial, quadIter->first);
 
             stiffness_matrix(global_test, global_trial_x) += quadIter->second * evaluated_test.value * evaluated_trial.dx;
             stiffness_matrix(global_test, global_trial_y) += quadIter->second * evaluated_test.value * evaluated_trial.dy;
@@ -275,8 +275,8 @@ public:
 
         for(unsigned dof=0; dof<velocity_x.space_dimension(); ++dof)
         {
-          xVelocity += velocity_x.evaluate_basis(cellIter->first, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
-          yVelocity += velocity_y.evaluate_basis(cellIter->first, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
+          xVelocity += velocity_x.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
+          yVelocity += velocity_y.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
         }
         return std::make_pair(xVelocity, yVelocity);
       }

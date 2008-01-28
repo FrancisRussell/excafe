@@ -24,7 +24,7 @@ public:
   {
   }
 
-  evaluated_basis evaluate_basis(const cell_id cid, const unsigned int i, const vertex_type& v) const
+  evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
   {
     /*   Triangle Node Numbering for quadratic basis
   
@@ -41,7 +41,7 @@ public:
          0  3  1
     */
 
-    std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);

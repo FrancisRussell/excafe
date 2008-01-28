@@ -24,10 +24,11 @@ public:
   {
   }
 
-  evaluated_basis evaluate_basis(const cell_id cid, const unsigned int i, const vertex_type& v) const
+  evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
   {
-    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getCell(cid).getArea(m->getGeometry());
+    const mesh_geometry<dimension> geometry(m->getGeometry());
+    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
+    const double area = c.getArea(geometry);
 
     const int ip1 = (i+1) % 3;
     const int ip2 = (i+2) % 3;
