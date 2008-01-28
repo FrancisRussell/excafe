@@ -2,10 +2,10 @@
 #define SIMPLE_CFD_MESH_GEOMETRY_HPP
 
 #include "simple_cfd_fwd.hpp"
-#include <utility>
 #include <cassert>
 #include <cstddef>
-#include <tr1/unordered_map>
+#include <boost/shared_ptr.hpp>
+#include "mesh_geometry_impl.hpp"
 
 namespace cfd
 {
@@ -17,41 +17,39 @@ public:
   static const unsigned int dimension = D;
 
 private:
-  std::tr1::unordered_map<vertex_id, vertex<dimension> > values;
+  boost::shared_ptr< mesh_geometry_impl<D> > impl;
+
+  void make_unique()
+  {
+    if (!impl.unique())
+      impl =  boost::shared_ptr< mesh_geometry_impl<D> >(new mesh_geometry_impl<D>(*impl));
+  }
 
 public:
-  mesh_geometry()
+  mesh_geometry() : impl(new mesh_geometry_impl<D>())
   {
   }
 
   std::size_t size() const
   {
-    return values.size();
+    return impl->size();
   }
 
   void insert(const vertex_id vid, const vertex<dimension>& v)
   {
-    values.insert(std::make_pair(vid, v));
+    make_unique();
+    impl->insert(vid, v);
   }
 
   vertex<dimension>& operator[](const vertex_id vid)
   {
-    return values[vid];
+    make_unique();
+    return (*impl)[vid];
   }
 
   const vertex<dimension> operator[](const vertex_id vid) const
   {
-    const typename std::tr1::unordered_map<vertex_id, vertex<dimension> >::const_iterator vertexIter(values.find(vid));
-
-    if (vertexIter != values.end())
-    {
-      return vertexIter->second;
-    }
-    else
-    {
-      assert(false);
-      return vertex<dimension>();
-    }
+    return (*impl)[vid];
   }
 };
 

@@ -7,11 +7,11 @@ using namespace cfd;
 int main(int argc, char* argv[])
 {
   typedef cell<triangle> cell_type;
-  mesh<cell_type> m(25,25);
+  mesh<cell_type> m(50,50);
 
   std::cout << "Constructing system..." << std::endl;
   stokes_system<cell_type> system(m);
-  std::cout << "Assembing system..." << std::endl;
+  std::cout << "Assembling system..." << std::endl;
   system.assemble();
   std::cout << "Applying boundary conditions..." << std::endl;
   system.applyBoundaryConditions();

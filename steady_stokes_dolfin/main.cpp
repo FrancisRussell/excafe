@@ -72,7 +72,7 @@ public:
 int main(int argc, char* argv[])
 {
   // Create Mesh
-  UnitSquare mesh(10,10);
+  UnitSquare mesh(50,50);
 
   // Create functions for boundary conditions
   VelocityXBC velocityXBC(mesh);
