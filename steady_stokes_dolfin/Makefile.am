@@ -7,4 +7,4 @@ STEADY_STOKES_GENERATED = SteadyStokes.h SteadyStokes.py
 BUILT_SOURCES = ${STEADY_STOKES_GENERATED}
 CLEANFILES = ${STEADY_STOKES_GENERATED}
 ${STEADY_STOKES_GENERATED}: SteadyStokes.form
-	ffc -l dolfin SteadyStokes.form
+	ffc -l dolfin -r quadrature SteadyStokes.form
