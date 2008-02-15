@@ -7,6 +7,8 @@
 #include "dof_map.hpp"
 #include "lagrange_triangle_linear.hpp"
 #include "lagrange_triangle_quadratic.hpp"
+#include "numeric/matrix.hpp"
+#include "numeric/vector.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -42,6 +44,10 @@ private:
   vector_type unknown_vector;
   vector_type load_vector;
 
+  PETScMatrix stiffness_matrix_p;
+  PETScVector unknown_vector_p;
+  PETScVector load_vector_p;
+
   enum Location
   {
     TOP_EDGE,
@@ -73,8 +79,9 @@ private:
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
                                              dofMap(buildDofMap(m, pressure, velocity_x, velocity_y)),
-                                             dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs),
-                                             unknown_vector(dofs), load_vector(dofs)
+                                             dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs), 
+                                             unknown_vector(dofs), load_vector(dofs), stiffness_matrix_p(dofs, dofs),
+                                             unknown_vector_p(dofs), load_vector_p(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;

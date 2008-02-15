@@ -6,6 +6,7 @@ AC_INIT(simple_cfd, 0.1, fpr02@doc.ic.ac.uk)
 AC_CONFIG_SRCDIR([steady_stokes/main.cpp])
 AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
+AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
 CXXFLAGS="-O2 -Wall -pedantic"
 
@@ -54,4 +55,5 @@ AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESUL
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([steady_stokes/Makefile])
 AC_CONFIG_FILES([steady_stokes_dolfin/Makefile])
+AC_CONFIG_FILES([lib/Makefile])
 AC_OUTPUT
