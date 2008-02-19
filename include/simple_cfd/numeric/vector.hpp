@@ -48,6 +48,11 @@ public:
     VecAssemblyEnd(v);
   }
 
+  Vec getPETScHandle()
+  {
+    return v;
+  }
+
   ~PETScVector()
   {
     const PetscErrorCode ierr = VecDestroy(v);

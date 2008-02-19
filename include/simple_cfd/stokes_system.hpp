@@ -9,6 +9,7 @@
 #include "lagrange_triangle_quadratic.hpp"
 #include "numeric/matrix.hpp"
 #include "numeric/vector.hpp"
+#include "numeric/solver.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -40,13 +41,10 @@ private:
   typedef mtl::matrix< double, mtl::rectangle<>, mtl::compressed<> >::type matrix_type;
   typedef mtl::dense1D<double> vector_type;
   const unsigned dofs;
-  matrix_type stiffness_matrix;
-  vector_type unknown_vector;
-  vector_type load_vector;
 
-  PETScMatrix stiffness_matrix_p;
-  PETScVector unknown_vector_p;
-  PETScVector load_vector_p;
+  PETScMatrix stiffness_matrix;
+  PETScVector unknown_vector;
+  PETScVector load_vector;
 
   enum Location
   {
@@ -80,8 +78,7 @@ public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
                                              dofMap(buildDofMap(m, pressure, velocity_x, velocity_y)),
                                              dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs), 
-                                             unknown_vector(dofs), load_vector(dofs), stiffness_matrix_p(dofs, dofs),
-                                             unknown_vector_p(dofs), load_vector_p(dofs)
+                                             unknown_vector(dofs), load_vector(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;
@@ -102,55 +99,63 @@ public:
         // Iterate over quadratic test functions
         for(unsigned test=0; test<velocity_x.space_dimension(); ++test)
         {
-          const unsigned global_test_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, test));
-          const unsigned global_test_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, test));
+          const int global_test_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, test));
+          const int global_test_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, test));
           evaluated_basis evaluated_test = velocity_x.evaluate_basis(cellIter->second, test, quadIter->first);
 
           // Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity_x.space_dimension(); ++trial)
           {
             // assemble velocity related part of momentum equation
-            const unsigned global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
-            const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
+            const int global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
+            const int global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
 
             evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->second, trial, quadIter->first);
 
-            stiffness_matrix(global_test_x, global_trial_x) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
-            stiffness_matrix(global_test_y, global_trial_y) += quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
+            const double convective_term_x = quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
+            const double convective_term_y = quadIter->second * (evaluated_test.dx*evaluated_trial.dx + evaluated_test.dy*evaluated_trial.dy);
+            stiffness_matrix.addValues(1, 1, &global_test_x, &global_trial_x, &convective_term_x);
+            stiffness_matrix.addValues(1, 1, &global_test_y, &global_trial_y, &convective_term_y);
           }
           
           // Iterate over linear trial functions
           for(unsigned trial=0; trial<pressure.space_dimension(); ++trial)
           {
             // assemble pressure related part of momentum equation
-            const unsigned global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
+            const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
             evaluated_basis evaluated_trial = pressure.evaluate_basis(cellIter->second, trial, quadIter->first);
 
-            stiffness_matrix(global_test_x, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dx;
-            stiffness_matrix(global_test_y, global_trial) += quadIter->second * evaluated_test.value*evaluated_trial.dy;
+            const double pressure_term_x = quadIter->second * evaluated_test.value*evaluated_trial.dx;
+            const double pressure_term_y = quadIter->second * evaluated_test.value*evaluated_trial.dy;
+            stiffness_matrix.addValues(1, 1, &global_test_x, &global_trial, &pressure_term_x);
+            stiffness_matrix.addValues(1, 1, &global_test_y, &global_trial, &pressure_term_y);
           }
         }
           
         // Iterate over linear test functions 
         for(unsigned test=0; test<pressure.space_dimension(); ++test)
         {
-          const unsigned global_test = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, test));
+          const int global_test = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, test));
           evaluated_basis evaluated_test = pressure.evaluate_basis(cellIter->second, test, quadIter->first);
 
           //Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity_x.space_dimension(); ++trial)
           {
             // assemble continuity equation
-            const unsigned global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
-            const unsigned global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
+            const int global_trial_x = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, trial));
+            const int global_trial_y = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, trial));
             evaluated_basis evaluated_trial = velocity_x.evaluate_basis(cellIter->second, trial, quadIter->first);
 
-            stiffness_matrix(global_test, global_trial_x) += quadIter->second * evaluated_test.value * evaluated_trial.dx;
-            stiffness_matrix(global_test, global_trial_y) += quadIter->second * evaluated_test.value * evaluated_trial.dy;
+            const double continuity_term_x = quadIter->second * evaluated_test.value * evaluated_trial.dx;
+            const double continuity_term_y = quadIter->second * evaluated_test.value * evaluated_trial.dy;
+            stiffness_matrix.addValues(1, 1, &global_test, &global_trial_x, &continuity_term_x);
+            stiffness_matrix.addValues(1, 1, &global_test, &global_trial_y, &continuity_term_y);
           }
         }
       }
     }   
+
+    stiffness_matrix.assemble();
   }
 
 
@@ -190,13 +195,14 @@ public:
 
       if (location == BOTTOM_EDGE || location == TOP_EDGE)
       {
-        const unsigned pressureGlobalDof(pressureIter->first);
-        zeroRow(stiffness_matrix, pressureGlobalDof);
-        stiffness_matrix(pressureGlobalDof, pressureGlobalDof) = 1.0;
-        load_vector[pressureGlobalDof] = 0.0;
+        const int pressureGlobalDof(pressureIter->first);
+        stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
+
+        const double rhs = 0.0;
+        load_vector.setValues(1, &pressureGlobalDof, &rhs);
 
         //To help convergence
-        unknown_vector[pressureGlobalDof] = load_vector[pressureGlobalDof];
+        unknown_vector.setValues(1, &pressureGlobalDof, &rhs);
       }
     }
 
@@ -205,19 +211,19 @@ public:
     {
       assert(!velocity_x_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_x_iter->second.begin());
-      
 
       const vertex_type position(velocity_x.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       // Check this really is an edge cell
       assert(getLocation(position) != BODY);
 
-      const unsigned velocity_x_globalDof(velocity_x_iter->first);
-      zeroRow(stiffness_matrix, velocity_x_globalDof);
-      stiffness_matrix(velocity_x_globalDof, velocity_x_globalDof) = 1.0;
-      load_vector[velocity_x_globalDof] = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
+      const int velocity_x_globalDof(velocity_x_iter->first);
+      stiffness_matrix.zeroRow(velocity_x_globalDof, 1.0);
+
+      const double rhs = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
+      load_vector.setValues(1, &velocity_x_globalDof, &rhs);
 
       // To help convergence
-      unknown_vector[velocity_x_globalDof] = load_vector[velocity_x_globalDof];
+      unknown_vector.setValues(1, &velocity_x_globalDof, &rhs);
     }
 
     // Assign values for the y velocity degrees of freedom (zero along top and bottom edges) 
@@ -233,31 +239,37 @@ public:
 
       if (location == LEFT_EDGE || location == RIGHT_EDGE)
       {
-        const unsigned velocity_y_globalDof(velocity_y_iter->first);
-        zeroRow(stiffness_matrix, velocity_y_globalDof);
-        stiffness_matrix(velocity_y_globalDof, velocity_y_globalDof) = 1.0;
-        load_vector[velocity_y_globalDof] = 0.0;
+        const int velocity_y_globalDof(velocity_y_iter->first);
+        stiffness_matrix.zeroRow(velocity_y_globalDof, 1.0);
+
+        const double rhs = 0.0;
+        load_vector.setValues(1, &velocity_y_globalDof, &rhs);
         
         // To help convergence
-        unknown_vector[velocity_y_globalDof] = load_vector[velocity_y_globalDof];
+        unknown_vector.setValues(1, &velocity_y_globalDof, &rhs);
       }
     }
+
+    load_vector.assemble();
+    unknown_vector.assemble();
   }
 
   void solve()
   {
-    const int max_iter = 2048;
-    itl::ILU<matrix_type> precond;
-    itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
-    itl::bicgstab(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
+    PETScKrylovSolver solver;
+    solver.solve(stiffness_matrix, unknown_vector, load_vector);
+//  const int max_iter = 2048;
+//  itl::ILU<matrix_type> precond;
+//  itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
+//  itl::bicgstab(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
   }
 
   void print() const
   {
     std::cout << "Stiffness Matrix: " << std::endl;
-    print_all_matrix(stiffness_matrix);
+    //print_all_matrix(stiffness_matrix);
     std::cout << std::endl << "Load Vector: " << std::endl;
-    print_vector(load_vector);
+    //print_vector(load_vector);
     std::cout << std::endl;
   }
 
@@ -282,8 +294,8 @@ public:
 
         for(unsigned dof=0; dof<velocity_x.space_dimension(); ++dof)
         {
-          xVelocity += velocity_x.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
-          yVelocity += velocity_y.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
+//        xVelocity += velocity_x.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
+//        yVelocity += velocity_y.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
         }
         return std::make_pair(xVelocity, yVelocity);
       }

@@ -45,18 +45,18 @@ public:
     checkError(ierr);
   }
 
-  void zeroRow(const int row)
+  void zeroRow(const int row, const double diagonal)
   {
-    zeroRows(&row, 1);
+    zeroRows(&row, 1, diagonal);
   }
 
-  void zeroRows(const int* rows, const unsigned rowCount)
+  void zeroRows(const int* rows, const unsigned rowCount, const double diagonal)
   {
     IS indexSet;
     PetscErrorCode ierr = ISCreateGeneral(PETSC_COMM_SELF, rowCount, rows, &indexSet);
     checkError(ierr);
     
-    ierr = MatZeroRowsIS(m, indexSet, 0.0);
+    ierr = MatZeroRowsIS(m, indexSet, diagonal);
     checkError(ierr);
 
     ierr = ISDestroy(indexSet);
@@ -67,6 +67,11 @@ public:
   {
     MatAssemblyBegin(m, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(m, MAT_FINAL_ASSEMBLY);
+  }
+
+  Mat getPETScHandle()
+  {
+    return m;
   }
 
   ~PETScMatrix()
