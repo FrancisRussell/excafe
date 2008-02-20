@@ -23,7 +23,14 @@ public:
   PETScMatrix(const unsigned rows, const unsigned cols)
   {
     PetscErrorCode ierr;
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, 0, PETSC_NULL, &m);
+    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, PETSC_DEFAULT, PETSC_NULL, &m);
+    checkError(ierr);
+  }
+
+  PETScMatrix(const unsigned rows, const unsigned cols, const unsigned nz)
+  {
+    PetscErrorCode ierr;
+    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, nz, PETSC_NULL, &m);
     checkError(ierr);
   }
 

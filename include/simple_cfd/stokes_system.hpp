@@ -77,7 +77,7 @@ private:
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
                                              dofMap(buildDofMap(m, pressure, velocity_x, velocity_y)),
-                                             dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs), 
+                                             dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs, dofMap.getDofsPerCell()), 
                                              unknown_vector(dofs), load_vector(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;

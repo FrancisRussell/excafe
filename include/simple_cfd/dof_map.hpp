@@ -50,6 +50,15 @@ public:
     return boundaryDofs.size();
   }
 
+  std::size_t getDofsPerCell() const
+  {
+    std::size_t dofsPerCell = 0;
+    for(typename std::set<const finite_element_type*>::const_iterator elementIter(elements.begin()); elementIter!=elements.end(); ++elementIter)
+      dofsPerCell += (*elementIter)->space_dimension();
+
+    return dofsPerCell;
+  }
+
   std::map< unsigned, std::set< boost::tuple<cell_id, unsigned> > > getBoundaryDegreesOfFreedom(const finite_element_type* const element) const
   {
     std::map< unsigned, std::set<boost::tuple<cell_id, unsigned> > > global2local;
