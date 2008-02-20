@@ -31,17 +31,17 @@ public:
     ierr = KSPGetPC(ksp, &pc);
     checkError(ierr);
 
-    ierr = KSPSetType(ksp, KSPBCGS);
+    ierr = KSPSetType(ksp, KSPGMRES);
     checkError(ierr);
 
     ierr = KSPMonitorSet(ksp, KSPMonitorDefault, PETSC_NULL, PETSC_NULL);
     checkError(ierr);
 
-    ierr = PCSetType(pc, PCILU);
+    ierr = PCSetType(pc, PCNONE);
     checkError(ierr);
 
-    ierr = PCFactorSetAllowDiagonalFill(pc);
-    checkError(ierr);
+    //ierr = PCFactorSetAllowDiagonalFill(pc);
+    //checkError(ierr);
   }
 
   void solve(PETScMatrix& a, PETScVector& x, PETScVector& b)
@@ -51,7 +51,7 @@ public:
     ierr = KSPSetOperators(ksp, a.getPETScHandle(), a.getPETScHandle(), SAME_NONZERO_PATTERN);
     checkError(ierr);
 
-    ierr = KSPSolve(ksp, x.getPETScHandle(), b.getPETScHandle());
+    ierr = KSPSolve(ksp, b.getPETScHandle(), x.getPETScHandle());
     checkError(ierr);
 
     KSPConvergedReason reason;
@@ -65,7 +65,6 @@ public:
   {
     KSPDestroy(ksp);
   }
-
 };
 
 }

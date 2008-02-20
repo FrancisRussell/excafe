@@ -158,7 +158,6 @@ public:
     stiffness_matrix.assemble();
   }
 
-
   Location getLocation(const vertex_type& v)
   {
     // TODO: make me into a function that doesn't depend on the specifics of the mesh generation
@@ -294,8 +293,15 @@ public:
 
         for(unsigned dof=0; dof<velocity_x.space_dimension(); ++dof)
         {
-//        xVelocity += velocity_x.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof))];
-//        yVelocity += velocity_y.evaluate_basis(cellIter->second, dof, vertex).value * unknown_vector[dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof))];
+          double xVelocityCoeff, yVelocityCoeff;
+          const int xVelocityDof = dofMap.getGlobalIndex(boost::make_tuple(&velocity_x, cellIter->first, dof));
+          const int yVelocityDof = dofMap.getGlobalIndex(boost::make_tuple(&velocity_y, cellIter->first, dof));
+
+          unknown_vector.getValues(1, &xVelocityDof, &xVelocityCoeff);
+          unknown_vector.getValues(1, &yVelocityDof, &yVelocityCoeff);
+
+          xVelocity += velocity_x.evaluate_basis(cellIter->second, dof, vertex).value * xVelocityCoeff;
+          yVelocity += velocity_y.evaluate_basis(cellIter->second, dof, vertex).value * yVelocityCoeff;
         }
         return std::make_pair(xVelocity, yVelocity);
       }
