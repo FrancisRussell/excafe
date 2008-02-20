@@ -8,7 +8,7 @@ AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
-CXXFLAGS="-O2 -Wall -pedantic"
+CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
 
 # Checks for programs.
 AC_PROG_CXX
@@ -19,6 +19,9 @@ AC_PROG_CC
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h])
+
+# Check how to compile MPI
+ACX_MPI([], AC_MSG_ERROR([Unable to find MPI.]))
 
 # Check for Boost
 AX_BOOST_BASE([1.33])
