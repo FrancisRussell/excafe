@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CFD_NUMERIC_MATRIX_HPP
 #define SIMPLE_CFD_NUMERIC_MATRIX_HPP
 
-#include <cassert>
+#include "numeric/sparsity_pattern.hpp"
 #include "petsc.h"
 #include "petscmat.h"
 #include "petscis.h"
@@ -14,78 +14,20 @@ class PETScMatrix
 private:
   Mat m;
 
-  void checkError(const PetscErrorCode ierr) const
-  {
-    assert(ierr == 0);
-  }
+  void checkError(const PetscErrorCode ierr) const;
 
 public:
-  PETScMatrix(const unsigned rows, const unsigned cols)
-  {
-    PetscErrorCode ierr;
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, PETSC_DEFAULT, PETSC_NULL, &m);
-    checkError(ierr);
-  }
-
-  PETScMatrix(const unsigned rows, const unsigned cols, const unsigned nz)
-  {
-    PetscErrorCode ierr;
-    ierr = MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, nz, PETSC_NULL, &m);
-    checkError(ierr);
-  }
-
-  void addValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block)
-  {
-    const PetscErrorCode ierr = MatSetValues(m, rows, rowIndices, cols, colIndices, block, ADD_VALUES);
-    checkError(ierr);
-  }
-
-  void setValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block)
-  {
-    const PetscErrorCode ierr = MatSetValues(m, rows, rowIndices, cols, colIndices, block, INSERT_VALUES);
-    checkError(ierr);
-  }
-
-  void getValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, double* block) const
-  {
-    const PetscErrorCode ierr = MatGetValues(m, rows, rowIndices, cols, colIndices, block);
-    checkError(ierr);
-  }
-
-  void zeroRow(const int row, const double diagonal)
-  {
-    zeroRows(&row, 1, diagonal);
-  }
-
-  void zeroRows(const int* rows, const unsigned rowCount, const double diagonal)
-  {
-    IS indexSet;
-    PetscErrorCode ierr = ISCreateGeneral(PETSC_COMM_SELF, rowCount, rows, &indexSet);
-    checkError(ierr);
-    
-    ierr = MatZeroRowsIS(m, indexSet, diagonal);
-    checkError(ierr);
-
-    ierr = ISDestroy(indexSet);
-    checkError(ierr);
-  }
-
-  void assemble()
-  {
-    MatAssemblyBegin(m, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(m, MAT_FINAL_ASSEMBLY);
-  }
-
-  Mat getPETScHandle()
-  {
-    return m;
-  }
-
-  ~PETScMatrix()
-  {
-    const PetscErrorCode ierr = MatDestroy(m);
-    checkError(ierr);
-  }
+  PETScMatrix(const unsigned rows, const unsigned cols);
+  PETScMatrix(const unsigned rows, const unsigned cols, const unsigned nz);
+  PETScMatrix(const SparsityPattern& pattern);
+  void addValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block);
+  void setValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block);
+  void getValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, double* block) const;
+  void zeroRow(const int row, const double diagonal);
+  void zeroRows(const int* rows, const unsigned rowCount, const double diagonal);
+  void assemble();
+  Mat getPETScHandle();
+  ~PETScMatrix();
 };
 
 }

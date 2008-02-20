@@ -10,6 +10,7 @@
 #include "numeric/matrix.hpp"
 #include "numeric/vector.hpp"
 #include "numeric/solver.hpp"
+#include "numeric/sparsity_pattern.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -42,6 +43,7 @@ private:
   typedef mtl::dense1D<double> vector_type;
   const unsigned dofs;
 
+  SparsityPattern sparsity;
   PETScMatrix stiffness_matrix;
   PETScVector unknown_vector;
   PETScVector load_vector;
@@ -77,7 +79,8 @@ private:
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
                                              dofMap(buildDofMap(m, pressure, velocity_x, velocity_y)),
-                                             dofs(dofMap.getDegreesOfFreedomCount()), stiffness_matrix(dofs, dofs, dofMap.getDofsPerCell()), 
+                                             dofs(dofMap.getDegreesOfFreedomCount()), sparsity(dofMap.getSparsityPattern()),
+                                             stiffness_matrix(sparsity), 
                                              unknown_vector(dofs), load_vector(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;

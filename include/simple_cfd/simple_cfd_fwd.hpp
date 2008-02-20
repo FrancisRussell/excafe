@@ -42,6 +42,12 @@ struct evaluated_basis
   double dy;
 };
 
+// Numeric types
+class SparsityPattern;
+class PETScMatrix;
+class PETScVector;
+class PETScKrylovSolver;
+
 }
 
 #endif

@@ -39,7 +39,7 @@ public:
 
   dof_map<cell_type> getDofMap() const
   {
-    return dof_map<cell_type>(elements, local2global, boundaryDofs);
+    return dof_map<cell_type>(m, elements, local2global, boundaryDofs);
   }
 
   void handleCells(const std::map<cell_id, cell_type>& cells)

@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_DOF_MAP_HPP
 
 #include "simple_cfd_fwd.hpp"
+#include "numeric/sparsity_pattern.hpp"
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <cassert>
@@ -18,6 +19,7 @@ private:
   typedef C cell_type;
   typedef finite_element<cell_type> finite_element_type;
   typedef std::map<boost::tuple<const finite_element_type*, cell_id, unsigned>, unsigned> local2global_map;
+  const mesh<cell_type>& m;
   std::set<const finite_element_type*> elements;
   local2global_map mapping;
   std::set<unsigned> boundaryDofs;
@@ -27,8 +29,8 @@ public:
   {
   }
 
-  dof_map(const std::set<const finite_element_type*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
-          elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
+  dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_type*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+          m(_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
 
@@ -79,6 +81,22 @@ public:
     const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
     assert(mappingIter != mapping.end());
     return mappingIter->second;
+  }
+
+  SparsityPattern getSparsityPattern() const
+  {
+    const unsigned dofs = getDegreesOfFreedomCount();
+    SparsityPattern pattern(dofs, dofs);
+    const std::map<cell_id, cell_type> cells(m.getCells());
+
+    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
+      for(typename std::set<const finite_element_type*>::const_iterator testIter(elements.begin()); testIter!=elements.end(); ++testIter)
+        for(typename std::set<const finite_element_type*>::const_iterator trialIter(elements.begin()); trialIter!=elements.end(); ++trialIter)
+          for(unsigned test=0; test < (*testIter)->space_dimension(); ++test)
+            for(unsigned trial=0; trial < (*trialIter)->space_dimension(); ++trial)
+              pattern.insert(getGlobalIndex(boost::make_tuple(*testIter, cellIter->first, test)), getGlobalIndex(boost::make_tuple(*trialIter, cellIter->first, trial)));
+
+    return pattern;
   }
 };
 

@@ -1,4 +1,4 @@
-#include "petsc_manager.hpp"
+#include "simple_cfd/petsc_manager.hpp"
 
 namespace cfd
 {
