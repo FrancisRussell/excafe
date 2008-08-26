@@ -18,10 +18,6 @@
 #include <fstream>
 #include <utility>
 #include <boost/tuple/tuple.hpp>
-#include <mtl/mtl.h>
-#include <itl/interface/mtl.h>
-#include <itl/krylov/bicgstab.h>
-#include <itl/preconditioner/ilu.h>
 
 namespace cfd
 {
@@ -39,8 +35,6 @@ private:
   lagrange_triangle_quadratic velocity_x;
   lagrange_triangle_quadratic velocity_y;
   dof_map<cell_type> dofMap;
-  typedef mtl::matrix< double, mtl::rectangle<>, mtl::compressed<> >::type matrix_type;
-  typedef mtl::dense1D<double> vector_type;
   const unsigned dofs;
 
   SparsityPattern sparsity;
@@ -69,12 +63,6 @@ private:
     mapBuilder.handleCells(m.getCells());
     return mapBuilder.getDofMap();
   }
-
-  static void zeroRow(matrix_type& m, const unsigned row)
-  {
-    std::fill(mtl::rows(m)[row].begin(), mtl::rows(m)[row].end(), 0.0);
-  }
-
 
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity_x(m), velocity_y(m), 
@@ -260,18 +248,12 @@ public:
   {
     PETScKrylovSolver solver;
     solver.solve(stiffness_matrix, unknown_vector, load_vector);
-//  const int max_iter = 2048;
-//  itl::ILU<matrix_type> precond;
-//  itl::noisy_iteration<double> iter(load_vector, max_iter, 1e-6);
-//  itl::bicgstab(stiffness_matrix, unknown_vector, load_vector, precond(), iter);
   }
 
   void print() const
   {
     std::cout << "Stiffness Matrix: " << std::endl;
-    //print_all_matrix(stiffness_matrix);
     std::cout << std::endl << "Load Vector: " << std::endl;
-    //print_vector(load_vector);
     std::cout << std::endl;
   }
 
