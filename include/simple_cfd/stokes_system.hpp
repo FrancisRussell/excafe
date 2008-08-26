@@ -11,6 +11,7 @@
 #include "numeric/vector.hpp"
 #include "numeric/solver.hpp"
 #include "numeric/sparsity_pattern.hpp"
+#include "numeric/tensor.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
