@@ -11,10 +11,12 @@
 namespace cfd
 {
 
+template<unsigned R>
 class lagrange_triangle_linear : public finite_element< cell<triangle> >
 {
 public:
   typedef cell<triangle> cell_type;
+  static const unsigned int rank = R;
   static const unsigned int dimension = cell_type::dimension;
   typedef vertex<dimension> vertex_type;
 

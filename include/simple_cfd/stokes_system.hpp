@@ -31,9 +31,9 @@ public:
 private:
   typedef typename cell_type::vertex_type vertex_type;
   const mesh<cell_type>& m;
-  lagrange_triangle_linear pressure;
-  lagrange_triangle_quadratic velocity_x;
-  lagrange_triangle_quadratic velocity_y;
+  lagrange_triangle_linear<0> pressure;
+  lagrange_triangle_quadratic<0> velocity_x;
+  lagrange_triangle_quadratic<0> velocity_y;
   dof_map<cell_type> dofMap;
   const unsigned dofs;
 
@@ -52,9 +52,9 @@ private:
   };
 
   static dof_map<cell_type> buildDofMap(const mesh<cell_type>& m,
-                                        const lagrange_triangle_linear& pressure, 
-                                        const lagrange_triangle_quadratic& velocity_x, 
-                                        const lagrange_triangle_quadratic& velocity_y)
+                                        const lagrange_triangle_linear<0>& pressure, 
+                                        const lagrange_triangle_quadratic<0>& velocity_x, 
+                                        const lagrange_triangle_quadratic<0>& velocity_y)
   {
     dof_map_builder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(pressure);
