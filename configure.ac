@@ -30,16 +30,16 @@ if test "$want_boost" = no; then
 fi
 
 # Check for MTL
-AC_ARG_WITH([mtl],
-          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
-	  [
-	    if test -f "$withval/include/mtl/mtl.h"; then
-              CXXFLAGS="$CXXFLAGS -I$withval/include"
-	    else
-	      AC_MSG_ERROR("$withval does not appear to be a prefix for a MTL installation.")
-             fi
-          ]
-          )
+#AC_ARG_WITH([mtl],
+#          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
+#	  [
+#	    if test -f "$withval/include/mtl/mtl.h"; then
+#              CXXFLAGS="$CXXFLAGS -I$withval/include"
+#	    else
+#	      AC_MSG_ERROR("$withval does not appear to be a prefix for a MTL installation.")
+#             fi
+#          ]
+#          )
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -51,9 +51,8 @@ AC_TYPE_SIZE_T
 AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([pow sqrt])
 
-
-AC_MSG_CHECKING([for MTL])
-AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESULT([no]); AC_MSG_ERROR([Failed to find MTL.]))
+#AC_MSG_CHECKING([for MTL])
+#AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESULT([no]); AC_MSG_ERROR([Failed to find MTL.]))
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([steady_stokes/Makefile])
