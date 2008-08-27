@@ -4,9 +4,12 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <cassert>
+#include <boost/array.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh.hpp"
 #include "finite_element.hpp"
+#include "numeric/tensor.hpp"
 
 namespace cfd
 {
@@ -20,11 +23,81 @@ public:
   static const unsigned int dimension = cell_type::dimension;
   typedef vertex<dimension> vertex_type;
 
+private:
   const mesh<cell_type>* m;
+
+  // This converts a value to a list of tensor indices in row major order.
+  // The order is irrelevent so long as it is consistent and can be used to
+  // determine common DoFs between cells
+  static void convert_to_tensor_index(const unsigned index, std::size_t* indices)
+  {
+    unsigned remainder = index;
+
+    for(int i=0; i<rank; ++i)
+    {
+      indices[rank-i-1] = remainder % dimension;
+      remainder /= dimension;
+    }
+
+    // A fail here means the index was too large
+    assert(remainder == 0);
+  }
+
+public:
+  // We define the numbering of bases on a cell in the following fashion
+  // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
   lagrange_triangle_linear(const mesh<cell_type>& _m) : m(&_m)
   {
   }
+
+  Tensor<dimension, rank, double> evaluate_tensor(const cell_type& c, const unsigned int i, const vertex_type& v)
+  {
+    const unsigned node_on_cell = i % 3;
+    const unsigned index_into_tensor = i / 3;
+
+    const mesh_geometry<dimension> geometry(m->getGeometry());
+    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
+    const double area = c.getArea(geometry);
+
+    const int ip1 = (node_on_cell+1) % 3;
+    const int ip2 = (node_on_cell+2) % 3;
+
+    boost::array<std::size_t, rank> tensorIndex;
+    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+
+    Tensor<dimension, rank, double> result;
+    result[tensorIndex.data()] = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
+                          (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / (2.0 * area);
+
+    return result;
+  }
+
+  Tensor<dimension, rank+1, double> evaluate_gradient(const cell_type& c, const unsigned int i, const vertex_type& v)
+  {
+    const unsigned node_on_cell = i % 3;
+    const unsigned index_into_tensor = i / 3;
+
+    const mesh_geometry<dimension> geometry(m->getGeometry());
+    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
+    const double area = c.getArea(geometry);
+
+    const int ip1 = (node_on_cell+1) % 3;
+    const int ip2 = (node_on_cell+2) % 3;
+
+    boost::array<std::size_t, rank+1> xTensorIndex, yTensorIndex;
+    convert_to_tensor_index(index_into_tensor, xTensorIndex.data());
+    convert_to_tensor_index(index_into_tensor, yTensorIndex.data());
+    xTensorIndex[rank] = 0;
+    yTensorIndex[rank] = 1;
+
+    Tensor<dimension, rank+1, double> result;
+    result[xTensorIndex.data()] = -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
+    result[yTensorIndex.data()] =  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
+
+    return result;
+  }
+
 
   evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
   {
@@ -47,7 +120,7 @@ public:
 
   unsigned space_dimension() const
   {
-    return 3;
+    return 3 * detail::Power<dimension, rank>::value;
   }
 
   std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
@@ -67,7 +140,10 @@ public:
       const std::map<vertex_id, unsigned>::const_iterator sharedVertexIter = cid2_dof.find(cid_vertices[dof]);
 
       if (sharedVertexIter != cid2_dof.end())
-        common.push_back(std::make_pair(dof, sharedVertexIter->second));
+      {
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          common.push_back(std::make_pair(index_into_tensor*3 + dof, index_into_tensor*3 + sharedVertexIter->second));
+      }
     }
     return common;
   }
@@ -90,15 +166,18 @@ public:
     for(unsigned i=0; i<vertexIndices.size(); ++i)
     {
       if (boundaryVertices.find(vertexIndices[i]) != boundaryVertices.end())
-        dofs.push_back(i);
+      {
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          dofs.push_back(index_into_tensor*3 + i);
+      }
     }
     return dofs;
   }
 
   vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
   {
-    assert(dof>=0 && dof<3);
-    return m->getCoordinates(cid)[dof];
+    assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
+    return m->getCoordinates(cid)[dof % 3];
   }
 };
 

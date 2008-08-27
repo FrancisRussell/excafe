@@ -47,6 +47,8 @@ class SparsityPattern;
 class PETScMatrix;
 class PETScVector;
 class PETScKrylovSolver;
+template<unsigned D, unsigned R, unsigned K, typename T> class TensorView;
+template<unsigned int D, unsigned int R, typename T> class Tensor;
 
 }
 
