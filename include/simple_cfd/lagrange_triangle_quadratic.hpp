@@ -313,7 +313,8 @@ public:
       const std::map<vertex_id, unsigned>::const_iterator sharedVertexIter = cid2_vertex_dof.find(cid_vertices[v]);
 
       if (sharedVertexIter != cid2_vertex_dof.end())
-        common.push_back(std::make_pair(cid_dof, sharedVertexIter->second));
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          common.push_back(std::make_pair(index_into_tensor*6 + cid_dof, index_into_tensor*6 + sharedVertexIter->second));
 
       ++cid_dof;
     }
@@ -323,7 +324,8 @@ public:
       const std::map<std::pair<vertex_id, vertex_id>, unsigned>::const_iterator sharedEdgeIter = cid2_midpoint_dof.find(cid_edges[m]);
 
       if (sharedEdgeIter != cid2_midpoint_dof.end())
-        common.push_back(std::make_pair(cid_dof, sharedEdgeIter->second));
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          common.push_back(std::make_pair(index_into_tensor*6 + cid_dof, index_into_tensor*6 + sharedEdgeIter->second));
 
       ++cid_dof;
     }
@@ -355,13 +357,15 @@ public:
     for(unsigned i=0; i<vertexIndices.size(); ++i)
     {
       if (boundaryVertices.find(vertexIndices[i]) != boundaryVertices.end())
-        dofs.push_back(i);
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          dofs.push_back(index_into_tensor*6 + i);
     }
 
     for(unsigned i=0; i<edges.size(); ++i)
     {
       if (boundaryEdgeSet.find(edges[i]) != boundaryEdgeSet.end())
-        dofs.push_back(i+3);
+        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
+          dofs.push_back(index_into_tensor*6 + i+3);
     }
 
     return dofs;
