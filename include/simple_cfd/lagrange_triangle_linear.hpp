@@ -98,6 +98,29 @@ public:
     return result;
   }
 
+  Tensor<dimension, rank-1, double> evaluate_divergence(const cell_type& c, const unsigned int i, const vertex_type& v)
+  {
+    const unsigned node_on_cell = i % 3;
+    const unsigned index_into_tensor = i / 3;
+
+    const mesh_geometry<dimension> geometry(m->getGeometry());
+    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
+    const double area = c.getArea(geometry);
+
+    const int ip1 = (node_on_cell+1) % 3;
+    const int ip2 = (node_on_cell+2) % 3;
+
+    // Note how we don't use the final value in the index
+    // FIXME: if we don't use an index of the original size, we'll buffer overflow
+    boost::array<std::size_t, rank> tensorIndex;
+    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+
+    Tensor<dimension, rank-1, double> result;
+    result[tensorIndex.data()] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
+    result[tensorIndex.data()] +=  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
+
+    return result;
+  }
 
   evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
   {

@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include <map>
+#include <cassert>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
@@ -20,29 +21,48 @@ public:
   static const unsigned int dimension = cell_type::dimension;
   typedef vertex<dimension> vertex_type;
 
+private:
   const mesh<cell_type>* m;
 
+  // This converts a value to a list of tensor indices in row major order.
+  // The order is irrelevent so long as it is consistent and can be used to
+  // determine common DoFs between cells
+  static void convert_to_tensor_index(const unsigned index, std::size_t* indices)
+  {
+    unsigned remainder = index;
+
+    for(unsigned i=0; i<rank; ++i)
+    {
+      indices[rank-i-1] = remainder % dimension;
+      remainder /= dimension;
+    }
+
+    // A fail here means the index was too large
+    assert(remainder == 0);
+  }
+
+public:
   lagrange_triangle_quadratic(const mesh<cell_type>& _m) : m(&_m)
   {
   }
 
+  /*   Triangle Node Numbering for quadratic basis
+
+       LL        
+
+       2
+
+       |\ 
+       | \ 
+     5 |  \ 4
+       |   \ 
+       |    \ 
+       ------ 
+       0  3  1
+  */
+
   evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
   {
-    /*   Triangle Node Numbering for quadratic basis
-  
-         LL        
-
-         2
- 
-         |\ 
-         | \ 
-       5 |  \ 4
-         |   \ 
-         |    \ 
-         ------ 
-         0  3  1
-    */
-
     std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
 
     // Create interpolated vertices
@@ -91,9 +111,166 @@ public:
     return result;
   }
 
+  Tensor<dimension, rank, double> evaluate_tensor(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  {
+    const unsigned node_on_cell = i % 6;
+    const unsigned index_into_tensor = i / 6;
+    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+
+    // Create interpolated vertices
+    vertices.push_back((vertices[0] + vertices[1])/2);
+    vertices.push_back((vertices[1] + vertices[2])/2);
+    vertices.push_back((vertices[2] + vertices[0])/2);
+
+    int j1, j2, k1, k2;
+    if (node_on_cell < 3)
+    {
+      j1 = (node_on_cell+1)%3;
+      j2 = (node_on_cell+2)%3;
+      k1 = 3 + node_on_cell;
+      k2 = 3 + (node_on_cell + 5)%3;
+    }
+    else
+    {
+      j1 = node_on_cell-3;
+      j2 = (node_on_cell-3+2)%3;
+      k1 = (node_on_cell-3+1)%3;
+      k2 = (node_on_cell-3+2)%3;
+    }
+
+    const double gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
+
+    const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (vertices[node_on_cell][1] - vertices[j1][1]);
+
+    const double hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
+
+    const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
+
+    boost::array<std::size_t, rank> tensorIndex;
+    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+
+    Tensor<dimension, rank, double> result;
+    result[tensorIndex.data()] = (gf/gn) * (hf/hn);
+
+    return result;
+  }
+
+  Tensor<dimension, rank+1, double> evaluate_gradient(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  {
+    const unsigned node_on_cell = i % 6;
+    const unsigned index_into_tensor = i / 6;
+    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+
+    // Create interpolated vertices
+    vertices.push_back((vertices[0] + vertices[1])/2);
+    vertices.push_back((vertices[1] + vertices[2])/2);
+    vertices.push_back((vertices[2] + vertices[0])/2);
+
+    int j1, j2, k1, k2;
+    if (node_on_cell < 3)
+    {
+      j1 = (node_on_cell+1)%3;
+      j2 = (node_on_cell+2)%3;
+      k1 = 3 + node_on_cell;
+      k2 = 3 + (node_on_cell + 5)%3;
+    }
+    else
+    {
+      j1 = node_on_cell-3;
+      j2 = (node_on_cell-3+2)%3;
+      k1 = (node_on_cell-3+1)%3;
+      k2 = (node_on_cell-3+2)%3;
+    }
+
+    const double gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
+
+    const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (vertices[node_on_cell][1] - vertices[j1][1]);
+
+    const double hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
+
+    const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
+
+    boost::array<std::size_t, rank+1> xTensorIndex, yTensorIndex;
+    convert_to_tensor_index(index_into_tensor, xTensorIndex.data());
+    convert_to_tensor_index(index_into_tensor, yTensorIndex.data());
+    xTensorIndex[rank] = 0;
+    yTensorIndex[rank] = 1;
+
+    Tensor<dimension, rank, double> result;
+    result[xTensorIndex.data()] = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
+                (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
+
+    result[yTensorIndex.data()] = -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
+                 (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
+
+    return result;
+  }
+
+  Tensor<dimension, rank-1, double> evaluate_divergence(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  {
+    const unsigned node_on_cell = i % 6;
+    const unsigned index_into_tensor = i / 6;
+    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+
+    // Create interpolated vertices
+    vertices.push_back((vertices[0] + vertices[1])/2);
+    vertices.push_back((vertices[1] + vertices[2])/2);
+    vertices.push_back((vertices[2] + vertices[0])/2);
+
+    int j1, j2, k1, k2;
+    if (node_on_cell < 3)
+    {
+      j1 = (node_on_cell+1)%3;
+      j2 = (node_on_cell+2)%3;
+      k1 = 3 + node_on_cell;
+      k2 = 3 + (node_on_cell + 5)%3;
+    }
+    else
+    {
+      j1 = node_on_cell-3;
+      j2 = (node_on_cell-3+2)%3;
+      k1 = (node_on_cell-3+1)%3;
+      k2 = (node_on_cell-3+2)%3;
+    }
+
+    const double gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
+
+    const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (vertices[i][1] - vertices[j1][1]);
+
+    const double hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
+
+    const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
+
+    // Note how we don't use the final value in the index
+    // FIXME: if we don't use an index of the original size, we'll buffer overflow
+    boost::array<std::size_t, rank> tensorIndex;
+    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+
+    Tensor<dimension, rank-1, double> result;
+    result[tensorIndex.data()] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
+                (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
+
+    result[tensorIndex.data()] += -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
+                 (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
+
+    return result;
+  }
+
   unsigned space_dimension() const
   {
-    return 6;
+    return 6 * detail::Power<dimension, rank>::value;
   }
 
   std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
@@ -192,18 +369,38 @@ public:
   
   vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
   {
-    assert(dof>=0 && dof<6);
+    assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
     if (dof<3)
     {
-      return m->getCoordinates(cid)[dof];
+      return m->getCoordinates(cid)[dof%6];
     }
     else
     {
       const std::vector<vertex_type> coordinates(m->getCoordinates(cid));
-      const int vid1 = (dof - 3)%3;
-      const int vid2 = (dof - 2)%3;
+      const int vid1 = (dof%6 - 3)%3;
+      const int vid2 = (dof%6 - 2)%3;
       return (coordinates[vid1] + coordinates[vid2])/2;
     }
+  }
+
+  // TODO: work out how to remove me.
+  // This is a hack to work out if a specific degree of freedom corresponds to
+  // the x-velocity of this finite element. This might not be rank 1, or maybe the
+  // basis functions aren't even aligned with the axes.
+  bool isXDof(const cell_id cid, const unsigned dof) const
+  {
+    assert(rank==1 && dimension>0);
+
+    // Our numbering implies the first 6 dofs on this finite element are x-velocity
+    return dof < 6;
+  }
+
+  bool isYDof(const cell_id cid, const unsigned dof) const
+  {
+    assert(rank==1 && dimension>0);
+
+    // Our numbering implies the second 6 dofs on this finite element are y-velocity
+    return dof >= 6 && dof < 12;
   }
 
 };

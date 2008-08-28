@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cassert>
+#include <algorithm>
+#include <functional>
 
 namespace cfd
 {
@@ -39,7 +41,7 @@ private:
   static const unsigned int knownIndicesCount = K;
 
   Tensor<D, R, T>& tensor;
-  std::size_t knownIndices[knownIndicesCount];
+  boost::array<std::size_t, knownIndicesCount>  knownIndices;
 
 public:
   TensorView(Tensor<D, R, T>& t, size_type* indices) : tensor(t)
@@ -47,7 +49,7 @@ public:
     std::copy(indices, indices+knownIndicesCount, knownIndices);
   }
 
-  TensorView<D, R, K+1, T> operator[](const size_type index)
+  TensorView<D, R, K+1, T> operator()(const size_type index)
   {
      std::size_t newKnownIndices[knownIndicesCount+1];
      std::copy(knownIndices, knownIndices+knownIndicesCount, newKnownIndices);
@@ -70,14 +72,14 @@ private:
   std::size_t knownIndices[rank];
 
 public:
-  TensorView(Tensor<D, R, T>& t, size_type* indices) : tensor(t)
+  TensorView(Tensor<D, R, T>& t, const size_type* const indices) : tensor(t)
   {
     std::copy(indices, indices+rank, knownIndices);
   }
 
   T toScalar() const
   {
-    tensor.toScalar();
+    return tensor.toScalar();
   }
 };
 
@@ -101,16 +103,22 @@ public:
     std::fill(elements.begin(), elements.end(), T());
   }
 
-  TensorView<D, R, 0, T> operator[](const size_type index)
+  Tensor(const Tensor& t) : elements(t.elements)
   {
-    return TensorView<D, R, 0, T>(this, NULL);
+  }
+
+  TensorView<D, R, 1, T> operator()(const size_type index)
+  {
+    return TensorView<D, R, 1, T>(*this, &index);
   }
 
   T& operator[](const size_type* const indices)
   {
+    assert(rank == 0 || indices != NULL);
+
     std::size_t index = 0;
   
-    for(int i = 0; i<rank; ++i)
+    for(unsigned i = 0; i<rank; ++i)
     {
       assert(indices[i] < dimension);
       index *= dimension;
@@ -120,12 +128,43 @@ public:
     return elements[index];
   }
 
+  Tensor& operator*=(const T s)
+  {
+    std::transform(elements.begin(), elements.end(), elements.begin(), std::bind2nd(std::multiplies<T>(), s));
+    return *this;
+  }
+
+  Tensor operator*(const T s) const
+  {
+    Tensor x(*this);
+    x*=s;
+    return x;
+  }
+
+  template<unsigned int R2>
+  Tensor<D, R+R2, T> operator*(const Tensor<D, R2, T>& t) const
+  {
+    Tensor<D, R+R2, T> result;
+
+    for(unsigned index=0; index<detail::Power<D, R>::value; ++index)
+      for(unsigned index2=0; index2<detail::Power<D, R2>::value; ++index2)
+        result.elements[index * detail::Power<D, R2>::value + index2] = elements[index] * t.elements[index2];
+
+    return result;
+  }
+
   T toScalar() const
   {
     assert(rank == 0);
     return elements[0];
   }
 };
+
+template<unsigned int D, unsigned int R, typename T> 
+Tensor<D, R, T>  operator*(const T s, const Tensor<D, R, T>& t)
+{
+  return t*s;
+}
 
 }
 
