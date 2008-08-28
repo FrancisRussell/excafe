@@ -374,7 +374,7 @@ public:
   vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
-    if (dof<3)
+    if (dof%6 < 3)
     {
       return m->getCoordinates(cid)[dof%6];
     }
