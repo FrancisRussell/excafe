@@ -204,7 +204,7 @@ public:
     xTensorIndex[rank] = 0;
     yTensorIndex[rank] = 1;
 
-    Tensor<dimension, rank, double> result;
+    Tensor<dimension, rank+1, double> result;
     result[xTensorIndex.data()] = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
                 (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
 

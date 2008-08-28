@@ -91,17 +91,16 @@ public:
         {
           const int global_test = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, test));
           Tensor<dimension, 0, double> test_velocity_divergence = velocity.evaluate_divergence(cellIter->second, test, quadIter->first);
+          Tensor<dimension, 2, double> test_velocity_gradient = velocity.evaluate_gradient(cellIter->second, test, quadIter->first);
 
           // Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity.space_dimension(); ++trial)
           {
             // assemble velocity related part of momentum equation
             const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, trial));
-            Tensor<dimension, 0, double> trial_velocity_divergence = velocity.evaluate_divergence(cellIter->second, trial, quadIter->first);
+            Tensor<dimension, 2, double> trial_velocity_gradient = velocity.evaluate_gradient(cellIter->second, trial, quadIter->first);
 
-            //FIXME: This equation is wrong
-            const double convective_term = (quadIter->second * test_velocity_divergence * trial_velocity_divergence).toScalar();
-
+            const double convective_term = (quadIter->second * test_velocity_gradient.colon_product(trial_velocity_gradient)).toScalar();
             stiffness_matrix.addValues(1, 1, &global_test, &global_trial, &convective_term);
           }
           
@@ -112,7 +111,7 @@ public:
             const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
             Tensor<dimension, 0, double> trial_pressure = pressure.evaluate_tensor(cellIter->second, trial, quadIter->first);
 
-            const double pressure_term = (quadIter->second * trial_pressure * test_velocity_divergence).toScalar();
+            const double pressure_term = -(quadIter->second * trial_pressure * test_velocity_divergence).toScalar();
             stiffness_matrix.addValues(1, 1, &global_test, &global_trial, &pressure_term);
           }
         }

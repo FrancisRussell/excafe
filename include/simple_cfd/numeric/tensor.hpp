@@ -8,6 +8,7 @@
 #include <cassert>
 #include <algorithm>
 #include <functional>
+#include <numeric>
 
 namespace cfd
 {
@@ -18,7 +19,7 @@ namespace detail
 template<unsigned  X, unsigned Y>
 struct Power
 {
-  static const unsigned int value = Power<X*Y, Y-1>::value;
+  static const unsigned int value = X * Power<X, Y-1>::value;
 };
 
 template<unsigned X>
@@ -92,7 +93,10 @@ public:
   typedef std::size_t size_type;
   static const unsigned int dimension = D;
   static const unsigned int rank = R;
-  static const size_type size = detail::Power<D, R>::value;
+  static const size_type size = detail::Power<dimension, rank>::value;
+
+  template<unsigned int D_, unsigned int R_, typename T_>
+  friend class Tensor;
 
 private:
   boost::array<value_type, size>  elements;
@@ -125,6 +129,7 @@ public:
       index += indices[i];
     }
 
+    assert(index < size);
     return elements[index];
   }
 
@@ -150,6 +155,13 @@ public:
       for(unsigned index2=0; index2<detail::Power<D, R2>::value; ++index2)
         result.elements[index * detail::Power<D, R2>::value + index2] = elements[index] * t.elements[index2];
 
+    return result;
+  }
+
+  Tensor<D, 0, T> colon_product(const Tensor& t) const
+  {
+    Tensor<D, 0, T> result;
+    result.elements[0] = std::inner_product(elements.begin(), elements.end(), t.elements.begin(), T(0));
     return result;
   }
 
