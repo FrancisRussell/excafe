@@ -26,6 +26,7 @@ public:
   void zeroRow(const int row, const double diagonal);
   void zeroRows(const int* rows, const unsigned rowCount, const double diagonal);
   void assemble();
+  void view() const;
   Mat getPETScHandle();
   ~PETScMatrix();
 };

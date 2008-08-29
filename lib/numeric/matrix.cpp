@@ -84,6 +84,15 @@ Mat PETScMatrix::getPETScHandle()
   return m;
 }
 
+void PETScMatrix::view() const
+{
+  PetscErrorCode ierr = PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_DENSE);
+  checkError(ierr);
+
+  ierr = MatView(m, PETSC_VIEWER_STDOUT_WORLD);
+  checkError(ierr);
+}
+
 PETScMatrix::~PETScMatrix()
 {
   const PetscErrorCode ierr = MatDestroy(m);
