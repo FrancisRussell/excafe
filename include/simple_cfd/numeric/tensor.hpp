@@ -45,15 +45,15 @@ private:
   boost::array<std::size_t, knownIndicesCount>  knownIndices;
 
 public:
-  TensorView(Tensor<D, R, T>& t, size_type* indices) : tensor(t)
+  TensorView(Tensor<D, R, T>& t, const size_type* const indices) : tensor(t)
   {
-    std::copy(indices, indices+knownIndicesCount, knownIndices);
+    std::copy(indices, indices+knownIndicesCount, knownIndices.begin());
   }
 
   TensorView<D, R, K+1, T> operator()(const size_type index)
   {
      std::size_t newKnownIndices[knownIndicesCount+1];
-     std::copy(knownIndices, knownIndices+knownIndicesCount, newKnownIndices);
+     std::copy(knownIndices.begin(), knownIndices.end(), newKnownIndices);
      newKnownIndices[knownIndicesCount] = index;
 
      return TensorView<D, R, K+1, T>(tensor, newKnownIndices);
@@ -80,7 +80,7 @@ public:
 
   T toScalar() const
   {
-    return tensor.toScalar();
+    return tensor[knownIndices];
   }
 };
 
