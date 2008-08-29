@@ -10,6 +10,7 @@
 #include "mesh.hpp"
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
+#include <cmath>
 
 namespace cfd
 {
@@ -86,10 +87,10 @@ public:
     const int ip2 = (node_on_cell+2) % 3;
 
     boost::array<std::size_t, rank+1> xTensorIndex, yTensorIndex;
-    convert_to_tensor_index(index_into_tensor, xTensorIndex.data());
-    convert_to_tensor_index(index_into_tensor, yTensorIndex.data());
-    xTensorIndex[rank] = 0;
-    yTensorIndex[rank] = 1;
+    convert_to_tensor_index(index_into_tensor, xTensorIndex.data()+1);
+    convert_to_tensor_index(index_into_tensor, yTensorIndex.data()+1);
+    xTensorIndex[0] = 0;
+    yTensorIndex[0] = 1;
 
     Tensor<dimension, rank+1, double> result;
     result[xTensorIndex.data()] = -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
@@ -116,8 +117,8 @@ public:
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
     Tensor<dimension, rank-1, double> result;
-    result[tensorIndex.data()] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
-    result[tensorIndex.data()] +=  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
+    result[tensorIndex.data()+1] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
+    result[tensorIndex.data()+1] +=  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
 
     return result;
   }

@@ -199,10 +199,10 @@ public:
                       (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
 
     boost::array<std::size_t, rank+1> xTensorIndex, yTensorIndex;
-    convert_to_tensor_index(index_into_tensor, xTensorIndex.data());
-    convert_to_tensor_index(index_into_tensor, yTensorIndex.data());
-    xTensorIndex[rank] = 0;
-    yTensorIndex[rank] = 1;
+    convert_to_tensor_index(index_into_tensor, xTensorIndex.data()+1);
+    convert_to_tensor_index(index_into_tensor, yTensorIndex.data()+1);
+    xTensorIndex[0] = 0;
+    yTensorIndex[0] = 1;
 
     Tensor<dimension, rank+1, double> result;
     result[xTensorIndex.data()] = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
@@ -218,6 +218,7 @@ public:
   {
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
+
     std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
 
     // Create interpolated vertices
@@ -245,7 +246,7 @@ public:
                       (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
 
     const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
-                      (vertices[j2][0] - vertices[j1][0]) * (vertices[i][1] - vertices[j1][1]);
+                      (vertices[j2][0] - vertices[j1][0]) * (vertices[node_on_cell][1] - vertices[j1][1]);
 
     const double hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
                       (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
@@ -259,10 +260,10 @@ public:
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
     Tensor<dimension, rank-1, double> result;
-    result[tensorIndex.data()] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
+    result[tensorIndex.data()+1] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
                 (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
 
-    result[tensorIndex.data()] += -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
+    result[tensorIndex.data()+1] += -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
                  (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
 
     return result;
