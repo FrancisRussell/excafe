@@ -260,11 +260,15 @@ public:
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
     Tensor<dimension, rank-1, double> result;
-    result[tensorIndex.data()+1] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
-                (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
 
-    result[tensorIndex.data()+1] += -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
-                 (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
+    if (tensorIndex[0] == 0)
+      result[tensorIndex.data()+1] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
+                                      (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
+    else if (tensorIndex[0] == 1)
+      result[tensorIndex.data()+1] += -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
+                                       (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
+    else
+      assert(false);
 
     return result;
   }

@@ -117,8 +117,13 @@ public:
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
     Tensor<dimension, rank-1, double> result;
-    result[tensorIndex.data()+1] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
-    result[tensorIndex.data()+1] +=  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
+
+    if (tensorIndex[0] == 0)
+      result[tensorIndex.data()+1] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
+    else if (tensorIndex[0] == 1)
+      result[tensorIndex.data()+1] +=  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
+    else
+      assert(false);
 
     return result;
   }
