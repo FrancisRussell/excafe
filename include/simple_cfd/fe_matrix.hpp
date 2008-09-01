@@ -1,8 +1,11 @@
 #ifndef SIMPLE_CFD_FE_MATRIX_HPP
 #define SIMPLE_CFD_FE_MATRIX_HPP
 
+#include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "dof_map.hpp"
+#include <vector>
+#include <set>
 #include <cassert>
 #include <boost/tuple/tuple.hpp>
 

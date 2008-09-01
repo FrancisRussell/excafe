@@ -7,10 +7,7 @@
 #include "dof_map.hpp"
 #include "lagrange_triangle_linear.hpp"
 #include "lagrange_triangle_quadratic.hpp"
-#include "numeric/matrix.hpp"
-#include "numeric/vector.hpp"
 #include "numeric/solver.hpp"
-#include "numeric/sparsity_pattern.hpp"
 #include "numeric/tensor.hpp"
 #include "fe_matrix.hpp"
 #include "fe_vector.hpp"
@@ -38,11 +35,10 @@ private:
   lagrange_triangle_linear<0> pressure;
   lagrange_triangle_quadratic<1> velocity;
   dof_map<cell_type> dofMap;
-  const unsigned dofs;
 
   FEMatrix<cell_type> stiffness_matrix;
-  PETScVector unknown_vector;
-  PETScVector load_vector;
+  FEVector<cell_type> unknown_vector;
+  FEVector<cell_type> load_vector;
 
   enum Location
   {
@@ -67,9 +63,8 @@ private:
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity(m), 
                                              dofMap(buildDofMap(m, pressure, velocity)),
-                                             dofs(dofMap.getDegreesOfFreedomCount()),
                                              stiffness_matrix(dofMap, dofMap), 
-                                             unknown_vector(dofs), load_vector(dofs)
+                                             unknown_vector(dofMap), load_vector(dofMap)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;
@@ -162,12 +157,12 @@ public:
 
   void applyBoundaryConditions()
   {
-    typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > dof_map;
-    const dof_map pressure_dofs(dofMap.getBoundaryDegreesOfFreedom(&pressure));
-    const dof_map velocity_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity));
+    typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > element_dof_map;
+    const element_dof_map pressure_dofs(dofMap.getBoundaryDegreesOfFreedom(&pressure));
+    const element_dof_map velocity_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity));
 
     // Assign a value for the pressure degrees around the edges
-    for(dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
+    for(element_dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
     {
       const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
       const vertex_type position(pressure.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
@@ -175,8 +170,8 @@ public:
 
       if (location == BOTTOM_EDGE || location == TOP_EDGE)
       {
-        const int pressureGlobalDof(pressureIter->first);
-        stiffness_matrix.zeroRow(boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
+        const typename dof_map<cell_type>::dof_t pressureGlobalDof = boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
 
         const double rhs = 0.0;
         load_vector.setValues(1, &pressureGlobalDof, &rhs);
@@ -187,7 +182,7 @@ public:
     }
 
     // Assign values for the x velocity degrees of freedom (x^2 + y^2 around the entire boundary)
-    for(dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
+    for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
     {
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
@@ -200,8 +195,8 @@ public:
         // Check this really is an edge cell
         assert(getLocation(position) != BODY);
 
-        const int velocity_globalDof(velocity_iter->first);
-        stiffness_matrix.zeroRow(boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
+        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
         const double rhs = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
         load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -212,7 +207,7 @@ public:
     }
 
     // Assign values for the y velocity degrees of freedom (zero along top and bottom edges) 
-    for(dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
+    for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
     {
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
@@ -229,8 +224,8 @@ public:
 
         if (location == LEFT_EDGE || location == RIGHT_EDGE)
         {
-          const int velocity_globalDof(velocity_iter->first);
-          stiffness_matrix.zeroRow(boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
+          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -248,7 +243,7 @@ public:
   void solve()
   {
     PETScKrylovSolver solver;
-    solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector, load_vector);
+    solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
   }
 
   void print() const
@@ -280,7 +275,7 @@ public:
         for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
         {
           Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->second, dof, vertex);
-          const int velocityDof = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, dof));
+          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->first, dof);
 
           double velocityCoeff;
           unknown_vector.getValues(1u, &velocityDof, &velocityCoeff);
