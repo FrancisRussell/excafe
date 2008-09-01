@@ -12,6 +12,8 @@
 #include "numeric/solver.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "numeric/tensor.hpp"
+#include "fe_matrix.hpp"
+#include "fe_vector.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -38,8 +40,7 @@ private:
   dof_map<cell_type> dofMap;
   const unsigned dofs;
 
-  SparsityPattern sparsity;
-  PETScMatrix stiffness_matrix;
+  FEMatrix<cell_type> stiffness_matrix;
   PETScVector unknown_vector;
   PETScVector load_vector;
 
@@ -66,8 +67,8 @@ private:
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity(m), 
                                              dofMap(buildDofMap(m, pressure, velocity)),
-                                             dofs(dofMap.getDegreesOfFreedomCount()), sparsity(dofMap.getSparsityPattern()),
-                                             stiffness_matrix(sparsity), 
+                                             dofs(dofMap.getDegreesOfFreedomCount()),
+                                             stiffness_matrix(dofMap, dofMap), 
                                              unknown_vector(dofs), load_vector(dofs)
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
@@ -89,7 +90,7 @@ public:
         // Iterate over quadratic test functions
         for(unsigned test=0; test<velocity.space_dimension(); ++test)
         {
-          const int global_test = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, test));
+          const typename dof_map<cell_type>::dof_t global_test = boost::make_tuple(&velocity, cellIter->first, test);
           Tensor<dimension, 0, double> test_velocity_divergence = velocity.evaluate_divergence(cellIter->second, test, quadIter->first);
           Tensor<dimension, 2, double> test_velocity_gradient = velocity.evaluate_gradient(cellIter->second, test, quadIter->first);
 
@@ -97,7 +98,7 @@ public:
           for(unsigned trial=0; trial<velocity.space_dimension(); ++trial)
           {
             // assemble velocity related part of momentum equation
-            const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, trial));
+            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&velocity, cellIter->first, trial);
             Tensor<dimension, 2, double> trial_velocity_gradient = velocity.evaluate_gradient(cellIter->second, trial, quadIter->first);
 
             const double convective_term = (quadIter->second * test_velocity_gradient.colon_product(trial_velocity_gradient)).toScalar();
@@ -108,7 +109,7 @@ public:
           for(unsigned trial=0; trial<pressure.space_dimension(); ++trial)
           {
             // assemble pressure related part of momentum equation
-            const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, trial));
+            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&pressure, cellIter->first, trial);
             Tensor<dimension, 0, double> trial_pressure = pressure.evaluate_tensor(cellIter->second, trial, quadIter->first);
 
             const double pressure_term = -(quadIter->second * trial_pressure * test_velocity_divergence).toScalar();
@@ -119,14 +120,14 @@ public:
         // Iterate over linear test functions 
         for(unsigned test=0; test<pressure.space_dimension(); ++test)
         {
-          const int global_test = dofMap.getGlobalIndex(boost::make_tuple(&pressure, cellIter->first, test));
+          const typename dof_map<cell_type>::dof_t global_test = boost::make_tuple(&pressure, cellIter->first, test);
           Tensor<dimension, 0, double> test_pressure = pressure.evaluate_tensor(cellIter->second, test, quadIter->first);
 
           //Iterate over quadratic trial functions
           for(unsigned trial=0; trial<velocity.space_dimension(); ++trial)
           {
             // assemble continuity equation
-            const int global_trial = dofMap.getGlobalIndex(boost::make_tuple(&velocity, cellIter->first, trial));
+            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&velocity, cellIter->first, trial);
             Tensor<dimension, 0, double> trial_velocity_divergence = velocity.evaluate_divergence(cellIter->second, trial, quadIter->first);
 
             const double continuity_term = (quadIter->second * test_pressure * trial_velocity_divergence).toScalar(); 
@@ -175,7 +176,7 @@ public:
       if (location == BOTTOM_EDGE || location == TOP_EDGE)
       {
         const int pressureGlobalDof(pressureIter->first);
-        stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
+        stiffness_matrix.zeroRow(boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
 
         const double rhs = 0.0;
         load_vector.setValues(1, &pressureGlobalDof, &rhs);
@@ -200,7 +201,7 @@ public:
         assert(getLocation(position) != BODY);
 
         const int velocity_globalDof(velocity_iter->first);
-        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+        stiffness_matrix.zeroRow(boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
 
         const double rhs = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
         load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -229,7 +230,7 @@ public:
         if (location == LEFT_EDGE || location == RIGHT_EDGE)
         {
           const int velocity_globalDof(velocity_iter->first);
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          stiffness_matrix.zeroRow(boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo)), 1.0);
 
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -247,7 +248,7 @@ public:
   void solve()
   {
     PETScKrylovSolver solver;
-    solver.solve(stiffness_matrix, unknown_vector, load_vector);
+    solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector, load_vector);
   }
 
   void print() const
