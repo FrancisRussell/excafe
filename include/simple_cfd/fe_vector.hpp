@@ -12,6 +12,7 @@ class FEVector
 {
 private:
   typedef C cell_type;
+  typedef finite_element<cell_type> finite_element_t;
   typedef typename dof_map<cell_type>::dof_t dof_t;
   const dof_map<cell_type> rowMappings;
   PETScVector vector;
@@ -32,6 +33,11 @@ private:
 
 public:
   FEVector(const dof_map<cell_type>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
+  {
+  }
+
+  FEVector(const dof_map<cell_type>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
+                                                                           vector(v)
   {
   }
 
@@ -58,6 +64,15 @@ public:
   void assemble()
   {
     vector.assemble();
+  }
+
+  FEVector extractSubvector(const finite_element_t* rowElement) const
+  {
+    const dof_map<cell_type> newRowMappings = rowMappings.extractDofs(rowElement);
+    std::vector<int> rowIndices = newRowMappings.getIndices(rowMappings);
+    
+    PETScVector subVector = vector.extractSubvector(rowIndices.size(), &rowIndices[0]);
+    return FEVector(newRowMappings, subVector);
   }
 
   PETScVector& getVectorHandle()

@@ -56,6 +56,13 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
+  FEMatrix(const dof_map<cell_type>& _rowMappings, const dof_map<cell_type>& _colMappings, const PETScMatrix& m) :
+          rowMappings(_rowMappings), colMappings(_colMappings), matrix(m)
+  {
+    assert(&rowMappings.getMesh() == &colMappings.getMesh());
+  }
+
+
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)
   {
     std::vector<int> rowIndices(rows);
@@ -74,6 +81,19 @@ public:
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
     matrix.zeroRow(rowIndex, diagonal);
+  }
+
+  FEMatrix extractSubmatrix(const finite_element_t* rowElement, const finite_element_t* colElement) const
+  {
+    const dof_map<cell_type> newRowMappings = rowMappings.extractDofs(rowElement);
+    const dof_map<cell_type> newColMappings = colMappings.extractDofs(colElement);
+
+    std::vector<int> rowIndices = newRowMappings.getIndices(rowMappings);
+    std::vector<int> colIndices = newColMappings.getIndices(colMappings);
+
+    PETScMatrix subMatrix = matrix.extractSubmatrix(rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
+
+    return FEMatrix(newRowMappings, newColMappings, subMatrix);
   }
 
   void assemble()
