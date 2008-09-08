@@ -89,6 +89,59 @@ public:
     return global2local;
   }
 
+  dof_map extractDofs(const finite_element_t* element) const
+  {
+    std::set<const finite_element_t*> newElements;
+    std::set<unsigned> newDofs;
+    local2global_map newMapping;
+
+    // We only define a mapping for a single element
+    newElements.insert(element);
+
+    // Copy across relevant mappings and get all global dofs corresponding to element so we can filter
+    // boundary dofs;
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    {
+      if (boost::get<0>(mappingIter->first) == element)
+      {
+        newDofs.insert(mappingIter->second);
+        newMapping.insert(*mappingIter);
+      }
+    }
+
+    // Work out the subset of dofs on the boundary
+    std::set<unsigned> newBoundaryDofs;
+    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), newBoundaryDofs.begin());
+
+    return dof_map(m, newElements, newMapping, newBoundaryDofs);
+  }
+
+  dof_map contiguous() const
+  {
+    // Create set of current dof values
+    std::set<unsigned> currentDofs;
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+      currentDofs.insert(mappingIter->second);
+
+    // Create the mapping between old and new dofs
+    unsigned newDof = 0;
+    std::map<unsigned, unsigned> remapping;
+    for(std::set<unsigned>::const_iterator currentDofIter(currentDofs.begin()); currentDofIter!=currentDofs.end(); ++currentDofIter)
+      remapping[*currentDofIter] = newDof++;
+
+    // Remap the mappings
+    local2global_map newMapping;
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+      newMapping[mappingIter->first] = remapping[mappingIter->second];
+
+    // Remap the boundary dofs
+    std::set<unsigned> newBoundaryDofs;
+    for(std::set<unsigned>::const_iterator boundaryDofIter(boundaryDofs.begin()); boundaryDofIter != boundaryDofs.end(); ++boundaryDofIter)
+      newBoundaryDofs.insert(remapping[*boundaryDofIter]);
+
+    return dof_map(m, elements, newMapping, newBoundaryDofs);
+  }
+
   unsigned getGlobalIndex(const dof_t& dof) const
   {
     const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
