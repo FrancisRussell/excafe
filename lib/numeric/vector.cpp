@@ -30,6 +30,14 @@ PETScVector& PETScVector::operator=(const PETScVector& p)
   return *this;
 }
 
+std::size_t PETScVector::numRows() const
+{
+  PetscInt size;
+  const PetscErrorCode ierr = VecGetSize(v, &size);
+  checkError(ierr);
+  return size;
+}
+
 void PETScVector::addValues(const unsigned numValues, const int* indices, const double* values)
 {
   const PetscErrorCode ierr = VecSetValues(v, numValues, indices, values, ADD_VALUES);
@@ -54,16 +62,12 @@ void PETScVector::assemble()
   VecAssemblyEnd(v);
 }
 
-PETScVector PETScVector::extractSubvector(const unsigned numValues, const int* indices) const
+void PETScVector::extractSubvector(PETScVector& dest, const unsigned numValues, const int* indices) const
 {
-  PETScVector result(numValues);
   PetscScalar* data;
-
-  VecGetArray(result.getPETScHandle(), &data);
+  VecGetArray(dest.getPETScHandle(), &data);
   getValues(numValues, indices, data);
-  VecRestoreArray(result.getPETScHandle(), &data);
-
-  return result;
+  VecRestoreArray(dest.getPETScHandle(), &data);
 }
 
 Vec PETScVector::getPETScHandle()

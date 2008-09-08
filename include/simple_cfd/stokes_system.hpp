@@ -40,6 +40,9 @@ private:
   FEVector<cell_type> unknown_vector;
   FEVector<cell_type> load_vector;
 
+  FEVector<cell_type> velocity_vector;
+  FEVector<cell_type> pressure_vector;
+
   enum Location
   {
     TOP_EDGE,
@@ -64,7 +67,9 @@ public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity(m), 
                                              dofMap(buildDofMap(m, pressure, velocity)),
                                              stiffness_matrix(dofMap, dofMap), 
-                                             unknown_vector(dofMap), load_vector(dofMap)
+                                             unknown_vector(dofMap), load_vector(dofMap),
+                                             velocity_vector(dofMap.extractDofs(&velocity)),
+                                             pressure_vector(dofMap.extractDofs(&pressure))
   {  
     std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;

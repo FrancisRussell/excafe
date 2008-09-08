@@ -83,17 +83,11 @@ public:
     matrix.zeroRow(rowIndex, diagonal);
   }
 
-  FEMatrix extractSubmatrix(const finite_element_t* rowElement, const finite_element_t* colElement) const
+  void extractSubmatrix(FEMatrix& s) const
   {
-    const dof_map<cell_type> newRowMappings = rowMappings.extractDofs(rowElement);
-    const dof_map<cell_type> newColMappings = colMappings.extractDofs(colElement);
-
-    std::vector<int> rowIndices = newRowMappings.getIndices(rowMappings);
-    std::vector<int> colIndices = newColMappings.getIndices(colMappings);
-
-    PETScMatrix subMatrix = matrix.extractSubmatrix(rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
-
-    return FEMatrix(newRowMappings, newColMappings, subMatrix);
+    const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
+    const std::vector<int> colIndices = s.colMappings.getIndices(colMappings);
+    matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
   }
 
   void assemble()

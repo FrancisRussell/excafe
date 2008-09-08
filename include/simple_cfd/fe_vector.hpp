@@ -66,13 +66,10 @@ public:
     vector.assemble();
   }
 
-  FEVector extractSubvector(const finite_element_t* rowElement) const
+  void extractSubvector(FEVector& s) const
   {
-    const dof_map<cell_type> newRowMappings = rowMappings.extractDofs(rowElement);
-    std::vector<int> rowIndices = newRowMappings.getIndices(rowMappings);
-    
-    PETScVector subVector = vector.extractSubvector(rowIndices.size(), &rowIndices[0]);
-    return FEVector(newRowMappings, subVector);
+    const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
+    vector.extractSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
   }
 
   PETScVector& getVectorHandle()

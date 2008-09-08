@@ -8,6 +8,7 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <iterator>
 
 namespace cfd
 {
@@ -41,7 +42,7 @@ private:
       remapping[*currentDofIter] = newDof++;
 
     // Remap the mappings
-    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    for(typename local2global_map::iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
       mappingIter->second = remapping[mappingIter->second];
 
     // Remap the boundary dofs
@@ -136,7 +137,7 @@ public:
 
     // Work out the subset of dofs on the boundary
     std::set<unsigned> newBoundaryDofs;
-    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), newBoundaryDofs.begin());
+    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
 
     dof_map result(m, newElements, newMapping, newBoundaryDofs);
     result.makeContiguous();

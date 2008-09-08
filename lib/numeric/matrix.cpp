@@ -52,6 +52,24 @@ PETScMatrix& PETScMatrix::operator=(const PETScMatrix& r)
   return *this;
 }
 
+std::size_t PETScMatrix::numRows() const
+{
+  PetscInt rows;
+  const PetscErrorCode ierr = MatGetSize(m, &rows, PETSC_NULL);
+  checkError(ierr);
+
+  return rows;
+}
+
+std::size_t PETScMatrix::numCols() const
+{
+  PetscInt cols;
+  const PetscErrorCode ierr = MatGetSize(m, PETSC_NULL, &cols);
+  checkError(ierr);
+
+  return cols;
+}
+
 void PETScMatrix::addValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block)
 {
   const PetscErrorCode ierr = MatSetValues(m, rows, rowIndices, cols, colIndices, block, ADD_VALUES);
@@ -108,12 +126,10 @@ void PETScMatrix::view() const
   checkError(ierr);
 }
 
-PETScMatrix PETScMatrix::extractSubmatrix(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const
+void PETScMatrix::extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const
 {
-  Mat submatrix;
-  const PetscErrorCode ierr = MatGetSubMatrixRaw(m, rows, rowIndices, cols, colIndices, PETSC_DECIDE, MAT_INITIAL_MATRIX, &submatrix);
+  const PetscErrorCode ierr = MatGetSubMatrixRaw(m, rows, rowIndices, cols, colIndices, PETSC_DECIDE, MAT_INITIAL_MATRIX, &dest.m);
   checkError(ierr);
-  return PETScMatrix(submatrix);
 }
 
 PETScMatrix::~PETScMatrix()
