@@ -4,6 +4,9 @@
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "dof_map.hpp"
+#include "fe_binary_function.hpp"
+#include "mesh.hpp"
+#include <algorithm>
 #include <vector>
 #include <set>
 #include <cassert>
@@ -17,6 +20,7 @@ class FEMatrix
 {
 private:
   typedef C cell_type;
+  typedef typename  cell_type::vertex_type vertex_type;
   typedef finite_element<cell_type> finite_element_t;
   typedef typename dof_map<cell_type>::dof_t dof_t;
 
@@ -62,7 +66,6 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
-
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)
   {
     std::vector<int> rowIndices(rows);
@@ -75,6 +78,43 @@ public:
       colIndices[col] = colMappings.getGlobalIndex(colDofs[col]);
 
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
+  }
+
+  void addTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
+  {
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+    
+    const finite_element_t* const trialFunction = f.getTrialFunction();
+    const finite_element_t* const testFunction = f.getTestFunction();
+
+    const std::map<cell_id, cell_type> cells(m.getCells());
+
+    const unsigned testSpaceDimension = testFunction->space_dimension();
+    const unsigned trialSpaceDimension = trialFunction->space_dimension();
+
+    std::vector<int> testIndices(testSpaceDimension);
+    std::vector<int> trialIndices(testSpaceDimension);
+    std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
+
+    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    {
+      const std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
+      std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
+
+      for(unsigned test=0; test<testSpaceDimension; ++test)
+        testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cellIter->first, test));
+
+      for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+        trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cellIter->first, trial));
+
+      for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
+        for(unsigned test=0; test<testSpaceDimension; ++test)
+          for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(cellIter->second, test, trial, quadIter->first);
+
+      matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
+    }
   }
 
   void zeroRow(const dof_t& dof, const double diagonal)
