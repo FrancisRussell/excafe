@@ -94,7 +94,7 @@ public:
     const unsigned trialSpaceDimension = trialFunction->space_dimension();
 
     std::vector<int> testIndices(testSpaceDimension);
-    std::vector<int> trialIndices(testSpaceDimension);
+    std::vector<int> trialIndices(trialSpaceDimension);
     std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
 
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
