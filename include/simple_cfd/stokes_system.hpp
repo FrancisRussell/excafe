@@ -23,19 +23,19 @@
 namespace cfd
 {
 
-template<typename C>
-class GradTrialInnerGradTest : public FEBinaryFunction<C>
+template<typename TrialType, typename TestType>
+class GradTrialInnerGradTest : public FEBinaryFunction<typename TrialType::cell_type>
 {
 private:
-  typedef typename FEBinaryFunction<C>::cell_type cell_type;
-  typedef typename FEBinaryFunction<C>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<C>::finite_element_t finite_element_t;
+  typedef typename TrialType::cell_type cell_type;
+  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
+  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
 
-  const lagrange_triangle_quadratic<1>* const trial;
-  const lagrange_triangle_quadratic<1>* const test;
+  const TrialType* const trial;
+  const TestType* const test;
 
 public:
-  GradTrialInnerGradTest(const lagrange_triangle_quadratic<1>* const _trial, const lagrange_triangle_quadratic<1>* const _test) : trial(_trial), test(_test)
+  GradTrialInnerGradTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
   {
   }
 
@@ -51,10 +51,8 @@ public:
 
   virtual double evaluate(const cell_type& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    static const unsigned dimension = cell_type::dimension;
-
-    Tensor<dimension, 2, double> trial_gradient = trial->evaluate_gradient(cell, trialDof, location);
-    Tensor<dimension, 2, double> test_gradient = test->evaluate_gradient(cell, testDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell, trialDof, location);
+    typename TestType::gradient_type test_gradient = test->evaluate_gradient(cell, testDof, location);
     const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
     return result;
   }
@@ -152,7 +150,7 @@ private:
   FEVector<cell_type> unknown_vector;
   FEVector<cell_type> load_vector;
 
-  GradTrialInnerGradTest<cell_type> convective_term;
+  GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
   NegTrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
 
@@ -200,70 +198,13 @@ public:
     const std::map<cell_id, cell_type> cells(m.getCells());
 
     // assemble velocity related part of momentum equation
-    std::cout << "Assembling convective term..." << std::endl;
     stiffness_matrix.addTerm(m, convective_term);
-    std::cout << "Assembling pressure term..." << std::endl;
+
+    // assemble pressure related part of momentum equation
     stiffness_matrix.addTerm(m, pressure_term);
-    std::cout << "Assembling continuity term..." << std::endl;
+
+    // assemble continuity equation
     stiffness_matrix.addTerm(m, continuity_term);
-    std::cout << "Assembled all terms." << std::endl;
-/*
-    // Iterate over cells
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
-    {
-      // Iterate over quadrature points
-      const std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
-      for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
-      {
-        // Iterate over quadratic test functions
-        for(unsigned test=0; test<velocity.space_dimension(); ++test)
-        {
-          const typename dof_map<cell_type>::dof_t global_test = boost::make_tuple(&velocity, cellIter->first, test);
-          Tensor<dimension, 0, double> test_velocity_divergence = velocity.evaluate_divergence(cellIter->second, test, quadIter->first);
-          Tensor<dimension, 2, double> test_velocity_gradient = velocity.evaluate_gradient(cellIter->second, test, quadIter->first);
-
-          // Iterate over quadratic trial functions
-          for(unsigned trial=0; trial<velocity.space_dimension(); ++trial)
-          {
-            // assemble velocity related part of momentum equation
-            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&velocity, cellIter->first, trial);
-            Tensor<dimension, 2, double> trial_velocity_gradient = velocity.evaluate_gradient(cellIter->second, trial, quadIter->first);
-
-            const double convective_term = (quadIter->second * test_velocity_gradient.colon_product(trial_velocity_gradient)).toScalar();
-            //stiffness_matrix.addValues(1, 1, &global_test, &global_trial, &convective_term);
-          }
-          
-          // Iterate over linear trial functions
-          for(unsigned trial=0; trial<pressure.space_dimension(); ++trial)
-          {
-            // assemble pressure related part of momentum equation
-            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&pressure, cellIter->first, trial);
-            Tensor<dimension, 0, double> trial_pressure = pressure.evaluate_tensor(cellIter->second, trial, quadIter->first);
-
-            const double pressure_term = -(quadIter->second * trial_pressure * test_velocity_divergence).toScalar();
-            //stiffness_matrix.addValues(1, 1, &global_test, &global_trial, &pressure_term);
-          }
-        }
-          
-        // Iterate over linear test functions 
-        for(unsigned test=0; test<pressure.space_dimension(); ++test)
-        {
-          const typename dof_map<cell_type>::dof_t global_test = boost::make_tuple(&pressure, cellIter->first, test);
-          Tensor<dimension, 0, double> test_pressure = pressure.evaluate_tensor(cellIter->second, test, quadIter->first);
-
-          //Iterate over quadratic trial functions
-          for(unsigned trial=0; trial<velocity.space_dimension(); ++trial)
-          {
-            // assemble continuity equation
-            const typename dof_map<cell_type>::dof_t global_trial = boost::make_tuple(&velocity, cellIter->first, trial);
-            Tensor<dimension, 0, double> trial_velocity_divergence = velocity.evaluate_divergence(cellIter->second, trial, quadIter->first);
-
-            const double continuity_term = (quadIter->second * test_pressure * trial_velocity_divergence).toScalar(); 
-            //stiffness_matrix.addValues(1, 1, &global_test, &global_trial, &continuity_term);
-          }
-        }
-      }
-    }*/   
 
     stiffness_matrix.assemble();
   }
