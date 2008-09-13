@@ -261,7 +261,7 @@ public:
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
-      const bool isXDof = velocity.isXDof(boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+      const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
 
       if (isXDof)
       {
@@ -286,7 +286,7 @@ public:
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
-      const bool isYDof = velocity.isYDof(boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+      const bool isYDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 1;
 
       if (isYDof)
       {

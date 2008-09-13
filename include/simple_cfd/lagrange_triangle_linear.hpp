@@ -214,6 +214,14 @@ public:
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     return m->getCoordinates(cid)[dof % 3];
   }
+
+  // NOTE: by permitting mapping dofs to tensor indices, this commits
+  // us to using standard bases.
+  unsigned getTensorIndex(const cell_id cid, const unsigned dof) const
+  {
+    assert(dof < space_dimension());
+    return dof/3;
+  }
 };
 
 }

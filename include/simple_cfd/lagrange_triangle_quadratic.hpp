@@ -398,26 +398,13 @@ public:
     }
   }
 
-  // TODO: work out how to remove me.
-  // This is a hack to work out if a specific degree of freedom corresponds to
-  // the x-velocity of this finite element. This might not be rank 1, or maybe the
-  // basis functions aren't even aligned with the axes.
-  bool isXDof(const cell_id cid, const unsigned dof) const
+  // NOTE: by permitting mapping dofs to tensor indices, this commits
+  // us to using standard bases.
+  unsigned getTensorIndex(const cell_id cid, const unsigned dof) const
   {
-    assert(rank==1 && dimension>0);
-
-    // Our numbering implies the first 6 dofs on this finite element are x-velocity
-    return dof < 6;
+    assert(dof < space_dimension());
+    return dof/6;
   }
-
-  bool isYDof(const cell_id cid, const unsigned dof) const
-  {
-    assert(rank==1 && dimension>0);
-
-    // Our numbering implies the second 6 dofs on this finite element are y-velocity
-    return dof >= 6 && dof < 12;
-  }
-
 };
 
 }
