@@ -41,6 +41,10 @@ public:
   {
   }
 
+  FEVector(const FEVector& v) : rowMappings(v.rowMappings), vector(v.vector)
+  {
+  }
+
   FEVector& operator=(const FEVector& f)
   {
     assert(rowMappings == f.rowMappings);

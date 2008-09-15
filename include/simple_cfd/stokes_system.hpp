@@ -279,7 +279,7 @@ public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity(m), 
                                              systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
-                                             pressureDofMap(systemDofMap.extractDofs(&velocity)),
+                                             pressureDofMap(systemDofMap.extractDofs(&pressure)),
                                              stiffness_matrix(systemDofMap, systemDofMap), 
                                              unknown_vector(systemDofMap), load_vector(systemDofMap),
                                              convective_term(&velocity, &velocity),
@@ -335,6 +335,7 @@ public:
 
     // This vector will hold the guesses for the unknowns each iteration
     FEVector<cell_type> unknown_guess(systemDofMap);
+    double residual = 0.0;
 
     do
     {
@@ -360,7 +361,7 @@ public:
       std::cout << "Applying boundary conditions..." << std::endl;
       applyBoundaryConditions();
 
-      const double residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
       std::cout << "Current non-linear residual: " << residual << std::endl;
 
       std::cout << "Starting solver..." << std::endl;
@@ -368,7 +369,7 @@ public:
 
       unknown_guess = unknown_vector;
     }
-    while(true);
+    while(residual > 3e-4);
 
     unknown_vector.extractSubvector(prev_velocity_vector);
     unknown_vector.extractSubvector(prev_pressure_vector);

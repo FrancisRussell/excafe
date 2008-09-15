@@ -67,6 +67,10 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
+  FEMatrix(const FEMatrix& m) : rowMappings(m.rowMappings), colMappings(m.colMappings), matrix(m.matrix)
+  {
+  }
+
   FEMatrix& operator=(const FEMatrix& f)
   {
     assert(rowMappings == f.rowMappings);
