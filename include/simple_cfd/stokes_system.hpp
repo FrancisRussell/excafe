@@ -499,7 +499,7 @@ public:
   void outputToFile(const std::string& filename)
   {
     std::ofstream outFile(filename.c_str());
-    render(10, 10, outFile);
+    render(20, 20, outFile);
     outFile.close();
   }
 
