@@ -1,9 +1,11 @@
 #include "simple_cfd/numeric/matrix.hpp"
+#include "simple_cfd/numeric/vector.hpp"
 #include "simple_cfd/numeric/sparsity_pattern.hpp"
 #include <vector>
 #include <cassert>
 #include "petsc.h"
 #include "petscmat.h"
+#include "petscvec.h"
 #include "petscis.h"
 
 namespace cfd
@@ -50,6 +52,14 @@ PETScMatrix& PETScMatrix::operator=(const PETScMatrix& r)
   const PetscErrorCode ierr = MatCopy(r.m, m, DIFFERENT_NONZERO_PATTERN);
   checkError(ierr);
   return *this;
+}
+
+PETScVector PETScMatrix::operator*(const PETScVector& v) const
+{
+  PETScVector result(numRows());
+  const PetscErrorCode ierr = MatMult(m, v.getPETScHandle(), result.getPETScHandle());
+  checkError(ierr);
+  return result;
 }
 
 std::size_t PETScMatrix::numRows() const
@@ -106,13 +116,19 @@ void PETScMatrix::zeroRows(const int* rows, const unsigned rowCount, const doubl
   checkError(ierr);
 }
 
+void PETScMatrix::zero()
+{
+  const PetscErrorCode ierr = MatZeroEntries(m);
+  checkError(ierr);
+}
+
 void PETScMatrix::assemble()
 {
   MatAssemblyBegin(m, MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(m, MAT_FINAL_ASSEMBLY);
 }
 
-Mat PETScMatrix::getPETScHandle()
+Mat PETScMatrix::getPETScHandle() const
 {
   return m;
 }

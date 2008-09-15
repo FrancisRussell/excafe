@@ -23,9 +23,11 @@ public:
   void addValues(const unsigned numValues, const int* indices, const double* values);
   void setValues(const unsigned numValues, const int* indices, const double* values);
   void getValues(const unsigned numValues, const int* indices, double* values) const;
+  void zero();
   void extractSubvector(PETScVector& dest, const unsigned numValues, const int* indices) const;
+  void addSubvector(const PETScVector& source, const unsigned numValues, const int* indices);
   void assemble();
-  Vec getPETScHandle();
+  Vec getPETScHandle() const;
   ~PETScVector();
 };
 

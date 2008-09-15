@@ -56,6 +56,12 @@ void PETScVector::getValues(const unsigned numValues, const int* indices, double
   checkError(ierr);
 }
 
+void PETScVector::zero()
+{
+  const PetscErrorCode ierr = VecZeroEntries(v);
+  checkError(ierr);
+}
+
 void PETScVector::assemble()
 {
   VecAssemblyBegin(v);
@@ -70,7 +76,16 @@ void PETScVector::extractSubvector(PETScVector& dest, const unsigned numValues, 
   VecRestoreArray(dest.getPETScHandle(), &data);
 }
 
-Vec PETScVector::getPETScHandle()
+void PETScVector::addSubvector(const PETScVector& source, const unsigned numValues, const int* indices)
+{
+  PetscScalar* data;
+  VecGetArray(source.getPETScHandle(), &data);
+  addValues(numValues, indices, data);
+  VecRestoreArray(source.getPETScHandle(), &data);
+}
+
+
+Vec PETScVector::getPETScHandle() const
 {
   return v;
 }

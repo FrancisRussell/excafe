@@ -21,6 +21,9 @@ PETScKrylovSolver::PETScKrylovSolver()
 
   ierr = KSPCreate(PETSC_COMM_SELF, &ksp);
   checkError(ierr);
+  
+  ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
+  checkError(ierr);
 
   ierr = KSPGetPC(ksp, &pc);
   checkError(ierr);
