@@ -10,7 +10,9 @@ namespace cfd
 
 PETScVector::PETScVector(const PETScVector& orig)
 {
-  const PetscErrorCode ierr = VecDuplicate(orig.v, &v);
+  PetscErrorCode ierr = VecDuplicate(orig.v, &v);
+  checkError(ierr);
+  ierr = VecCopy(orig.v, v);
   checkError(ierr);
 }
 
