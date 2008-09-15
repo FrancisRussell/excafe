@@ -158,6 +158,27 @@ public:
     return result;
   }
 
+  template<unsigned int R2>
+  Tensor<D, R+R2-2, T> inner_product(const Tensor<D, R2, T>& t) const
+  {
+    Tensor<D, R+R2-2, T> result;
+
+    for(unsigned index=0; index<detail::Power<D, R-1>::value; ++index)
+    {
+      for(unsigned index2=0; index2<detail::Power<D, R2-1>::value; ++index2)
+      {
+        T sum = 0.0;
+        for(unsigned sumIndex=0; sumIndex<D; ++sumIndex)
+          sum += elements[index*rank + sumIndex] * t.elements[sumIndex*detail::Power<D, R2-1>::value + index2];
+
+        result.elements[index*detail::Power<D, R2-1>::value + index2] = sum;
+      }
+    }
+
+    return result;
+  }
+
+
   Tensor<D, 0, T> colon_product(const Tensor& t) const
   {
     Tensor<D, 0, T> result;

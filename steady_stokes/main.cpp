@@ -14,11 +14,11 @@ int main(int argc, char* argv[])
   std::cout << "Constructing system..." << std::endl;
   stokes_system<cell_type> system(m);
   std::cout << "Assembling system..." << std::endl;
-  system.assemble();
-  std::cout << "Applying boundary conditions..." << std::endl;
-  system.applyBoundaryConditions();
+  system.timeDependentAssembleAndSolve();
+  //std::cout << "Applying boundary conditions..." << std::endl;
+  //system.applyBoundaryConditions();
 
-  std::cout << "Starting solver..." << std::endl;
-  system.solve();
+  //std::cout << "Starting solver..." << std::endl;
+  //system.solve();
   system.outputToFile("./steady_stokes.vtk");
 }

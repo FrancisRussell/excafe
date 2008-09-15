@@ -26,11 +26,12 @@ namespace cfd
 template<typename TrialType, typename TestType>
 class GradTrialInnerGradTest : public FEBinaryFunction<typename TrialType::cell_type>
 {
-private:
+public:
   typedef typename TrialType::cell_type cell_type;
   typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
   typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
 
+private:
   const TrialType* const trial;
   const TestType* const test;
 
@@ -49,23 +50,29 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const cell_type& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell, trialDof, location);
-    typename TestType::gradient_type test_gradient = test->evaluate_gradient(cell, testDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell.second, trialDof, location);
+    typename TestType::gradient_type test_gradient = test->evaluate_gradient(cell.second, testDof, location);
     const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
     return result;
+  }
+
+  ScaledFEBinaryFunction<GradTrialInnerGradTest> operator*(const double s) const
+  {
+    return ScaledFEBinaryFunction<GradTrialInnerGradTest>(*this, s);
   }
 };
 
 template<typename TrialType, typename TestType>
 class NegTrialInnerDivTest : public FEBinaryFunction<typename TrialType::cell_type>
 {
-private:
+public:
   typedef typename TrialType::cell_type cell_type;
   typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
   typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
 
+private:
   const TrialType* const trial;
   const TestType* const test;
 
@@ -84,10 +91,10 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const cell_type& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell, trialDof, location);
-    typename TestType::divergence_type test_divergence = test->evaluate_divergence(cell, testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
+    typename TestType::divergence_type test_divergence = test->evaluate_divergence(cell.second, testDof, location);
     const double result = - (trial_value * test_divergence).toScalar();
     return result;
   }
@@ -96,11 +103,12 @@ public:
 template<typename TrialType, typename TestType>
 class DivTrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
 {
-private:
+public:
   typedef typename TrialType::cell_type cell_type;
   typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
   typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
 
+private:
   const TrialType* const trial;
   const TestType* const test;
 
@@ -119,15 +127,98 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const cell_type& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(cell, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(cell, testDof, location);
+    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(cell.second, trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
     const double result = (test_value * trial_divergence).toScalar();
     return result;
   }
 };
 
+template<typename TrialType, typename TestType>
+class TrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
+{
+public:
+  typedef typename TrialType::cell_type cell_type;
+  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
+  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
+
+private:
+  const TrialType* const trial;
+  const TestType* const test;
+
+public:
+  TrialInnerTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
+  {
+  }
+
+  virtual const finite_element_t* getTestFunction() const
+  {
+    return test;
+  }
+
+  virtual const finite_element_t* getTrialFunction() const 
+  {
+    return trial;
+  }
+
+  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  {
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
+    const double result = (test_value.colon_product(trial_value)).toScalar();
+    return result;
+  }
+};
+
+template<typename TrialType, typename TestType>
+class TrialDotGradTrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
+{
+public:
+  typedef typename TrialType::cell_type cell_type;
+  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
+  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
+
+private:
+  const TrialType* const trial;
+  const FEVector<cell_type> prevTrial;
+  const TestType* const test;
+
+public:
+  TrialDotGradTrialInnerTest(const TrialType* const _trial, const FEVector<cell_type>& _prevTrial, const TestType* const _test) : 
+                             trial(_trial), prevTrial(_prevTrial), test(_test)
+  {
+  }
+
+  virtual const finite_element_t* getTestFunction() const
+  {
+    return test;
+  }
+
+  virtual const finite_element_t* getTrialFunction() const 
+  {
+    return trial;
+  }
+
+  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  {
+    boost::tuple<const finite_element_t*, cell_id, unsigned> trialDofTuple(trial, cell.first, trialDof);
+    double prevTrialCoeff;
+    prevTrial.getValues(1, &trialDofTuple, &prevTrialCoeff);
+
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell.second, trialDof, location) * prevTrialCoeff;
+    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
+    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
+    return result;
+  }
+
+  ScaledFEBinaryFunction<TrialDotGradTrialInnerTest> operator*(const double s) const
+  {
+    return ScaledFEBinaryFunction<TrialDotGradTrialInnerTest>(*this, s);
+  }
+};
 
 template<typename C>
 class stokes_system
@@ -144,7 +235,10 @@ private:
   const mesh<cell_type>& m;
   pressure_basis_t pressure;
   velocity_basis_t velocity;
-  dof_map<cell_type> dofMap;
+
+  dof_map<cell_type> systemDofMap;
+  dof_map<cell_type> velocityDofMap;
+  dof_map<cell_type> pressureDofMap;
 
   FEMatrix<cell_type> stiffness_matrix;
   FEVector<cell_type> unknown_vector;
@@ -153,9 +247,13 @@ private:
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
   NegTrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
+  TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
 
-  FEVector<cell_type> velocity_vector;
-  FEVector<cell_type> pressure_vector;
+  FEVector<cell_type> prev_velocity_vector;
+  FEVector<cell_type> prev_pressure_vector;
+
+  const double k;
+  const double theta;
 
   enum Location
   {
@@ -179,24 +277,26 @@ private:
 
 public:
   stokes_system(const mesh<cell_type>& _m) : m(_m), pressure(m), velocity(m), 
-                                             dofMap(buildDofMap(m, pressure, velocity)),
-                                             stiffness_matrix(dofMap, dofMap), 
-                                             unknown_vector(dofMap), load_vector(dofMap),
+                                             systemDofMap(buildDofMap(m, pressure, velocity)),
+                                             velocityDofMap(systemDofMap.extractDofs(&velocity)),
+                                             pressureDofMap(systemDofMap.extractDofs(&velocity)),
+                                             stiffness_matrix(systemDofMap, systemDofMap), 
+                                             unknown_vector(systemDofMap), load_vector(systemDofMap),
                                              convective_term(&velocity, &velocity),
                                              pressure_term(&pressure, &velocity),
                                              continuity_term(&velocity, &pressure),
-                                             velocity_vector(dofMap.extractDofs(&velocity)),
-                                             pressure_vector(dofMap.extractDofs(&pressure))
+                                             mass_term(&velocity, &velocity),
+                                             prev_velocity_vector(velocityDofMap),
+                                             prev_pressure_vector(pressureDofMap),
+                                             k(1.0), theta(0.5)
   {  
-    std::cout << "Size of dof map: " << dofMap.getMappingSize() << std::endl;
-    std::cout << "Degrees of freedom: " << dofMap.getDegreesOfFreedomCount() << std::endl;
-    std::cout << "Degrees of freedom on boundary: " << dofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
+    std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
+    std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
+    std::cout << "Degrees of freedom on boundary: " << systemDofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
   }
 
   void assemble()
   {
-    const std::map<cell_id, cell_type> cells(m.getCells());
-
     // assemble velocity related part of momentum equation
     stiffness_matrix.addTerm(m, convective_term);
 
@@ -207,6 +307,70 @@ public:
     stiffness_matrix.addTerm(m, continuity_term);
 
     stiffness_matrix.assemble();
+  }
+
+  void timeDependentAssembleAndSolve() 
+  {
+    std::cout << "Assembling linear terms..." << std::endl;
+
+    // Add in all constant terms in the lhs matrix
+    FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
+    linear_stiffness_matrix.addTerm(m, mass_term);
+    linear_stiffness_matrix.addTerm(m, convective_term * (theta*k));
+    linear_stiffness_matrix.addTerm(m, pressure_term);
+    linear_stiffness_matrix.addTerm(m, continuity_term);
+    linear_stiffness_matrix.assemble();
+
+    // Add in all constant terms in the rhs matrix
+    TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
+    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
+    nonlinear_rhs_matrix.addTerm(m, mass_term);
+    nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta)*k));
+    nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
+    nonlinear_rhs_matrix.assemble();
+
+    // Add non-linear term into rhs matrix then multiply to get rhs vector
+    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
+    rhs_velocity.assemble();
+
+    // This vector will hold the guesses for the unknowns each iteration
+    FEVector<cell_type> unknown_guess(systemDofMap);
+
+    do
+    {
+      std::cout << "Assembling non-linear terms..." << std::endl;
+
+      // Copy the existing matrices
+      FEMatrix<cell_type> nonlinear_stiffness_matrix(linear_stiffness_matrix);
+
+      // Create non-linear terms for calculating lhs part of system
+      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
+
+      // Add non-linear term into stiffness matrix
+      nonlinear_stiffness_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_stiffness_matrix.assemble();
+
+      // Add rhs velocity-related vector into load vector
+      load_vector.zero();
+      load_vector.addSubvector(rhs_velocity);
+      load_vector.assemble();
+
+      stiffness_matrix = nonlinear_stiffness_matrix;
+
+      std::cout << "Applying boundary conditions..." << std::endl;
+      applyBoundaryConditions();
+
+      std::cout << "Starting solver..." << std::endl;
+      solve();
+
+      unknown_guess = unknown_vector;
+    }
+    while(true);
+
+    unknown_vector.extractSubvector(prev_velocity_vector);
+    unknown_vector.extractSubvector(prev_pressure_vector);
+    prev_velocity_vector.assemble();
+    prev_pressure_vector.assemble();
   }
 
   Location getLocation(const vertex_type& v)
@@ -232,8 +396,8 @@ public:
   void applyBoundaryConditions()
   {
     typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > element_dof_map;
-    const element_dof_map pressure_dofs(dofMap.getBoundaryDegreesOfFreedom(&pressure));
-    const element_dof_map velocity_dofs(dofMap.getBoundaryDegreesOfFreedom(&velocity));
+    const element_dof_map pressure_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&pressure));
+    const element_dof_map velocity_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&velocity));
 
     // Assign a value for the pressure degrees around the edges
     for(element_dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
@@ -310,6 +474,7 @@ public:
       }
     }
 
+    stiffness_matrix.assemble();
     load_vector.assemble();
     unknown_vector.assemble();
   }

@@ -41,6 +41,13 @@ public:
   {
   }
 
+  FEVector& operator=(const FEVector& f)
+  {
+    assert(rowMappings == f.rowMappings);
+    vector = f.vector;
+    return *this;
+  }
+
   void addValues(const unsigned rows, const dof_t* rowDofs, const double* values)
   {
     addOrSetValues(rows, rowDofs, values, true);
@@ -61,6 +68,11 @@ public:
     vector.getValues(rows, &rowIndices[0], values);
   }
 
+  void zero()
+  {
+    vector.zero();
+  }
+
   void assemble()
   {
     vector.assemble();
@@ -70,6 +82,12 @@ public:
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.extractSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+  }
+
+  void addSubvector(const FEVector& s)
+  {
+    const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
+    vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
   }
 
   PETScVector& getVectorHandle()

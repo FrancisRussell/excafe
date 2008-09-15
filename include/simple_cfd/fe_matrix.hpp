@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_FE_MATRIX_HPP
 #define SIMPLE_CFD_FE_MATRIX_HPP
 
+#include "fe_vector.hpp"
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "dof_map.hpp"
@@ -66,6 +67,14 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
+  FEMatrix& operator=(const FEMatrix& f)
+  {
+    assert(rowMappings == f.rowMappings);
+    assert(colMappings == f.colMappings);
+    matrix = f.matrix;
+    return *this;
+  }
+
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)
   {
     std::vector<int> rowIndices(rows);
@@ -111,7 +120,7 @@ public:
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
         for(unsigned test=0; test<testSpaceDimension; ++test)
           for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(cellIter->second, test, trial, quadIter->first);
+            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(*cellIter, test, trial, quadIter->first);
 
       matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
     }
@@ -121,6 +130,11 @@ public:
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
     matrix.zeroRow(rowIndex, diagonal);
+  }
+  
+  void zero()
+  {
+    matrix.zero();
   }
 
   void extractSubmatrix(FEMatrix& s) const
@@ -133,6 +147,11 @@ public:
   void assemble()
   {
     matrix.assemble();
+  }
+
+  FEVector<cell_type> operator*(FEVector<cell_type>& v) const
+  {
+    return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
   }
 
   PETScMatrix& getMatrixHandle()

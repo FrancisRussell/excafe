@@ -63,6 +63,14 @@ public:
   {
   }
 
+  bool operator==(const dof_map& map) const
+  {
+    return &m == &map.m &&
+    elements == map.elements &&
+    mapping == map.mapping &&
+    boundaryDofs == map.boundaryDofs;
+  }
+
   const mesh<cell_type>& getMesh() const
   {
     return m;
@@ -144,7 +152,7 @@ public:
     return result;
   }
 
-  std::vector<int> getIndices(const dof_map& map)
+  std::vector<int> getIndices(const dof_map& map) const
   {
     std::vector<int> result(getDegreesOfFreedomCount());
     
