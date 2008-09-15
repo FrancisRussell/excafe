@@ -1,5 +1,7 @@
 #include "simple_cfd/numeric/vector.hpp"
 #include <cassert>
+#include <numeric>
+#include <vector>
 #include "petsc.h"
 #include "petscvec.h"
 
@@ -28,6 +30,43 @@ PETScVector& PETScVector::operator=(const PETScVector& p)
   const PetscErrorCode ierr = VecCopy(p.v, v);
   checkError(ierr);
   return *this;
+}
+
+PETScVector& PETScVector::operator*=(const double s)
+{
+  const PetscErrorCode ierr = VecScale(v, s);
+  checkError(ierr);
+  return *this;
+}
+
+PETScVector PETScVector::operator-(const PETScVector& p) const
+{
+  PETScVector negP(p);
+  negP *= -1.0;
+  return *this + negP;
+}
+
+PETScVector PETScVector::operator+(const PETScVector& p) const
+{
+  PETScVector result(*this);
+
+  std::vector<int> rowIndices(numRows());
+  for(std::size_t i=0; i<rowIndices.size(); ++i)
+    rowIndices[i] = i;
+
+  PetscScalar* data;
+  VecGetArray(p.getPETScHandle(), &data);
+  result.addValues(numRows(), &rowIndices[0], data);
+  VecRestoreArray(p.getPETScHandle(), &data);
+  return result;
+}
+
+double PETScVector::two_norm() const
+{
+  PetscReal r;
+  const PetscErrorCode ierr = VecNorm(v, NORM_2, &r);
+  checkError(ierr);
+  return r;
 }
 
 std::size_t PETScVector::numRows() const

@@ -360,6 +360,9 @@ public:
       std::cout << "Applying boundary conditions..." << std::endl;
       applyBoundaryConditions();
 
+      const double residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      std::cout << "Current non-linear residual: " << residual << std::endl;
+
       std::cout << "Starting solver..." << std::endl;
       solve();
 

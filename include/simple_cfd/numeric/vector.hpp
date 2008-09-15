@@ -19,6 +19,10 @@ public:
   PETScVector(const PETScVector& orig);
   PETScVector(const unsigned rows);
   PETScVector& operator=(const PETScVector& p);
+  PETScVector& operator*=(const double s);
+  PETScVector operator+(const PETScVector& p) const;
+  PETScVector operator-(const PETScVector& p) const;
+  double two_norm() const;
   std::size_t numRows() const;
   void addValues(const unsigned numValues, const int* indices, const double* values);
   void setValues(const unsigned numValues, const int* indices, const double* values);

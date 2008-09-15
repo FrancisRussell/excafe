@@ -48,6 +48,23 @@ public:
     return *this;
   }
 
+  FEVector operator+(const FEVector& f) const
+  {
+    assert(rowMappings == f.rowMappings);
+    return FEVector(rowMappings, vector + f.vector);
+  }
+
+  FEVector operator-(const FEVector& f) const
+  {
+    assert(rowMappings == f.rowMappings);
+    return FEVector(rowMappings, vector - f.vector);
+  }
+
+  double two_norm() const
+  {
+    return vector.two_norm();
+  }
+
   void addValues(const unsigned rows, const dof_t* rowDofs, const double* values)
   {
     addOrSetValues(rows, rowDofs, values, true);
