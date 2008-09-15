@@ -360,6 +360,7 @@ public:
 
       std::cout << "Applying boundary conditions..." << std::endl;
       applyBoundaryConditions();
+      applyCylinderBoundaryConditions();
 
       residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
       std::cout << "Current non-linear residual: " << residual << std::endl;
@@ -481,6 +482,31 @@ public:
     stiffness_matrix.assemble();
     load_vector.assemble();
     unknown_vector.assemble();
+  }
+
+  void applyCylinderBoundaryConditions()
+  {
+    const std::map<cell_id, cell_type> cells(m.getCells());
+    const unsigned velocitySpaceDimension = velocity.space_dimension();
+    const vertex_type centre(0.3, 0.5);
+    const double radius = 0.15;
+
+    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    {
+      for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
+      {
+        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->first, dof);
+        const vertex_type offset = dofLocation - centre;
+
+        if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
+        {
+          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->first, dof);
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          const double rhs = 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
+      }
+    }
   }
 
   void solve()
