@@ -31,6 +31,8 @@ public:
   typedef vertex<dimension> vertex_type;
 
 private:
+  double width;
+  double height;
   int x_size;
   int y_size;
   mesh_geometry<dimension> geometry;
@@ -38,7 +40,7 @@ private:
   std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
 
 public:
-  mesh(const int width, const int height) : x_size(width), y_size(height)
+  mesh(const double w, const double h, const int xNodes, const int yNodes) : width(w), height(h), x_size(xNodes), y_size(yNodes)
   {
     assert(x_size > 1);
     assert(y_size > 1);
@@ -53,7 +55,7 @@ public:
     {
       for(int x=0; x < x_nodes; ++x)
       {
-        addVertex(vid, vertex_type(static_cast<double>(x) / (x_nodes-1), static_cast<double>(y) / (y_nodes-1)));
+        addVertex(vid, vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
         ++vid;
       }
     }

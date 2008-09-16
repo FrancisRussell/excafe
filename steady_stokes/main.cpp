@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
   PETScManager::instance().init(argc, argv);
   typedef cell<triangle> cell_type;
-  mesh<cell_type> m(50,50);
+  mesh<cell_type> m(3.0, 1.0, 90, 30);
 
   std::cout << "Constructing system..." << std::endl;
   stokes_system<cell_type> system(m);
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
   //std::cout << "Starting solver..." << std::endl;
   //system.solve();
-  for(int i=0; i<5; ++i)
+  for(int i=0; i<120; ++i)
   {
     std::cout << "Starting timestep: " << i << std::endl;
     system.timeDependentAssembleAndSolve();

@@ -254,6 +254,7 @@ private:
 
   const double k;
   const double theta;
+  const double kinematic_viscosity;
 
   enum Location
   {
@@ -288,7 +289,7 @@ public:
                                              mass_term(&velocity, &velocity),
                                              prev_velocity_vector(velocityDofMap),
                                              prev_pressure_vector(pressureDofMap),
-                                             k(1.0), theta(0.5)
+                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/200)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
@@ -316,7 +317,7 @@ public:
     // Add in all constant terms in the lhs matrix
     FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
     linear_stiffness_matrix.addTerm(m, mass_term);
-    linear_stiffness_matrix.addTerm(m, convective_term * (theta*k));
+    linear_stiffness_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
     linear_stiffness_matrix.addTerm(m, pressure_term);
     linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
@@ -325,7 +326,7 @@ public:
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
     FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta)*k));
+    nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
@@ -370,7 +371,7 @@ public:
 
       unknown_guess = unknown_vector;
     }
-    while(residual > 3e-4);
+    while(residual > 1e-2);
 
     unknown_vector.extractSubvector(prev_velocity_vector);
     unknown_vector.extractSubvector(prev_pressure_vector);
@@ -380,13 +381,13 @@ public:
 
   Location getLocation(const vertex_type& v)
   {
-    // TODO: make me into a function that doesn't depend on the specifics of the mesh generation
+    // FIXME: make me into a function that doesn't depend on the specifics of the mesh generation
 
     Location location = BODY;
     if (v[0] == 0.0)
       location = LEFT_EDGE;
 
-    if (v[0] == 1.0)
+    if (v[0] == 3.0)
       location = RIGHT_EDGE;
 
     if (v[1] == 0.0)
@@ -394,6 +395,9 @@ public:
 
     if (v[1] == 1.0)
       location = TOP_EDGE;
+
+    if (1.0 - v[1] <0.01 && location != TOP_EDGE)
+      std::cout << "ARGH" << std::endl;
 
     return location;
   }
@@ -404,14 +408,14 @@ public:
     const element_dof_map pressure_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&pressure));
     const element_dof_map velocity_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&velocity));
 
-    // Assign a value for the pressure degrees around the edges
-    for(element_dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
+    // Assign a value for the pressure degrees along the left edge
+/*  for(element_dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
     {
       const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
       const vertex_type position(pressure.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       const Location location = getLocation(position);
 
-      if (location == BOTTOM_EDGE || location == TOP_EDGE)
+      if (location == LEFT_EDGE)
       {
         const typename dof_map<cell_type>::dof_t pressureGlobalDof = boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
         stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
@@ -423,8 +427,22 @@ public:
         unknown_vector.setValues(1, &pressureGlobalDof, &rhs);
       }
     }
+*/
 
-    // Assign values for the x velocity degrees of freedom (x^2 + y^2 around the entire boundary)
+    // Set a single pressure degree-of-freedom to make the system soluble
+    const element_dof_map::const_iterator pressureIter(pressure_dofs.begin());
+    const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
+    const typename dof_map<cell_type>::dof_t pressureGlobalDof = boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+    stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
+
+    const double rhs = 0.0;
+    load_vector.setValues(1, &pressureGlobalDof, &rhs);
+
+    //To help convergence
+    unknown_vector.setValues(1, &pressureGlobalDof, &rhs);
+
+
+    // Assign values for the x velocity degrees of freedom on the left hand side
     for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
     {
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
@@ -436,46 +454,42 @@ public:
       {
         const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
         // Check this really is an edge cell
-        assert(getLocation(position) != BODY);
+        if (getLocation(position) == LEFT_EDGE)
+        {
+          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          const double rhs = 4.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
 
-        const double rhs = position[0] * position[0] + position[1] * position[1]; // x^2 + y^2
-        load_vector.setValues(1, &velocity_globalDof, &rhs);
-
-        // To help convergence
-        unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+          // To help convergence
+          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
       }
     }
 
-    // Assign values for the y velocity degrees of freedom (zero along top and bottom edges) 
+    // Assign values for the velocity degrees of freedom along top and bottom edges
     for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
     {
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
-      const bool isYDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 1;
+      const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      const Location location = getLocation(position);
 
-      if (isYDof)
+      // Check this really is an edge cell
+      assert(location != BODY);
+
+      if (location == TOP_EDGE || location == BOTTOM_EDGE)
       {
-        const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
-        const Location location = getLocation(position);
+        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-        // Check this really is an edge cell
-        assert(location != BODY);
-
-        if (location == LEFT_EDGE || location == RIGHT_EDGE)
-        {
-          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
-
-          const double rhs = 0.0;
-          load_vector.setValues(1, &velocity_globalDof, &rhs);
+        const double rhs = 0.0;
+        load_vector.setValues(1, &velocity_globalDof, &rhs);
         
-          // To help convergence
-          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
-        }
+        // To help convergence
+        unknown_vector.setValues(1, &velocity_globalDof, &rhs);
       }
     }
 
@@ -488,7 +502,7 @@ public:
   {
     const std::map<cell_id, cell_type> cells(m.getCells());
     const unsigned velocitySpaceDimension = velocity.space_dimension();
-    const vertex_type centre(0.3, 0.5);
+    const vertex_type centre(1.0, 0.5);
     const double radius = 0.15;
 
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
@@ -525,7 +539,7 @@ public:
   void outputToFile(const std::string& filename)
   {
     std::ofstream outFile(filename.c_str());
-    render(20, 20, outFile);
+    render(3.0, 1.0, 60, 20, outFile);
     outFile.close();
   }
 
@@ -562,10 +576,10 @@ public:
     return std::make_pair(0.0, 0.0);
   }
 
-  void render(const unsigned xPoints, const unsigned yPoints, std::ostream& out)
+  void render(const double width, const double height, const unsigned xPoints, const unsigned yPoints, std::ostream& out)
   {
-    const double xSpacing = 1.0/(xPoints-1);
-    const double ySpacing = 1.0/(yPoints-1);
+    const double xSpacing = width/(xPoints-1);
+    const double ySpacing = height/(yPoints-1);
 
     out << "# vtk DataFile Version 2.0" << std::endl;
     out << "Simple Stokes Solver" << std::endl;
@@ -581,8 +595,8 @@ public:
     {
       for(unsigned xPoint=0; xPoint<xPoints; ++xPoint)
       {
-        const double x = static_cast<double>(xPoint)/(xPoints-1);
-        const double y = static_cast<double>(yPoint)/(yPoints-1);
+        const double x = xPoint * xSpacing;
+        const double y = yPoint * ySpacing;
 
         const std::pair<double, double> velocity(getVelocityVector(vertex_type(x, y)));
         out << velocity.first << " " << velocity.second << " " << 0.0 << std::endl;
