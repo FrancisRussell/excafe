@@ -43,22 +43,16 @@ PETScVector& PETScVector::operator*=(const double s)
 
 PETScVector& PETScVector::operator+=(const PETScVector& p)
 {
-  std::vector<int> rowIndices(numRows());
-  for(std::size_t i=0; i<rowIndices.size(); ++i)
-    rowIndices[i] = i;
-
-  PetscScalar* data;
-  VecGetArray(p.getPETScHandle(), &data);
-  addValues(numRows(), &rowIndices[0], data);
-  VecRestoreArray(p.getPETScHandle(), &data);
+  const PetscErrorCode ierr = VecAXPY(v, 1.0, p.v);
+  checkError(ierr);
   return *this;
 }
 
 PETScVector& PETScVector::operator-=(const PETScVector& p)
 {
-  PETScVector negP(p);
-  negP *= -1.0;
-  return (*this += negP);
+  const PetscErrorCode ierr = VecAXPY(v, -1.0, p.v);
+  checkError(ierr);
+  return *this;
 }
 
 PETScVector PETScVector::operator*(const double s) const
@@ -143,7 +137,6 @@ void PETScVector::addSubvector(const PETScVector& source, const unsigned numValu
   addValues(numValues, indices, data);
   VecRestoreArray(source.getPETScHandle(), &data);
 }
-
 
 Vec PETScVector::getPETScHandle() const
 {
