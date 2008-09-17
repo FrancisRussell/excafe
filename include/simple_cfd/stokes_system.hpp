@@ -289,7 +289,7 @@ public:
                                              mass_term(&velocity, &velocity),
                                              prev_velocity_vector(velocityDofMap),
                                              prev_pressure_vector(pressureDofMap),
-                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/200)
+                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/250)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
@@ -335,7 +335,7 @@ public:
     rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<cell_type> unknown_guess(systemDofMap);
+    FEVector<cell_type> unknown_guess(unknown_vector);
     double residual = 0.0;
 
     do
@@ -363,15 +363,14 @@ public:
       applyBoundaryConditions();
       applyCylinderBoundaryConditions();
 
-      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
-      std::cout << "Current non-linear residual: " << residual << std::endl;
-
       std::cout << "Starting solver..." << std::endl;
       solve();
 
       unknown_guess = unknown_vector;
+      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      std::cout << "Current non-linear residual: " << residual << std::endl;
     }
-    while(residual > 1e-2);
+    while(residual > 1e-3);
 
     unknown_vector.extractSubvector(prev_velocity_vector);
     unknown_vector.extractSubvector(prev_pressure_vector);
@@ -405,42 +404,7 @@ public:
   void applyBoundaryConditions()
   {
     typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > element_dof_map;
-    const element_dof_map pressure_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&pressure));
     const element_dof_map velocity_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&velocity));
-
-    // Assign a value for the pressure degrees along the left edge
-/*  for(element_dof_map::const_iterator pressureIter(pressure_dofs.begin()); pressureIter != pressure_dofs.end(); ++pressureIter)
-    {
-      const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
-      const vertex_type position(pressure.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
-      const Location location = getLocation(position);
-
-      if (location == LEFT_EDGE)
-      {
-        const typename dof_map<cell_type>::dof_t pressureGlobalDof = boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-        stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
-
-        const double rhs = 0.0;
-        load_vector.setValues(1, &pressureGlobalDof, &rhs);
-
-        //To help convergence
-        unknown_vector.setValues(1, &pressureGlobalDof, &rhs);
-      }
-    }
-*/
-
-    // Set a single pressure degree-of-freedom to make the system soluble
-    const element_dof_map::const_iterator pressureIter(pressure_dofs.begin());
-    const boost::tuple<cell_id, unsigned> dofInfo(*pressureIter->second.begin());
-    const typename dof_map<cell_type>::dof_t pressureGlobalDof = boost::make_tuple(&pressure, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-    stiffness_matrix.zeroRow(pressureGlobalDof, 1.0);
-
-    const double rhs = 0.0;
-    load_vector.setValues(1, &pressureGlobalDof, &rhs);
-
-    //To help convergence
-    unknown_vector.setValues(1, &pressureGlobalDof, &rhs);
-
 
     // Assign values for the x velocity degrees of freedom on the left hand side
     for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
@@ -459,7 +423,7 @@ public:
           const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-          const double rhs = 4.0;
+          const double rhs = 5.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
 
           // To help convergence
