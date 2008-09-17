@@ -41,25 +41,44 @@ PETScVector& PETScVector::operator*=(const double s)
   return *this;
 }
 
-PETScVector PETScVector::operator-(const PETScVector& p) const
+PETScVector& PETScVector::operator+=(const PETScVector& p)
 {
-  PETScVector negP(p);
-  negP *= -1.0;
-  return *this + negP;
-}
-
-PETScVector PETScVector::operator+(const PETScVector& p) const
-{
-  PETScVector result(*this);
-
   std::vector<int> rowIndices(numRows());
   for(std::size_t i=0; i<rowIndices.size(); ++i)
     rowIndices[i] = i;
 
   PetscScalar* data;
   VecGetArray(p.getPETScHandle(), &data);
-  result.addValues(numRows(), &rowIndices[0], data);
+  addValues(numRows(), &rowIndices[0], data);
   VecRestoreArray(p.getPETScHandle(), &data);
+  return *this;
+}
+
+PETScVector& PETScVector::operator-=(const PETScVector& p)
+{
+  PETScVector negP(p);
+  negP *= -1.0;
+  return (*this += negP);
+}
+
+PETScVector PETScVector::operator*(const double s) const
+{
+  PETScVector result(*this);
+  result *= s;
+  return result;
+}
+
+PETScVector PETScVector::operator+(const PETScVector& p) const
+{
+  PETScVector result(*this);
+  result += p;
+  return result;
+}
+
+PETScVector PETScVector::operator-(const PETScVector& p) const
+{
+  PETScVector result(*this);
+  result -= p;
   return result;
 }
 

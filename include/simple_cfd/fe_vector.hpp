@@ -52,6 +52,31 @@ public:
     return *this;
   }
 
+  FEVector& operator*=(const double d)
+  {
+    vector *= d;
+    return *this;
+  }
+
+  FEVector& operator+=(const FEVector& f)
+  {
+    assert(rowMappings == f.rowMappings);
+    vector += f.vector;
+    return *this;
+  }
+  
+  FEVector& operator-=(const FEVector& f)
+  {
+    assert(rowMappings == f.rowMappings);
+    vector -= f.vector;
+    return *this;
+  }
+
+  FEVector operator*(const double d) const
+  {
+    return FEVector(rowMappings, vector * d);
+  }
+
   FEVector operator+(const FEVector& f) const
   {
     assert(rowMappings == f.rowMappings);

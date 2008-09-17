@@ -20,6 +20,9 @@ public:
   PETScVector(const unsigned rows);
   PETScVector& operator=(const PETScVector& p);
   PETScVector& operator*=(const double s);
+  PETScVector& operator+=(const PETScVector& p);
+  PETScVector& operator-=(const PETScVector& p);
+  PETScVector operator*(const double s) const;
   PETScVector operator+(const PETScVector& p) const;
   PETScVector operator-(const PETScVector& p) const;
   double two_norm() const;
