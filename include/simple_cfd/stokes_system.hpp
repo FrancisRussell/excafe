@@ -18,6 +18,7 @@
 #include <ostream>
 #include <fstream>
 #include <utility>
+#include <cstdlib>
 #include <boost/tuple/tuple.hpp>
 
 namespace cfd
@@ -395,9 +396,6 @@ public:
     if (v[1] == 1.0)
       location = TOP_EDGE;
 
-    if (1.0 - v[1] <0.01 && location != TOP_EDGE)
-      std::cout << "ARGH" << std::endl;
-
     return location;
   }
 
@@ -413,22 +411,19 @@ public:
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
       const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
-
-      if (isXDof)
+      const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      
+      if (getLocation(position) == LEFT_EDGE)
       {
-        const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
-        // Check this really is an edge cell
-        if (getLocation(position) == LEFT_EDGE)
-        {
-          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-          const double rhs = 5.0;
-          load_vector.setValues(1, &velocity_globalDof, &rhs);
+        // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
+        const double rhs = isXDof ? 5.0 : 0.0;
+        load_vector.setValues(1, &velocity_globalDof, &rhs);
 
-          // To help convergence
-          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
-        }
+        // To help convergence
+        unknown_vector.setValues(1, &velocity_globalDof, &rhs);
       }
     }
 
@@ -490,7 +485,14 @@ public:
   void solve()
   {
     PETScKrylovSolver solver;
+    solver.setMaxIterations(25000);
     solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
+
+    if (!solver.converged())
+    {
+      std::cout << "Convergence failure: " << solver.getConvergedReason() << std::endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   void print() const
@@ -503,7 +505,7 @@ public:
   void outputToFile(const std::string& filename)
   {
     std::ofstream outFile(filename.c_str());
-    render(3.0, 1.0, 60, 20, outFile);
+    render(3.0, 1.0, 90, 30, outFile);
     outFile.close();
   }
 
