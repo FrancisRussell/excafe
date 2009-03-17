@@ -38,7 +38,7 @@ PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), maxIts(PETSC_DEFAU
   checkError(ierr);
 }
 
-void PETScKrylovSolver::solve(PETScMatrix& a, PETScVector& x, PETScVector& b)
+void PETScKrylovSolver::solve(const PETScMatrix& a, PETScVector& x, const PETScVector& b)
 {
   PetscErrorCode ierr;
 

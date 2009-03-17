@@ -241,10 +241,6 @@ private:
   dof_map<cell_type> velocityDofMap;
   dof_map<cell_type> pressureDofMap;
 
-  FEMatrix<cell_type> stiffness_matrix;
-  FEVector<cell_type> unknown_vector;
-  FEVector<cell_type> load_vector;
-
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
   NegTrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
@@ -252,6 +248,8 @@ private:
 
   FEVector<cell_type> prev_velocity_vector;
   FEVector<cell_type> prev_pressure_vector;
+  FEVector<cell_type> velocity_vector;
+  FEVector<cell_type> pressure_vector;
 
   const double k;
   const double theta;
@@ -282,14 +280,14 @@ public:
                                              systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
-                                             stiffness_matrix(systemDofMap, systemDofMap), 
-                                             unknown_vector(systemDofMap), load_vector(systemDofMap),
                                              convective_term(&velocity, &velocity),
                                              pressure_term(&pressure, &velocity),
                                              continuity_term(&velocity, &pressure),
                                              mass_term(&velocity, &velocity),
                                              prev_velocity_vector(velocityDofMap),
                                              prev_pressure_vector(pressureDofMap),
+                                             pressure_vector(pressureDofMap),
+                                             velocity_vector(velocityDofMap),
                                              k(1.0), theta(0.5), kinematic_viscosity(1.0/250)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
@@ -297,31 +295,15 @@ public:
     std::cout << "Degrees of freedom on boundary: " << systemDofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
   }
 
-  void assemble()
-  {
-    // assemble velocity related part of momentum equation
-    stiffness_matrix.addTerm(m, convective_term);
-
-    // assemble pressure related part of momentum equation
-    stiffness_matrix.addTerm(m, pressure_term);
-
-    // assemble continuity equation
-    stiffness_matrix.addTerm(m, continuity_term);
-
-    stiffness_matrix.assemble();
-  }
-
   void timeDependentAssembleAndSolve() 
   {
     std::cout << "Assembling linear terms..." << std::endl;
 
     // Add in all constant terms in the lhs matrix
-    FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
-    linear_stiffness_matrix.addTerm(m, mass_term);
-    linear_stiffness_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
-    linear_stiffness_matrix.addTerm(m, pressure_term);
-    linear_stiffness_matrix.addTerm(m, continuity_term);
-    linear_stiffness_matrix.assemble();
+    FEMatrix<cell_type> linear_lhs_matrix(velocityDofMap, velocityDofMap);
+    linear_lhs_matrix.addTerm(m, mass_term);
+    linear_lhs_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
+    linear_lhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
@@ -336,7 +318,7 @@ public:
     rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<cell_type> unknown_guess(unknown_vector);
+    FEVector<cell_type> unknown_velocity(prev_velocity_vector);
     double residual = 0.0;
 
     do
@@ -344,39 +326,30 @@ public:
       std::cout << "Assembling non-linear terms..." << std::endl;
 
       // Copy the existing matrices
-      FEMatrix<cell_type> nonlinear_stiffness_matrix(linear_stiffness_matrix);
+      FEMatrix<cell_type> nonlinear_lhs_matrix(linear_lhs_matrix);
 
       // Create non-linear terms for calculating lhs part of system
-      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
+      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_velocity, &velocity);
 
       // Add non-linear term into stiffness matrix
-      nonlinear_stiffness_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
-      nonlinear_stiffness_matrix.assemble();
-
-      // Add rhs velocity-related vector into load vector
-      load_vector.zero();
-      load_vector.addSubvector(rhs_velocity);
-      load_vector.assemble();
-
-      stiffness_matrix = nonlinear_stiffness_matrix;
+      nonlinear_lhs_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_lhs_matrix.assemble();
 
       std::cout << "Applying boundary conditions..." << std::endl;
-      applyBoundaryConditions();
-      applyCylinderBoundaryConditions();
+      applyEdgeVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
+      applyCylinderVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       std::cout << "Starting solver..." << std::endl;
-      solve();
+      solve(nonlinear_lhs_matrix.getMatrixHandle(), unknown_velocity.getVectorHandle(), rhs_velocity.getVectorHandle());
 
-      unknown_guess = unknown_vector;
-      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
-      std::cout << "Current non-linear residual: " << residual << std::endl;
+      residual = ((nonlinear_lhs_matrix * unknown_velocity) - rhs_velocity).two_norm();
+      std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
     }
     while(residual > 1e-3);
 
-    unknown_vector.extractSubvector(prev_velocity_vector);
-    unknown_vector.extractSubvector(prev_pressure_vector);
-    prev_velocity_vector.assemble();
-    prev_pressure_vector.assemble();
+    prev_velocity_vector = velocity_vector;
+    prev_pressure_vector = pressure_vector;
+    velocity_vector = unknown_velocity;
   }
 
   Location getLocation(const vertex_type& v)
@@ -399,7 +372,7 @@ public:
     return location;
   }
 
-  void applyBoundaryConditions()
+  void applyEdgeVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
     typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > element_dof_map;
     const element_dof_map velocity_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&velocity));
@@ -457,7 +430,7 @@ public:
     unknown_vector.assemble();
   }
 
-  void applyCylinderBoundaryConditions()
+  void applyCylinderVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
     const std::map<cell_id, cell_type> cells(m.getCells());
     const unsigned velocitySpaceDimension = velocity.space_dimension();
@@ -482,11 +455,11 @@ public:
     }
   }
 
-  void solve()
+  void solve(const PETScMatrix& stiffness_matrix, PETScVector& unknown_vector, const PETScVector& load_vector)
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);
-    solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
+    solver.solve(stiffness_matrix, unknown_vector, load_vector);
 
     if (!solver.converged())
     {
@@ -527,7 +500,7 @@ public:
           const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->first, dof);
 
           double velocityCoeff;
-          unknown_vector.getValues(1u, &velocityDof, &velocityCoeff);
+          velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);
 
           xVelocity += velocity_basis(0).toScalar() * velocityCoeff;
           yVelocity += velocity_basis(1).toScalar() * velocityCoeff;
