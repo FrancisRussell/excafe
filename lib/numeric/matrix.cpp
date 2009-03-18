@@ -116,6 +116,12 @@ void PETScMatrix::zeroRows(const int* rows, const unsigned rowCount, const doubl
   checkError(ierr);
 }
 
+void PETScMatrix::addToDiagonal(const PETScVector& v)
+{
+  const PetscErrorCode ierr = MatDiagonalSet(m, v.getPETScHandle(), ADD_VALUES);
+  checkError(ierr);
+}
+
 void PETScMatrix::zero()
 {
   const PetscErrorCode ierr = MatZeroEntries(m);
@@ -140,6 +146,17 @@ void PETScMatrix::view() const
 
   ierr = MatView(m, PETSC_VIEWER_STDOUT_WORLD);
   checkError(ierr);
+}
+
+PETScVector PETScMatrix::getLumpedDiagonal() const
+{
+  assert(numRows() == numCols());
+
+  PETScVector allOnes(numCols());
+  allOnes = 1.0;
+  allOnes.assemble();
+
+  return *this * allOnes;
 }
 
 void PETScMatrix::extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const

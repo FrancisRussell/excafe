@@ -286,8 +286,8 @@ public:
                                              mass_term(&velocity, &velocity),
                                              prev_velocity_vector(velocityDofMap),
                                              prev_pressure_vector(pressureDofMap),
-                                             pressure_vector(pressureDofMap),
                                              velocity_vector(velocityDofMap),
+                                             pressure_vector(pressureDofMap),
                                              k(1.0), theta(0.5), kinematic_viscosity(1.0/250)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
