@@ -186,6 +186,17 @@ public:
     return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
   }
 
+  FEVector<cell_type> trans_mult(FEVector<cell_type>& v) const
+  {
+    assert(rowMappings == v.getRowMappings());
+    return FEVector<cell_type>(colMappings, matrix.trans_mult(v.getVectorHandle()));
+  }
+
+  FEMatrix<cell_type> trans_mult(FEMatrix<cell_type>& b) const
+  {
+    assert(rowMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
+  }
 
   PETScMatrix& getMatrixHandle()
   {

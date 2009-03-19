@@ -70,6 +70,21 @@ PETScMatrix PETScMatrix::operator*(const PETScMatrix& b) const
   return PETScMatrix(c);
 }
 
+PETScVector PETScMatrix::trans_mult(const PETScVector& v) const
+{
+  PETScVector result(numCols());
+  const PetscErrorCode ierr = MatMultTranspose(m, v.getPETScHandle(), result.getPETScHandle());
+  checkError(ierr);
+  return result;
+}
+
+PETScMatrix PETScMatrix::trans_mult(const PETScMatrix& b) const
+{
+  Mat c;
+  const PetscErrorCode ierr = MatMatMultTranspose(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &c);
+  checkError(ierr);
+  return PETScMatrix(c);
+}
 
 std::size_t PETScMatrix::numRows() const
 {
