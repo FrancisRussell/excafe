@@ -71,6 +71,16 @@ public:
   {
   }
 
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
+  dof_map<cell_type> getColMappings() const
+  {
+    return colMappings;
+  }
+
   FEMatrix& operator=(const FEMatrix& f)
   {
     assert(rowMappings == f.rowMappings);
@@ -130,6 +140,12 @@ public:
     }
   }
 
+  void addToDiagonal(const FEVector<cell_type>& v)
+  {
+    assert(rowMappings == v.getRowMappings());
+    matrix.addToDiagonal(v.getVectorHandle());
+  }
+
   void zeroRow(const dof_t& dof, const double diagonal)
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
@@ -146,6 +162,11 @@ public:
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     const std::vector<int> colIndices = s.colMappings.getIndices(colMappings);
     matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
+  }
+
+  FEVector<cell_type> getLumpedDiagonal() const
+  {
+    return FEVector<cell_type>(rowMappings, matrix.getLumpedDiagonal());
   }
 
   void assemble()

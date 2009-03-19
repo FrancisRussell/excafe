@@ -118,6 +118,9 @@ void PETScMatrix::zeroRows(const int* rows, const unsigned rowCount, const doubl
 
 void PETScMatrix::addToDiagonal(const PETScVector& v)
 {
+  assert(numRows() == numCols());
+  assert(numRows() == v.numRows());
+
   const PetscErrorCode ierr = MatDiagonalSet(m, v.getPETScHandle(), ADD_VALUES);
   checkError(ierr);
 }
