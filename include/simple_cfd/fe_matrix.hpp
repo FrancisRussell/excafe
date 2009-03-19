@@ -176,8 +176,16 @@ public:
 
   FEVector<cell_type> operator*(FEVector<cell_type>& v) const
   {
+    assert(colMappings == v.getRowMappings());
     return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
   }
+
+  FEMatrix<cell_type> operator*(FEMatrix<cell_type>& b) const
+  {
+    assert(colMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
+  }
+
 
   PETScMatrix& getMatrixHandle()
   {

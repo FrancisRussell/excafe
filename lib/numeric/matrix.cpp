@@ -62,6 +62,15 @@ PETScVector PETScMatrix::operator*(const PETScVector& v) const
   return result;
 }
 
+PETScMatrix PETScMatrix::operator*(const PETScMatrix& b) const
+{
+  Mat c;
+  const PetscErrorCode ierr = MatMatMult(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &c);
+  checkError(ierr);
+  return PETScMatrix(c);
+}
+
+
 std::size_t PETScMatrix::numRows() const
 {
   PetscInt rows;

@@ -25,6 +25,7 @@ public:
   PETScMatrix(const SparsityPattern& pattern);
   PETScMatrix& operator=(const PETScMatrix& r);
   PETScVector operator*(const PETScVector& v) const;
+  PETScMatrix operator*(const PETScMatrix& m) const;
   std::size_t numRows() const;
   std::size_t numCols() const;
   void addValues(const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices, const double* block);
