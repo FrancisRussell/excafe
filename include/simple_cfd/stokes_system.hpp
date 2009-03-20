@@ -295,6 +295,15 @@ public:
     std::cout << "Degrees of freedom on boundary: " << systemDofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
   }
 
+  FEMatrix<cell_type> getLumpedInverse(const FEMatrix<cell_type>& matrix)
+  {
+    FEVector<cell_type> diagonal(matrix.getLumpedDiagonal());
+    diagonal.reciprocal();
+    FEMatrix<cell_type> invertedMatrix(matrix.getRowMappings(), matrix.getColMappings());
+    invertedMatrix.addToDiagonal(diagonal);
+    return invertedMatrix;
+  }
+
   void timeDependentAssembleAndSolve() 
   {
     std::cout << "Assembling linear terms..." << std::endl;
@@ -313,8 +322,18 @@ public:
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
+    FEMatrix<cell_type> pressure_matrix(velocityDofMap, pressureDofMap);
+    pressure_matrix.addTerm(m, pressure_term);
+    pressure_matrix.assemble();
+
+    FEMatrix<cell_type> velocity_mass_matrix(velocityDofMap, velocityDofMap);
+    velocity_mass_matrix.addTerm(m, mass_term);
+    velocity_mass_matrix.assemble();
+
+    FEMatrix<cell_type> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
+
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
+    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector + pressure_matrix * prev_pressure_vector * k);
     rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
@@ -340,10 +359,16 @@ public:
       applyCylinderVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       std::cout << "Starting solver..." << std::endl;
-      solve(nonlinear_lhs_matrix.getMatrixHandle(), unknown_velocity.getVectorHandle(), rhs_velocity.getVectorHandle());
+      solve(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       residual = ((nonlinear_lhs_matrix * unknown_velocity) - rhs_velocity).two_norm();
       std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
+
+      // Now solve mass-lumped continuity equation
+      FEMatrix<cell_type> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
+      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix)*velocity_mass_matrix*rhs_velocity);
+      FEVector<cell_type> phi(velocityDofMap);
+      solve(continuity_lhs, phi, continuity_rhs);
     }
     while(residual > 1e-3);
 
@@ -455,11 +480,11 @@ public:
     }
   }
 
-  void solve(const PETScMatrix& stiffness_matrix, PETScVector& unknown_vector, const PETScVector& load_vector)
+  void solve(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);
-    solver.solve(stiffness_matrix, unknown_vector, load_vector);
+    solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
 
     if (!solver.converged())
     {

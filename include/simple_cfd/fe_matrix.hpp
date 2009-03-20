@@ -140,7 +140,7 @@ public:
     }
   }
 
-  void addToDiagonal(const FEVector<cell_type>& v)
+  void addToDiagonal(FEVector<cell_type>& v)
   {
     assert(rowMappings == v.getRowMappings());
     matrix.addToDiagonal(v.getVectorHandle());
