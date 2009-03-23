@@ -65,7 +65,7 @@ PETScVector PETScMatrix::operator*(const PETScVector& v) const
 PETScMatrix PETScMatrix::operator*(const PETScMatrix& b) const
 {
   Mat c;
-  const PetscErrorCode ierr = MatMatMult(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &c);
+  const PetscErrorCode ierr = MatMatMult(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, 1.0, &c);
   checkError(ierr);
   return PETScMatrix(c);
 }
@@ -81,7 +81,7 @@ PETScVector PETScMatrix::trans_mult(const PETScVector& v) const
 PETScMatrix PETScMatrix::trans_mult(const PETScMatrix& b) const
 {
   Mat c;
-  const PetscErrorCode ierr = MatMatMultTranspose(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &c);
+  const PetscErrorCode ierr = MatMatMultTranspose(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, 1.0, &c);
   checkError(ierr);
   return PETScMatrix(c);
 }

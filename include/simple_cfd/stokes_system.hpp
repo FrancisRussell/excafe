@@ -338,9 +338,10 @@ public:
 
     // This vector will hold the guesses for the unknowns each iteration
     FEVector<cell_type> unknown_velocity(prev_velocity_vector);
+    FEVector<cell_type> unknown_pressure(prev_pressure_vector);
     double residual = 0.0;
 
-    do
+    for(int picard_iteration=0; picard_iteration<2; ++picard_iteration)
     {
       std::cout << "Assembling non-linear terms..." << std::endl;
 
@@ -366,15 +367,24 @@ public:
 
       // Now solve mass-lumped continuity equation
       FEMatrix<cell_type> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
-      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix)*velocity_mass_matrix*rhs_velocity);
-      FEVector<cell_type> phi(velocityDofMap);
+      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix)*velocity_mass_matrix*rhs_velocity*-1.0);
+      FEVector<cell_type> phi(pressureDofMap);
+      std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
+
+      unknown_pressure = prev_pressure_vector - (phi * k);
+
+      FEVector<cell_type> actual_velocity(velocity_vector);
+      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
+
+      std::cout << "Solving velocity correction..." << std::endl;
+      solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs);
     }
-    while(residual > 1e-3);
 
     prev_velocity_vector = velocity_vector;
     prev_pressure_vector = pressure_vector;
     velocity_vector = unknown_velocity;
+    pressure_vector = unknown_pressure;
   }
 
   Location getLocation(const vertex_type& v)
