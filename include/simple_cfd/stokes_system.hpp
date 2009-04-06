@@ -99,6 +99,12 @@ public:
     const double result = (trial_value * test_divergence).toScalar();
     return result;
   }
+
+  ScaledFEBinaryFunction<TrialInnerDivTest> operator*(const double s) const
+  {
+    return ScaledFEBinaryFunction<TrialInnerDivTest>(*this, s);
+  }
+
 };
 
 template<typename TrialType, typename TestType>
@@ -304,8 +310,81 @@ public:
     return invertedMatrix;
   }
 
+  void initialiseFields()
+  {
+    std::cout << "Running coupled solver to find initial fields..." << std::endl;
+    std::cout << "Assembling linear terms..." << std::endl;
+
+    // Add in all constant terms in the lhs matrix
+    FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
+    linear_stiffness_matrix.addTerm(m, mass_term);
+    linear_stiffness_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
+    linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
+    linear_stiffness_matrix.addTerm(m, continuity_term);
+    linear_stiffness_matrix.assemble();
+
+    // Add in all constant terms in the rhs matrix
+    TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
+    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
+    nonlinear_rhs_matrix.addTerm(m, mass_term);
+    nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
+    nonlinear_rhs_matrix.assemble();
+
+    // Add non-linear term into rhs matrix then multiply to get rhs vector
+    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
+    rhs_velocity.assemble();
+
+    // This vector will hold the guesses for the unknowns each iteration
+    FEVector<cell_type> load_vector(systemDofMap);
+    FEVector<cell_type> unknown_vector(systemDofMap);
+    FEVector<cell_type> unknown_guess(unknown_vector);
+    double residual = 0.0;
+
+    do
+    {
+      std::cout << "Assembling non-linear terms..." << std::endl;
+
+      // Copy the existing matrices
+      FEMatrix<cell_type> nonlinear_stiffness_matrix(linear_stiffness_matrix);
+
+      // Create non-linear terms for calculating lhs part of system
+      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
+
+      // Add non-linear term into stiffness matrix
+      nonlinear_stiffness_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_stiffness_matrix.assemble();
+
+      // Add rhs velocity-related vector into load vector
+      load_vector.zero();
+      load_vector.addSubvector(rhs_velocity);
+      load_vector.assemble();
+
+      std::cout << "Applying boundary conditions..." << std::endl;
+      applyEdgeVelocityBoundaryConditions(nonlinear_stiffness_matrix, unknown_vector, load_vector);
+      applyCylinderVelocityBoundaryConditions(nonlinear_stiffness_matrix, unknown_vector, load_vector);
+
+      std::cout << "Starting solver..." << std::endl;
+      solve(nonlinear_stiffness_matrix, unknown_vector, load_vector);
+
+      unknown_guess = unknown_vector;
+      residual = ((nonlinear_stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      std::cout << "Current non-linear residual: " << residual << std::endl;
+    }
+    while(residual > 1e-3);
+
+    unknown_vector.extractSubvector(pressure_vector);
+    //unknown_vector.extractSubvector(velocity_vector);
+    pressure_vector.assemble();
+    //velocity_vector.assemble();
+    std::cout << "Calculated initial fields." << std::endl;
+  }
+
   void timeDependentAssembleAndSolve() 
   {
+    prev_velocity_vector = velocity_vector;
+    prev_pressure_vector = pressure_vector;
+
     std::cout << "Assembling linear terms..." << std::endl;
 
     // Add in all constant terms in the lhs matrix
@@ -379,8 +458,6 @@ public:
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
     }
 
-    prev_velocity_vector = velocity_vector;
-    prev_pressure_vector = pressure_vector;
     velocity_vector = unknown_velocity;
     pressure_vector = unknown_pressure;
   }

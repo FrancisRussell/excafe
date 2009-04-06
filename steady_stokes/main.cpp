@@ -20,6 +20,9 @@ int main(int argc, char* argv[])
 
   //std::cout << "Starting solver..." << std::endl;
   //system.solve();
+  
+  system.initialiseFields();
+
   for(int i=0; i<120; ++i)
   {
     std::cout << "Starting timestep: " << i << std::endl;
