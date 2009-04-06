@@ -66,7 +66,7 @@ public:
 };
 
 template<typename TrialType, typename TestType>
-class NegTrialInnerDivTest : public FEBinaryFunction<typename TrialType::cell_type>
+class TrialInnerDivTest : public FEBinaryFunction<typename TrialType::cell_type>
 {
 public:
   typedef typename TrialType::cell_type cell_type;
@@ -78,7 +78,7 @@ private:
   const TestType* const test;
 
 public:
-  NegTrialInnerDivTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
+  TrialInnerDivTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
   {
   }
 
@@ -96,7 +96,7 @@ public:
   {
     typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
     typename TestType::divergence_type test_divergence = test->evaluate_divergence(cell.second, testDof, location);
-    const double result = - (trial_value * test_divergence).toScalar();
+    const double result = (trial_value * test_divergence).toScalar();
     return result;
   }
 };
@@ -242,7 +242,7 @@ private:
   dof_map<cell_type> pressureDofMap;
 
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
-  NegTrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
+  TrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
   TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
 
@@ -374,7 +374,7 @@ public:
 
       unknown_pressure = prev_pressure_vector - (phi * k);
 
-      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
+      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity - pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
     }
