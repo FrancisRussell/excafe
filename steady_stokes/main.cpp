@@ -1,6 +1,9 @@
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/stokes_system.hpp>
 #include <simple_cfd/petsc_manager.hpp>
+#include <simple_cfd/subdomain.hpp>
+#include <simple_cfd/function.hpp>
+#include <simple_cfd/numeric/tensor.hpp>
 #include <iostream>
 #include <sstream>
 

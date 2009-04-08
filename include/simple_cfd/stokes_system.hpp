@@ -12,6 +12,9 @@
 #include "fe_matrix.hpp"
 #include "fe_vector.hpp"
 #include "fe_binary_function.hpp"
+#include "subdomain.hpp"
+#include "function.hpp"
+#include "boundary_condition.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -227,6 +230,69 @@ public:
   }
 };
 
+class Edges : public SubDomain<shape_dimensions<triangle>::dimension>
+{
+private:
+  const double EPSILON;
+
+public:
+  static const unsigned int dimension = shape_dimensions<triangle>::dimension;
+
+  Edges() : EPSILON(1e-5)
+  {
+  }
+
+  bool inside(const vertex<dimension>& v)
+  {
+    return v[0] < EPSILON || v[1] < EPSILON || v[1] > (1.0 - EPSILON);
+  }
+};
+
+class Cylinder : public SubDomain<shape_dimensions<triangle>::dimension>
+{
+public:
+  bool inside(const vertex<dimension>& v)
+  {
+    const vertex<2> centre(1.0, 0.5);
+    const double radius = 0.15;
+    const vertex<2> offset(centre - v);
+
+    return (offset[0]*offset[0] + offset[1]*offset[1]) < (radius * radius);
+  }
+};
+
+class Zero : public Function<2, 1, double>
+{
+public:
+  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v)
+  {
+    return Tensor<2, 1, double>();
+  }
+};
+
+class EdgeConditions : public Function<2, 1, double>
+{
+private:
+  const double EPSILON;
+
+public:
+  EdgeConditions() : EPSILON(1e-5)
+  {
+  }
+
+  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v)
+  {
+    Tensor<2, 1, double> t;
+
+    if (v[0] < EPSILON)
+    {
+      t[0] = 5.0;
+    }
+
+    return t;
+  }
+};
+
 template<typename C>
 class stokes_system
 {
@@ -261,6 +327,18 @@ private:
   const double theta;
   const double kinematic_viscosity;
 
+  // Subdomains
+  Edges edges;
+  Cylinder cylinder;
+
+  // Functions
+  EdgeConditions edgeConditions;
+  Zero zero;
+
+  // Boundary Conditions
+  BoundaryCondition<2,1> edgeVelocities;
+  BoundaryCondition<2,1> cylinderVelocities;
+
   enum Location
   {
     TOP_EDGE,
@@ -294,7 +372,9 @@ public:
                                              prev_pressure_vector(pressureDofMap),
                                              velocity_vector(velocityDofMap),
                                              pressure_vector(pressureDofMap),
-                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/250)
+                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/250),
+                                             edgeVelocities(edges, edgeConditions), 
+                                             cylinderVelocities(cylinder, zero)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
