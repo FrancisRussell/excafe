@@ -2,6 +2,7 @@
 #include<SteadyStokes.h>
 #include<cstdlib>
 #include<iostream>
+#include<vector>
 
 using namespace dolfin;
 
@@ -100,7 +101,12 @@ int main(int argc, char* argv[])
   SteadyStokesBilinearForm a(mixedSpace, mixedSpace);
   SteadyStokesLinearForm L(mixedSpace);
   L.f = f;
-  Array<BoundaryCondition*> bcs(&velocity_x_bc, &velocity_y_bc, &pressure_bc);
+
+  std::vector<BoundaryCondition*> bcs;
+  bcs.push_back(&velocity_x_bc);
+  bcs.push_back(&velocity_y_bc);
+  bcs.push_back(&pressure_bc);
+
   VariationalProblem pde(a, L, bcs);
   
   // Solve PDE
