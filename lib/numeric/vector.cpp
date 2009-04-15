@@ -34,6 +34,13 @@ PETScVector& PETScVector::operator=(const PETScVector& p)
   return *this;
 }
 
+PETScVector& PETScVector::operator=(const double s)
+{
+  const PetscErrorCode ierr = VecSet(v, s);
+  checkError(ierr);
+  return *this;
+}
+
 PETScVector& PETScVector::operator*=(const double s)
 {
   const PetscErrorCode ierr = VecScale(v, s);
@@ -113,6 +120,12 @@ void PETScVector::getValues(const unsigned numValues, const int* indices, double
 void PETScVector::zero()
 {
   const PetscErrorCode ierr = VecZeroEntries(v);
+  checkError(ierr);
+}
+
+void PETScVector::reciprocal()
+{
+  const PetscErrorCode ierr = VecReciprocal(v);
   checkError(ierr);
 }
 

@@ -19,7 +19,7 @@ class dof_map
 public:
   typedef C cell_type;
   typedef finite_element<cell_type> finite_element_t;
-  typedef boost::tuple<const finite_element_t*, cell_id, unsigned>  dof_t;
+  typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
 
 private:
@@ -137,6 +137,37 @@ public:
     for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
     {
       if (boost::get<0>(mappingIter->first) == element)
+      {
+        newDofs.insert(mappingIter->second);
+        newMapping.insert(*mappingIter);
+      }
+    }
+
+    // Work out the subset of dofs on the boundary
+    std::set<unsigned> newBoundaryDofs;
+    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
+
+    dof_map result(m, newElements, newMapping, newBoundaryDofs);
+    result.makeContiguous();
+    return result;
+  }
+
+  dof_map extractSubDomainDofs(const finite_element_t* element, const SubDomain<cell_type::dimension>& subDomain)
+  {
+    std::set<const finite_element_t*> newElements;
+    std::set<unsigned> newDofs;
+    local2global_map newMapping;
+
+    // We only define a mapping for a single element
+    newElements.insert(element);
+
+    // Copy across relevant mappings and get all global dofs corresponding to element so we can filter
+    // boundary dofs;
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    {
+      const dof_t dof(mappingIter->first);
+
+      if (boost::get<0>(dof) == element && subDomain.inside(element->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof))))
       {
         newDofs.insert(mappingIter->second);
         newMapping.insert(*mappingIter);

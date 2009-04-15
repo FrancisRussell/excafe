@@ -71,6 +71,16 @@ public:
   {
   }
 
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
+  dof_map<cell_type> getColMappings() const
+  {
+    return colMappings;
+  }
+
   FEMatrix& operator=(const FEMatrix& f)
   {
     assert(rowMappings == f.rowMappings);
@@ -130,6 +140,12 @@ public:
     }
   }
 
+  void addToDiagonal(FEVector<cell_type>& v)
+  {
+    assert(rowMappings == v.getRowMappings());
+    matrix.addToDiagonal(v.getVectorHandle());
+  }
+
   void zeroRow(const dof_t& dof, const double diagonal)
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
@@ -148,6 +164,11 @@ public:
     matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
   }
 
+  FEVector<cell_type> getLumpedDiagonal() const
+  {
+    return FEVector<cell_type>(rowMappings, matrix.getLumpedDiagonal());
+  }
+
   void assemble()
   {
     matrix.assemble();
@@ -155,7 +176,26 @@ public:
 
   FEVector<cell_type> operator*(FEVector<cell_type>& v) const
   {
+    assert(colMappings == v.getRowMappings());
     return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
+  }
+
+  FEMatrix<cell_type> operator*(FEMatrix<cell_type>& b) const
+  {
+    assert(colMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
+  }
+
+  FEVector<cell_type> trans_mult(FEVector<cell_type>& v) const
+  {
+    assert(rowMappings == v.getRowMappings());
+    return FEVector<cell_type>(colMappings, matrix.trans_mult(v.getVectorHandle()));
+  }
+
+  FEMatrix<cell_type> trans_mult(FEMatrix<cell_type>& b) const
+  {
+    assert(rowMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
   }
 
   PETScMatrix& getMatrixHandle()

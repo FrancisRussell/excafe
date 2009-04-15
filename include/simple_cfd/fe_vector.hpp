@@ -45,6 +45,11 @@ public:
   {
   }
 
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
   FEVector& operator=(const FEVector& f)
   {
     assert(rowMappings == f.rowMappings);
@@ -117,6 +122,11 @@ public:
   void zero()
   {
     vector.zero();
+  }
+
+  void reciprocal()
+  {
+    vector.reciprocal();
   }
 
   void assemble()
