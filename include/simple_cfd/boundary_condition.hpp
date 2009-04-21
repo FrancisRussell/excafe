@@ -30,9 +30,15 @@ public:
     BOOST_STATIC_ASSERT(dimension == finite_element_t::dimension);
 
     typedef typename finite_element_t::cell_type cell_type;
+    typedef dof_map<typename finite_element_t::cell_type> dof_map_type;
+
     dof_map<cell_type> subDomainDofMap(dofMap.extractSubDomainDofs(element, subdomain)); 
 
     FEVector<cell_type> dirichletValues(subDomainDofMap);
+
+    for(typename dof_map_type::const_iterator dofMapIter(subDomainDofMap.begin()); dofMapIter!=subDomainDofMap.end(); ++dofMapIter)
+    {
+    }
   }
 };
 

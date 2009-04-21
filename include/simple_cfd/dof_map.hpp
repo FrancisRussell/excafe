@@ -22,6 +22,8 @@ public:
   typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
 
+  typedef typename local2global_map::const_iterator const_iterator;
+
 private:
   const mesh<cell_type>& m;
   std::set<const finite_element_t*> elements;
@@ -61,6 +63,16 @@ public:
   dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
           m(_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
+  }
+
+  const_iterator begin() const
+  {
+    return mapping.begin();
+  }
+
+  const_iterator end() const
+  {
+    return mapping.end();
   }
 
   bool operator==(const dof_map& map) const
