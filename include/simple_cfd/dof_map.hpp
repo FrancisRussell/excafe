@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <iterator>
+#include <utility>
 
 namespace cfd
 {
@@ -25,7 +26,7 @@ public:
   typedef typename local2global_map::const_iterator const_iterator;
 
 private:
-  const mesh<cell_type>& m;
+  const mesh<cell_type>* m;
   std::set<const finite_element_t*> elements;
   local2global_map mapping;
   std::set<unsigned> boundaryDofs;
@@ -60,8 +61,12 @@ public:
   {
   }
 
+  dof_map(const dof_map& d) : m(d.m), elements(d.elements), mapping(d.mapping), boundaryDofs(d.boundaryDofs)
+  {
+  }
+
   dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
-          m(_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
+          m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
 
@@ -77,7 +82,7 @@ public:
 
   bool operator==(const dof_map& map) const
   {
-    return &m == &map.m &&
+    return m == map.m &&
     elements == map.elements &&
     mapping == map.mapping &&
     boundaryDofs == map.boundaryDofs;
@@ -85,7 +90,7 @@ public:
 
   const mesh<cell_type>& getMesh() const
   {
-    return m;
+    return *m;
   }
 
   std::set<const finite_element_t*> getFiniteElements() const
@@ -159,40 +164,58 @@ public:
     std::set<unsigned> newBoundaryDofs;
     std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
 
-    dof_map result(m, newElements, newMapping, newBoundaryDofs);
+    dof_map result(*m, newElements, newMapping, newBoundaryDofs);
     result.makeContiguous();
     return result;
   }
 
-  dof_map extractSubDomainDofs(const finite_element_t* element, const SubDomain<cell_type::dimension>& subDomain)
+  std::pair<dof_map, dof_map> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >& dirichletConditions)
   {
-    std::set<const finite_element_t*> newElements;
-    std::set<unsigned> newDofs;
-    local2global_map newMapping;
+    local2global_map homogeneous;
+    std::set<const finite_element_t*> homogeneousElements;
+    std::set<unsigned> homogeneousBoundaryDofs;
 
-    // We only define a mapping for a single element
-    newElements.insert(element);
+    local2global_map dirichlet;
+    std::set<const finite_element_t*> dirichletElements;
+    std::set<unsigned> dirichletBoundaryDofs;
 
-    // Copy across relevant mappings and get all global dofs corresponding to element so we can filter
-    // boundary dofs;
     for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
     {
       const dof_t dof(mappingIter->first);
+      bool isDirichlet = false;
 
-      if (boost::get<0>(dof) == element && subDomain.inside(element->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof))))
+      for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
+          dirichletIter != dirichletConditions.end(); ++dirichletIter)
       {
-        newDofs.insert(mappingIter->second);
-        newMapping.insert(*mappingIter);
+        if (dirichletIter->first == boost::get<0>(dof) && dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof))))
+        {
+          dirichlet.insert(*mappingIter);
+          dirichletElements.insert( boost::get<0>(dof));
+
+          if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
+            dirichletBoundaryDofs.insert(mappingIter->second);
+
+          isDirichlet = true;
+        }
+      }
+
+      if (!isDirichlet) 
+      {
+        homogeneous.insert(*mappingIter);
+        homogeneousElements.insert(boost::get<0>(dof));
+
+        if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
+          homogeneousBoundaryDofs.insert(mappingIter->second);
       }
     }
 
-    // Work out the subset of dofs on the boundary
-    std::set<unsigned> newBoundaryDofs;
-    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
+    dof_map homogeneousMap(*m, homogeneousElements, homogeneous, homogeneousBoundaryDofs);
+    dof_map dirichletMap(*m, dirichletElements, dirichlet, dirichletBoundaryDofs);
 
-    dof_map result(m, newElements, newMapping, newBoundaryDofs);
-    result.makeContiguous();
-    return result;
+    homogeneousMap.makeContiguous();
+    dirichletMap.makeContiguous();
+
+    return std::make_pair(homogeneousMap, dirichletMap);
   }
 
   std::vector<int> getIndices(const dof_map& map) const

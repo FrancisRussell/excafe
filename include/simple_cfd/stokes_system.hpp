@@ -242,7 +242,7 @@ public:
   {
   }
 
-  bool inside(const vertex<dimension>& v)
+  bool inside(const vertex<dimension>& v) const
   {
     return v[0] < EPSILON || v[1] < EPSILON || v[1] > (1.0 - EPSILON);
   }
@@ -251,7 +251,7 @@ public:
 class Cylinder : public SubDomain<shape_dimensions<triangle>::dimension>
 {
 public:
-  bool inside(const vertex<dimension>& v)
+  bool inside(const vertex<dimension>& v) const
   {
     const vertex<2> centre(1.0, 0.5);
     const double radius = 0.15;
@@ -302,6 +302,7 @@ public:
 private:
   static const unsigned dimension = cell_type::dimension;
   typedef typename cell_type::vertex_type vertex_type;
+  typedef finite_element<cell_type> finite_element_t;
   typedef lagrange_triangle_linear<0> pressure_basis_t;
   typedef lagrange_triangle_quadratic<1> velocity_basis_t;
 
@@ -312,6 +313,9 @@ private:
   dof_map<cell_type> systemDofMap;
   dof_map<cell_type> velocityDofMap;
   dof_map<cell_type> pressureDofMap;
+
+  dof_map<cell_type> velocityDofMapHomogeneous;
+  dof_map<cell_type> velocityDofMapDirichlet;
 
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
   TrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
@@ -379,6 +383,14 @@ public:
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
     std::cout << "Degrees of freedom on boundary: " << systemDofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
+
+    std::vector< std::pair<const finite_element_t*, const SubDomain<dimension>*> > boundaryConditions;
+    boundaryConditions.push_back(std::make_pair(&velocity, &edges));
+    boundaryConditions.push_back(std::make_pair(&velocity, &cylinder));
+
+    const std::pair< dof_map<cell_type>, dof_map<cell_type> > splitDofs(velocityDofMap.splitHomogeneousDirichlet(boundaryConditions));
+    velocityDofMapHomogeneous = splitDofs.first;
+    velocityDofMapDirichlet = splitDofs.second;
   }
 
   FEMatrix<cell_type> getLumpedInverse(const FEMatrix<cell_type>& matrix)

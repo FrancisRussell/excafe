@@ -12,7 +12,7 @@ class SubDomain
 public:
   static const unsigned int dimension = D;
 
-  virtual bool inside(const vertex<dimension>& v) = 0;
+  virtual bool inside(const vertex<dimension>& v) const = 0;
   virtual ~SubDomain() {}
 };
 
