@@ -234,6 +234,19 @@ public:
     assert(mappingIter != mapping.end());
     return mappingIter->second;
   }
+
+  int getGlobalIndexWithMissingAsNegative(const dof_t& dof) const
+  {
+    const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
+    if (mappingIter != mapping.end())
+    {
+      return mappingIter->second;
+    }
+    else
+    {
+      return -1;
+    }
+  }
 };
 
 }

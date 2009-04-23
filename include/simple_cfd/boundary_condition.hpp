@@ -34,18 +34,19 @@ public:
     typedef dof_map<typename finite_element_t::cell_type> dof_map_type;
     typedef typename dof_map_type::dof_t dof_t;
 
-    const dof_map_type dofMap(boundaryValues.getRowMapping());
+    const dof_map_type dofMap(boundaryValues.getRowMappings());
+    const mesh<cell_type>& m(dofMap.getMesh());
 
     for(typename dof_map_type::const_iterator dofMapIter(dofMap.begin()); dofMapIter!=dofMap.end(); ++dofMapIter)
     {
       const dof_t dof(dofMapIter->first);
-      const vertex<dimension> dofLocation(element->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof)));
+      const vertex<dimension> dofLocation(element.getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof)));
 
-      if (boost::get<0>(dof) == element && subdomain.inside(dofLocation))
+      if (boost::get<0>(dof) == &element && subdomain.inside(dofLocation))
       {
         const Tensor<D, R, double> boundaryValue(function.evaluate(dofLocation));
-        const Tensor<D, R, double> basisAtDofLocation(element->evaluate_tensor(boost::get<1>(dof),
-                                                                               boost::get<2>(dof), dofLocation));
+        const Tensor<D, R, double> basisAtDofLocation(element.evaluate_tensor(m.getCell(boost::get<1>(dof)),
+                                                                              boost::get<2>(dof), dofLocation));
         const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
         boundaryValues.setValues(1, &dof, &dofValue);
       }

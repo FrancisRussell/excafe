@@ -264,7 +264,7 @@ public:
 class Zero : public Function<2, 1, double>
 {
 public:
-  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v)
+  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v) const
   {
     return Tensor<2, 1, double>();
   }
@@ -280,13 +280,13 @@ public:
   {
   }
 
-  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v)
+  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v) const
   {
     Tensor<2, 1, double> t;
 
     if (v[0] < EPSILON)
     {
-      t[0] = 5.0;
+      t(0) = 5.0;
     }
 
     return t;
@@ -479,36 +479,51 @@ public:
 
     std::cout << "Assembling linear terms..." << std::endl;
 
+    FEVector<cell_type> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
+    prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
+
     // Add in all constant terms in the lhs matrix
-    FEMatrix<cell_type> linear_lhs_matrix(velocityDofMap, velocityDofMap);
+    FEMatrix<cell_type> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    FEMatrix<cell_type> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
+
     linear_lhs_matrix.addTerm(m, mass_term);
     linear_lhs_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
     linear_lhs_matrix.assemble();
 
+    linear_dirichlet_rhs_matrix.addTerm(m, mass_term);
+    linear_dirichlet_rhs_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
+    linear_dirichlet_rhs_matrix.assemble();
+
     // Add in all constant terms in the rhs matrix
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
-    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
+    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
     nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta) * k * kinematic_viscosity));
+    nonLinearTermPrev * (-(1.0-theta) * k);
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta) * k));
     nonlinear_rhs_matrix.assemble();
 
-    FEMatrix<cell_type> pressure_matrix(velocityDofMap, pressureDofMap);
+    FEMatrix<cell_type> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
     pressure_matrix.addTerm(m, pressure_term);
     pressure_matrix.assemble();
 
-    FEMatrix<cell_type> velocity_mass_matrix(velocityDofMap, velocityDofMap);
+    FEMatrix<cell_type> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     velocity_mass_matrix.addTerm(m, mass_term);
     velocity_mass_matrix.assemble();
 
     FEMatrix<cell_type> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector + pressure_matrix * prev_pressure_vector * k);
+    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector + pressure_matrix * prev_pressure_vector * k);
     rhs_velocity.assemble();
 
+    FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
+    edgeVelocities.populateDirichletValues(dirichletValues, velocity);
+    cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
+
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<cell_type> unknown_velocity(prev_velocity_vector);
+    FEVector<cell_type> velocity_guess(prev_velocity_vector);
+    FEVector<cell_type> unknown_velocity(velocityDofMapHomogeneous);
     FEVector<cell_type> unknown_pressure(prev_pressure_vector);
     double residual = 0.0;
 
@@ -518,19 +533,25 @@ public:
 
       // Copy the existing matrices
       FEMatrix<cell_type> nonlinear_lhs_matrix(linear_lhs_matrix);
+      FEMatrix<cell_type> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
 
       // Create non-linear terms for calculating lhs part of system
-      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_velocity, &velocity);
+      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, velocity_guess, &velocity);
 
       // Add non-linear term into stiffness matrix
       nonlinear_lhs_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
       nonlinear_lhs_matrix.assemble();
 
-      std::cout << "Applying boundary conditions..." << std::endl;
-      applyEdgeVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
-      applyCylinderVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
+      nonlinear_dirichlet_rhs_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_dirichlet_rhs_matrix.assemble();
+
+      //std::cout << "Applying boundary conditions..." << std::endl;
+      //applyEdgeVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
+      //applyCylinderVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       std::cout << "Starting solver..." << std::endl;
+
+      const FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues);
       solve(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       residual = ((nonlinear_lhs_matrix * unknown_velocity) - rhs_velocity).two_norm();
@@ -548,9 +569,16 @@ public:
       FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity - pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
+
+      velocity_guess.zero();
+      velocity_guess.addSubvector(unknown_velocity);
+      velocity_guess.addSubvector(dirichletValues);
     }
 
-    velocity_vector = unknown_velocity;
+    velocity_vector.zero();
+    velocity_vector.addSubvector(unknown_velocity);
+    velocity_vector.addSubvector(dirichletValues);
+
     pressure_vector = unknown_pressure;
   }
 

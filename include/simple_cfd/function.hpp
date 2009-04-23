@@ -14,7 +14,7 @@ public:
   static const int rank = R;
   typedef T value_type;
 
-  virtual Tensor<D, R, T> evaluate(const vertex<dimension>& v) = 0;
+  virtual Tensor<D, R, T> evaluate(const vertex<dimension>& v) const = 0;
 };
 
 }

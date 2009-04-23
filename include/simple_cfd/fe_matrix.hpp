@@ -42,12 +42,25 @@ private:
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
+    {
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
+      {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
+        {
           for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
+          {
             for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
-              pattern.insert(rowMappings.getGlobalIndex(boost::make_tuple(*rowElemIter, cellIter->first, rowDof)), 
-                             colMappings.getGlobalIndex(boost::make_tuple(*colElemIter, cellIter->first, colDof)));
+            {
+              const int rowIndex = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, rowDof)); 
+              const int colIndex = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, colDof));
+
+              if (rowIndex >= 0 && colIndex >= 0)
+                pattern.insert(rowIndex, colIndex); 
+            }
+          }
+        }
+      }
+    }
 
     return pattern;
   }
@@ -126,10 +139,10 @@ public:
       std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
       for(unsigned test=0; test<testSpaceDimension; ++test)
-        testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cellIter->first, test));
+        testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cellIter->first, test));
 
       for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-        trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cellIter->first, trial));
+        trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cellIter->first, trial));
 
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
         for(unsigned test=0; test<testSpaceDimension; ++test)
