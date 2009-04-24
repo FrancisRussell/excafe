@@ -520,6 +520,7 @@ public:
     FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
+    dirichletValues.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
     FEVector<cell_type> velocity_guess(prev_velocity_vector);
@@ -551,10 +552,10 @@ public:
 
       std::cout << "Starting solver..." << std::endl;
 
-      const FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues);
-      solve(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
+      FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues);
+      solve(nonlinear_lhs_matrix, unknown_velocity, modified_rhs_velocity);
 
-      residual = ((nonlinear_lhs_matrix * unknown_velocity) - rhs_velocity).two_norm();
+      residual = ((nonlinear_lhs_matrix * unknown_velocity) - modified_rhs_velocity).two_norm();
       std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
 
       // Now solve mass-lumped continuity equation
