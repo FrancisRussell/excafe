@@ -499,7 +499,6 @@ public:
     FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
     nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta) * k * kinematic_viscosity));
-    nonLinearTermPrev * (-(1.0-theta) * k);
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta) * k));
     nonlinear_rhs_matrix.assemble();
 
