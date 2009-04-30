@@ -16,6 +16,7 @@ private:
   KSP ksp;
   PC pc;
   PetscReal rtol;
+  PetscReal atol;
   PetscInt maxIts;
 
   void checkError(const PetscErrorCode ierr) const;
@@ -25,6 +26,7 @@ public:
   PETScKrylovSolver();
   void setMaxIterations(const std::size_t maxIter);
   void setRelativeTolerance(const double t);
+  void setAbsoluteTolerance(const double t);
   void solve(const PETScMatrix& a, PETScVector& x, const PETScVector& b);
   bool converged() const;
   std::string getConvergedReason() const;
