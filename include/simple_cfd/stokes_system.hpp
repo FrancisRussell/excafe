@@ -284,7 +284,7 @@ public:
   {
     Tensor<2, 1, double> t;
 
-    if (v[0] < EPSILON)
+    if (v[0] < EPSILON && (v[1] > EPSILON || v[1] < 1.0 - EPSILON))
     {
       t(0) = 5.0;
     }
@@ -404,6 +404,7 @@ public:
 
   void initialiseFields()
   {
+    /*
     std::cout << "Running coupled solver to find initial fields..." << std::endl;
     std::cout << "Assembling linear terms..." << std::endl;
 
@@ -470,6 +471,14 @@ public:
     pressure_vector.assemble();
     //velocity_vector.assemble();
     std::cout << "Calculated initial fields." << std::endl;
+    */
+
+    FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
+    edgeVelocities.populateDirichletValues(dirichletValues, velocity);
+    cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
+
+    velocity_vector.zero();
+    velocity_vector.addSubvector(dirichletValues);
   }
 
   void timeDependentAssembleAndSolve() 
@@ -513,7 +522,7 @@ public:
     FEMatrix<cell_type> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector + pressure_matrix * prev_pressure_vector * k);
+    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
     rhs_velocity.assemble();
 
     FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
@@ -524,7 +533,7 @@ public:
     // This vector will hold the guesses for the unknowns each iteration
     FEVector<cell_type> velocity_guess(prev_velocity_vector);
     FEVector<cell_type> unknown_velocity(velocityDofMapHomogeneous);
-    FEVector<cell_type> unknown_pressure(prev_pressure_vector);
+    FEVector<cell_type> pressure_guess(prev_pressure_vector);
     double residual = 0.0;
 
     for(int picard_iteration=0; picard_iteration<2; ++picard_iteration)
@@ -551,7 +560,7 @@ public:
 
       std::cout << "Starting solver..." << std::endl;
 
-      FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues);
+      FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
       solve(nonlinear_lhs_matrix, unknown_velocity, modified_rhs_velocity);
 
       residual = ((nonlinear_lhs_matrix * unknown_velocity) - modified_rhs_velocity).two_norm();
@@ -564,9 +573,9 @@ public:
       std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
 
-      unknown_pressure = prev_pressure_vector - (phi * k);
+      pressure_guess = pressure_guess - (phi * (1/k));
 
-      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity - pressure_matrix*phi);
+      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
 
@@ -579,7 +588,7 @@ public:
     velocity_vector.addSubvector(unknown_velocity);
     velocity_vector.addSubvector(dirichletValues);
 
-    pressure_vector = unknown_pressure;
+    pressure_vector = pressure_guess;
   }
 
   Location getLocation(const vertex_type& v)
@@ -689,6 +698,8 @@ public:
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);
+    solver.setAbsoluteTolerance(1e-4);
+    solver.setRelativeTolerance(0.0);
     solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
 
     if (!solver.converged())
