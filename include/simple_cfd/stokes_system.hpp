@@ -284,7 +284,7 @@ public:
   {
     Tensor<2, 1, double> t;
 
-    if (v[0] < EPSILON && (v[1] > EPSILON || v[1] < 1.0 - EPSILON))
+    if (v[0] < EPSILON && v[1] > EPSILON && v[1] < 1.0 - EPSILON)
     {
       t(0) = 5.0;
     }
@@ -476,9 +476,11 @@ public:
     FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
+    dirichletValues.assemble();
 
     velocity_vector.zero();
     velocity_vector.addSubvector(dirichletValues);
+    velocity_vector.assemble();
   }
 
   void timeDependentAssembleAndSolve() 
@@ -490,6 +492,7 @@ public:
 
     FEVector<cell_type> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
     prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
+    homogeneous_prev_velocity_vector.assemble();
 
     // Add in all constant terms in the lhs matrix
     FEMatrix<cell_type> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
@@ -523,7 +526,6 @@ public:
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
     FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
-    rhs_velocity.assemble();
 
     FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
@@ -539,6 +541,8 @@ public:
     for(int picard_iteration=0; picard_iteration<2; ++picard_iteration)
     {
       std::cout << "Assembling non-linear terms..." << std::endl;
+
+      pressure_guess = prev_pressure_vector;
 
       // Copy the existing matrices
       FEMatrix<cell_type> nonlinear_lhs_matrix(linear_lhs_matrix);
@@ -563,6 +567,9 @@ public:
       FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
       solve(nonlinear_lhs_matrix, unknown_velocity, modified_rhs_velocity);
 
+      std::cout << "L2-norm of homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
+      std::cout << "L2-norm of C^Tu: " << pressure_matrix.trans_mult(unknown_velocity).two_norm() << std::endl;
+
       residual = ((nonlinear_lhs_matrix * unknown_velocity) - modified_rhs_velocity).two_norm();
       std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
 
@@ -572,21 +579,26 @@ public:
       FEVector<cell_type> phi(pressureDofMap);
       std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
+      std::cout << "L2-norm of phi: " << phi.two_norm() << std::endl;
 
       pressure_guess = pressure_guess - (phi * (1/k));
 
       FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
+      std::cout << "L2-norm of corrected homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
+      std::cout << "L2-norm of C^Tu with modified velocity vector: " << pressure_matrix.trans_mult(unknown_velocity).two_norm() << std::endl;
 
       velocity_guess.zero();
       velocity_guess.addSubvector(unknown_velocity);
       velocity_guess.addSubvector(dirichletValues);
+      velocity_guess.assemble();
     }
 
     velocity_vector.zero();
     velocity_vector.addSubvector(unknown_velocity);
     velocity_vector.addSubvector(dirichletValues);
+    velocity_vector.assemble();
 
     pressure_vector = pressure_guess;
   }
