@@ -15,7 +15,7 @@ void PETScKrylovSolver::checkError(const PetscErrorCode ierr) const
   assert(ierr == 0);
 }
 
-PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), atol(PETSC_DEFAULT), maxIts(PETSC_DEFAULT)
+PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), atol(PETSC_DEFAULT), maxIts(PETSC_DEFAULT), preconditionerEnabled(true)
 {
   PetscErrorCode ierr;
 
@@ -36,6 +36,9 @@ PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), atol(PETSC_DEFAULT
 
   ierr = PCSetType(pc, PCSOR);
   checkError(ierr);
+
+  updateTolerances();
+  updatePreconditioner();
 }
 
 void PETScKrylovSolver::solve(const PETScMatrix& a, PETScVector& x, const PETScVector& b)
@@ -92,6 +95,18 @@ void PETScKrylovSolver::updateTolerances()
   checkError(ierr);
 }
 
+void PETScKrylovSolver::updatePreconditioner()
+{
+  PetscErrorCode ierr = PCSetType(pc, preconditionerEnabled ? PCSOR : PCNONE);
+  checkError(ierr);
+}
+
+void PETScKrylovSolver::enablePreconditioner(const bool enable)
+{
+  preconditionerEnabled = enable;
+  updatePreconditioner();
+}
+
 void PETScKrylovSolver::setMaxIterations(const std::size_t maxIter)
 {
   maxIts = maxIter;
@@ -109,7 +124,6 @@ void PETScKrylovSolver::setAbsoluteTolerance(const double t)
   atol = t;
   updateTolerances();
 }
-
 
 PETScKrylovSolver::~PETScKrylovSolver()
 {
