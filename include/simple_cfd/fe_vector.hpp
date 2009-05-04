@@ -2,6 +2,8 @@
 #define SIMPLE_CFD_FE_VECTOR_HPP
 
 #include <vector>
+#include <ostream>
+#include <iostream>
 #include "numeric/vector.hpp"
 
 namespace cfd
@@ -144,6 +146,11 @@ public:
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+  }
+
+  void print(std::ostream& out = std::cout)
+  {
+    vector.print(out);
   }
 
   PETScVector& getVectorHandle()

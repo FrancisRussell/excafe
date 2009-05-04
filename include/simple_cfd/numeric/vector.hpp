@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_NUMERIC_VECTOR_HPP
 
 #include <cstddef>
+#include <iosfwd>
 #include "petsc.h"
 #include "petscvec.h"
 
@@ -36,6 +37,7 @@ public:
   void addSubvector(const PETScVector& source, const unsigned numValues, const int* indices);
   void reciprocal();
   void assemble();
+  void print(std::ostream& out) const;
   Vec getPETScHandle() const;
   ~PETScVector();
 };

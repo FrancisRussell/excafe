@@ -2,6 +2,8 @@
 #include <cassert>
 #include <numeric>
 #include <vector>
+#include <ostream>
+#include <iostream>
 #include "petsc.h"
 #include "petscvec.h"
 
@@ -149,6 +151,22 @@ void PETScVector::addSubvector(const PETScVector& source, const unsigned numValu
   VecGetArray(source.getPETScHandle(), &data);
   addValues(numValues, indices, data);
   VecRestoreArray(source.getPETScHandle(), &data);
+}
+
+void PETScVector::print(std::ostream& out = std::cout) const
+{
+  const size_t rows = numRows();
+  std::vector<int> indices(rows);
+  std::vector<double> values(rows);
+
+  for(size_t index = 0; index < rows; ++index)
+    indices[index] = index;
+
+  getValues(rows, &indices[0], &values[0]);
+
+  out << "(";
+  for(size_t index = 0; index < rows; ++index)
+    out << values[index] << (index < rows-1 ? ", " : ")");
 }
 
 Vec PETScVector::getPETScHandle() const
