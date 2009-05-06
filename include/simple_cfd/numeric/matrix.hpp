@@ -36,6 +36,7 @@ public:
   void zeroRow(const int row, const double diagonal);
   void zeroRows(const int* rows, const unsigned rowCount, const double diagonal);
   void addToDiagonal(const PETScVector& v);
+  void scaleDiagonal(const PETScVector& s);
   void zero();
   void assemble();
   void extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const;

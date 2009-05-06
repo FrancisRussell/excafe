@@ -149,6 +149,23 @@ void PETScMatrix::addToDiagonal(const PETScVector& v)
   checkError(ierr);
 }
 
+void PETScMatrix::scaleDiagonal(const PETScVector& s)
+{
+  assert(numRows() == numCols());
+  assert(numRows() == s.numRows());
+
+  PETScVector diagonal(s.numRows());
+
+  PetscErrorCode ierr = MatGetDiagonal(m, diagonal.getPETScHandle());
+  checkError(ierr);
+
+  ierr = VecPointwiseMult(diagonal.getPETScHandle(), diagonal.getPETScHandle(), s.getPETScHandle());
+  checkError(ierr);
+
+  ierr = MatDiagonalSet(m, diagonal.getPETScHandle(), INSERT_VALUES);
+  checkError(ierr);
+}
+
 void PETScMatrix::zero()
 {
   const PetscErrorCode ierr = MatZeroEntries(m);

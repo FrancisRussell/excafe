@@ -179,7 +179,15 @@ public:
 
   FEVector<cell_type> getLumpedDiagonal() const
   {
+    assert(rowMappings == colMappings);
     return FEVector<cell_type>(rowMappings, matrix.getLumpedDiagonal());
+  }
+
+  void scaleDiagonal(const FEVector<cell_type>& s)
+  {
+    assert(rowMappings == colMappings);
+    assert(rowMappings == s.getRowMappings());
+    matrix.scaleDiagonal(s.getVectorHandle());
   }
 
   void assemble()
