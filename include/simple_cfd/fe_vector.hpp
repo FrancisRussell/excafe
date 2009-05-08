@@ -65,11 +65,6 @@ public:
     return *this;
   }
 
-  FEVector& operator=(const double s)
-  {
-    vector = s;
-  }
-
   FEVector& operator*=(const double d)
   {
     vector *= d;
