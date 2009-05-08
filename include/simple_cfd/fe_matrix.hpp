@@ -195,31 +195,36 @@ public:
     matrix.assemble();
   }
 
-  FEVector<cell_type> operator*(FEVector<cell_type>& v) const
+  FEVector<cell_type> operator*(const FEVector<cell_type>& v) const
   {
     assert(colMappings == v.getRowMappings());
     return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
   }
 
-  FEMatrix<cell_type> operator*(FEMatrix<cell_type>& b) const
+  FEMatrix<cell_type> operator*(const FEMatrix<cell_type>& b) const
   {
     assert(colMappings == b.getRowMappings());
     return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
   }
 
-  FEVector<cell_type> trans_mult(FEVector<cell_type>& v) const
+  FEVector<cell_type> trans_mult(const FEVector<cell_type>& v) const
   {
     assert(rowMappings == v.getRowMappings());
     return FEVector<cell_type>(colMappings, matrix.trans_mult(v.getVectorHandle()));
   }
 
-  FEMatrix<cell_type> trans_mult(FEMatrix<cell_type>& b) const
+  FEMatrix<cell_type> trans_mult(const FEMatrix<cell_type>& b) const
   {
     assert(rowMappings == b.getRowMappings());
     return FEMatrix<cell_type>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
   }
 
   PETScMatrix& getMatrixHandle()
+  {
+    return matrix;
+  }
+
+  const PETScMatrix& getMatrixHandle() const
   {
     return matrix;
   }

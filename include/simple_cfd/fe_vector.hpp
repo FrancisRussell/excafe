@@ -163,6 +163,11 @@ public:
   {
     return vector;
   }
+
+  const PETScVector& getVectorHandle() const
+  {
+    return vector;
+  }
 };
 
 }
