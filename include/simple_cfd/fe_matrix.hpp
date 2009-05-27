@@ -101,6 +101,9 @@ public:
     const finite_element_t* const trialFunction = f.getTrialFunction();
     const finite_element_t* const testFunction = f.getTestFunction();
 
+    assert(trialElements.find(trialFunction) != trialElements.end());
+    assert(testElements.find(testFunction) != testElements.end());
+
     const std::map<cell_id, cell_type> cells(m.getCells());
 
     const unsigned testSpaceDimension = testFunction->space_dimension();
