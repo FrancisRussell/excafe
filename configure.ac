@@ -58,4 +58,5 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([steady_stokes/Makefile])
 AC_CONFIG_FILES([steady_stokes_dolfin/Makefile])
 AC_CONFIG_FILES([lib/Makefile])
+AC_CONFIG_FILES([tests/Makefile])
 AC_OUTPUT
