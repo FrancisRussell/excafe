@@ -15,7 +15,7 @@ void PETScKrylovSolver::checkError(const PetscErrorCode ierr) const
   assert(ierr == 0);
 }
 
-PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), maxIts(PETSC_DEFAULT)
+PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), atol(PETSC_DEFAULT), maxIts(PETSC_DEFAULT), preconditionerEnabled(true)
 {
   PetscErrorCode ierr;
 
@@ -34,11 +34,14 @@ PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), maxIts(PETSC_DEFAU
   ierr = KSPMonitorSet(ksp, KSPMonitorDefault, PETSC_NULL, PETSC_NULL);
   checkError(ierr);
 
-  ierr = PCSetType(pc, PCNONE);
+  ierr = PCSetType(pc, PCSOR);
   checkError(ierr);
+
+  updateTolerances();
+  updatePreconditioner();
 }
 
-void PETScKrylovSolver::solve(PETScMatrix& a, PETScVector& x, PETScVector& b)
+void PETScKrylovSolver::solve(const PETScMatrix& a, PETScVector& x, const PETScVector& b)
 {
   PetscErrorCode ierr;
 
@@ -88,8 +91,20 @@ std::string PETScKrylovSolver::getConvergedReason() const
 
 void PETScKrylovSolver::updateTolerances()
 {
-  const PetscErrorCode ierr = KSPSetTolerances(ksp, rtol, PETSC_DEFAULT, PETSC_DEFAULT, maxIts);
+  const PetscErrorCode ierr = KSPSetTolerances(ksp, rtol, atol, PETSC_DEFAULT, maxIts);
   checkError(ierr);
+}
+
+void PETScKrylovSolver::updatePreconditioner()
+{
+  PetscErrorCode ierr = PCSetType(pc, preconditionerEnabled ? PCSOR : PCNONE);
+  checkError(ierr);
+}
+
+void PETScKrylovSolver::enablePreconditioner(const bool enable)
+{
+  preconditionerEnabled = enable;
+  updatePreconditioner();
 }
 
 void PETScKrylovSolver::setMaxIterations(const std::size_t maxIter)
@@ -101,6 +116,12 @@ void PETScKrylovSolver::setMaxIterations(const std::size_t maxIter)
 void PETScKrylovSolver::setRelativeTolerance(const double t)
 {
   rtol = t;
+  updateTolerances();
+}
+
+void PETScKrylovSolver::setAbsoluteTolerance(const double t)
+{
+  atol = t;
   updateTolerances();
 }
 
