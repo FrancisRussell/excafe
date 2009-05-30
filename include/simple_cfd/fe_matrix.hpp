@@ -42,12 +42,25 @@ private:
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
     for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
+    {
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
+      {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
+        {
           for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
+          {
             for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
-              pattern.insert(rowMappings.getGlobalIndex(boost::make_tuple(*rowElemIter, cellIter->first, rowDof)), 
-                             colMappings.getGlobalIndex(boost::make_tuple(*colElemIter, cellIter->first, colDof)));
+            {
+              const int rowIndex = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, rowDof)); 
+              const int colIndex = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, colDof));
+
+              if (rowIndex >= 0 && colIndex >= 0)
+                pattern.insert(rowIndex, colIndex); 
+            }
+          }
+        }
+      }
+    }
 
     return pattern;
   }
@@ -69,6 +82,16 @@ public:
 
   FEMatrix(const FEMatrix& m) : rowMappings(m.rowMappings), colMappings(m.colMappings), matrix(m.matrix)
   {
+  }
+
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
+  dof_map<cell_type> getColMappings() const
+  {
+    return colMappings;
   }
 
   FEMatrix& operator=(const FEMatrix& f)
@@ -119,10 +142,10 @@ public:
       std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
       for(unsigned test=0; test<testSpaceDimension; ++test)
-        testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cellIter->first, test));
+        testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cellIter->first, test));
 
       for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-        trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cellIter->first, trial));
+        trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cellIter->first, trial));
 
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
         for(unsigned test=0; test<testSpaceDimension; ++test)
@@ -131,6 +154,12 @@ public:
 
       matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
     }
+  }
+
+  void addToDiagonal(FEVector<cell_type>& v)
+  {
+    assert(rowMappings == v.getRowMappings());
+    matrix.addToDiagonal(v.getVectorHandle());
   }
 
   void zeroRow(const dof_t& dof, const double diagonal)
@@ -151,17 +180,54 @@ public:
     matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
   }
 
+  FEVector<cell_type> getLumpedDiagonal() const
+  {
+    assert(rowMappings == colMappings);
+    return FEVector<cell_type>(rowMappings, matrix.getLumpedDiagonal());
+  }
+
+  void scaleDiagonal(const FEVector<cell_type>& s)
+  {
+    assert(rowMappings == colMappings);
+    assert(rowMappings == s.getRowMappings());
+    matrix.scaleDiagonal(s.getVectorHandle());
+  }
+
   void assemble()
   {
     matrix.assemble();
   }
 
-  FEVector<cell_type> operator*(FEVector<cell_type>& v) const
+  FEVector<cell_type> operator*(const FEVector<cell_type>& v) const
   {
+    assert(colMappings == v.getRowMappings());
     return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
   }
 
+  FEMatrix<cell_type> operator*(const FEMatrix<cell_type>& b) const
+  {
+    assert(colMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
+  }
+
+  FEVector<cell_type> trans_mult(const FEVector<cell_type>& v) const
+  {
+    assert(rowMappings == v.getRowMappings());
+    return FEVector<cell_type>(colMappings, matrix.trans_mult(v.getVectorHandle()));
+  }
+
+  FEMatrix<cell_type> trans_mult(const FEMatrix<cell_type>& b) const
+  {
+    assert(rowMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
+  }
+
   PETScMatrix& getMatrixHandle()
+  {
+    return matrix;
+  }
+
+  const PETScMatrix& getMatrixHandle() const
   {
     return matrix;
   }
