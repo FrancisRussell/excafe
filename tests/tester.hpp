@@ -1,5 +1,6 @@
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
+#include <simple_cfd/dof_map_builder.hpp>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,7 @@ private:
     const double height = 10.0;
     
     typedef typename basis_t::cell_type cell_type;
-    cfd::TriangularMeshBuilder meshBuilder(width, height, 0.14);
+    cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
     basis_t basis(m);
     const std::map<cfd::cell_id, cell_type> cells(m.getCells());
@@ -58,8 +59,6 @@ private:
  
     const double width = 20.0;
     const double height = 10.0;
-    const double xPoints = 30;
-    const double yPoints = 50;
     
     typedef typename basis_t::cell_type cell_type;
     typedef typename cell_type::vertex_type vertex_type;
@@ -69,7 +68,8 @@ private:
     typedef typename local2global_map::mapped_type global_dof_t;
     typedef typename std::map< global_dof_t, std::vector<local_dof_t> > global2local_map;
 
-    cfd::mesh<cell_type> m(width, height, xPoints, yPoints);
+    cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
+    cfd::mesh<cell_type> m(meshBuilder.buildMesh());
     const std::map<cfd::cell_id, cell_type> cells(m.getCells());
     basis_t basis(m);
 
