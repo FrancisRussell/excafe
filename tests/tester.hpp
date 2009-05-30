@@ -1,4 +1,5 @@
 #include <simple_cfd/mesh.hpp>
+#include <simple_cfd/triangular_mesh_builder.hpp>
 #include <string>
 
 class Tester
@@ -23,11 +24,10 @@ private:
   
     const double width = 20.0;
     const double height = 10.0;
-    const double xPoints = 30;
-    const double yPoints = 50;
     
     typedef typename basis_t::cell_type cell_type;
-    cfd::mesh<cell_type> m(width, height, xPoints, yPoints);
+    cfd::TriangularMeshBuilder meshBuilder(width, height, 0.14);
+    cfd::mesh<cell_type> m(meshBuilder.buildMesh());
     basis_t basis(m);
     const std::map<cfd::cell_id, cell_type> cells(m.getCells());
   

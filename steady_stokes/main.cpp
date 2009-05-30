@@ -1,4 +1,5 @@
 #include <simple_cfd/mesh.hpp>
+#include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/stokes_system.hpp>
 #include <simple_cfd/petsc_manager.hpp>
 #include <iostream>
@@ -10,7 +11,8 @@ int main(int argc, char* argv[])
 {
   PETScManager::instance().init(argc, argv);
   typedef cell<triangle> cell_type;
-  mesh<cell_type> m(3.0, 1.0, 90, 30);
+  TriangularMeshBuilder meshBuilder(3.0, 1.0, 1.0/900.0);
+  mesh<cell_type> m(meshBuilder.buildMesh());
 
   std::cout << "Constructing system..." << std::endl;
   stokes_system<cell_type> system(m);

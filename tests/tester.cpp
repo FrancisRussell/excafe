@@ -1,5 +1,6 @@
 #include <tester.hpp>
 #include <simple_cfd/mesh.hpp>
+#include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/lagrange_triangle_linear.hpp>
 #include <simple_cfd/lagrange_triangle_quadratic.hpp>
 #include <map>
@@ -52,7 +53,8 @@ void Tester::testQuadrature()
 
   const double area = 50.0;
   const double width = 10.0;
-  mesh<cell_type> m(width, width, 2, 2);
+  TriangularMeshBuilder meshBuilder(width, width, area);
+  mesh<cell_type> m(meshBuilder.buildMesh());
   const std::map<cell_id, cell_type> cells(m.getCells());
 
   for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
