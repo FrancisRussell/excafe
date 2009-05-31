@@ -1,4 +1,5 @@
 #include "simple_cfd/numeric/sparsity_pattern.hpp"
+#include <cassert>
 
 namespace cfd
 {
@@ -9,6 +10,8 @@ SparsityPattern::SparsityPattern(const unsigned r, const unsigned c) : rows(r), 
 
 void SparsityPattern::insert(const unsigned row, const unsigned col)
 {
+  assert(row >= 0 && row < rows);
+  assert(col >= 0 && col < cols);
   pattern[row].insert(col);
 }
 

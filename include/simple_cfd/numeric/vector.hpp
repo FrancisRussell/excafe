@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_NUMERIC_VECTOR_HPP
 
 #include <cstddef>
+#include <iosfwd>
 #include "petsc.h"
 #include "petscvec.h"
 
@@ -19,6 +20,7 @@ public:
   PETScVector(const PETScVector& orig);
   PETScVector(const unsigned rows);
   PETScVector& operator=(const PETScVector& p);
+  PETScVector& operator=(const double s);
   PETScVector& operator*=(const double s);
   PETScVector& operator+=(const PETScVector& p);
   PETScVector& operator-=(const PETScVector& p);
@@ -33,7 +35,9 @@ public:
   void zero();
   void extractSubvector(PETScVector& dest, const unsigned numValues, const int* indices) const;
   void addSubvector(const PETScVector& source, const unsigned numValues, const int* indices);
+  void reciprocal();
   void assemble();
+  void print(std::ostream& out) const;
   Vec getPETScHandle() const;
   ~PETScVector();
 };

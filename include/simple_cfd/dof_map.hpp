@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <iterator>
+#include <utility>
 
 namespace cfd
 {
@@ -19,11 +20,13 @@ class dof_map
 public:
   typedef C cell_type;
   typedef finite_element<cell_type> finite_element_t;
-  typedef boost::tuple<const finite_element_t*, cell_id, unsigned>  dof_t;
+  typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
 
+  typedef typename local2global_map::const_iterator const_iterator;
+
 private:
-  const mesh<cell_type>& m;
+  const mesh<cell_type>* m;
   std::set<const finite_element_t*> elements;
   local2global_map mapping;
   std::set<unsigned> boundaryDofs;
@@ -58,14 +61,28 @@ public:
   {
   }
 
-  dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
-          m(_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
+  dof_map(const dof_map& d) : m(d.m), elements(d.elements), mapping(d.mapping), boundaryDofs(d.boundaryDofs)
   {
+  }
+
+  dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+          m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
+  {
+  }
+
+  const_iterator begin() const
+  {
+    return mapping.begin();
+  }
+
+  const_iterator end() const
+  {
+    return mapping.end();
   }
 
   bool operator==(const dof_map& map) const
   {
-    return &m == &map.m &&
+    return m == map.m &&
     elements == map.elements &&
     mapping == map.mapping &&
     boundaryDofs == map.boundaryDofs;
@@ -73,7 +90,7 @@ public:
 
   const mesh<cell_type>& getMesh() const
   {
-    return m;
+    return *m;
   }
 
   std::set<const finite_element_t*> getFiniteElements() const
@@ -147,9 +164,58 @@ public:
     std::set<unsigned> newBoundaryDofs;
     std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
 
-    dof_map result(m, newElements, newMapping, newBoundaryDofs);
+    dof_map result(*m, newElements, newMapping, newBoundaryDofs);
     result.makeContiguous();
     return result;
+  }
+
+  std::pair<dof_map, dof_map> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >& dirichletConditions)
+  {
+    local2global_map homogeneous;
+    std::set<const finite_element_t*> homogeneousElements;
+    std::set<unsigned> homogeneousBoundaryDofs;
+
+    local2global_map dirichlet;
+    std::set<const finite_element_t*> dirichletElements;
+    std::set<unsigned> dirichletBoundaryDofs;
+
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    {
+      const dof_t dof(mappingIter->first);
+      bool isDirichlet = false;
+
+      for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
+          dirichletIter != dirichletConditions.end(); ++dirichletIter)
+      {
+        if (dirichletIter->first == boost::get<0>(dof) && dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof))))
+        {
+          dirichlet.insert(*mappingIter);
+          dirichletElements.insert( boost::get<0>(dof));
+
+          if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
+            dirichletBoundaryDofs.insert(mappingIter->second);
+
+          isDirichlet = true;
+        }
+      }
+
+      if (!isDirichlet) 
+      {
+        homogeneous.insert(*mappingIter);
+        homogeneousElements.insert(boost::get<0>(dof));
+
+        if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
+          homogeneousBoundaryDofs.insert(mappingIter->second);
+      }
+    }
+
+    dof_map homogeneousMap(*m, homogeneousElements, homogeneous, homogeneousBoundaryDofs);
+    dof_map dirichletMap(*m, dirichletElements, dirichlet, dirichletBoundaryDofs);
+
+    homogeneousMap.makeContiguous();
+    dirichletMap.makeContiguous();
+
+    return std::make_pair(homogeneousMap, dirichletMap);
   }
 
   std::vector<int> getIndices(const dof_map& map) const
@@ -167,6 +233,19 @@ public:
     const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
     assert(mappingIter != mapping.end());
     return mappingIter->second;
+  }
+
+  int getGlobalIndexWithMissingAsNegative(const dof_t& dof) const
+  {
+    const typename local2global_map::const_iterator mappingIter(mapping.find(dof));
+    if (mappingIter != mapping.end())
+    {
+      return mappingIter->second;
+    }
+    else
+    {
+      return -1;
+    }
   }
 };
 

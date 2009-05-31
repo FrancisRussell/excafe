@@ -2,6 +2,8 @@
 #define SIMPLE_CFD_FE_VECTOR_HPP
 
 #include <vector>
+#include <ostream>
+#include <iostream>
 #include "numeric/vector.hpp"
 
 namespace cfd
@@ -45,10 +47,21 @@ public:
   {
   }
 
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
   FEVector& operator=(const FEVector& f)
   {
     assert(rowMappings == f.rowMappings);
     vector = f.vector;
+    return *this;
+  }
+
+  FEVector& operator=(const double s)
+  {
+    vector = s;
     return *this;
   }
 
@@ -119,6 +132,11 @@ public:
     vector.zero();
   }
 
+  void reciprocal()
+  {
+    vector.reciprocal();
+  }
+
   void assemble()
   {
     vector.assemble();
@@ -136,7 +154,17 @@ public:
     vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
   }
 
+  void print(std::ostream& out = std::cout)
+  {
+    vector.print(out);
+  }
+
   PETScVector& getVectorHandle()
+  {
+    return vector;
+  }
+
+  const PETScVector& getVectorHandle() const
   {
     return vector;
   }
