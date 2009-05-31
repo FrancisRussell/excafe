@@ -3,6 +3,7 @@
 
 #include <simple_cfd_fwd.hpp>
 #include <mesh.hpp>
+#include <libtriangle.hpp>
 
 namespace cfd
 {
@@ -15,6 +16,9 @@ private:
   const double width;
   const double height;
   const double maxCellArea;
+
+  mesh<cell_type> buildMeshOld() const;
+  mesh<cell_type> buildMeshTriangle() const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);

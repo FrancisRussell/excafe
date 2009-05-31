@@ -29,6 +29,8 @@ if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
 
+AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
+
 # Check for MTL
 #AC_ARG_WITH([mtl],
 #          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
