@@ -105,15 +105,15 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
 
   mesh<TriangularMeshBuilder::cell_type> m;
 
-  for(vertex_id vid = 0; vid < out.numberofpoints; ++vid)
+  for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
   {
     const vertex_type v(out.pointlist[vid*2], out.pointlist[vid*2+1]);
-    m.addVertex(vid, v);
+    m.addVertex(v);
   }
 
   std::vector<vertex_id> cellVertices(3);
 
-  for(cell_id cid = 0; cid < out.numberoftriangles; ++cid)
+  for(cell_id cid = 0; cid < static_cast<unsigned>(out.numberoftriangles); ++cid)
   {
     cellVertices[0] = out.trianglelist[cid*3];
     cellVertices[1] = out.trianglelist[cid*3+1];
@@ -145,7 +145,7 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
   {
     for(int x=0; x < x_nodes; ++x)
     {
-      m.addVertex(vid, vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
+      m.addVertex(vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
       ++vid;
     }
   }

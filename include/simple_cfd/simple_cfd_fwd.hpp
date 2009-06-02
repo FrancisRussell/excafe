@@ -5,8 +5,8 @@ namespace cfd
 {
 
 // ID types
-typedef int vertex_id;
-typedef int cell_id;
+typedef unsigned vertex_id;
+typedef unsigned cell_id;
 
 // Cell shapes
 enum shape

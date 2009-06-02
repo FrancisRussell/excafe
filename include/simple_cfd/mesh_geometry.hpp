@@ -35,10 +35,10 @@ public:
     return impl->size();
   }
 
-  void insert(const vertex_id vid, const vertex<dimension>& v)
+  vertex_id add(const vertex<dimension>& v)
   {
     make_unique();
-    impl->insert(vid, v);
+    return impl->add(v);
   }
 
   vertex<dimension>& operator[](const vertex_id vid)

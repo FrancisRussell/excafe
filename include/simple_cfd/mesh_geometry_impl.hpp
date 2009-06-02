@@ -2,10 +2,9 @@
 #define SIMPLE_CFD_MESH_GEOMETRY_IMPL_HPP
 
 #include "simple_cfd_fwd.hpp"
-#include <utility>
+#include <vector>
 #include <cassert>
 #include <cstddef>
-#include <tr1/unordered_map>
 
 namespace cfd
 {
@@ -17,7 +16,7 @@ public:
   static const unsigned int dimension = D;
 
 private:
-  std::tr1::unordered_map<vertex_id, vertex<dimension> > values;
+  std::vector< vertex<dimension> > values;
 
 public:
   mesh_geometry_impl()
@@ -29,29 +28,23 @@ public:
     return values.size();
   }
 
-  void insert(const vertex_id vid, const vertex<dimension>& v)
+  const vertex_id add(const vertex<dimension>& v)
   {
-    values.insert(std::make_pair(vid, v));
+    const vertex_id vid = values.size();
+    values.push_back(v);
+    return vid;
   }
 
   vertex<dimension>& operator[](const vertex_id vid)
   {
+    assert(vid < values.size());
     return values[vid];
   }
 
   const vertex<dimension> operator[](const vertex_id vid) const
   {
-    const typename std::tr1::unordered_map<vertex_id, vertex<dimension> >::const_iterator vertexIter(values.find(vid));
-
-    if (vertexIter != values.end())
-    {
-      return vertexIter->second;
-    }
-    else
-    {
-      assert(false);
-      return vertex<dimension>();
-    }
+    assert(vid < values.size());
+    return values[vid];
   }
 };
 

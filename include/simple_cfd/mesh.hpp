@@ -42,9 +42,9 @@ public:
   {
   }
 
-  void addVertex(const vertex_id vid, const vertex_type& v)
+  const vertex_id addVertex(const vertex_type& v)
   {
-    geometry.insert(vid, v);
+    return geometry.add(v);
   }
 
   void addCell(const cell_id cid, const cell_type& c)
