@@ -24,7 +24,7 @@ public:
   static const unsigned int dimension = cell_type::dimension;
   typedef Tensor<dimension, rank, double> value_type;
   typedef Tensor<dimension, rank+1, double> gradient_type;
-  typedef Tensor<dimension, rank+1, double> divergence_type;
+  typedef Tensor<dimension, rank-1, double> divergence_type;
   typedef vertex<dimension> vertex_type;
 
 private:
