@@ -9,6 +9,7 @@
 #include <boost/lambda/lambda.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
+#include "mesh_connectivity.hpp"
 #include "utility.hpp"
 #include "cell.hpp"
 #include "dof_map.hpp"
@@ -34,7 +35,7 @@ private:
   double width;
   double height;
   mesh_geometry<dimension> geometry;
-  std::map<cell_id, cell_type> cells;
+  MeshConnectivity baseConnectivity;
   std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
 
 public:
@@ -47,14 +48,15 @@ public:
     return geometry.add(v);
   }
 
-  void addCell(const cell_id cid, const cell_type& c)
+  const cell_id addCell(const cell_type& c)
   {
-    cells.insert(std::make_pair(cid, c));
-    const std::vector< vertex_id > cell_vertices(c.getIndices());
+    const std::vector<vertex_id> cell_vertices(c.getIndices());
+    const cell_id cid = baseConnectivity.addEntity(cell_vertices.begin(), cell_vertices.end());
     for(std::vector<vertex_id>::const_iterator vertexIter(cell_vertices.begin()); vertexIter != cell_vertices.end(); ++vertexIter)
     {
       vertex_to_cells[*vertexIter].insert(cid);
     }
+    return cid;
   }
   
   std::set<cell_id> getVertexIncidentCells(const vertex_id vid) const
@@ -80,6 +82,7 @@ public:
 
   std::vector< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
   {
+    const std::map<cell_id, cell_type> cells(getCells());
     std::map< std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > facetCount;
     for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
     {
@@ -112,6 +115,7 @@ public:
 
   void print(std::ostream& out = std::cout) const
   {
+    const std::map<cell_id, cell_type> cells(getCells());
     out << "Nodes: " << geometry.size() << std::endl;
     out << "Cells: " << cells.size() << std::endl;
     out << std::endl;
@@ -126,9 +130,9 @@ public:
   
   cell_type getCell(const cell_id cid) const
   {
-    const std::map<cell_id, cell_type>::const_iterator cellIter = cells.find(cid);
-    assert(cellIter != cells.end());
-    return cellIter->second;
+    std::vector<std::size_t> vertexIndices;
+    baseConnectivity.populateWithIndices(vertexIndices, cid);
+    return cell_type(vertexIndices);
   }
 
   vertex_type getVertex(const vertex_id vid) const
@@ -138,6 +142,15 @@ public:
 
   std::map<cell_id, cell_type> getCells() const
   {
+    std::vector<std::size_t> vertexIndices;
+    std::map<cell_id, cell_type> cells;
+
+    for(std::size_t cid = 0; cid < baseConnectivity.numEntities(); ++cid)
+    {
+      baseConnectivity.populateWithIndices(vertexIndices, cid);
+      cell_type cell(vertexIndices);
+      cells.insert(std::make_pair(cid, cell));
+    }
     return cells;
   }
 

@@ -118,7 +118,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
     cellVertices[0] = out.trianglelist[cid*3];
     cellVertices[1] = out.trianglelist[cid*3+1];
     cellVertices[2] = out.trianglelist[cid*3+2];
-    m.addCell(cid, cell_type(cellVertices));
+    const cell_id givenCid = m.addCell(cell_type(cellVertices));
+    assert(givenCid == cid);
   }
 
   trifreeMembers(out);
@@ -193,9 +194,11 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
       std::transform(offset_upper_right_vertices.begin(), 
         offset_upper_right_vertices.end(), offset_upper_right_vertices.begin(), boost::lambda::_1 + offset);
 
-      m.addCell(cid, cell_type(offset_lower_left_vertices));
+      const cell_id llCid = m.addCell(cell_type(offset_lower_left_vertices));
+      assert(llCid == cid);
       ++cid;
-      m.addCell(cid, cell_type(offset_upper_right_vertices));
+      const cell_id urCid = m.addCell(cell_type(offset_upper_right_vertices));
+      assert(urCid == cid);
       ++cid;
     }
   }
