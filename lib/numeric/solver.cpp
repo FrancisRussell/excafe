@@ -28,7 +28,7 @@ PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), maxIts(PETSC_DEFAU
   ierr = KSPGetPC(ksp, &pc);
   checkError(ierr);
 
-  ierr = KSPSetType(ksp, KSPBCGS);
+  ierr = KSPSetType(ksp, KSPGMRES);
   checkError(ierr);
 
   ierr = KSPMonitorSet(ksp, KSPMonitorDefault, PETSC_NULL, PETSC_NULL);
