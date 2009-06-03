@@ -108,7 +108,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
   for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
   {
     const vertex_type v(out.pointlist[vid*2], out.pointlist[vid*2+1]);
-    m.addVertex(v);
+    const vertex_id givenVid = m.addVertex(v);
+    assert(vid == givenVid);
   }
 
   std::vector<vertex_id> cellVertices(3);
@@ -146,7 +147,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
   {
     for(int x=0; x < x_nodes; ++x)
     {
-      m.addVertex(vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
+      const vertex_id givenVid = m.addVertex(vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
+      assert(vid == givenVid);
       ++vid;
     }
   }
