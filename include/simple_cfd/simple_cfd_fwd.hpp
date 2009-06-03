@@ -1,12 +1,14 @@
 #ifndef SIMPLE_CFD_SIMPLE_CFD_FWD_HPP
 #define SIMPLE_CFD_SIMPLE_CFD_FWD_HPP
 
+#include <cstddef>
+
 namespace cfd
 {
 
 // ID types
-typedef unsigned vertex_id;
-typedef unsigned cell_id;
+typedef std::size_t vertex_id;
+typedef std::size_t cell_id;
 
 // Cell shapes
 enum shape
