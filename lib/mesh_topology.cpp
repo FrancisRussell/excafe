@@ -29,7 +29,11 @@ void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t 
     calculateConnectivity(dPrime, d);
     performTranspose(d, dPrime);
   }
-  else if (std::min(d, dPrime) == dimension || std::max(d, dPrime) == 0) // Can't be calculated by build
+  else if (dPrime == 0 && dimension > d && d > 0)
+  {
+    performBuild(d);
+  }
+  else
   {
     // We need to avoid the case d=d'=d''. We choose d''=0 and have d''=dimension
     // in the special case where d=d'=0.
@@ -38,18 +42,11 @@ void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t 
     calculateConnectivity(dPrimePrime, dPrime);
     performIntersection(d, dPrime, dPrimePrime);
   }
-  else // Has to be able to be calculated by build
-  {
-    // In this case, either d or dPrime is equal to dimension or 0. We want the 
-    // other one as a parameter to build
-    const std::size_t buildD = (d == 0 || d == dimension) ? dPrime : d;
-    assert(buildD != dimension && buildD != 0);
-    performBuild(buildD);
-  }
 }
 
 void MeshTopology::performTranspose(const std::size_t d, const std::size_t dPrime)
 {
+
   calculateConnectivity(dimension, dimension);
 }
 

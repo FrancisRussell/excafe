@@ -36,6 +36,9 @@ template<unsigned D> class mesh_geometry_impl;
 template<shape s> class cell;
 template<unsigned int D> class vertex;
 template<typename C> class finite_element;
+class MeshTopology;
+class MeshConnectivity;
+class MeshEntity;
 
 // Basis function types
 struct evaluated_basis
