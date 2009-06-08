@@ -2,7 +2,10 @@
 #define SIMPLE_CFD_MESH_CONNECTIVITY_HPP
 
 #include<vector>
+#include<algorithm>
 #include<cstddef>
+#include<functional>
+#include<boost/bind.hpp>
 
 namespace cfd
 {
@@ -28,6 +31,28 @@ public:
     offsets.push_back(indices.size());
     return index;
   }
+
+  template<typename InputIterator>
+  void addEntity(const std::size_t index, const InputIterator& indicesBegin, const InputIterator& indicesEnd)
+  {
+    // First we need to resize the array of offsets if index is larger than the current largest entity
+    // Be careful with unsigned types here!
+    if (numEntities() <= index)
+    {
+      const std::size_t newOffsetsCount = index - numEntities() + 1;
+      std::fill_n(std::back_inserter(offsets), newOffsetsCount, offsets.size());
+    }
+
+    // Now we insert the new indices
+    // We use index+1 so we insert new indices after existing indices for that entity
+    const std::size_t numNewIndices = indicesEnd - indicesBegin;
+    indices.insert(indices.begin() + offsets[index+1], indicesBegin, indicesEnd);
+
+    // Now we have to increment all offsets after index by numNewIndices
+    std::transform(offsets.begin() + index, offsets.end(), offsets.begin() + index, 
+      boost::bind(std::plus<std::size_t>(), _1, numNewIndices));
+  }
+
 };
 
 }

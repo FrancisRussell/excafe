@@ -39,6 +39,8 @@ template<typename C> class finite_element;
 class MeshTopology;
 class MeshConnectivity;
 class MeshEntity;
+class MeshEntityIteratorGlobal;
+class MeshEntityIteratorLocal;
 
 // Basis function types
 struct evaluated_basis

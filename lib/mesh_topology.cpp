@@ -46,16 +46,49 @@ void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t 
 
 void MeshTopology::performTranspose(const std::size_t d, const std::size_t dPrime)
 {
+  const std::size_t newConnectivityIndex = getConnectivityIndex(d, dPrime);
+  MeshConnectivity& newConnectivity = relations[newConnectivityIndex];
+  assert(newConnectivity.numEntities() == 0);
 
-  calculateConnectivity(dimension, dimension);
+  for(global_iterator dPrimeIter(global_begin(dPrime)); dPrimeIter!=global_end(dPrime); ++dPrimeIter)
+  {
+    for(local_iterator dIter(local_begin(*dPrimeIter, d)); dIter!=local_end(*dPrimeIter, d); ++dIter)
+    {
+      const std::size_t index = dPrimeIter->getIndex();
+      newConnectivity.addEntity(dIter->getIndex(), &index, &index+1);
+    }
+  }
 }
 
 void MeshTopology::performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime)
 {
+  calculateConnectivity(dPrime, 0);
+  calculateConnectivity(d, 0);
+
+  const std::size_t newConnectivityIndex = getConnectivityIndex(d, dPrime);
+  MeshConnectivity& newConnectivity = relations[newConnectivityIndex];
+  assert(newConnectivity.numEntities() == 0);
+
+  for(global_iterator dIter(global_begin(d)); dIter!=global_end(d); ++dIter)
+  {
+    std::vector<std::size_t dVertexIndices;
+    populateWithIndices(dVertexIndices, const std::size_t entity) const;
+
+    for(local_iterator dPrimePrimeIter(local_begin(*dIter, dPrimePrime)); dPrimePrimeIter!=local_end(*dIter, dPrimePrime); ++dPrimePrimeIter)
+    {
+      for(local_iterator dPrimeIter(local_begin(*dPrimePrimeIter, dPrime)); dPrimeIter!=local_end(*dPrimePrimeIter, dPrime); ++dPrimeIter)
+      {
+        if ((d == dPrime && dIter->getIndex() != dPrimeIter->getIndex()) || (d>dPrime && false /*FIXME*/)) 
+        {
+        }
+      }
+    }
+  }
 }
 
 void MeshTopology::performBuild(const std::size_t d)
 {
+  calculateConnectivity(dimension, dimension);
 }
 
 std::size_t MeshTopology::getConnectivityIndex(const std::size_t d, const std::size_t dPrime) const
