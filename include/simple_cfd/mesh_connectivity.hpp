@@ -42,7 +42,7 @@ public:
     if (numEntities() <= index)
     {
       const std::size_t newOffsetsCount = index - numEntities() + 1;
-      std::fill_n(std::back_inserter(offsets), newOffsetsCount, offsets.size());
+      std::fill_n(std::back_inserter(offsets), newOffsetsCount, indices.size());
     }
 
     // Now we insert the new indices
@@ -51,7 +51,7 @@ public:
     indices.insert(indices.begin() + offsets[index+1], indicesBegin, indicesEnd);
 
     // Now we have to increment all offsets after index by numNewIndices
-    std::transform(offsets.begin() + index, offsets.end(), offsets.begin() + index, 
+    std::transform(offsets.begin() + index + 1, offsets.end(), offsets.begin() + index + 1, 
       boost::bind(std::plus<std::size_t>(), _1, numNewIndices));
   }
 
