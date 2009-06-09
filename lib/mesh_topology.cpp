@@ -94,9 +94,10 @@ void MeshTopology::performIntersection(const std::size_t d, const std::size_t dP
       for(local_iterator dPrimeIter(local_begin(*dPrimePrimeIter, dPrime)); dPrimeIter!=local_end(*dPrimePrimeIter, dPrime); ++dPrimeIter)
       {
         const std::set<std::size_t> dPrimeVertexIndices(getIndices(*dPrimeIter, 0));
-        const bool dPrimeContainsD = std::includes(dPrimeVertexIndices.begin(), dPrimeVertexIndices.end(), dVertexIndices.begin(), dVertexIndices.end());
+        const bool dIncludesDPrime = std::includes(dVertexIndices.begin(), dVertexIndices.end(),
+          dPrimeVertexIndices.begin(), dPrimeVertexIndices.end());
 
-        if ((d == dPrime && dIter->getIndex() != dPrimeIter->getIndex()) || (d>dPrime && dPrimeContainsD)) 
+        if ((d == dPrime && dIter->getIndex() != dPrimeIter->getIndex()) || (d>dPrime && dIncludesDPrime)) 
         {
            const std::size_t j = dPrimeIter->getIndex();
            newConnectivity->addEntity(dIter->getIndex(), &j, &j+1);
@@ -156,7 +157,6 @@ MeshConnectivity* MeshTopology::getConnectivity(const std::size_t d, const std::
 
 std::set<std::size_t> MeshTopology::getIndices(const MeshEntity& entity, const std::size_t d)
 {
-  calculateConnectivity(entity.getDimension(), d);
   std::set<std::size_t> indices;
 
   for(local_iterator dIter(local_begin(entity, d)); dIter!=local_end(entity, d); ++dIter)
