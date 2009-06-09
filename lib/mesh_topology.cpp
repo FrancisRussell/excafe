@@ -1,11 +1,12 @@
 #include <set>
 #include <algorithm>
 #include <mesh_topology.hpp>
+#include <general_cell.hpp>
 
 namespace cfd
 {
 
-MeshTopology::MeshTopology(const std::size_t _dimension) : dimension(_dimension), 
+MeshTopology::MeshTopology(const GeneralCell& _cell) : cell(_cell), dimension(cell.getDimension()), 
   relations(numRelations(dimension))
 {
 }
@@ -73,8 +74,7 @@ void MeshTopology::performIntersection(const std::size_t d, const std::size_t dP
   {
     const std::set<std::size_t> dVertexIndices(getIndices(*dIter, 0));
 
-    for(local_iterator dPrimePrimeIter(local_begin(*dIter, dPrimePrime)); dPrimePrimeIter!=local_end(*dIter, dPrimePrime); ++dPrimePrimeIter)
-    {
+    for(local_iterator dPrimePrimeIter(local_begin(*dIter, dPrimePrime)); dPrimePrimeIter!=local_end(*dIter, dPrimePrime); ++dPrimePrimeIter) {
       for(local_iterator dPrimeIter(local_begin(*dPrimePrimeIter, dPrime)); dPrimeIter!=local_end(*dPrimePrimeIter, dPrime); ++dPrimeIter)
       {
         const std::set<std::size_t> dPrimeVertexIndices(getIndices(*dPrimeIter, 0));
@@ -92,11 +92,29 @@ void MeshTopology::performIntersection(const std::size_t d, const std::size_t dP
 
 void MeshTopology::performBuild(const std::size_t d)
 {
+  MeshConnectivity* const newConnectivity = getConnectivity(d, 0);
+  assert(newConnectivity->numEntities() == 0);
+
   calculateConnectivity(dimension, dimension);
   std::size_t k = 0;
 
-  for(global_iterator dIter(global_begin(dimension)); dIter!=global_end(dimension); ++dIter)
+  for(global_iterator cellIter(global_begin(dimension)); cellIter!=global_end(dimension); ++cellIter)
   {
+    const std::set< std::set<std::size_t> > vi(cell.getIncidentVertices(*this, *cellIter, 0));
+    for(local_iterator iCellIter(local_begin(*cellIter, dimension)); iCellIter!=local_end(*cellIter, dimension); ++iCellIter) 
+    {
+      if (iCellIter->getIndex() < cellIter->getIndex())
+      {
+        const std::set< std::set<std::size_t> > vj(cell.getIncidentVertices(*this, *iCellIter, 0));
+        for(std::set< std::set<std::size_t> >::const_iterator viIter(vi.begin()); viIter!=vi.end(); ++viIter)
+        {
+          if (vj.find(*viIter) == vj.end())
+          {
+            newConnectivity->addEntity(k, viIter->begin(), viIter->end());
+          }
+        }
+      }
+    }
   }
 }
 
@@ -115,6 +133,7 @@ MeshConnectivity* MeshTopology::getConnectivity(const std::size_t d, const std::
 
 std::set<std::size_t> MeshTopology::getIndices(const MeshEntity& entity, const std::size_t d)
 {
+  calculateConnectivity(entity.getDimension(), d);
   std::set<std::size_t> indices;
 
   for(local_iterator dIter(local_begin(entity, d)); dIter!=local_end(entity, d); ++dIter)
@@ -123,6 +142,30 @@ std::set<std::size_t> MeshTopology::getIndices(const MeshEntity& entity, const s
   }
 
   return indices;
+}
+
+MeshTopology::global_iterator MeshTopology::global_begin(const std::size_t d)
+{
+  return MeshEntityIteratorGlobal(this, d, 0);
+}
+
+MeshTopology::global_iterator MeshTopology::global_end(const std::size_t d)
+{
+  calculateConnectivity(d, 0);
+  return MeshEntityIteratorGlobal(this, d, getConnectivity(d, 0)->numEntities());
+}
+
+MeshTopology::local_iterator MeshTopology::local_begin(const MeshEntity& entity, const std::size_t d)
+{
+  calculateConnectivity(entity.getDimension(), d);
+  return MeshEntityIteratorLocal(this, entity, d, 0);
+}
+
+MeshTopology::local_iterator MeshTopology::local_end(const MeshEntity& entity, const std::size_t d)
+{
+  calculateConnectivity(entity.getDimension(), d);
+  return MeshEntityIteratorLocal(this, entity, d, 
+    getConnectivity(entity.getDimension(), d)->entitySize(entity.getIndex()));
 }
 
 }

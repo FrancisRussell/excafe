@@ -5,6 +5,7 @@
 #include<algorithm>
 #include<cstddef>
 #include<functional>
+#include<iterator>
 #include<boost/bind.hpp>
 
 namespace cfd
@@ -45,7 +46,7 @@ public:
 
     // Now we insert the new indices
     // We use index+1 so we insert new indices after existing indices for that entity
-    const std::size_t numNewIndices = indicesEnd - indicesBegin;
+    const std::size_t numNewIndices = std::distance(indicesBegin, indicesEnd);
     indices.insert(indices.begin() + offsets[index+1], indicesBegin, indicesEnd);
 
     // Now we have to increment all offsets after index by numNewIndices

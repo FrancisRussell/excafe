@@ -37,6 +37,7 @@ private:
   mesh_geometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
   std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
+  cell<triangle> referenceCell;
 
 public:
   mesh()

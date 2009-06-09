@@ -19,8 +19,8 @@ private:
   std::size_t index;
 
 public:
-  MeshEntityIteratorGlobal(MeshTopology* const _topology, const std::size_t _dimension) : topology(_topology),
-    dimension(_dimension), index(0)
+  MeshEntityIteratorGlobal(MeshTopology* const _topology, const std::size_t _dimension, const std::size_t _index) : 
+    topology(_topology), dimension(_dimension), index(_index)
   {
   }
 

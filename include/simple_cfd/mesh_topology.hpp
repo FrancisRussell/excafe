@@ -4,6 +4,7 @@
 #include <mesh_connectivity.hpp>
 #include <mesh_entity_iterator_global.hpp>
 #include <mesh_entity_iterator_local.hpp>
+#include <general_cell.hpp>
 #include <cstddef>
 #include <cassert>
 #include <vector>
@@ -18,6 +19,7 @@ private:
   friend class MeshEntityIteratorGlobal;
   friend class MeshEntityIteratorLocal;
 
+  const GeneralCell& cell;
   const std::size_t dimension;
   std::vector<MeshConnectivity> relations;
 
@@ -30,14 +32,14 @@ private:
   void performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime);
   void performBuild(const std::size_t d);
 
-  std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
 
 public:
   typedef MeshEntityIteratorGlobal global_iterator;
   typedef MeshEntityIteratorLocal local_iterator;
 
-  MeshTopology(const std::size_t _dimension);
+  MeshTopology(const GeneralCell& _cell);
   std::size_t numEntities(const std::size_t d);
+  std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
 
   global_iterator global_begin(const std::size_t d);
   global_iterator global_end(const std::size_t d);

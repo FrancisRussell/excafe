@@ -9,20 +9,23 @@
 #include<iostream>
 #include<algorithm>
 #include<numeric>
+#include<cstddef>
 #include"simple_cfd_fwd.hpp"
 #include"mesh.hpp"
 #include"vertex.hpp"
+#include"mesh_topology.hpp"
+#include"general_cell.hpp"
 
 namespace cfd
 {
 
 template<shape s>
-class cell
+class cell 
 {
 };
 
 template<>
-class cell<triangle>
+class cell<triangle> : public GeneralCell
 {
 public:
   static const shape cell_shape = triangle;
@@ -34,10 +37,19 @@ private:
   boost::array<vertex_id, vertex_count> vertex_ids;
 
 public:
+  cell()
+  {
+  }
+
   cell(const std::vector<vertex_id>& vertices)
   {
     assert(vertices.size() == vertex_count);
     std::copy(vertices.begin(), vertices.end(), vertex_ids.begin());
+  }
+
+  virtual std::size_t getDimension() const
+  {
+    return dimension;
   }
 
   std::vector<vertex_id> getIndices() const
@@ -148,7 +160,44 @@ public:
       if ((vDotProd<0 && v3DotProd>0) || (vDotProd>0 && v3DotProd<0))
         contained = false;
     }
-   return contained;
+    return contained;
+  }
+
+  std::set< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
+  {
+    //NOTE: we rely on the fact that the vertices are sorted, otherwise this method
+    //      would be non-deterministic
+    std::set<std::size_t> vertexSet(topology.getIndices(cellEntity, d));
+    std::vector<std::size_t> sortedVertices(vertexSet.begin(), vertexSet.end());
+    std::set< std::set<std::size_t> > result;
+    assert(vertexSet.size() == vertex_count);
+
+    if (d == 2)
+    {
+      // All vertices are incident to the cell
+      result.insert(vertexSet);
+    }
+    else if (d == 1)
+    {
+      for(unsigned edge=0; edge<3; ++edge)
+      {
+        std::set<std::size_t> edgeVertexSet;
+        edgeVertexSet.insert(sortedVertices[edge]);
+        edgeVertexSet.insert(sortedVertices[(edge+1)%vertex_count]);
+      }
+    }
+    else if (d == 0)
+    {
+      // Vertices are only incident to themselves
+      for(unsigned i=0; i<sortedVertices.size(); ++i)
+      {
+        std::set<std::size_t> singleVertexSet;
+        singleVertexSet.insert(sortedVertices[i]);
+        result.insert(singleVertexSet);
+      }
+    }
+
+    return result;
   }
 };
 
