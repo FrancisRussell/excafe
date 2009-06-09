@@ -67,28 +67,13 @@ public:
     topology.setBaseConnectivity(baseConnectivity);
     baseConnectivity.clear();
   }
-  
-  std::set<cell_id> getVertexIncidentCells(const vertex_id vid) const
-  {
-    const std::map<vertex_id, std::set<cell_id> >::const_iterator vertexIter(vertex_to_cells.find(vid));
-    assert(vertexIter != vertex_to_cells.end());
-    return vertexIter->second;
-  }
 
   std::set<cell_id> getCellIncidentCells(const cell_id cid) const
   {
-    // Note that the returned list will also contain the original cell
-    const std::vector<vertex_id> indices(getCell(cid).getIndices());
-    std::set<cell_id> incident;
-    
-    for(std::vector<vertex_id>::const_iterator vertexIter(indices.begin()); vertexIter != indices.end(); ++vertexIter)
-    {
-      const std::set<cell_id> localIncident(getVertexIncidentCells(*vertexIter));
-      incident.insert(localIncident.begin(), localIncident.end());
-    }
-    return incident;
+    const MeshEntity cellEntity(dimension, cid);
+    return topology.getIndices(cellEntity, dimension);
   }
-
+  
   std::vector< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
   {
     const std::map<cell_id, cell_type> cells(getCells());
