@@ -8,6 +8,13 @@ namespace cfd
 
 MeshConnectivity::MeshConnectivity()
 {
+  clear();
+}
+
+void MeshConnectivity::clear()
+{
+  offsets.clear();
+  indices.clear();
   offsets.push_back(0);
 }
 

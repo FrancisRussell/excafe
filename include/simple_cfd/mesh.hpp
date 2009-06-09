@@ -10,6 +10,7 @@
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
 #include "mesh_connectivity.hpp"
+#include "mesh_topology.hpp"
 #include "utility.hpp"
 #include "cell.hpp"
 #include "dof_map.hpp"
@@ -38,9 +39,10 @@ private:
   MeshConnectivity baseConnectivity;
   std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
   cell<triangle> referenceCell;
+  mutable MeshTopology topology;
 
 public:
-  mesh()
+  mesh() : topology(referenceCell)
   {
   }
 
@@ -58,6 +60,12 @@ public:
       vertex_to_cells[*vertexIter].insert(cid);
     }
     return cid;
+  }
+
+  void finish()
+  {
+    topology.setBaseConnectivity(baseConnectivity);
+    baseConnectivity.clear();
   }
   
   std::set<cell_id> getVertexIncidentCells(const vertex_id vid) const
@@ -132,7 +140,7 @@ public:
   cell_type getCell(const cell_id cid) const
   {
     std::vector<std::size_t> vertexIndices;
-    baseConnectivity.populateWithIndices(vertexIndices, cid);
+    topology.getConnectivity(dimension, 0)->populateWithIndices(vertexIndices, cid);
     return cell_type(vertexIndices);
   }
 
@@ -146,9 +154,9 @@ public:
     std::vector<std::size_t> vertexIndices;
     std::map<cell_id, cell_type> cells;
 
-    for(std::size_t cid = 0; cid < baseConnectivity.numEntities(); ++cid)
+    for(std::size_t cid = 0; cid < topology.numEntities(dimension); ++cid)
     {
-      baseConnectivity.populateWithIndices(vertexIndices, cid);
+      topology.getConnectivity(dimension, 0)->populateWithIndices(vertexIndices, cid);
       cell_type cell(vertexIndices);
       cells.insert(std::make_pair(cid, cell));
     }

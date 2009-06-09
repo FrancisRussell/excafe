@@ -25,7 +25,7 @@ private:
 
   static std::size_t numRelations(const std::size_t dimension);
   std::size_t getConnectivityIndex(const std::size_t d, const std::size_t dPrime) const;
-  MeshConnectivity* getConnectivity(const std::size_t d, const std::size_t dPrime);
+  MeshConnectivity* getConnectivityObject(const std::size_t d, const std::size_t dPrime);
 
   void calculateConnectivity(const std::size_t d, const std::size_t dPrime);
   void performTranspose(const std::size_t d, const std::size_t dPrime);
@@ -38,8 +38,10 @@ public:
   typedef MeshEntityIteratorLocal local_iterator;
 
   MeshTopology(const GeneralCell& _cell);
+  void setBaseConnectivity(const MeshConnectivity& connectivity);
   std::size_t numEntities(const std::size_t d);
   std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
+  MeshConnectivity* getConnectivity(const std::size_t d, const std::size_t dPrime);
 
   global_iterator global_begin(const std::size_t d);
   global_iterator global_end(const std::size_t d);

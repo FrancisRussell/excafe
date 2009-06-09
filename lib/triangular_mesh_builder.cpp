@@ -124,6 +124,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
   }
 
   trifreeMembers(out);
+
+  m.finish();
   return m;
 }
 
@@ -205,6 +207,7 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
     }
   }
 
+  m.finish();
   return m;
 }
 

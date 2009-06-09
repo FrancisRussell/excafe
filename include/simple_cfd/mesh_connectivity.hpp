@@ -22,6 +22,7 @@ public:
   std::size_t numEntities() const;
   std::size_t addEntity(const std::vector<std::size_t>& _indices);
   std::size_t entitySize(const std::size_t entity) const;
+  void clear();
   void populateWithIndices(std::vector<std::size_t>& indices, const std::size_t entity) const;
 
   template<typename InputIterator>
