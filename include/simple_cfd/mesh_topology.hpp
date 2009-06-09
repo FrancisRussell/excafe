@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cassert>
 #include <vector>
+#include <set>
 
 namespace cfd
 {
@@ -28,6 +29,8 @@ private:
   void performTranspose(const std::size_t d, const std::size_t dPrime);
   void performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime);
   void performBuild(const std::size_t d);
+
+  std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
 
 public:
   typedef MeshEntityIteratorGlobal global_iterator;
