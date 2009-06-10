@@ -7,11 +7,11 @@ namespace cfd
 {
 
 MeshTopology::MeshTopology(const GeneralCell& _cell) : cell(_cell), dimension(cell.getDimension()), 
-  relations(numRelations(dimension))
+  relations(numConnectivityRelations(dimension))
 {
 }
 
-std::size_t MeshTopology::numRelations(const std::size_t dimension)
+std::size_t MeshTopology::numConnectivityRelations(const std::size_t dimension)
 {
   return (dimension+1)*(dimension+1);
 }
@@ -26,6 +26,12 @@ void MeshTopology::setBaseConnectivity(const MeshConnectivity& c)
 std::size_t MeshTopology::numEntities(const std::size_t d)
 {
   return getConnectivity(d, 0)->numEntities();
+}
+
+std::size_t MeshTopology::numRelations(const MeshEntity& entity, const std::size_t d)
+{
+  calculateConnectivity(entity.getDimension(), d);
+  return getConnectivityObject(entity.getDimension(), d)->numRelations(entity.getIndex());
 }
 
 void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t dPrime)
@@ -58,9 +64,6 @@ void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t 
 
 void MeshTopology::performTranspose(const std::size_t d, const std::size_t dPrime)
 {
-  // Prerequisite
-  // calculateConnectivity(dPrime, d);
-
   MeshConnectivity* const newConnectivity = getConnectivityObject(d, dPrime);
   assert(newConnectivity->numEntities() == 0);
 
@@ -76,13 +79,6 @@ void MeshTopology::performTranspose(const std::size_t d, const std::size_t dPrim
 
 void MeshTopology::performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime)
 {
-  // Prerequisites
-  //calculateConnectivity(d, dPrimePrime);
-  //calculateConnectivity(dPrimePrime, dPrime);
-
-  //calculateConnectivity(dPrime, 0);
-  //calculateConnectivity(d, 0);
-
   MeshConnectivity* const newConnectivity = getConnectivityObject(d, dPrime);
   assert(newConnectivity->numEntities() == 0);
 
@@ -112,7 +108,6 @@ void MeshTopology::performBuild(const std::size_t d)
   MeshConnectivity* const newConnectivity = getConnectivityObject(d, 0);
   assert(newConnectivity->numEntities() == 0);
 
-  //calculateConnectivity(dimension, dimension);
   std::size_t k = 0;
 
   for(global_iterator cellIter(global_begin(dimension)); cellIter!=global_end(dimension); ++cellIter)
@@ -174,21 +169,18 @@ MeshTopology::global_iterator MeshTopology::global_begin(const std::size_t d)
 
 MeshTopology::global_iterator MeshTopology::global_end(const std::size_t d)
 {
-  calculateConnectivity(d, 0);
-  return MeshEntityIteratorGlobal(this, d, getConnectivityObject(d, 0)->numEntities());
+  return MeshEntityIteratorGlobal(this, d, getConnectivity(d, 0)->numEntities());
 }
 
 MeshTopology::local_iterator MeshTopology::local_begin(const MeshEntity& entity, const std::size_t d)
 {
-  calculateConnectivity(entity.getDimension(), d);
   return MeshEntityIteratorLocal(this, entity, d, 0);
 }
 
 MeshTopology::local_iterator MeshTopology::local_end(const MeshEntity& entity, const std::size_t d)
 {
-  calculateConnectivity(entity.getDimension(), d);
   return MeshEntityIteratorLocal(this, entity, d, 
-    getConnectivityObject(entity.getDimension(), d)->entitySize(entity.getIndex()));
+    getConnectivity(entity.getDimension(), d)->numRelations(entity.getIndex()));
 }
 
 }

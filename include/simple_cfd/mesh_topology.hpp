@@ -23,7 +23,7 @@ private:
   const std::size_t dimension;
   std::vector<MeshConnectivity> relations;
 
-  static std::size_t numRelations(const std::size_t dimension);
+  static std::size_t numConnectivityRelations(const std::size_t dimension);
   std::size_t getConnectivityIndex(const std::size_t d, const std::size_t dPrime) const;
   MeshConnectivity* getConnectivityObject(const std::size_t d, const std::size_t dPrime);
 
@@ -40,6 +40,7 @@ public:
   MeshTopology(const GeneralCell& _cell);
   void setBaseConnectivity(const MeshConnectivity& connectivity);
   std::size_t numEntities(const std::size_t d);
+  std::size_t numRelations(const MeshEntity& entity, const std::size_t d);
   std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
   MeshConnectivity* getConnectivity(const std::size_t d, const std::size_t dPrime);
 
