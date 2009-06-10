@@ -167,10 +167,14 @@ public:
   {
     //NOTE: we rely on the fact that the vertices are sorted, otherwise this method
     //      would be non-deterministic
-    std::set<std::size_t> vertexSet(topology.getIndices(cellEntity, d));
+    assert(cellEntity.getDimension() == dimension);
+    assert(d <= dimension);
+
+    std::set<std::size_t> vertexSet(topology.getIndices(cellEntity, 0));
     std::vector<std::size_t> sortedVertices(vertexSet.begin(), vertexSet.end());
-    std::set< std::set<std::size_t> > result;
     assert(vertexSet.size() == vertex_count);
+
+    std::set< std::set<std::size_t> > result;
 
     if (d == 2)
     {
@@ -183,7 +187,8 @@ public:
       {
         std::set<std::size_t> edgeVertexSet;
         edgeVertexSet.insert(sortedVertices[edge]);
-        edgeVertexSet.insert(sortedVertices[(edge+1)%vertex_count]);
+        edgeVertexSet.insert(sortedVertices[(edge+1)%3]);
+        result.insert(edgeVertexSet);
       }
     }
     else if (d == 0)
