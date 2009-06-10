@@ -37,7 +37,6 @@ private:
   double height;
   mesh_geometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
-  std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
   cell<triangle> referenceCell;
   mutable MeshTopology topology;
 
@@ -55,10 +54,6 @@ public:
   {
     const std::vector<vertex_id> cell_vertices(c.getIndices());
     const cell_id cid = baseConnectivity.addEntity(cell_vertices.begin(), cell_vertices.end());
-    for(std::vector<vertex_id>::const_iterator vertexIter(cell_vertices.begin()); vertexIter != cell_vertices.end(); ++vertexIter)
-    {
-      vertex_to_cells[*vertexIter].insert(cid);
-    }
     return cid;
   }
 
