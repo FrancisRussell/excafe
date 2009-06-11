@@ -170,34 +170,33 @@ public:
     assert(cellEntity.getDimension() == dimension);
     assert(d <= dimension);
 
-    std::set<std::size_t> vertexSet(topology.getIndices(cellEntity, 0));
-    std::vector<std::size_t> sortedVertices(vertexSet.begin(), vertexSet.end());
-    assert(vertexSet.size() == vertex_count);
+    std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
+    assert(vertices.size() == vertex_count);
 
     std::set< std::set<std::size_t> > result;
 
     if (d == 2)
     {
       // All vertices are incident to the cell
-      result.insert(vertexSet);
+      result.insert(std::set<std::size_t>(vertices.begin(), vertices.end()));
     }
     else if (d == 1)
     {
       for(unsigned edge=0; edge<3; ++edge)
       {
         std::set<std::size_t> edgeVertexSet;
-        edgeVertexSet.insert(sortedVertices[edge]);
-        edgeVertexSet.insert(sortedVertices[(edge+1)%3]);
+        edgeVertexSet.insert(vertices[edge]);
+        edgeVertexSet.insert(vertices[(edge+1)%3]);
         result.insert(edgeVertexSet);
       }
     }
     else if (d == 0)
     {
       // Vertices are only incident to themselves
-      for(unsigned i=0; i<sortedVertices.size(); ++i)
+      for(unsigned i=0; i<vertices.size(); ++i)
       {
         std::set<std::size_t> singleVertexSet;
-        singleVertexSet.insert(sortedVertices[i]);
+        singleVertexSet.insert(vertices[i]);
         result.insert(singleVertexSet);
       }
     }

@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cassert>
 #include <algorithm>
+#include <vector>
 
 namespace cfd
 {
@@ -39,11 +40,11 @@ std::size_t MeshConnectivity::numRelations() const
   return indices.size();
 }
 
-void MeshConnectivity::populateWithIndices(std::vector<std::size_t>& _indices, const std::size_t entity) const
+std::vector<std::size_t> MeshConnectivity::getIndices(const std::size_t entity) const
 {
   assert(entity < numEntities());
-  _indices.resize(numRelations(entity));
-  std::copy(&indices[offsets[entity]], &indices[offsets[entity+1]], _indices.begin());
+  const std::vector<std::size_t> result(&indices[offsets[entity]], &indices[offsets[entity+1]]);
+  return result;
 }
 
 }

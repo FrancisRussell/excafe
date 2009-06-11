@@ -66,7 +66,8 @@ public:
   std::set<cell_id> getCellIncidentCells(const cell_id cid) const
   {
     const MeshEntity cellEntity(dimension, cid);
-    return topology.getIndices(cellEntity, dimension);
+    const std::vector<std::size_t> vertices(topology.getIndices(cellEntity, dimension));
+    return std::set<std::size_t>(vertices.begin(), vertices.end());
   }
 
   //NOTE: assumes a 2D mesh
@@ -78,8 +79,7 @@ public:
     {
       if (topology.numRelations(*facetIter, dimension) == 1)
       {
-        const std::set<vertex_id> vertexSet(topology.getIndices(*facetIter, 0));
-        const std::vector<vertex_id> vertices(vertexSet.begin(), vertexSet.end());
+        const std::vector<vertex_id> vertices(topology.getIndices(*facetIter, 0));
         assert(vertices.size() == 2);
         result.push_back(std::make_pair(vertices[0], vertices[1]));
       }
@@ -115,8 +115,7 @@ public:
   
   cell_type getCell(const cell_id cid) const
   {
-    std::vector<std::size_t> vertexIndices;
-    topology.getConnectivity(dimension, 0)->populateWithIndices(vertexIndices, cid);
+    const std::vector<std::size_t> vertexIndices(topology.getConnectivity(dimension, 0)->getIndices(cid));
     return cell_type(vertexIndices);
   }
 
@@ -127,12 +126,11 @@ public:
 
   std::map<cell_id, cell_type> getCells() const
   {
-    std::vector<std::size_t> vertexIndices;
     std::map<cell_id, cell_type> cells;
 
     for(std::size_t cid = 0; cid < topology.numEntities(dimension); ++cid)
     {
-      topology.getConnectivity(dimension, 0)->populateWithIndices(vertexIndices, cid);
+      const std::vector<std::size_t> vertexIndices(topology.getConnectivity(dimension, 0)->getIndices(cid));
       cell_type cell(vertexIndices);
       cells.insert(std::make_pair(cid, cell));
     }

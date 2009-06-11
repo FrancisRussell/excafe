@@ -25,7 +25,7 @@ public:
   std::size_t numRelations(const std::size_t entity) const;
   std::size_t numRelations() const;
   void clear();
-  void populateWithIndices(std::vector<std::size_t>& indices, const std::size_t entity) const;
+  std::vector<std::size_t> getIndices(const std::size_t entity) const;
 
   template<typename InputIterator>
   std::size_t addEntity(const InputIterator& indicesBegin, const InputIterator& indicesEnd)

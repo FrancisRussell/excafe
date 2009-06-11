@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <mesh_topology.hpp>
 #include <general_cell.hpp>
+#include <iterator>
 
 namespace cfd
 {
@@ -97,13 +98,16 @@ void MeshTopology::performIntersection(const std::size_t d, const std::size_t dP
 
   for(global_iterator dIter(global_begin(d)); dIter!=global_end(d); ++dIter)
   {
-    const std::set<std::size_t> dVertexIndices(getIndices(*dIter, 0));
+    std::set<std::size_t> dVertexIndices;
+    outputIndices(*dIter, 0, std::inserter(dVertexIndices, dVertexIndices.begin()));
 
     for(local_iterator dPrimePrimeIter(local_begin(*dIter, dPrimePrime)); dPrimePrimeIter!=local_end(*dIter, dPrimePrime); ++dPrimePrimeIter)
     {
       for(local_iterator dPrimeIter(local_begin(*dPrimePrimeIter, dPrime)); dPrimeIter!=local_end(*dPrimePrimeIter, dPrime); ++dPrimeIter)
       {
-        const std::set<std::size_t> dPrimeVertexIndices(getIndices(*dPrimeIter, 0));
+        std::set<std::size_t> dPrimeVertexIndices;
+        outputIndices(*dPrimeIter, 0, std::inserter(dPrimeVertexIndices, dPrimeVertexIndices.begin()));
+
         const bool dIncludesDPrime = std::includes(dVertexIndices.begin(), dVertexIndices.end(),
           dPrimeVertexIndices.begin(), dPrimeVertexIndices.end());
 
@@ -168,16 +172,9 @@ MeshConnectivity* MeshTopology::getConnectivity(const std::size_t d, const std::
   return getConnectivityObject(d, dPrime);
 }
 
-std::set<std::size_t> MeshTopology::getIndices(const MeshEntity& entity, const std::size_t d)
+std::vector<std::size_t> MeshTopology::getIndices(const MeshEntity& entity, const std::size_t d)
 {
-  std::set<std::size_t> indices;
-
-  for(local_iterator dIter(local_begin(entity, d)); dIter!=local_end(entity, d); ++dIter)
-  {
-    indices.insert(dIter->getIndex());
-  }
-
-  return indices;
+  return getConnectivity(entity.getDimension(), d)->getIndices(entity.getIndex());
 }
 
 MeshTopology::global_iterator MeshTopology::global_begin(const std::size_t d)

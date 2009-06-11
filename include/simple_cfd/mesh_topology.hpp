@@ -41,7 +41,16 @@ public:
   void setBaseConnectivity(const MeshConnectivity& connectivity);
   std::size_t numEntities(const std::size_t d);
   std::size_t numRelations(const MeshEntity& entity, const std::size_t d);
-  std::set<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
+  std::vector<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d);
+
+  template<typename OutputIterator>
+  void outputIndices(const MeshEntity& entity, const std::size_t d, OutputIterator out)
+  {
+    const std::vector<std::size_t> indices(getIndices(entity, d));
+    std::copy(indices.begin(), indices.end(), out);
+
+  }
+
   MeshConnectivity* getConnectivity(const std::size_t d, const std::size_t dPrime);
 
   global_iterator global_begin(const std::size_t d);

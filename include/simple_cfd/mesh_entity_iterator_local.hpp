@@ -27,8 +27,7 @@ public:
   const MeshEntity dereference() const
   {
     // FIXME: I'm hideously inefficient
-    std::vector<std::size_t> indices;
-    connectivity->populateWithIndices(indices, from.getIndex());
+    std::vector<std::size_t> indices(connectivity->getIndices(from.getIndex()));
     return MeshEntity(dimensionTo, indices[offset]);
   }
 
