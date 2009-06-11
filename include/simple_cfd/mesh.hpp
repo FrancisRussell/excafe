@@ -1,12 +1,12 @@
 #ifndef SIMPLE_CFD_MESH_HPP
 #define SIMPLE_CFD_MESH_HPP
 
-#include <cassert>
-#include <iostream>
 #include <map>
 #include <set>
+#include <vector>
 #include <utility>
-#include <boost/lambda/lambda.hpp>
+#include <cassert>
+#include <iostream>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
 #include "mesh_connectivity.hpp"
@@ -68,27 +68,23 @@ public:
     const MeshEntity cellEntity(dimension, cid);
     return topology.getIndices(cellEntity, dimension);
   }
-  
+
+  //NOTE: assumes a 2D mesh
   std::vector< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
   {
-    const std::map<cell_id, cell_type> cells(getCells());
-    std::map< std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > facetCount;
-    for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
-    {
-      const std::set< std::pair<vertex_id, vertex_id> > facets(cellIter->second.getFacets());
-      for(std::set< std::pair<vertex_id, vertex_id> >::const_iterator facetIter(facets.begin()); facetIter!=facets.end(); ++facetIter)
-        ++facetCount[*facetIter];
-    }
+    std::vector< std::pair<vertex_id, vertex_id> > result;
 
-    std::vector< std::pair<vertex_id, vertex_id> > facets;
-    for(std::map< std::pair<vertex_id, vertex_id>, unsigned >::const_iterator facetCountIter(facetCount.begin()); facetCountIter!=facetCount.end(); ++facetCountIter)
+    for(MeshTopology::global_iterator facetIter(topology.global_begin(dimension-1)); facetIter!=topology.global_end(dimension-1); ++facetIter)
     {
-      // We only want facets that are not adjacent to other facets
-      if (facetCountIter->second == 1)
-        facets.push_back(facetCountIter->first);
+      if (topology.numRelations(*facetIter, dimension) == 1)
+      {
+        const std::set<vertex_id> vertexSet(topology.getIndices(*facetIter, 0));
+        const std::vector<vertex_id> vertices(vertexSet.begin(), vertexSet.end());
+        assert(vertices.size() == 2);
+        result.push_back(std::make_pair(vertices[0], vertices[1]));
+      }
     }
-
-    return facets;
+    return result;
   }
 
   std::vector< vertex<dimension> > getCoordinates(const cell_id cid) const
