@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_MESH_CONNECTIVITY_HPP
 #define SIMPLE_CFD_MESH_CONNECTIVITY_HPP
 
+#include<set>
 #include<vector>
 #include<algorithm>
 #include<cstddef>
@@ -22,6 +23,7 @@ public:
   std::size_t numEntities() const;
   std::size_t addEntity(const std::vector<std::size_t>& _indices);
   std::size_t numRelations(const std::size_t entity) const;
+  std::size_t numRelations() const;
   void clear();
   void populateWithIndices(std::vector<std::size_t>& indices, const std::size_t entity) const;
 
@@ -45,10 +47,13 @@ public:
       std::fill_n(std::back_inserter(offsets), newOffsetsCount, indices.size());
     }
 
-    // Now we insert the new indices
-    // We use index+1 so we insert new indices after existing indices for that entity
-    const std::size_t numNewIndices = std::distance(indicesBegin, indicesEnd);
-    indices.insert(indices.begin() + offsets[index+1], indicesBegin, indicesEnd);
+    std::set<std::size_t> entities(indicesBegin, indicesEnd);
+    entities.insert(indices.begin() + offsets[index], indices.begin() + offsets[index+1]); 
+    const std::size_t numNewIndices = entities.size() + offsets[index] - offsets[index+1];
+
+    // Now we make space for the new indices
+    indices.insert(indices.begin() + offsets[index], numNewIndices, 0);
+    std::copy(entities.begin(), entities.end(), indices.begin() + offsets[index]);
 
     // Now we have to increment all offsets after index by numNewIndices
     std::transform(offsets.begin() + index + 1, offsets.end(), offsets.begin() + index + 1, 

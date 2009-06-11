@@ -34,6 +34,11 @@ std::size_t MeshConnectivity::numRelations(const std::size_t entity) const
   return offsets[entity+1] - offsets[entity];
 }
 
+std::size_t MeshConnectivity::numRelations() const
+{
+  return indices.size();
+}
+
 void MeshConnectivity::populateWithIndices(std::vector<std::size_t>& _indices, const std::size_t entity) const
 {
   assert(entity < numEntities());
