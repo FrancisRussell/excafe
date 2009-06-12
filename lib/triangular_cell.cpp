@@ -9,11 +9,6 @@ TriangularCell::TriangularCell()
 {
 }
 
-TriangularCell::TriangularCell(const std::vector<vertex_id>& vertices)
-{
-  assert(vertices.size() == vertex_count);
-}
-
 std::size_t TriangularCell::getDimension() const
 {
   return dimension;

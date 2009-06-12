@@ -273,7 +273,6 @@ private:
     dof_map_builder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(pressure);
     mapBuilder.addFiniteElement(velocity);
-    mapBuilder.handleCells(m.getCells());
     return mapBuilder.getDofMap();
   }
 
@@ -459,21 +458,20 @@ public:
 
   void applyCylinderBoundaryConditions()
   {
-    const std::map<cell_id, cell_type> cells(m.getCells());
     const unsigned velocitySpaceDimension = velocity.space_dimension();
     const vertex_type centre(1.0, 0.5);
     const double radius = 0.15;
 
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->first, dof);
+        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->getIndex(), dof);
         const vertex_type offset = dofLocation - centre;
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
-          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->first, dof);
+          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -511,20 +509,16 @@ public:
 
   std::pair<double, double> getVelocityVector(const vertex_type& vertex) const
   {
-    const std::map<cell_id, cell_type> cells(m.getCells());
-    const mesh_geometry<mesh<cell_type>::dimension> geometry(m.getGeometry());
-    typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin());
-
-    while(cellIter!=cells.end())
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
-      if (cellIter->second.contains(m, cellIter->first, vertex))
+      if (m.getReferenceCell().contains(m, cellIter->getIndex(), vertex))
       {
         double xVelocity(0.0), yVelocity(0.0);
 
         for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
         {
-          Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->first, dof, vertex);
-          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->first, dof);
+          Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->getIndex(), dof, vertex);
+          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
 
           double velocityCoeff;
           unknown_vector.getValues(1u, &velocityDof, &velocityCoeff);

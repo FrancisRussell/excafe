@@ -63,6 +63,11 @@ public:
     return cid;
   }
 
+  const GeneralCell& getReferenceCell() const
+  {
+    return referenceCell;
+  }
+
   std::map<vertex_type, double> getQuadrature(const MeshEntity& entity) const
   {
     return referenceCell.getQuadrature(*this, entity);
@@ -142,19 +147,6 @@ public:
   vertex_type getVertex(const vertex_id vid) const
   {
     return geometry[vid];
-  }
-
-  std::map<cell_id, cell_type> getCells() const
-  {
-    std::map<cell_id, cell_type> cells;
-
-    for(std::size_t cid = 0; cid < topology.numEntities(dimension); ++cid)
-    {
-      const std::vector<std::size_t> vertexIndices(topology.getIndices(MeshEntity(dimension, cid), 0));
-      cell_type cell(vertexIndices);
-      cells.insert(std::make_pair(cid, cell));
-    }
-    return cells;
   }
 
   mesh_geometry<dimension> getGeometry() const

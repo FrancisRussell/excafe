@@ -29,20 +29,20 @@ private:
     typedef typename basis_t::cell_type cell_type;
     cfd::TriangularMeshBuilder meshBuilder(width, height, 0.14);
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
+    const std::size_t dimension = m.getDimension();
     basis_t basis(m);
-    const std::map<cfd::cell_id, cell_type> cells(m.getCells());
   
-    for(typename std::map<cfd::cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    for(typename cfd::mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       const int dofs = basis.space_dimension();
-      std::map<vertex_type, double> quadrature(m.getQuadrature(cfd::MeshEntity(2, cellIter->first)));
+      std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
   
       for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
         {
-          sum += basis.evaluate_tensor(cellIter->first, i, wIter->first).toScalar();
+          sum += basis.evaluate_tensor(cellIter->getIndex(), i, wIter->first).toScalar();
         }
         assertZero(1.0 - sum);
       }
