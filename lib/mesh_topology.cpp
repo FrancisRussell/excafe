@@ -1,8 +1,9 @@
-#include <set>
-#include <algorithm>
 #include <mesh_topology.hpp>
 #include <general_cell.hpp>
 #include <iterator>
+#include <set>
+#include <vector>
+#include <algorithm>
 
 namespace cfd
 {
@@ -130,19 +131,19 @@ void MeshTopology::performBuild(const std::size_t d)
 
   for(global_iterator cellIter(global_begin(dimension)); cellIter!=global_end(dimension); ++cellIter)
   {
-    const std::set< std::set<std::size_t> > vi(cell.getIncidentVertices(*this, *cellIter, d));
+    const std::vector< std::set<std::size_t> > vi(cell.getIncidentVertices(*this, *cellIter, d));
     std::set< std::set<std::size_t> > seen;
 
     for(local_iterator iCellIter(local_begin(*cellIter, dimension)); iCellIter!=local_end(*cellIter, dimension); ++iCellIter)
     {
       if (iCellIter->getIndex() < cellIter->getIndex())
       {
-        const std::set< std::set<std::size_t> > vj(cell.getIncidentVertices(*this, *iCellIter, d));
+        const std::vector< std::set<std::size_t> > vj(cell.getIncidentVertices(*this, *iCellIter, d));
         seen.insert(vj.begin(), vj.end());
       }
     }
 
-    for(std::set< std::set<std::size_t> >::const_iterator viIter(vi.begin()); viIter!=vi.end(); ++viIter)
+    for(std::vector< std::set<std::size_t> >::const_iterator viIter(vi.begin()); viIter!=vi.end(); ++viIter)
     {
       if (seen.find(*viIter) == seen.end())
       {

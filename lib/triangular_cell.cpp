@@ -1,7 +1,11 @@
+#include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <mesh.hpp>
 #include <vector>
 #include <cassert>
+#include <map>
+#include <set>
+#include <numeric>
 
 namespace cfd
 {
@@ -103,7 +107,7 @@ bool TriangularCell::contains(const mesh<TriangularCell>& m, const std::size_t c
   return contained;
 }
 
-std::set< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
+std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
 {
   //NOTE: we rely on the fact that the vertices are sorted, otherwise this method
   //      would be non-deterministic
@@ -113,12 +117,12 @@ std::set< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopolo
   std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
   assert(vertices.size() == vertex_count);
 
-  std::set< std::set<std::size_t> > result;
+  std::vector< std::set<std::size_t> > result;
 
   if (d == 2)
   {
     // All vertices are incident to the cell
-    result.insert(std::set<std::size_t>(vertices.begin(), vertices.end()));
+    result.push_back(std::set<std::size_t>(vertices.begin(), vertices.end()));
   }
   else if (d == 1)
   {
@@ -127,7 +131,7 @@ std::set< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopolo
       std::set<std::size_t> edgeVertexSet;
       edgeVertexSet.insert(vertices[edge]);
       edgeVertexSet.insert(vertices[(edge+1)%3]);
-      result.insert(edgeVertexSet);
+      result.push_back(edgeVertexSet);
     }
   }
   else if (d == 0)
@@ -137,7 +141,7 @@ std::set< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopolo
     {
       std::set<std::size_t> singleVertexSet;
       singleVertexSet.insert(vertices[i]);
-      result.insert(singleVertexSet);
+      result.push_back(singleVertexSet);
     }
   }
 

@@ -2,13 +2,8 @@
 #define SIMPLE_CFD_TRIANGULAR_CELL_HPP
 
 #include<vector>
-#include<cassert>
 #include<map>
-#include<boost/array.hpp>
-#include<ostream>
-#include<iostream>
-#include<algorithm>
-#include<numeric>
+#include<set>
 #include<cstddef>
 #include"simple_cfd_fwd.hpp"
 #include"vertex.hpp"
@@ -33,7 +28,7 @@ public:
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
   bool contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& v) const;
-  std::set< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
+  std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
 };
 
 }
