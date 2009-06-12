@@ -11,6 +11,7 @@
 #include "mesh_geometry.hpp"
 #include "mesh_connectivity.hpp"
 #include "mesh_topology.hpp"
+#include "mesh_function.hpp"
 #include "utility.hpp"
 #include "triangular_cell.hpp"
 #include "dof_map.hpp"
@@ -40,9 +41,10 @@ private:
   MeshConnectivity baseConnectivity;
   TriangularCell referenceCell;
   mutable MeshTopology topology;
+  MeshFunction<int> facetLabels;
 
 public:
-  mesh() : topology(referenceCell)
+  mesh() : topology(referenceCell), facetLabels(getDimension()-1)
   {
   }
 
@@ -76,6 +78,12 @@ public:
   double getArea(const std::size_t cid) const
   {
     return referenceCell.getArea(*this, MeshEntity(dimension, cid));
+  }
+
+  void setFacetLabelling(const MeshFunction<int>& f)
+  {
+    assert(f.getDimension() == getDimension() - 1);
+    facetLabels = f;
   }
 
   void finish()

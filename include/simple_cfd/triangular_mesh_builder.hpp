@@ -3,7 +3,10 @@
 
 #include <simple_cfd_fwd.hpp>
 #include <mesh.hpp>
+#include <vector>
+#include <utility>
 #include <libtriangle.hpp>
+#include <polygon.hpp>
 
 namespace cfd
 {
@@ -16,12 +19,14 @@ private:
   const double width;
   const double height;
   const double maxCellArea;
+  std::vector< std::pair<Polygon, int> > polygons;
 
   mesh<cell_type> buildMeshOld() const;
   mesh<cell_type> buildMeshTriangle() const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
+  void addPolygon(const Polygon& polygon, int label);
   mesh<TriangularCell> buildMesh() const;
 };
 

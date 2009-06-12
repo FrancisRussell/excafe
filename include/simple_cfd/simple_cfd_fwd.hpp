@@ -35,12 +35,14 @@ template<unsigned D> class mesh_geometry;
 template<unsigned D> class mesh_geometry_impl;
 template<unsigned int D> class vertex;
 template<typename C> class finite_element;
+template<typename T> class MeshFunction;
 class TriangularCell;
 class MeshTopology;
 class MeshConnectivity;
 class MeshEntity;
 class MeshEntityIteratorGlobal;
 class MeshEntityIteratorLocal;
+class Polygon;
 
 // Basis function types
 struct evaluated_basis
