@@ -1,6 +1,7 @@
 #include <triangular_cell.hpp>
 #include <mesh.hpp>
 #include <vector>
+#include <cassert>
 
 namespace cfd
 {
@@ -52,6 +53,10 @@ double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& 
   const double doubleArea = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
                             vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
+
+  // Check for correct orientation
+  assert(doubleArea >= 0.0);
+
   return doubleArea / 2.0;
 }
 
