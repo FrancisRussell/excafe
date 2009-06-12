@@ -12,7 +12,6 @@ TriangularCell::TriangularCell()
 TriangularCell::TriangularCell(const std::vector<vertex_id>& vertices)
 {
   assert(vertices.size() == vertex_count);
-  std::copy(vertices.begin(), vertices.end(), vertex_ids.begin());
 }
 
 std::size_t TriangularCell::getDimension() const
@@ -20,10 +19,9 @@ std::size_t TriangularCell::getDimension() const
   return dimension;
 }
 
-std::vector<vertex_id> TriangularCell::getIndices() const
+std::size_t TriangularCell::getVerticesPerCell() const
 {
-  const std::vector<vertex_id> indices(vertex_ids.begin(), vertex_ids.end());
-  return indices;
+  return vertex_count;
 }
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature()
@@ -60,16 +58,6 @@ double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& 
                             vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
   return doubleArea / 2.0;
-}
-
-std::set< std::pair<vertex_id, vertex_id> > TriangularCell::getFacets() const
-{
-  std::set< std::pair<vertex_id, vertex_id> > facets;
-
-  for(unsigned i=0; i<vertex_count; ++i)
-    facets.insert(std::make_pair(vertex_ids[i], vertex_ids[(i+1)%vertex_count]));
-  
-  return facets;
 }
 
 TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const

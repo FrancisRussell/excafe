@@ -56,10 +56,10 @@ public:
     return geometry.add(v);
   }
 
-  const cell_id addCell(const cell_type& c)
+  const cell_id addCell(const std::vector<std::size_t> vertexIndices)
   {
-    const std::vector<vertex_id> cell_vertices(c.getIndices());
-    const cell_id cid = baseConnectivity.addEntity(cell_vertices.begin(), cell_vertices.end());
+    assert(vertexIndices.size() == referenceCell.getVerticesPerCell());
+    const cell_id cid = baseConnectivity.addEntity(vertexIndices.begin(), vertexIndices.end());
     return cid;
   }
 

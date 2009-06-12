@@ -25,18 +25,13 @@ public:
   typedef vertex<dimension> vertex_type;
   static const unsigned int vertex_count = 3;
 
-private:
-  boost::array<vertex_id, vertex_count> vertex_ids;
-
-public:
   TriangularCell();
   TriangularCell(const std::vector<vertex_id>& vertices);
   virtual std::size_t getDimension() const;
-  std::vector<vertex_id> getIndices() const;
+  virtual std::size_t getVerticesPerCell() const;
   static std::map<vertex_type, double> getReferenceQuadrature();
   virtual std::map<vertex_type, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
-  std::set< std::pair<vertex_id, vertex_id> > getFacets() const;
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
   bool contains(const mesh<TriangularCell>& mesh, const std::size_t cid, const vertex_type& v) const;
   std::set< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;

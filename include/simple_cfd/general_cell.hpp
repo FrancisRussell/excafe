@@ -15,6 +15,7 @@ public:
   virtual std::set< std::set<std::size_t> > 
     getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const = 0;
   virtual std::size_t getDimension() const = 0;
+  virtual std::size_t getVerticesPerCell() const = 0;
   virtual std::map<vertex<2>, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const = 0;
 };
 
