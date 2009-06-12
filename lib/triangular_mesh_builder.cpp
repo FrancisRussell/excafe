@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libtriangle.hpp>
@@ -60,48 +61,61 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMesh() const
   return buildMeshTriangle();
 }
 
+void TriangularMeshBuilder::addPolygon(const Polygon& polygon, const int label)
+{
+  polygons.push_back(std::make_pair(polygon, label));
+}
+
 mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle() const
 {
   triangulateio in, out;
   clear(in);
   clear(out);
 
-  in.numberofpoints = 4;
-  in.numberofpointattributes = 0;
-  in.pointlist = new double[in.numberofpoints * 2];
-  
+  std::vector<double> pointList;
+  std::vector<int> segmentList;
+  std::vector<int> segmentMarkerList;
+
   // BL
-  in.pointlist[0] = 0.0;
-  in.pointlist[1] = 0.0;
-  // TL
-  in.pointlist[2] = 0.0;
-  in.pointlist[3] = height;
-  // TR
-  in.pointlist[4] = width;
-  in.pointlist[5] = height;
+  pointList.push_back(0.0);
+  pointList.push_back(0.0);
   // BR
-  in.pointlist[6] = width;
-  in.pointlist[7] = 0.0;
+  pointList.push_back(width);
+  pointList.push_back(0.0);
+  // TR
+  pointList.push_back(width);
+  pointList.push_back(height);
+  // TL
+  pointList.push_back(0.0);
+  pointList.push_back(height);
 
-  in.numberofsegments = 4;
-  in.segmentlist = new int[in.numberofsegments * 2];
-  in.segmentlist[0] = 0;
-  in.segmentlist[1] = 1;
-  in.segmentlist[2] = 1;
-  in.segmentlist[3] = 2;
-  in.segmentlist[4] = 2;
-  in.segmentlist[5] = 3;
-  in.segmentlist[6] = 3;
-  in.segmentlist[7] = 0;
+  in.pointlist = &pointList[0];
+  in.numberofpoints = pointList.size() / 2;
 
-  // Q=quiet, z=zero-indexing, a=area-constraint
-  boost::shared_array<char> options = stringToCharArray(std::string("Qza") + 
+  segmentList.push_back(0);
+  segmentList.push_back(1);
+  segmentList.push_back(1);
+  segmentList.push_back(2);
+  segmentList.push_back(2);
+  segmentList.push_back(3);
+  segmentList.push_back(3);
+  segmentList.push_back(0);
+
+  in.segmentlist = &segmentList[0];
+  in.numberofsegments = segmentList.size() / 2;
+
+  segmentMarkerList.push_back(1);
+  segmentMarkerList.push_back(2);
+  segmentMarkerList.push_back(3);
+  segmentMarkerList.push_back(4);
+  assert(static_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
+  in.segmentmarkerlist = &segmentMarkerList[0];
+
+  // Q=quiet, e=output-edges, p=read-segments, z=zero-indexing, a=area-constraint
+  boost::shared_array<char> options = stringToCharArray(std::string("Qepza") + 
     boost::lexical_cast<std::string>(maxCellArea));
 
   triangulate(options.get(), &in, &out, NULL);
-
-  delete[] in.pointlist;
-  delete[] in.segmentlist;
 
   mesh<TriangularMeshBuilder::cell_type> m;
 
@@ -123,9 +137,38 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
     assert(givenCid == cid);
   }
 
-  trifreeMembers(out);
-
   m.finish();
+
+  // We can only start to map edge markers back to edges after the mesh is able to 
+  // determine topological relations.
+
+  const std::size_t facetDim = m.getDimension() - 1;
+  MeshFunction<int> facetNumbering(facetDim);
+
+  for(int edge=0; edge < out.numberofedges; ++edge)
+  {
+    const std::size_t v1 = out.edgelist[edge*2];
+    const std::size_t v2 = out.edgelist[edge*2+1];
+    const int label = out.edgemarkerlist[edge];
+
+    const MeshEntity v1Entity(0, v1);
+    bool foundEdge = false;
+
+    for(mesh<cell_type>::local_iterator facetIter = m.local_begin(v1Entity, facetDim); facetIter!=m.local_end(v1Entity, facetDim); ++facetIter)
+    {
+      const std::vector<std::size_t> vertexIndices(m.getIndices(*facetIter, 0));
+      if (std::find(vertexIndices.begin(), vertexIndices.end(), v2) != vertexIndices.end())
+      {
+        foundEdge = true;
+        facetNumbering(*facetIter) = label;
+      }
+    }
+
+    assert(foundEdge);
+    m.setFacetLabelling(facetNumbering);
+  }
+
+  trifreeMembers(out);
   return m;
 }
 
