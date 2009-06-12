@@ -13,10 +13,10 @@ namespace cfd
 {
 
 template<unsigned int R>
-class lagrange_triangle_quadratic : public finite_element< cell<triangle> >
+class lagrange_triangle_quadratic : public finite_element<TriangularCell>
 {
 public:
-  typedef cell<triangle> cell_type;
+  typedef TriangularCell cell_type;
   static const unsigned int rank = R;
   static const unsigned int dimension = cell_type::dimension;
   typedef Tensor<dimension, rank, double> value_type;
@@ -64,9 +64,9 @@ public:
        0  3  1
   */
 
-  evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  evaluated_basis evaluate_basis(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
-    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+    std::vector<vertex_type> vertices(m->getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -114,12 +114,12 @@ public:
     return result;
   }
 
-  value_type evaluate_tensor(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+    std::vector<vertex_type> vertices(m->getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -163,12 +163,12 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+    std::vector<vertex_type> vertices(m->getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -219,13 +219,13 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
 
-    std::vector<vertex_type> vertices(c.getCoordinates(m->getGeometry()));
+    std::vector<vertex_type> vertices(m->getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -286,8 +286,8 @@ public:
 
   std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
   {
-    const std::vector<vertex_id> cid_vertices(m->getCell(cid).getIndices());
-    const std::vector<vertex_id> cid2_vertices(m->getCell(cid2).getIndices());
+    const std::vector<vertex_id> cid_vertices(m->getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> cid2_vertices(m->getIndices(MeshEntity(dimension, cid2), 0));
 
     std::vector< std::pair<vertex_id, vertex_id> > cid_edges;
     std::vector< std::pair<vertex_id, vertex_id> > cid2_edges;
@@ -356,7 +356,7 @@ public:
     }
 
     // Create lists of all local edges and vertices
-    const std::vector<vertex_id> vertexIndices(m->getCell(cid).getIndices());
+    const std::vector<vertex_id> vertexIndices(m->getIndices(MeshEntity(dimension, cid), 0));
     std::vector< std::pair<unsigned, unsigned> > edges;
     for(unsigned edge=0; edge<3; ++edge)
     {

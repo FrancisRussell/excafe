@@ -60,9 +60,9 @@ void Tester::testQuadrature()
   for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
   {
     // Check the area is correct first
-    assertZero(cellIter->second.getArea(m.getGeometry()) - area);
+    assertZero(m.getArea(cellIter->first) - area);
 
-    std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
+    std::map<vertex_type, double> quadrature(m.getQuadrature(MeshEntity(2, cellIter->first)));
 
     double accum = 0;
     for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)

@@ -1,12 +1,13 @@
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
+#include <simple_cfd/mesh_entity.hpp>
 #include <string>
 
 class Tester
 {
 private:
   const double epsilon;
-  typedef cfd::cell<cfd::triangle> cell_type;
+  typedef cfd::TriangularCell cell_type;
   typedef cell_type::vertex_type vertex_type;
 
   void assertTrue(const bool b);
@@ -34,14 +35,14 @@ private:
     for(typename std::map<cfd::cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
     {
       const int dofs = basis.space_dimension();
-      std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
+      std::map<vertex_type, double> quadrature(m.getQuadrature(cfd::MeshEntity(2, cellIter->first)));
   
       for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
         {
-          sum += basis.evaluate_tensor(cellIter->second, i, wIter->first).toScalar();
+          sum += basis.evaluate_tensor(cellIter->first, i, wIter->first).toScalar();
         }
         assertZero(1.0 - sum);
       }

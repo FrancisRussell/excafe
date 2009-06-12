@@ -24,25 +24,31 @@ class mesh
 };
 
 template<>
-class mesh< cell<triangle> >
+class mesh<TriangularCell>
 {
 public:
-  static const shape cell_shape = triangle;
-  typedef cell<cell_shape> cell_type;
+  typedef TriangularCell cell_type;
   static const unsigned int dimension = cell_type::dimension;
   typedef vertex<dimension> vertex_type;
+  typedef MeshTopology::global_iterator global_iterator;
+  typedef MeshTopology::local_iterator local_iterator;
 
 private:
   double width;
   double height;
   mesh_geometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
-  cell<triangle> referenceCell;
+  TriangularCell referenceCell;
   mutable MeshTopology topology;
 
 public:
   mesh() : topology(referenceCell)
   {
+  }
+
+  std::size_t getDimension() const
+  {
+    return referenceCell.getDimension();
   }
 
   const vertex_id addVertex(const vertex_type& v)
@@ -57,10 +63,40 @@ public:
     return cid;
   }
 
+  std::map<vertex_type, double> getQuadrature(const MeshEntity& entity) const
+  {
+    return referenceCell.getQuadrature(*this, entity);
+  }
+
+  double getArea(const std::size_t cid) const
+  {
+    return referenceCell.getArea(*this, MeshEntity(dimension, cid));
+  }
+
   void finish()
   {
     topology.setBaseConnectivity(baseConnectivity);
     baseConnectivity.clear();
+  }
+
+  global_iterator global_begin(const std::size_t d) const
+  {
+    return topology.global_begin(d);
+  }
+
+  global_iterator global_end(const std::size_t d) const
+  {
+    return topology.global_end(d);
+  }
+
+  local_iterator local_begin(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.local_begin(entity, d);
+  }
+
+  local_iterator local_end(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.local_end(entity, d);
   }
 
   std::set<cell_id> getCellIncidentCells(const cell_id cid) const
@@ -89,7 +125,7 @@ public:
 
   std::vector< vertex<dimension> > getCoordinates(const cell_id cid) const
   {
-    const std::vector<vertex_id> vertex_ids(getCell(cid).getIndices());
+    const std::vector<vertex_id> vertex_ids(topology.getIndices(MeshEntity(dimension, cid), 0));
     std::vector< vertex<dimension> > coords;
 
     for(std::vector<vertex_id>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
@@ -98,25 +134,9 @@ public:
     return coords;
   }
 
-  void print(std::ostream& out = std::cout) const
+  std::vector<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d) const
   {
-    const std::map<cell_id, cell_type> cells(getCells());
-    out << "Nodes: " << geometry.size() << std::endl;
-    out << "Cells: " << cells.size() << std::endl;
-    out << std::endl;
-
-    for(std::map<cell_id, cell_type>::const_iterator cellIter = cells.begin(); cellIter != cells.end(); ++cellIter)
-    {
-      out << "Cell: " << cellIter->first << std::endl;
-      cellIter->second.print(out);
-      out << std::endl;
-    }
-  }
-  
-  cell_type getCell(const cell_id cid) const
-  {
-    const std::vector<std::size_t> vertexIndices(topology.getConnectivity(dimension, 0)->getIndices(cid));
-    return cell_type(vertexIndices);
+    return topology.getIndices(entity, d);
   }
 
   vertex_type getVertex(const vertex_id vid) const
@@ -130,7 +150,7 @@ public:
 
     for(std::size_t cid = 0; cid < topology.numEntities(dimension); ++cid)
     {
-      const std::vector<std::size_t> vertexIndices(topology.getConnectivity(dimension, 0)->getIndices(cid));
+      const std::vector<std::size_t> vertexIndices(topology.getIndices(MeshEntity(dimension, cid), 0));
       cell_type cell(vertexIndices);
       cells.insert(std::make_pair(cid, cell));
     }
