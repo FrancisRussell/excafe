@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CFD_CELL_HPP
-#define SIMPLE_CFD_CELL_HPP
+#ifndef SIMPLE_CFD_TRIANGULAR_CELL_HPP
+#define SIMPLE_CFD_TRIANGULAR_CELL_HPP
 
 #include<vector>
 #include<cassert>

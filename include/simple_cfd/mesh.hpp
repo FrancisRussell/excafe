@@ -12,7 +12,7 @@
 #include "mesh_connectivity.hpp"
 #include "mesh_topology.hpp"
 #include "utility.hpp"
-#include "cell.hpp"
+#include "triangular_cell.hpp"
 #include "dof_map.hpp"
 
 namespace cfd
