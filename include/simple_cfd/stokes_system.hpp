@@ -54,10 +54,10 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell.second, trialDof, location);
-    typename TestType::gradient_type test_gradient = test->evaluate_gradient(cell.second, testDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(entity.getIndex(), trialDof, location);
+    typename TestType::gradient_type test_gradient = test->evaluate_gradient(entity.getIndex(), testDof, location);
     const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
     return result;
   }
@@ -95,10 +95,10 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
-    typename TestType::divergence_type test_divergence = test->evaluate_divergence(cell.second, testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
+    typename TestType::divergence_type test_divergence = test->evaluate_divergence(entity.getIndex(), testDof, location);
     const double result = (trial_value * test_divergence).toScalar();
     return result;
   }
@@ -137,10 +137,10 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(cell.second, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
+    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(entity.getIndex(), trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
     const double result = (test_value * trial_divergence).toScalar();
     return result;
   }
@@ -173,10 +173,10 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
     const double result = (test_value.colon_product(trial_value)).toScalar();
     return result;
   }
@@ -211,15 +211,15 @@ public:
     return trial;
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    boost::tuple<const finite_element_t*, cell_id, unsigned> trialDofTuple(trial, cell.first, trialDof);
+    boost::tuple<const finite_element_t*, cell_id, unsigned> trialDofTuple(trial, entity.getIndex(), trialDof);
     double prevTrialCoeff;
     prevTrial.getValues(1, &trialDofTuple, &prevTrialCoeff);
 
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(cell.second, trialDof, location);
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cell.second, trialDof, location) * prevTrialCoeff;
-    typename TestType::value_type test_value = test->evaluate_tensor(cell.second, testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(entity.getIndex(), trialDof, location) * prevTrialCoeff;
+    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
     const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
     return result;
   }
@@ -359,7 +359,6 @@ private:
     dof_map_builder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(pressure);
     mapBuilder.addFiniteElement(velocity);
-    mapBuilder.handleCells(m.getCells());
     return mapBuilder.getDofMap();
   }
 
@@ -683,21 +682,20 @@ public:
 
   void applyCylinderVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
-    const std::map<cell_id, cell_type> cells(m.getCells());
     const unsigned velocitySpaceDimension = velocity.space_dimension();
     const vertex_type centre(1.0, 0.5);
     const double radius = 0.15;
 
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->first, dof);
+        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->getIndex(), dof);
         const vertex_type offset = dofLocation - centre;
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
-          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->first, dof);
+          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -737,20 +735,16 @@ public:
 
   std::pair<double, double> getVelocityVector(const vertex_type& vertex) const
   {
-    const std::map<cell_id, cell_type> cells(m.getCells());
-    const mesh_geometry<mesh<cell_type>::dimension> geometry(m.getGeometry());
-    typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin());
-
-    while(cellIter!=cells.end())
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
-      if (cellIter->second.contains(geometry, vertex))
+      if (m.getReferenceCell().contains(m, cellIter->getIndex(), vertex))
       {
         double xVelocity(0.0), yVelocity(0.0);
 
         for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
         {
-          Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->second, dof, vertex);
-          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->first, dof);
+          Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->getIndex(), dof, vertex);
+          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
 
           double velocityCoeff;
           velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);

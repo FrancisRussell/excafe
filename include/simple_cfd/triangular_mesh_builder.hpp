@@ -11,8 +11,8 @@ namespace cfd
 class TriangularMeshBuilder
 {
 private:
-  typedef cell<triangle> cell_type;
-  typedef cell<triangle>::vertex_type vertex_type;
+  typedef TriangularCell cell_type;
+  typedef TriangularCell::vertex_type vertex_type;
   const double width;
   const double height;
   const double maxCellArea;
@@ -22,7 +22,7 @@ private:
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
-  mesh<cell_type> buildMesh() const;
+  mesh<TriangularCell> buildMesh() const;
 };
 
 }

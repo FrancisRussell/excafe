@@ -1,12 +1,14 @@
 #ifndef SIMPLE_CFD_SIMPLE_CFD_FWD_HPP
 #define SIMPLE_CFD_SIMPLE_CFD_FWD_HPP
 
+#include <cstddef>
+
 namespace cfd
 {
 
 // ID types
-typedef int vertex_id;
-typedef int cell_id;
+typedef std::size_t vertex_id;
+typedef std::size_t cell_id;
 
 // Cell shapes
 enum shape
@@ -31,12 +33,16 @@ template<typename C> class mesh;
 template<typename C> class mesh_builder;
 template<unsigned D> class mesh_geometry;
 template<unsigned D> class mesh_geometry_impl;
-template<shape s> class cell;
 template<unsigned int D> class vertex;
 template<typename C> class finite_element;
 template<unsigned int D> class SubDomain;
 template<unsigned int D, unsigned int R, typename T> class Function;
-
+class TriangularCell;
+class MeshTopology;
+class MeshConnectivity;
+class MeshEntity;
+class MeshEntityIteratorGlobal;
+class MeshEntityIteratorLocal;
 
 // Basis function types
 struct evaluated_basis

@@ -105,23 +105,27 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
 
   mesh<TriangularMeshBuilder::cell_type> m;
 
-  for(vertex_id vid = 0; vid < out.numberofpoints; ++vid)
+  for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
   {
     const vertex_type v(out.pointlist[vid*2], out.pointlist[vid*2+1]);
-    m.addVertex(vid, v);
+    const vertex_id givenVid = m.addVertex(v);
+    assert(vid == givenVid);
   }
 
   std::vector<vertex_id> cellVertices(3);
 
-  for(cell_id cid = 0; cid < out.numberoftriangles; ++cid)
+  for(cell_id cid = 0; cid < static_cast<unsigned>(out.numberoftriangles); ++cid)
   {
     cellVertices[0] = out.trianglelist[cid*3];
     cellVertices[1] = out.trianglelist[cid*3+1];
     cellVertices[2] = out.trianglelist[cid*3+2];
-    m.addCell(cid, cell_type(cellVertices));
+    const cell_id givenCid = m.addCell(cellVertices);
+    assert(givenCid == cid);
   }
 
   trifreeMembers(out);
+
+  m.finish();
   return m;
 }
 
@@ -145,7 +149,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
   {
     for(int x=0; x < x_nodes; ++x)
     {
-      m.addVertex(vid, vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
+      const vertex_id givenVid = m.addVertex(vertex_type(static_cast<double>(x) / (x_nodes-1) * width, static_cast<double>(y) / (y_nodes-1) * height));
+      assert(vid == givenVid);
       ++vid;
     }
   }
@@ -193,13 +198,16 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() con
       std::transform(offset_upper_right_vertices.begin(), 
         offset_upper_right_vertices.end(), offset_upper_right_vertices.begin(), boost::lambda::_1 + offset);
 
-      m.addCell(cid, cell_type(offset_lower_left_vertices));
+      const cell_id llCid = m.addCell(offset_lower_left_vertices);
+      assert(llCid == cid);
       ++cid;
-      m.addCell(cid, cell_type(offset_upper_right_vertices));
+      const cell_id urCid = m.addCell(offset_upper_right_vertices);
+      assert(urCid == cid);
       ++cid;
     }
   }
 
+  m.finish();
   return m;
 }
 

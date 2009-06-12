@@ -36,13 +36,13 @@ private:
     const unsigned colDofs = colMappings.getDegreesOfFreedomCount();
 
     SparsityPattern pattern(rowDofs, colDofs);
-    const std::map<cell_id, cell_type> cells(rowMappings.getMesh().getCells());
+    const mesh<cell_type> m(rowMappings.getMesh());
+    const std::size_t dimension = m.getDimension();
 
     const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
-    {
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
       {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
@@ -50,17 +50,16 @@ private:
           for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
           {
             for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
-            {
-              const int rowIndex = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, rowDof)); 
-              const int colIndex = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter, cellIter->first, colDof));
+
+              const int rowIndex =
+                rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                cellIter->getIndex(), rowDof)); 
+              const int colIndex =
+                colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                cellIter->getIndex(), colDof));
 
               if (rowIndex >= 0 && colIndex >= 0)
                 pattern.insert(rowIndex, colIndex); 
-            }
-          }
-        }
-      }
-    }
 
     return pattern;
   }
@@ -127,8 +126,7 @@ public:
     assert(trialElements.find(trialFunction) != trialElements.end());
     assert(testElements.find(testFunction) != testElements.end());
 
-    const std::map<cell_id, cell_type> cells(m.getCells());
-
+    const std::size_t dimension = m.getDimension();
     const unsigned testSpaceDimension = testFunction->space_dimension();
     const unsigned trialSpaceDimension = trialFunction->space_dimension();
 
@@ -136,21 +134,21 @@ public:
     std::vector<int> trialIndices(trialSpaceDimension);
     std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
 
-    for(typename std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter != m.global_end(dimension); ++cellIter)
     {
-      const std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
+      const std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
       std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
       for(unsigned test=0; test<testSpaceDimension; ++test)
-        testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cellIter->first, test));
+        testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cellIter->getIndex(), test));
 
       for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-        trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cellIter->first, trial));
+        trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cellIter->getIndex(), trial));
 
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
         for(unsigned test=0; test<testSpaceDimension; ++test)
           for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(*cellIter, test, trial, quadIter->first);
+            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(m, *cellIter, test, trial, quadIter->first);
 
       matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
     }

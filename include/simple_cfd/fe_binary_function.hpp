@@ -17,7 +17,7 @@ public:
 
   virtual const finite_element_t* getTestFunction() const = 0;
   virtual const finite_element_t* getTrialFunction() const = 0;
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const = 0;
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const = 0;
 };
 
 template<typename T>
@@ -46,9 +46,9 @@ public:
     return function.getTrialFunction();
   }
 
-  virtual double evaluate(const std::pair<cell_id, cell_type>& cell, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    return function.evaluate(cell, testDof, trialDof, location) * scaleFactor;
+    return function.evaluate(m, entity, testDof, trialDof, location) * scaleFactor;
   }
 };
 

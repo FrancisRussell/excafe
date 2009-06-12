@@ -13,7 +13,7 @@ using namespace cfd;
 int main(int argc, char* argv[])
 {
   PETScManager::instance().init(argc, argv);
-  typedef cell<triangle> cell_type;
+  typedef TriangularCell cell_type;
   TriangularMeshBuilder meshBuilder(3.0, 1.0, 1.0/900.0);
   mesh<cell_type> m(meshBuilder.buildMesh());
 

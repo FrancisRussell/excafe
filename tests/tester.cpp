@@ -57,14 +57,14 @@ void Tester::testQuadrature()
   const double width = 10.0;
   TriangularMeshBuilder meshBuilder(width, width, area);
   mesh<cell_type> m(meshBuilder.buildMesh());
-  const std::map<cell_id, cell_type> cells(m.getCells());
+  const std::size_t dimension = m.getDimension();
 
-  for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter != cells.end(); ++cellIter)
+  for(mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
   {
     // Check the area is correct first
-    assertZero(cellIter->second.getArea(m.getGeometry()) - area);
+    assertZero(m.getArea(cellIter->getIndex()) - area);
 
-    std::map<vertex_type, double> quadrature(cellIter->second.getQuadrature(m.getGeometry()));
+    std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
 
     double accum = 0;
     for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)

@@ -16,15 +16,15 @@ namespace cfd
 {
 
 template<unsigned R>
-class lagrange_triangle_linear : public finite_element< cell<triangle> >
+class lagrange_triangle_linear : public finite_element<TriangularCell>
 {
 public:
-  typedef cell<triangle> cell_type;
+  typedef TriangularCell cell_type;
   static const unsigned int rank = R;
   static const unsigned int dimension = cell_type::dimension;
   typedef Tensor<dimension, rank, double> value_type;
   typedef Tensor<dimension, rank+1, double> gradient_type;
-  typedef Tensor<dimension, rank+1, double> divergence_type;
+  typedef Tensor<dimension, rank-1, double> divergence_type;
   typedef vertex<dimension> vertex_type;
 
 private:
@@ -55,15 +55,14 @@ public:
   {
   }
 
-  value_type evaluate_tensor(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const mesh_geometry<dimension> geometry(m->getGeometry());
-    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
-    const double area = c.getArea(geometry);
+    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    const double area = m->getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -78,15 +77,14 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const mesh_geometry<dimension> geometry(m->getGeometry());
-    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
-    const double area = c.getArea(geometry);
+    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    const double area = m->getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -104,15 +102,14 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const mesh_geometry<dimension> geometry(m->getGeometry());
-    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
-    const double area = c.getArea(geometry);
+    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    const double area = m->getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -134,11 +131,10 @@ public:
     return result;
   }
 
-  evaluated_basis evaluate_basis(const cell_type& c, const unsigned int i, const vertex_type& v) const
+  evaluated_basis evaluate_basis(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
-    const mesh_geometry<dimension> geometry(m->getGeometry());
-    const std::vector<vertex_type> vertices(c.getCoordinates(geometry));
-    const double area = c.getArea(geometry);
+    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    const double area = m->getArea(cid);
 
     const int ip1 = (i+1) % 3;
     const int ip2 = (i+2) % 3;
@@ -160,8 +156,8 @@ public:
 
   std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
   {
-    const std::vector<vertex_id> cid_vertices(m->getCell(cid).getIndices());
-    const std::vector<vertex_id> cid2_vertices(m->getCell(cid2).getIndices());
+    const std::vector<vertex_id> cid_vertices(m->getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> cid2_vertices(m->getIndices(MeshEntity(dimension, cid2), 0));
 
     // Map vertices of cid2 onto degrees of freedom
     std::map<vertex_id, unsigned> cid2_dof;
@@ -194,7 +190,7 @@ public:
     }
 
     // Create list of local vertices
-    const std::vector<vertex_id> vertexIndices(m->getCell(cid).getIndices());
+    const std::vector<vertex_id> vertexIndices(m->getIndices(MeshEntity(dimension, cid), 0));
 
     // Find vertices on boundary
     std::vector<unsigned> dofs;
