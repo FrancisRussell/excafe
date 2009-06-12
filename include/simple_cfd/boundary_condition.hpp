@@ -35,7 +35,6 @@ public:
     typedef typename dof_map_type::dof_t dof_t;
 
     const dof_map_type dofMap(boundaryValues.getRowMappings());
-    const mesh<cell_type>& m(dofMap.getMesh());
 
     for(typename dof_map_type::const_iterator dofMapIter(dofMap.begin()); dofMapIter!=dofMap.end(); ++dofMapIter)
     {
@@ -45,7 +44,7 @@ public:
       if (boost::get<0>(dof) == &element && subdomain.inside(dofLocation))
       {
         const Tensor<D, R, double> boundaryValue(function.evaluate(dofLocation));
-        const Tensor<D, R, double> basisAtDofLocation(element.evaluate_tensor(m.getCell(boost::get<1>(dof)),
+        const Tensor<D, R, double> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
                                                                               boost::get<2>(dof), dofLocation));
         const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
         boundaryValues.setValues(1, &dof, &dofValue);

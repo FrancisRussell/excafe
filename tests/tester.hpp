@@ -71,12 +71,10 @@ private:
 
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
-    const std::map<cfd::cell_id, cell_type> cells(m.getCells());
     basis_t basis(m);
 
     cfd::dof_map_builder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);
-    mapBuilder.handleCells(cells);
 
     dof_map_t dofMap(mapBuilder.getDofMap());
     std::map< global_dof_t, std::vector<local_dof_t> > global2local;
@@ -92,13 +90,13 @@ private:
       {
         const local_dof_t localDof(dofIter->second[0]);
         const vertex_type location = boost::get<0>(localDof)->getDofCoordinate(boost::get<1>(localDof), boost::get<2>(localDof));
-        const double localDofValue = basis.evaluate_tensor(m.getCell(boost::get<1>(localDof)), boost::get<2>(localDof), location).toScalar();
+        const double localDofValue = basis.evaluate_tensor(boost::get<1>(localDof), boost::get<2>(localDof), location).toScalar();
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
           const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinate(boost::get<1>(coDof), boost::get<2>(coDof));
-          const double coDofValue = basis.evaluate_tensor(m.getCell(boost::get<1>(coDof)), boost::get<2>(coDof), coDofLocation).toScalar();
+          const double coDofValue = basis.evaluate_tensor(boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
           assertTrue(location == coDofLocation);
           assertZero(localDofValue - coDofValue);
         }

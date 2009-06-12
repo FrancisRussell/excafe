@@ -43,6 +43,7 @@ private:
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
     for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    {
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
       {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
@@ -50,7 +51,7 @@ private:
           for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
           {
             for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
-
+            {
               const int rowIndex =
                 rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
                 cellIter->getIndex(), rowDof)); 
@@ -60,6 +61,11 @@ private:
 
               if (rowIndex >= 0 && colIndex >= 0)
                 pattern.insert(rowIndex, colIndex); 
+            }
+          }
+        }
+      }
+    }
 
     return pattern;
   }
