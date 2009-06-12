@@ -528,10 +528,6 @@ public:
         }
         return std::make_pair(xVelocity, yVelocity);
       }
-      else
-      {
-        ++cellIter;
-      }
     }
     return std::make_pair(0.0, 0.0);
   }
