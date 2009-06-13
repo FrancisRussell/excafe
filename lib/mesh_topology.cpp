@@ -185,7 +185,7 @@ MeshTopology::global_iterator MeshTopology::global_begin(const std::size_t d)
 
 MeshTopology::global_iterator MeshTopology::global_end(const std::size_t d)
 {
-  return MeshEntityIteratorGlobal(this, d, getConnectivity(d, 0)->numEntities());
+  return MeshEntityIteratorGlobal(this, d, numEntities(d));
 }
 
 MeshTopology::local_iterator MeshTopology::local_begin(const MeshEntity& entity, const std::size_t d)
