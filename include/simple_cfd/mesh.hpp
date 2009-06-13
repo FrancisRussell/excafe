@@ -92,6 +92,21 @@ public:
     baseConnectivity.clear();
   }
 
+  std::size_t numEntities(const std::size_t d) const
+  {
+    return topology.numEntities(d);
+  }
+
+  std::size_t numRelatins(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.numRelations(entity, d);
+  }
+
+  std::size_t numRelations(const std::size_t d, const std::size_t dPrime) const
+  {
+    return topology.numRelations(d, dPrime);
+  }
+
   global_iterator global_begin(const std::size_t d) const
   {
     return topology.global_begin(d);

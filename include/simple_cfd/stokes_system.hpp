@@ -503,7 +503,8 @@ public:
   void outputToFile(const std::string& filename)
   {
     std::ofstream outFile(filename.c_str());
-    render(3.0, 1.0, 90, 30, outFile);
+    //renderOld(3.0, 1.0, 90, 30, outFile);
+    render(outFile);
     outFile.close();
   }
 
@@ -513,26 +514,45 @@ public:
     {
       if (m.getReferenceCell().contains(m, cellIter->getIndex(), vertex))
       {
-        double xVelocity(0.0), yVelocity(0.0);
-
-        for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
-        {
-          Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cellIter->getIndex(), dof, vertex);
-          const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
-
-          double velocityCoeff;
-          unknown_vector.getValues(1u, &velocityDof, &velocityCoeff);
-
-          xVelocity += velocity_basis(0).toScalar() * velocityCoeff;
-          yVelocity += velocity_basis(1).toScalar() * velocityCoeff;
-        }
-        return std::make_pair(xVelocity, yVelocity);
+        return getVelocityVector(MeshEntity(m.getDimension(), cellIter->getIndex()), vertex);
       }
     }
     return std::make_pair(0.0, 0.0);
   }
 
-  void render(const double width, const double height, const unsigned xPoints, const unsigned yPoints, std::ostream& out)
+  std::pair<double, double> getVelocityVector(const MeshEntity& entity, const vertex_type& vertex) const
+  {
+    // From any given mesh entity, we determine a cell we can compute a value from
+    std::size_t cid;
+    if (entity.getDimension() == m.getDimension())
+    {
+      cid = entity.getIndex();
+    }
+    else
+    {
+      const std::vector<std::size_t> cellIndices(m.getIndices(entity, m.getDimension()));
+      assert(cellIndices.size() > 0);
+      cid = cellIndices.front();
+    }
+
+    //assert(m.getReferenceCell().contains(m, cid, vertex));
+    double xVelocity(0.0), yVelocity(0.0);
+
+    for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
+    {
+      Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(cid, dof, vertex);
+      const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cid, dof);
+
+      double velocityCoeff;
+      unknown_vector.getValues(1u, &velocityDof, &velocityCoeff);
+
+      xVelocity += velocity_basis(0).toScalar() * velocityCoeff;
+      yVelocity += velocity_basis(1).toScalar() * velocityCoeff;
+     }
+     return std::make_pair(xVelocity, yVelocity);
+  }
+
+  void renderOld(const double width, const double height, const unsigned xPoints, const unsigned yPoints, std::ostream& out)
   {
     const double xSpacing = width/(xPoints-1);
     const double ySpacing = height/(yPoints-1);
@@ -557,6 +577,60 @@ public:
         const std::pair<double, double> velocity(getVelocityVector(vertex_type(x, y)));
         out << velocity.first << " " << velocity.second << " " << 0.0 << std::endl;
       }
+    }
+  }
+
+  void render(std::ostream& out)
+  {
+    std::vector< vertex<2> > vertices;
+    std::vector< std::pair<double, double> > velocities;
+
+    for(typename mesh<cell_type>::global_iterator vIter(m.global_begin(0)); vIter!=m.global_end(0); ++vIter)
+    {
+      const vertex<2> v(m.getVertex(vIter->getIndex()));
+      vertices.push_back(v);
+      velocities.push_back(getVelocityVector(v));
+    }
+
+    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(1)); eIter!=m.global_end(1); ++eIter)
+    {
+      const std::vector<std::size_t> vertexIndices(m.getIndices(*eIter, 0));
+      const vertex<2> v((m.getVertex(vertexIndices[0]) + m.getVertex(vertexIndices[1]))/2);
+      vertices.push_back(v);
+      velocities.push_back(getVelocityVector(*eIter, v));
+    }
+
+    out << "# vtk DataFile Version 2.0" << std::endl;
+    out << "Simple Navier-Stokes Solver" << std::endl;
+    out << "ASCII" << std::endl;
+    out << "DATASET POLYDATA" << std::endl;
+    out << "POINTS " << vertices.size() << " DOUBLE " << std::endl;
+
+    for(std::size_t point = 0; point < vertices.size(); ++point)
+    {
+      const vertex<2> v(vertices[point]);
+      out << v[0] << " " << v[1] << " 0" << std::endl;
+    }
+
+    out << "POLYGONS " << m.numEntities(dimension) << " " << m.numRelations(dimension, 0)+m.numEntities(dimension)  << std::endl; 
+    for(typename mesh<cell_type>::global_iterator cIter(m.global_begin(dimension)); cIter!=m.global_end(dimension); ++cIter)
+    {
+      const std::vector<std::size_t> vIndices(m.getIndices(*cIter, 0));
+      out << vIndices.size();
+
+      for(std::size_t v=0; v<vIndices.size(); ++v)
+      {
+        out << " " << vIndices[v];
+      }
+      out << std::endl;
+    }
+
+    out << "POINT_DATA " << vertices.size() << std::endl;
+    out << "VECTORS velocity_field DOUBLE" << std::endl;
+
+    for(std::size_t point = 0; point < velocities.size(); ++point)
+    {
+      out << velocities[point].first << " " << velocities[point].second << " 0" << std::endl;
     }
   }
 };

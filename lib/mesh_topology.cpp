@@ -41,8 +41,12 @@ std::size_t MeshTopology::numEntities(const std::size_t d)
 
 std::size_t MeshTopology::numRelations(const MeshEntity& entity, const std::size_t d)
 {
-  calculateConnectivity(entity.getDimension(), d);
-  return getConnectivityObject(entity.getDimension(), d)->numRelations(entity.getIndex());
+  return getConnectivity(entity.getDimension(), d)->numRelations(entity.getIndex());
+}
+
+std::size_t MeshTopology::numRelations(const std::size_t d, const std::size_t dPrime)
+{
+  return getConnectivity(d, dPrime)->numRelations();
 }
 
 void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t dPrime)
