@@ -115,8 +115,8 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
   assert(static_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
   in.segmentmarkerlist = &segmentMarkerList[0];
 
-  // Q=quiet, e=output-edges, p=read-segments, z=zero-indexing, a=area-constraint
-  boost::shared_array<char> options = stringToCharArray(std::string("Qepza") + 
+  // Q=quiet, q=quality, e=output-edges, p=read-segments, z=zero-indexing, a=area-constraint
+  boost::shared_array<char> options = stringToCharArray(std::string("Qqepza") + 
     boost::lexical_cast<std::string>(maxCellArea));
 
   triangulate(options.get(), &in, &out, NULL);
