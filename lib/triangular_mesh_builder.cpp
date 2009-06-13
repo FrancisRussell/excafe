@@ -1,6 +1,3 @@
-#include <simple_cfd_fwd.hpp>
-#include <triangular_mesh_builder.hpp>
-#include <mesh.hpp>
 #include <cmath>
 #include <cassert>
 #include <vector>
@@ -8,6 +5,10 @@
 #include <cstring>
 #include <string>
 #include <utility>
+#include <iterator>
+#include <simple_cfd_fwd.hpp>
+#include <triangular_mesh_builder.hpp>
+#include <mesh.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libtriangle.hpp>
@@ -89,9 +90,6 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
   pointList.push_back(0.0);
   pointList.push_back(height);
 
-  in.pointlist = &pointList[0];
-  in.numberofpoints = pointList.size() / 2;
-
   segmentList.push_back(0);
   segmentList.push_back(1);
   segmentList.push_back(1);
@@ -100,14 +98,20 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
   segmentList.push_back(3);
   segmentList.push_back(3);
   segmentList.push_back(0);
-
-  in.segmentlist = &segmentList[0];
-  in.numberofsegments = segmentList.size() / 2;
 
   segmentMarkerList.push_back(1);
   segmentMarkerList.push_back(2);
   segmentMarkerList.push_back(3);
   segmentMarkerList.push_back(4);
+
+  handlePolygons(pointList, segmentList, segmentMarkerList);
+
+  in.pointlist = &pointList[0];
+  in.numberofpoints = pointList.size() / 2;
+
+  in.segmentlist = &segmentList[0];
+  in.numberofsegments = segmentList.size() / 2;
+
   assert(static_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
   in.segmentmarkerlist = &segmentMarkerList[0];
 
@@ -163,13 +167,45 @@ mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshTriangle(
         facetNumbering(*facetIter) = label;
       }
     }
-
     assert(foundEdge);
-    m.setFacetLabelling(facetNumbering);
   }
 
+  m.setFacetLabelling(facetNumbering);
   trifreeMembers(out);
   return m;
+}
+
+void TriangularMeshBuilder::handlePolygons(std::vector<double>& pointList, 
+  std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const
+{
+  for(std::vector< std::pair<Polygon, int> >::const_iterator polyIter(polygons.begin());
+    polyIter!=polygons.end(); ++polyIter)
+  {
+    const Polygon polygon(polyIter->first);
+    const int label = polyIter->second;
+
+    std::vector<double> points;
+    std::vector<int> segments;
+
+    for(std::size_t node=0; node<polygon.getNumSides(); ++node)
+    {
+      const double angle = polygon.getRotation() + (2*M_PI)*node/polygon.getNumSides();
+      const double x = polygon.getOrigin()[0] + sin(angle) * polygon.getRadius();
+      const double y = polygon.getOrigin()[1] + cos(angle) * polygon.getRadius();
+      points.push_back(x);
+      points.push_back(y);
+    }
+
+    for(std::size_t edge=0; edge<polygon.getNumSides(); ++edge)
+    {
+      segments.push_back(edge%polygon.getNumSides() + pointList.size()/2);
+      segments.push_back((edge+1)%polygon.getNumSides() + pointList.size()/2);
+    }
+
+    pointList.insert(pointList.end(), points.begin(), points.end());
+    segmentList.insert(segmentList.end(), segments.begin(), segments.end());
+    std::fill_n(std::back_inserter(segmentMarkerList), polygon.getNumSides(), label);
+  }
 }
 
 mesh<TriangularMeshBuilder::cell_type> TriangularMeshBuilder::buildMeshOld() const

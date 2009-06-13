@@ -23,6 +23,8 @@ private:
 
   mesh<cell_type> buildMeshOld() const;
   mesh<cell_type> buildMeshTriangle() const;
+  void handlePolygons(std::vector<double>& pointList, 
+    std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
