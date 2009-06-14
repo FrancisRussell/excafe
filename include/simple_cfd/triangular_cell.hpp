@@ -29,6 +29,7 @@ public:
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
   bool contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& v) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
+  virtual std::size_t getLocalIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t cid) const;
 };
 
 }

@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <numeric>
+#include <algorithm>
 
 namespace cfd
 {
@@ -109,8 +110,6 @@ bool TriangularCell::contains(const mesh<TriangularCell>& m, const std::size_t c
 
 std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
 {
-  //NOTE: we rely on the fact that the vertices are sorted, otherwise this method
-  //      would be non-deterministic
   assert(cellEntity.getDimension() == dimension);
   assert(d <= dimension);
 
@@ -146,6 +145,24 @@ std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTop
   }
 
   return result;
+}
+
+std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t cid) const
+{
+  // Get vertices on entity
+  const std::vector<std::size_t> vertexIndices(topology.getIndices(entity, 0));
+  const std::set<std::size_t> vertexIndicesSet(vertexIndices.begin(), vertexIndices.end());
+
+  // Get sets of vertices corresponding to entities of dimension entity.getDimension() on cell cid.
+  const std::vector< std::set<std::size_t> > incidentVertices(getIncidentVertices(topology, MeshEntity(dimension, cid), entity.getDimension()));
+
+  const std::vector< std::set<std::size_t> >::const_iterator 
+    entityIter(std::find(incidentVertices.begin(), incidentVertices.end(), vertexIndicesSet));
+
+  // If this assertion fails, entity wasn't present on cell cid
+  assert(entityIter != incidentVertices.end());
+
+  return entityIter - incidentVertices.begin();
 }
 
 }
