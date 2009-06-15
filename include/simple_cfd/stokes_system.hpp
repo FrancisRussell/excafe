@@ -383,8 +383,6 @@ public:
     // FIXME: make me into a function that doesn't depend on the specifics of the mesh generation
 
     Location location = BODY;
-    if (v[0] == 0.0)
-      location = LEFT_EDGE;
 
     if (v[0] == 3.0)
       location = RIGHT_EDGE;
@@ -394,6 +392,9 @@ public:
 
     if (v[1] == 1.0)
       location = TOP_EDGE;
+
+    if (v[0] == 0.0)
+      location = LEFT_EDGE;
 
     return location;
   }
@@ -432,13 +433,14 @@ public:
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
+      const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
       const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       const Location location = getLocation(position);
 
       // Check this really is an edge cell
       assert(location != BODY);
 
-      if (location == TOP_EDGE || location == BOTTOM_EDGE)
+      if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
       {
         const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
         stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
