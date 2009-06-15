@@ -86,6 +86,11 @@ public:
     facetLabels = f;
   }
 
+  int getFacetLabel(const MeshEntity& entity) const
+  {
+    return facetLabels(entity);
+  }
+
   void finish()
   {
     topology.setBaseConnectivity(baseConnectivity);
@@ -172,9 +177,14 @@ public:
     return geometry[vid];
   }
 
-  mesh_geometry<dimension> getGeometry() const
+  const mesh_geometry<dimension>& getGeometry() const
   {
     return geometry;
+  }
+
+  MeshTopology& getTopology() const
+  {
+    return topology;
   }
 
   virtual ~mesh()

@@ -15,6 +15,7 @@
 #include "subdomain.hpp"
 #include "function.hpp"
 #include "boundary_condition.hpp"
+#include "boundary_condition_handler.hpp"
 #include <iostream>
 #include <map>
 #include <algorithm>

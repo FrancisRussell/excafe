@@ -28,7 +28,10 @@ public:
   typedef vertex<dimension> vertex_type;
 
 private:
+  static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
+  static const unsigned int dofs_per_index = 3;
   const mesh<cell_type>* m;
+  const cell_type referenceCell;
 
   // This converts a value to a list of tensor indices in row major order.
   // The order is irrelevent so long as it is consistent and can be used to
@@ -217,6 +220,24 @@ public:
   {
     assert(dof < space_dimension());
     return dof/3;
+  }
+
+  virtual std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  {
+    const std::size_t localIndex = referenceCell.getLocalIndex(topology, entity, cid);
+    std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > result;
+
+    if (entity.getDimension() == 2 || entity.getDimension() == 1) return result;
+
+    if (entity.getDimension() == 0)
+    {
+      for(std::size_t index=0; index < tensor_size; ++index)
+      {
+        result.insert(boost::make_tuple(this, cid, dofs_per_index*index + localIndex));
+      }
+    }
+
+    return result;
   }
 };
 
