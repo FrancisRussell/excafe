@@ -61,13 +61,12 @@ void Tester::testQuadrature()
   {
     // Check the area is correct first
     assertZero(m.getArea(cellIter->getIndex()) - area);
-
     std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
 
     double accum = 0;
     for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
     {
-      accum += wIter->second;
+      accum += wIter->second * m.getReferenceCell().getJacobian(m, *cellIter, wIter->first);
     }
 
     assertZero(accum - area);
