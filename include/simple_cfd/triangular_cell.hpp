@@ -26,6 +26,7 @@ public:
   static std::map<vertex_type, double> getReferenceQuadrature();
   virtual std::map<vertex_type, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
+  double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& v) const;
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
   bool contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& v) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;

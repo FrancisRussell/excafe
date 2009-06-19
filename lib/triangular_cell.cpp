@@ -43,26 +43,33 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadra
 std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
   const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
-  const double scaling = getArea(m, entity) / 0.5; // 0.5 is area of reference triangle
   std::map<vertex_type, double> weightings;
 
   for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
-    weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * scaling;
+  {
+    weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second;
+  }
 
   return weightings;
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
+  // Jacobian is constant so v doesn't matter
+  const vertex_type v(0.0, 0.0);
+  const double area = 0.5 * getJacobian(m, entity, v);
+  assert(area >= 0.0);
+  return area;
+}
+
+double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& b) const
+{
   const std::vector<vertex_type> vertices(m.getCoordinates(entity.getIndex()));
-  const double doubleArea = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
+  const double jacobian = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
                             vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
 
-  // Check for correct orientation
-  assert(doubleArea >= 0.0);
-
-  return doubleArea / 2.0;
+  return jacobian;
 }
 
 TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const

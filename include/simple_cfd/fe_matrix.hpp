@@ -124,10 +124,14 @@ public:
       for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
         trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cellIter->getIndex(), trial));
 
+      //FIXME: Assumes constant Jacobian
+      const double jacobian = m.getReferenceCell().getJacobian(m, *cellIter, vertex_type(0.0, 0.0));
+
       for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
         for(unsigned test=0; test<testSpaceDimension; ++test)
           for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(m, *cellIter, test, trial, quadIter->first);
+            valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *cellIter, test, trial,
+            quadIter->first) * jacobian * quadIter->second;
 
       matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
     }

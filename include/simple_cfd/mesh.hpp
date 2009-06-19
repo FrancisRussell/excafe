@@ -80,6 +80,11 @@ public:
     return referenceCell.getArea(*this, MeshEntity(dimension, cid));
   }
 
+  double getJacobian(const std::size_t cid, const vertex_type& v) const
+  {
+    return referenceCell.getJacobian(*this, MeshEntity(dimension, cid), v);
+  }
+
   void setFacetLabelling(const MeshFunction<int>& f)
   {
     assert(f.getDimension() == getDimension() - 1);
