@@ -64,56 +64,6 @@ public:
        0  3  1
   */
 
-  evaluated_basis evaluate_basis(const std::size_t cid, const unsigned int i, const vertex_type& v) const
-  {
-    std::vector<vertex_type> vertices(m->getCoordinates(cid));
-
-    // Create interpolated vertices
-    vertices.push_back((vertices[0] + vertices[1])/2);
-    vertices.push_back((vertices[1] + vertices[2])/2);
-    vertices.push_back((vertices[2] + vertices[0])/2);
-
-    int j1, j2, k1, k2;
-    if (i < 3)
-    {
-      j1 = (i+1)%3;
-      j2 = (i+2)%3;
-      k1 = 3 + i;
-      k2 = 3 + (i + 5)%3;
-    }
-    else
-    {
-      j1 = i-3;
-      j2 = (i-3+2)%3;
-      k1 = (i-3+1)%3;
-      k2 = (i-3+2)%3;
-    }
-
-    const double gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
-                      (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
-
-    const double gn = (vertices[i][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
-                      (vertices[j2][0] - vertices[j1][0]) * (vertices[i][1] - vertices[j1][1]);
-
-    const double hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
-                      (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
-
-    const double hn = (vertices[i][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
-                      (vertices[k2][0] - vertices[k1][0]) * (vertices[i][1] - vertices[k1][1]);
-
-    evaluated_basis result;
-
-    result.value = (gf/gn) * (hf/hn);
-
-    result.dx = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
-                (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
-
-    result.dy = -((vertices[j2][0] - vertices[j1][0])/gn) * (hf/hn) -
-                 (gf/gn) * ((vertices[k2][0] - vertices[k1][0])/hn);
-
-    return result;
-  }
-
   value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& v) const
   {
     assert(i < space_dimension());

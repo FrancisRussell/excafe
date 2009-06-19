@@ -44,14 +44,6 @@ class MeshEntityIteratorGlobal;
 class MeshEntityIteratorLocal;
 class Polygon;
 
-// Basis function types
-struct evaluated_basis
-{
-  double value;
-  double dx;
-  double dy;
-};
-
 // Numeric types
 class SparsityPattern;
 class PETScMatrix;

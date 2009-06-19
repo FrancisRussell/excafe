@@ -131,24 +131,6 @@ public:
     return result;
   }
 
-  evaluated_basis evaluate_basis(const std::size_t cid, const unsigned int i, const vertex_type& v) const
-  {
-    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getArea(cid);
-
-    const int ip1 = (i+1) % 3;
-    const int ip2 = (i+2) % 3;
-
-    evaluated_basis result;
-
-    result.value = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
-                    (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / (2.0 * area);
-    result.dx = -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
-    result.dy =  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
-
-    return result;
-  }
-
   unsigned space_dimension() const
   {
     return 3 * detail::Power<dimension, rank>::value;
