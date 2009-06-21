@@ -20,6 +20,10 @@ public:
   typedef vertex<dimension> vertex_type;
   static const unsigned int vertex_count = 3;
 
+private:
+  static std::map<vertex_type, double> normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value); 
+
+public:
   TriangularCell();
   virtual std::size_t getDimension() const;
   virtual std::size_t getVerticesPerCell() const;

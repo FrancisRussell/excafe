@@ -35,16 +35,31 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  double width;
-  double height;
   mesh_geometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
   TriangularCell referenceCell;
   mutable MeshTopology topology;
   MeshFunction<int> facetLabels;
+  MeshFunction<bool> boundaryFacets;
+
+  MeshFunction<bool> buildBoundaryFunction() const
+  {
+    MeshFunction<bool> boundary(dimension-1);
+
+    for(MeshTopology::global_iterator facetIter(topology.global_begin(dimension-1)); facetIter!=topology.global_end(dimension-1); ++facetIter)
+    {
+      const std::size_t numCells = numRelations(*facetIter, dimension);
+      assert(numCells != 0);
+
+      if (numCells == 1)
+        boundary(*facetIter) = true;
+    }
+
+    return boundary;
+  }
 
 public:
-  mesh() : topology(referenceCell), facetLabels(getDimension()-1)
+  mesh() : topology(referenceCell), facetLabels(getDimension()-1), boundaryFacets(getDimension()-1)
   {
   }
 
@@ -70,6 +85,16 @@ public:
     return referenceCell;
   }
 
+  std::size_t getContainingCell(const MeshEntity& entity) const
+  {
+    if (entity.getDimension() == dimension)
+      return entity.getIndex();
+
+    const std::vector<std::size_t> cellIndices(getIndices(entity, dimension));
+    assert(cellIndices.size() > 0);
+    return cellIndices.front();
+  }
+
   std::map<vertex_type, double> getQuadrature(const MeshEntity& entity) const
   {
     return referenceCell.getQuadrature(*this, entity);
@@ -91,10 +116,17 @@ public:
     facetLabels = f;
   }
 
+  MeshFunction<bool> getBoundaryFunction() const
+  {
+    return boundaryFacets;
+  }
+
   void finish()
   {
     topology.setBaseConnectivity(baseConnectivity);
     baseConnectivity.clear();
+
+    boundaryFacets = buildBoundaryFunction();
   }
 
   std::size_t numEntities(const std::size_t d) const
@@ -102,7 +134,7 @@ public:
     return topology.numEntities(d);
   }
 
-  std::size_t numRelatins(const MeshEntity& entity, const std::size_t d) const
+  std::size_t numRelations(const MeshEntity& entity, const std::size_t d) const
   {
     return topology.numRelations(entity, d);
   }
@@ -180,6 +212,11 @@ public:
   mesh_geometry<dimension> getGeometry() const
   {
     return geometry;
+  }
+
+  MeshTopology& getTopology() const
+  {
+    return topology;
   }
 
   virtual ~mesh()
