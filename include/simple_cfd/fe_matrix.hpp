@@ -91,14 +91,13 @@ private:
         for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, MeshEntity(m.getDimension(), cid), test, trial,
+              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *eIter, test, trial,
               quadIter->first) * quadIter->second;
 
         matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
       }
     }
   }
-
 
 public:
   FEMatrix(const dof_map<cell_type>& _rowMappings, const dof_map<cell_type>& _colMappings) :

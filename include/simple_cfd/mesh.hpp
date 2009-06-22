@@ -204,7 +204,7 @@ public:
     return topology.getIndices(entity, d);
   }
 
-  vertex_type getVertex(const vertex_id vid) const
+  vertex_type getVertex(const std::size_t vid) const
   {
     return geometry[vid];
   }

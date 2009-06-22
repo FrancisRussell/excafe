@@ -1,5 +1,6 @@
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
+#include <numeric/tensor.hpp>
 #include <mesh.hpp>
 #include <vector>
 #include <cassert>
@@ -77,7 +78,6 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
     const std::size_t cid = m.getContainingCell(entity);
     const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
     const std::vector<vertex_type> vertices(m.getCoordinates(cid));
-
     std::map<vertex_type, double> weightings;
 
     for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
@@ -96,9 +96,8 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   else
   {
     assert(false);
+    return std::map<vertex_type, double>();
   }
-
-  return std::map<vertex_type, double>();
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
@@ -122,10 +121,10 @@ double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEnti
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
     return jacobian;
   }
-  else if (entity.getDimension() == 2)
+  else if (entity.getDimension() == 1)
   {
-    assert(vertices.size() == 2);
-    const vertex_type difference = vertices[entity.getIndex()] - vertices[(entity.getIndex()+1)%3];
+    const std::size_t localIndex = getLocalIndex(m.getTopology(), entity, m.getContainingCell(entity));
+    const vertex_type difference = vertices[localIndex] - vertices[(localIndex+1)%3];
     return std::sqrt(difference[0] * difference[0] + difference[1] * difference[1]);
   }
   else
@@ -234,6 +233,31 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const MeshEnti
   assert(entityIter != incidentVertices.end());
 
   return entityIter - incidentVertices.begin();
+}
+
+
+Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(const mesh<TriangularCell>& m, 
+  const std::size_t cid, const std::size_t fid, const vertex_type& v) const
+{
+  Tensor<dimension, 1, double> normal;
+  std::vector< vertex<dimension> > cellVertices(m.getCoordinates(cid));
+  assert(cellVertices.size() == 3);
+
+  const std::size_t localFacetID = getLocalIndex(m.getTopology(), MeshEntity(dimension-1, fid), cid);
+  const vertex_type v1 = cellVertices[localFacetID];
+  const vertex_type v2 = cellVertices[(localFacetID+1)%3];
+
+  const std::size_t zero = 0;
+  const std::size_t one = 1;
+
+  const double facetLength = v1.distance(v2);
+  const vertex_type delta = v2 - v1;
+
+  // The x and y values are exchanged to create the perpendicular
+  normal[&zero] = delta[1] / facetLength;
+  normal[&one] = -delta[0] / facetLength;
+
+  return normal;
 }
 
 }

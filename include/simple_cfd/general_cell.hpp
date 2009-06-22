@@ -19,6 +19,8 @@ public:
   virtual std::size_t getVerticesPerCell() const = 0;
   virtual std::map<vertex<2>, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const = 0;
   virtual double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex<2>& v) const = 0;
+  virtual Tensor<2, 1, double> getFacetNormal(const mesh<TriangularCell>& m, const std::size_t cid, const
+    std::size_t fid, const vertex<2>& v) const = 0;
   virtual bool contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex<2>& v) const = 0;
   virtual ~GeneralCell() {}
 };
