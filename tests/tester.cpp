@@ -66,7 +66,7 @@ void Tester::testQuadrature()
     double accum = 0;
     for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
     {
-      accum += wIter->second * m.getReferenceCell().getJacobian(m, *cellIter, wIter->first);
+      accum += wIter->second;
     }
 
     assertZero(accum - area);
