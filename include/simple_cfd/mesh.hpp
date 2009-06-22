@@ -35,16 +35,31 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  double width;
-  double height;
   mesh_geometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
   TriangularCell referenceCell;
   mutable MeshTopology topology;
   MeshFunction<int> facetLabels;
+  MeshFunction<bool> boundaryFacets;
+
+  MeshFunction<bool> buildBoundaryFunction() const
+  {
+    MeshFunction<bool> boundary(dimension-1);
+
+    for(MeshTopology::global_iterator facetIter(topology.global_begin(dimension-1)); facetIter!=topology.global_end(dimension-1); ++facetIter)
+    {
+      const std::size_t numCells = numRelations(*facetIter, dimension);
+      assert(numCells != 0);
+
+      if (numCells == 1)
+        boundary(*facetIter) = true;
+    }
+
+    return boundary;
+  }
 
 public:
-  mesh() : topology(referenceCell), facetLabels(getDimension()-1)
+  mesh() : topology(referenceCell), facetLabels(getDimension()-1), boundaryFacets(getDimension()-1)
   {
   }
 
@@ -70,6 +85,16 @@ public:
     return referenceCell;
   }
 
+  std::size_t getContainingCell(const MeshEntity& entity) const
+  {
+    if (entity.getDimension() == dimension)
+      return entity.getIndex();
+
+    const std::vector<std::size_t> cellIndices(getIndices(entity, dimension));
+    assert(cellIndices.size() > 0);
+    return cellIndices.front();
+  }
+
   std::map<vertex_type, double> getQuadrature(const MeshEntity& entity) const
   {
     return referenceCell.getQuadrature(*this, entity);
@@ -78,6 +103,11 @@ public:
   double getArea(const std::size_t cid) const
   {
     return referenceCell.getArea(*this, MeshEntity(dimension, cid));
+  }
+
+  double getJacobian(const std::size_t cid, const vertex_type& v) const
+  {
+    return referenceCell.getJacobian(*this, MeshEntity(dimension, cid), v);
   }
 
   void setFacetLabelling(const MeshFunction<int>& f)
@@ -91,10 +121,17 @@ public:
     return facetLabels(entity);
   }
 
+  MeshFunction<bool> getBoundaryFunction() const
+  {
+    return boundaryFacets;
+  }
+
   void finish()
   {
     topology.setBaseConnectivity(baseConnectivity);
     baseConnectivity.clear();
+
+    boundaryFacets = buildBoundaryFunction();
   }
 
   std::size_t numEntities(const std::size_t d) const
@@ -102,7 +139,7 @@ public:
     return topology.numEntities(d);
   }
 
-  std::size_t numRelatins(const MeshEntity& entity, const std::size_t d) const
+  std::size_t numRelations(const MeshEntity& entity, const std::size_t d) const
   {
     return topology.numRelations(entity, d);
   }
@@ -172,7 +209,7 @@ public:
     return topology.getIndices(entity, d);
   }
 
-  vertex_type getVertex(const vertex_id vid) const
+  vertex_type getVertex(const std::size_t vid) const
   {
     return geometry[vid];
   }

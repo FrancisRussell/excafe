@@ -3,7 +3,9 @@
 
 #include "simple_cfd_fwd.hpp"
 #include <cassert>
+#include <cmath>
 #include <algorithm>
+#include <numeric>
 #include <vector>
 #include <boost/lambda/lambda.hpp>
 #include <boost/array.hpp>
@@ -118,6 +120,12 @@ public:
   const_iterator end() const
   {
     return values.end();
+  }
+
+  double distance(const vertex<dimension>& v) const 
+  {
+    const vertex delta = v - *this;
+    return std::sqrt(std::inner_product(delta.begin(), delta.end(), delta.begin(), 0.0));
   }
 };
 

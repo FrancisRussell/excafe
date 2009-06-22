@@ -1,5 +1,6 @@
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
+#include <numeric/tensor.hpp>
 #include <mesh.hpp>
 #include <vector>
 #include <cassert>
@@ -7,6 +8,8 @@
 #include <set>
 #include <numeric>
 #include <algorithm>
+#include <utility>
+#include <cmath>
 
 namespace cfd
 {
@@ -23,6 +26,20 @@ std::size_t TriangularCell::getDimension() const
 std::size_t TriangularCell::getVerticesPerCell() const
 {
   return vertex_count;
+}
+
+std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value)
+{
+  double sum = 0.0;
+  std::map<vertex_type, double> newQuadrature;
+
+  for(std::map<vertex_type, double>::const_iterator qIter(quadrature.begin()); qIter!=quadrature.end(); ++qIter)
+    sum += qIter->second;
+
+  for(std::map<vertex_type, double>::const_iterator qIter(quadrature.begin()); qIter!=quadrature.end(); ++qIter)
+    newQuadrature.insert(std::make_pair(qIter->first, qIter->second * (value/sum)));
+
+  return newQuadrature;
 }
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature()
@@ -43,26 +60,79 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadra
 std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
   const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
-  const double scaling = getArea(m, entity) / 0.5; // 0.5 is area of reference triangle
-  std::map<vertex_type, double> weightings;
 
-  for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
-    weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * scaling;
+  //FIXME: Assumes constant Jacobian
+  const double jacobian = m.getReferenceCell().getJacobian(m, entity, vertex_type(0.0, 0.0));
 
-  return weightings;
+  if (entity.getDimension() == 2)
+  {
+    std::map<vertex_type, double> weightings;
+    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    {
+      weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * jacobian;
+    }
+    return weightings;
+  }
+  else if (entity.getDimension() == 1)
+  {
+    const std::size_t cid = m.getContainingCell(entity);
+    const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
+    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    std::map<vertex_type, double> weightings;
+
+    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    {
+      //NOTE: the edge mapping MUST match reference_to_physical and getLocalIndex
+      if ((index == 0 && refIter->first[1] == 0.0) ||
+          (index == 1 && refIter->first[0] + refIter->first[1] == 1.0) ||
+          (index == 2 && refIter->first[0] == 0.0))
+      {
+        weightings[reference_to_physical(m, cid, refIter->first)] = refIter->second;
+      }
+    }
+
+    return normaliseQuadrature(weightings, 1.0 * jacobian);
+  }
+  else
+  {
+    assert(false);
+    return std::map<vertex_type, double>();
+  }
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
-  const std::vector<vertex_type> vertices(m.getCoordinates(entity.getIndex()));
-  const double doubleArea = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
+  // Jacobian is constant so v doesn't matter
+  const vertex_type v(0.0, 0.0);
+  const double area = 0.5 * getJacobian(m, entity, v);
+  assert(area >= 0.0);
+  return area;
+}
+
+double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& b) const
+{
+  const std::vector<vertex_type> vertices(m.getCoordinates(m.getContainingCell(entity)));
+
+  if (entity.getDimension() == 2)
+  {
+    assert(vertices.size() == 3);
+    const double jacobian = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
                             vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
+    return jacobian;
+  }
+  else if (entity.getDimension() == 1)
+  {
+    const std::size_t localIndex = getLocalIndex(m.getTopology(), entity, m.getContainingCell(entity));
+    const vertex_type difference = vertices[localIndex] - vertices[(localIndex+1)%3];
+    return std::sqrt(difference[0] * difference[0] + difference[1] * difference[1]);
+  }
+  else
+  {
+    assert(false);
+  }
 
-  // Check for correct orientation
-  assert(doubleArea >= 0.0);
-
-  return doubleArea / 2.0;
+  return 0.0;
 }
 
 TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const
@@ -163,6 +233,31 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const MeshEnti
   assert(entityIter != incidentVertices.end());
 
   return entityIter - incidentVertices.begin();
+}
+
+
+Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(const mesh<TriangularCell>& m, 
+  const std::size_t cid, const std::size_t fid, const vertex_type& v) const
+{
+  Tensor<dimension, 1, double> normal;
+  std::vector< vertex<dimension> > cellVertices(m.getCoordinates(cid));
+  assert(cellVertices.size() == 3);
+
+  const std::size_t localFacetID = getLocalIndex(m.getTopology(), MeshEntity(dimension-1, fid), cid);
+  const vertex_type v1 = cellVertices[localFacetID];
+  const vertex_type v2 = cellVertices[(localFacetID+1)%3];
+
+  const std::size_t zero = 0;
+  const std::size_t one = 1;
+
+  const double facetLength = v1.distance(v2);
+  const vertex_type delta = v2 - v1;
+
+  // The x and y values are exchanged to create the perpendicular
+  normal[&zero] = delta[1] / facetLength;
+  normal[&one] = -delta[0] / facetLength;
+
+  return normal;
 }
 
 }

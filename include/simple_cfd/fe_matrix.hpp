@@ -70,6 +70,52 @@ private:
     return pattern;
   }
 
+  void addTermGeneral(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f, const bool boundaryIntegral)
+  {
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+    
+    const finite_element_t* const trialFunction = f.getTrialFunction();
+    const finite_element_t* const testFunction = f.getTestFunction();
+
+    assert(trialElements.find(trialFunction) != trialElements.end());
+    assert(testElements.find(testFunction) != testElements.end());
+
+    const std::size_t dimension = boundaryIntegral ? m.getDimension()-1 : m.getDimension();
+    const unsigned testSpaceDimension = testFunction->space_dimension();
+    const unsigned trialSpaceDimension = trialFunction->space_dimension();
+    const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
+
+    std::vector<int> testIndices(testSpaceDimension);
+    std::vector<int> trialIndices(trialSpaceDimension);
+    std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
+
+    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(dimension)); eIter != m.global_end(dimension); ++eIter)
+    {
+      if (!boundaryIntegral || boundaryFunction(*eIter))
+      {
+        const std::map<vertex_type, double> quadrature(m.getQuadrature(*eIter));
+        const std::size_t cid = m.getContainingCell(*eIter);
+
+        std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
+
+        for(unsigned test=0; test<testSpaceDimension; ++test)
+          testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cid, test));
+
+        for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+          trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cid, trial));
+
+        for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
+          for(unsigned test=0; test<testSpaceDimension; ++test)
+            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *eIter, test, trial,
+              quadIter->first) * quadIter->second;
+
+        matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
+      }
+    }
+  }
+
 public:
   FEMatrix(const dof_map<cell_type>& _rowMappings, const dof_map<cell_type>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
@@ -123,41 +169,12 @@ public:
 
   void addTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
   {
-    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
-    
-    const finite_element_t* const trialFunction = f.getTrialFunction();
-    const finite_element_t* const testFunction = f.getTestFunction();
+    addTermGeneral(m, f, false);
+  }
 
-    assert(trialElements.find(trialFunction) != trialElements.end());
-    assert(testElements.find(testFunction) != testElements.end());
-
-    const std::size_t dimension = m.getDimension();
-    const unsigned testSpaceDimension = testFunction->space_dimension();
-    const unsigned trialSpaceDimension = trialFunction->space_dimension();
-
-    std::vector<int> testIndices(testSpaceDimension);
-    std::vector<int> trialIndices(trialSpaceDimension);
-    std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter != m.global_end(dimension); ++cellIter)
-    {
-      const std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
-      std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
-
-      for(unsigned test=0; test<testSpaceDimension; ++test)
-        testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cellIter->getIndex(), test));
-
-      for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-        trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cellIter->getIndex(), trial));
-
-      for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
-        for(unsigned test=0; test<testSpaceDimension; ++test)
-          for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            valueBlock[test * trialSpaceDimension + trial] += quadIter->second * f.evaluate(m, *cellIter, test, trial, quadIter->first);
-
-      matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
-    }
+  void addBoundaryTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
+  {
+    addTermGeneral(m, f, true);
   }
 
   void addToDiagonal(FEVector<cell_type>& v)

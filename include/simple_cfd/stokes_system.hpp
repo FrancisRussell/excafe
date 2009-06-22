@@ -57,8 +57,9 @@ public:
 
   virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(entity.getIndex(), trialDof, location);
-    typename TestType::gradient_type test_gradient = test->evaluate_gradient(entity.getIndex(), testDof, location);
+    const std::size_t cid = m.getContainingCell(entity);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cid, trialDof, location);
+    typename TestType::gradient_type test_gradient = test->evaluate_gradient(cid, testDof, location);
     const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
     return result;
   }
@@ -68,6 +69,51 @@ public:
     return ScaledFEBinaryFunction<GradTrialInnerGradTest>(*this, s);
   }
 };
+
+template<typename TrialType, typename TestType>
+class GradTrialInnerNormalMulTest : public FEBinaryFunction<typename TrialType::cell_type>
+{
+public:
+  typedef typename TrialType::cell_type cell_type;
+  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
+  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
+
+private:
+  const TrialType* const trial;
+  const TestType* const test;
+
+public:
+  GradTrialInnerNormalMulTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
+  {
+  }
+
+  virtual const finite_element_t* getTestFunction() const
+  {
+    return test;
+  }
+
+  virtual const finite_element_t* getTrialFunction() const 
+  {
+    return trial;
+  }
+
+  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  {
+    assert(entity.getDimension() == m.getDimension() - 1);
+    const std::size_t cid = m.getContainingCell(entity);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cid, trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(cid, testDof, location);
+    Tensor<2, 1, double> facetNormal = m.getReferenceCell().getFacetNormal(m, cid, entity.getIndex(), location);
+    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal)).toScalar();
+    return result;
+  }
+
+  ScaledFEBinaryFunction<GradTrialInnerNormalMulTest> operator*(const double s) const
+  {
+    return ScaledFEBinaryFunction<GradTrialInnerNormalMulTest>(*this, s);
+  }
+};
+
 
 template<typename TrialType, typename TestType>
 class TrialInnerDivTest : public FEBinaryFunction<typename TrialType::cell_type>
@@ -98,8 +144,9 @@ public:
 
   virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
-    typename TestType::divergence_type test_divergence = test->evaluate_divergence(entity.getIndex(), testDof, location);
+    const std::size_t cid = m.getContainingCell(entity);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cid, trialDof, location);
+    typename TestType::divergence_type test_divergence = test->evaluate_divergence(cid, testDof, location);
     const double result = (trial_value * test_divergence).toScalar();
     return result;
   }
@@ -140,8 +187,9 @@ public:
 
   virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(entity.getIndex(), trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
+    const std::size_t cid = m.getContainingCell(entity);
+    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(cid, trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(cid, testDof, location);
     const double result = (test_value * trial_divergence).toScalar();
     return result;
   }
@@ -176,8 +224,9 @@ public:
 
   virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
+    const std::size_t cid = m.getContainingCell(entity);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cid, trialDof, location);
+    typename TestType::value_type test_value = test->evaluate_tensor(cid, testDof, location);
     const double result = (test_value.colon_product(trial_value)).toScalar();
     return result;
   }
@@ -214,13 +263,14 @@ public:
 
   virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
+    const std::size_t cid = m.getContainingCell(entity);
     boost::tuple<const finite_element_t*, cell_id, unsigned> trialDofTuple(trial, entity.getIndex(), trialDof);
     double prevTrialCoeff;
     prevTrial.getValues(1, &trialDofTuple, &prevTrialCoeff);
 
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(entity.getIndex(), trialDof, location);
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(entity.getIndex(), trialDof, location) * prevTrialCoeff;
-    typename TestType::value_type test_value = test->evaluate_tensor(entity.getIndex(), testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(cid, trialDof, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(cid, trialDof, location) * prevTrialCoeff;
+    typename TestType::value_type test_value = test->evaluate_tensor(cid, testDof, location);
     const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
     return result;
   }
@@ -319,6 +369,7 @@ private:
   dof_map<cell_type> velocityDofMapDirichlet;
 
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
+  GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> convective_boundary_term;
   TrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
   TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
@@ -369,6 +420,7 @@ public:
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
                                              convective_term(&velocity, &velocity),
+                                             convective_boundary_term(&velocity, &velocity),
                                              pressure_term(&pressure, &velocity),
                                              continuity_term(&velocity, &pressure),
                                              mass_term(&velocity, &velocity),
@@ -412,6 +464,7 @@ public:
     FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
     linear_stiffness_matrix.addTerm(m, mass_term);
     linear_stiffness_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
+    linear_stiffness_matrix.addBoundaryTerm(m, convective_boundary_term * (theta * k * kinematic_viscosity * -1.0));
     linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
     linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
@@ -420,7 +473,8 @@ public:
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
     FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, convective_term * (-(1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addTerm(m, convective_term * -((1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addBoundaryTerm(m, convective_term * ((1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
@@ -608,8 +662,6 @@ public:
     // FIXME: make me into a function that doesn't depend on the specifics of the mesh generation
 
     Location location = BODY;
-    if (v[0] == 0.0)
-      location = LEFT_EDGE;
 
     if (v[0] == 3.0)
       location = RIGHT_EDGE;
@@ -619,6 +671,9 @@ public:
 
     if (v[1] == 1.0)
       location = TOP_EDGE;
+
+    if (v[0] == 0.0)
+      location = LEFT_EDGE;
 
     return location;
   }
@@ -657,13 +712,14 @@ public:
       assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
+      const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
       const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       const Location location = getLocation(position);
 
       // Check this really is an edge cell
       assert(location != BODY);
 
-      if (location == TOP_EDGE || location == BOTTOM_EDGE)
+      if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
       {
         const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
         stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
