@@ -7,6 +7,8 @@
 #include <set>
 #include <numeric>
 #include <algorithm>
+#include <utility>
+#include <cmath>
 
 namespace cfd
 {
@@ -23,6 +25,20 @@ std::size_t TriangularCell::getDimension() const
 std::size_t TriangularCell::getVerticesPerCell() const
 {
   return vertex_count;
+}
+
+std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value)
+{
+  double sum = 0.0;
+  std::map<vertex_type, double> newQuadrature;
+
+  for(std::map<vertex_type, double>::const_iterator qIter(quadrature.begin()); qIter!=quadrature.end(); ++qIter)
+    sum += qIter->second;
+
+  for(std::map<vertex_type, double>::const_iterator qIter(quadrature.begin()); qIter!=quadrature.end(); ++qIter)
+    newQuadrature.insert(std::make_pair(qIter->first, qIter->second * (value/sum)));
+
+  return newQuadrature;
 }
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature()
@@ -43,7 +59,6 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadra
 std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
   const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
-  std::map<vertex_type, double> weightings;
 
   //FIXME: Assumes constant Jacobian
   const double jacobian = m.getReferenceCell().getJacobian(m, entity, vertex_type(0.0, 0.0));
@@ -52,8 +67,31 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   {
     weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * jacobian;
   }
+  else if (entity.getDimension() == 1)
+  {
+    const std::size_t cid = m.getContainingCell(entity);
+    const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
+    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
 
-  return weightings;
+    std::map<vertex_type, double> weightings;
+
+    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    {
+      //NOTE: the edge mapping MUST match reference_to_physical and getLocalIndex
+      if ((index == 0 && refIter->first[1] == 0.0) ||
+          (index == 1 && refIter->first[0] + refIter->first[1] == 1.0) ||
+          (index == 2 && refIter->first[0] == 0.0))
+      {
+        weightings[reference_to_physical(m, cid, refIter->first)] = refIter->second;
+      }
+    }
+
+    return normaliseQuadrature(weightings, 1.0 * jacobian);
+  }
+  else
+  {
+    assert(false);
+  }
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
@@ -67,13 +105,28 @@ double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& 
 
 double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& b) const
 {
-  assert(entity.getDimension() == 2);
-  const std::vector<vertex_type> vertices(m.getCoordinates(entity.getIndex()));
-  const double jacobian = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
+  const std::vector<vertex_type> vertices(m.getCoordinates(m.getContainingCell(entity)));
+
+  if (entity.getDimension() == 2)
+  {
+    assert(vertices.size() == 3);
+    const double jacobian = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
                             vertices[1][0] * (vertices[2][1] - vertices[0][1]) +
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
+    return jacobian;
+  }
+  else if (entity.getDimension() == 2)
+  {
+    assert(vertices.size() == 2);
+    const vertex_type difference = vertices[entity.getIndex()] - vertices[(entity.getIndex()+1)%3];
+    return std::sqrt(difference[0] * difference[0] + difference[1] * difference[1]);
+  }
+  else
+  {
+    assert(false);
+  }
 
-  return jacobian;
+  return 0.0;
 }
 
 TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const
