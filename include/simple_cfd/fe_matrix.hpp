@@ -146,36 +146,9 @@ public:
     addTermGeneral(m, f, false);
   }
 
-    assert(trialElements.find(trialFunction) != trialElements.end());
-    assert(testElements.find(testFunction) != testElements.end());
-
-    const std::size_t dimension = m.getDimension();
-    const unsigned testSpaceDimension = testFunction->space_dimension();
-    const unsigned trialSpaceDimension = trialFunction->space_dimension();
-
-    std::vector<int> testIndices(testSpaceDimension);
-    std::vector<int> trialIndices(trialSpaceDimension);
-    std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter != m.global_end(dimension); ++cellIter)
-    {
-      const std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
-      std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
-
-      for(unsigned test=0; test<testSpaceDimension; ++test)
-        testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cellIter->getIndex(), test));
-
-      for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-        trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cellIter->getIndex(), trial));
-
-      for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
-        for(unsigned test=0; test<testSpaceDimension; ++test)
-          for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *cellIter, test, trial,
-            quadIter->first) * quadIter->second;
-
-      matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
-    }
+  void addBoundaryTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
+  {
+    addTermGeneral(m, f, true);
   }
 
   void zeroRow(const dof_t& dof, const double diagonal)

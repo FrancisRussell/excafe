@@ -63,9 +63,14 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   //FIXME: Assumes constant Jacobian
   const double jacobian = m.getReferenceCell().getJacobian(m, entity, vertex_type(0.0, 0.0));
 
-  for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+  if (entity.getDimension() == 2)
   {
-    weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * jacobian;
+    std::map<vertex_type, double> weightings;
+    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    {
+      weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * jacobian;
+    }
+    return weightings;
   }
   else if (entity.getDimension() == 1)
   {
@@ -92,6 +97,8 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   {
     assert(false);
   }
+
+  return std::map<vertex_type, double>();
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
