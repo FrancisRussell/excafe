@@ -295,8 +295,8 @@ private:
   FEVector<cell_type> unknown_vector;
   FEVector<cell_type> load_vector;
 
-  GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> convective_term;
-  GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> convective_boundary_term;
+  GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> viscosity_term;
+  GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> viscosity_boundary_term;
   NegTrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
   TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
@@ -334,8 +334,8 @@ public:
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
                                              stiffness_matrix(systemDofMap, systemDofMap), 
                                              unknown_vector(systemDofMap), load_vector(systemDofMap),
-                                             convective_term(&velocity, &velocity),
-                                             convective_boundary_term(&velocity, &velocity),
+                                             viscosity_term(&velocity, &velocity),
+                                             viscosity_boundary_term(&velocity, &velocity),
                                              pressure_term(&pressure, &velocity),
                                              continuity_term(&velocity, &pressure),
                                              mass_term(&velocity, &velocity),
@@ -351,7 +351,7 @@ public:
   void assemble()
   {
     // assemble velocity related part of momentum equation
-    stiffness_matrix.addTerm(m, convective_term);
+    stiffness_matrix.addTerm(m, viscosity_term);
 
     // assemble pressure related part of momentum equation
     stiffness_matrix.addTerm(m, pressure_term);
@@ -369,8 +369,8 @@ public:
     // Add in all constant terms in the lhs matrix
     FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
     linear_stiffness_matrix.addTerm(m, mass_term);
-    linear_stiffness_matrix.addTerm(m, convective_term * (theta * k * kinematic_viscosity));
-    linear_stiffness_matrix.addBoundaryTerm(m, convective_boundary_term * (theta * k * kinematic_viscosity * -1.0));
+    linear_stiffness_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+    linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
     linear_stiffness_matrix.addTerm(m, pressure_term);
     linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
@@ -379,8 +379,8 @@ public:
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
     FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, convective_term * -((1.0-theta) * k * kinematic_viscosity));
-    nonlinear_rhs_matrix.addBoundaryTerm(m, convective_term * ((1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addTerm(m, viscosity_term * -((1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_term * ((1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
