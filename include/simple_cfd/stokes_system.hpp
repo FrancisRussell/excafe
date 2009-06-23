@@ -419,8 +419,6 @@ public:
                                              systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
-                                             stiffness_matrix(systemDofMap, systemDofMap), 
-                                             unknown_vector(systemDofMap), load_vector(systemDofMap),
                                              viscosity_term(&velocity, &velocity),
                                              viscosity_boundary_term(&velocity, &velocity),
                                              pressure_term(&pressure, &velocity),
@@ -458,7 +456,6 @@ public:
 
   void initialiseFields()
   {
-    /*
     std::cout << "Running coupled solver to find initial fields..." << std::endl;
     std::cout << "Assembling linear terms..." << std::endl;
 
@@ -514,7 +511,7 @@ public:
       applyCylinderVelocityBoundaryConditions(nonlinear_stiffness_matrix, unknown_vector, load_vector);
 
       std::cout << "Starting solver..." << std::endl;
-      solve(nonlinear_stiffness_matrix, unknown_vector, load_vector);
+      solve(nonlinear_stiffness_matrix, unknown_vector, load_vector, false);
 
       unknown_guess = unknown_vector;
       residual = ((nonlinear_stiffness_matrix * unknown_guess) - load_vector).two_norm();
@@ -523,12 +520,12 @@ public:
     while(residual > 1e-3);
 
     unknown_vector.extractSubvector(pressure_vector);
-    //unknown_vector.extractSubvector(velocity_vector);
+    unknown_vector.extractSubvector(velocity_vector);
     pressure_vector.assemble();
-    //velocity_vector.assemble();
+    velocity_vector.assemble();
     std::cout << "Calculated initial fields." << std::endl;
-    */
 
+/*
     FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
@@ -537,6 +534,7 @@ public:
     velocity_vector.zero();
     velocity_vector.addSubvector(dirichletValues);
     velocity_vector.assemble();
+*/
   }
 
   void timeDependentAssembleAndSolve() 
@@ -631,13 +629,13 @@ public:
 
       // Now solve mass-lumped continuity equation
       FEMatrix<cell_type> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
-      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix)*velocity_mass_matrix*unknown_velocity*-1.0);
+      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix*(velocity_mass_matrix*unknown_velocity*-1.0)));
       FEVector<cell_type> phi(pressureDofMap);
       std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
       std::cout << "L2-norm of phi: " << phi.two_norm() << std::endl;
 
-      pressure_guess = pressure_guess - (phi * (1/k));
+      //pressure_guess = pressure_guess - (phi * (1/k));
 
       FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
@@ -763,12 +761,13 @@ public:
     }
   }
 
-  void solve(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
+  void solve(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector, const bool usePreconditioner = true)
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);
     solver.setAbsoluteTolerance(1e-4);
     solver.setRelativeTolerance(0.0);
+    solver.enablePreconditioner(usePreconditioner);
     solver.solve(stiffness_matrix.getMatrixHandle(), unknown_vector.getVectorHandle(), load_vector.getVectorHandle());
 
     if (!solver.converged())
