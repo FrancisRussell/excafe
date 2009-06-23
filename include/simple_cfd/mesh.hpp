@@ -116,6 +116,11 @@ public:
     facetLabels = f;
   }
 
+  int getFacetLabel(const MeshEntity& entity) const
+  {
+    return facetLabels(entity);
+  }
+
   MeshFunction<bool> getBoundaryFunction() const
   {
     return boundaryFacets;
@@ -209,7 +214,7 @@ public:
     return geometry[vid];
   }
 
-  mesh_geometry<dimension> getGeometry() const
+  const mesh_geometry<dimension>& getGeometry() const
   {
     return geometry;
   }

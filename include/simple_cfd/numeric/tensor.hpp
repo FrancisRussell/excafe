@@ -82,6 +82,11 @@ public:
   {
     return tensor[knownIndices];
   }
+
+  T& operator=(const T value)
+  {
+    return tensor[knownIndices] = value;
+  }
 };
 
 
@@ -177,7 +182,6 @@ public:
 
     return result;
   }
-
 
   Tensor<D, 0, T> colon_product(const Tensor& t) const
   {

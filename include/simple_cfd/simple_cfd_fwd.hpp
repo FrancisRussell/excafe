@@ -35,6 +35,8 @@ template<unsigned D> class mesh_geometry;
 template<unsigned D> class mesh_geometry_impl;
 template<unsigned int D> class vertex;
 template<typename C> class finite_element;
+template<unsigned int D> class SubDomain;
+template<unsigned int D, unsigned int R, typename T> class Function;
 template<typename T> class MeshFunction;
 class TriangularCell;
 class MeshTopology;

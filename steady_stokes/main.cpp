@@ -2,6 +2,9 @@
 #include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/stokes_system.hpp>
 #include <simple_cfd/petsc_manager.hpp>
+#include <simple_cfd/subdomain.hpp>
+#include <simple_cfd/function.hpp>
+#include <simple_cfd/numeric/tensor.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -23,6 +26,9 @@ int main(int argc, char* argv[])
 
   //std::cout << "Starting solver..." << std::endl;
   //system.solve();
+  
+  system.initialiseFields();
+
   for(int i=0; i<120; ++i)
   {
     std::cout << "Starting timestep: " << i << std::endl;
