@@ -12,11 +12,12 @@ private:
 
   void assertTrue(const bool b);
   void assertFalse(const bool b);
-  void assertZero(const double d);
+  void assertEqual(const double d, const double d2);
 
   void testQuadrature();  
   void testLinearBasis();
   void testQuadraticBasis();
+  void testRisingFactorial();
 
   template<typename basis_t>
   void testBasis(const std::string& name)
@@ -44,7 +45,7 @@ private:
         {
           sum += basis.evaluate_tensor(cellIter->getIndex(), i, wIter->first).toScalar();
         }
-        assertZero(1.0 - sum);
+        assertEqual(1.0, sum);
       }
     }
   }
