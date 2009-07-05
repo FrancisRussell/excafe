@@ -18,9 +18,11 @@ struct Pow
 {
   inline double operator()(const double value, const std::size_t exponent) const
   {
-    double result=1;
+    double result=1.0;
+
     for(std::size_t power=0; power<exponent; ++power)
       result *= value;
+
     return result;
   }
 };
@@ -46,19 +48,17 @@ OptimisedPolynomial::OptimisedPolynomial(const Polynomial& p) : variables(p.getI
 
 double OptimisedPolynomial::evaluate(const std::vector<double>& params) const
 {
-  double result = 0;
+  double result = 0.0;
 
   for(coefficient_vec_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
-  {
     result += std::inner_product(params.begin(), params.end(), cIter->first.begin(), cIter->second, std::multiplies<double>(), Pow());
-  }
 
   return result;
 }
 
 double OptimisedPolynomial::operator()() const
 {
-  assert(variables.size() == 0);
+  assert(variables.empty());
   return evaluate(paramData);
 }
 
