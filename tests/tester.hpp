@@ -15,6 +15,8 @@ private:
   void assertEqual(const double d, const double d2);
 
   void testQuadrature();  
+  void testQuadrature(const std::map<double, double>& q);  
+  void testTriangleQuadrature();  
   void testLinearBasis();
   void testQuadraticBasis();
   void testRisingFactorial();

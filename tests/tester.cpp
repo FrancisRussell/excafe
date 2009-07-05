@@ -4,6 +4,7 @@
 #include <simple_cfd/lagrange_triangle_linear.hpp>
 #include <simple_cfd/lagrange_triangle_quadratic.hpp>
 #include <simple_cfd/numeric/math_utilities.hpp>
+#include <simple_cfd/numeric/quadrature.hpp>
 #include <map>
 #include <iostream>
 #include <cmath>
@@ -17,6 +18,7 @@ Tester::Tester() : epsilon(1e-10)
 void Tester::run() 
 {
   testQuadrature();
+  testTriangleQuadrature();
   testLinearBasis();
   testQuadraticBasis();
   testRisingFactorial();
@@ -50,9 +52,9 @@ void Tester::assertEqual(const double d, const double d2)
 }
 
 
-void Tester::testQuadrature()
+void Tester::testTriangleQuadrature()
 {
-  std::cout << "Testing quadrature..." << std::endl;
+  std::cout << "Testing triangle quadrature..." << std::endl;
 
   const double area = 50.0;
   const double width = 10.0;
@@ -74,6 +76,31 @@ void Tester::testQuadrature()
 
     assertEqual(accum, area);
   }
+}
+
+void Tester::testQuadrature()
+{
+
+  Quadrature quadrature;
+
+  std::cout << "Testing Gauss-Legendre quadrature..." << std::endl;
+  testQuadrature(quadrature.getGauss(5));
+
+  std::cout << "Testing Gauss-Radau-Legendre quadrature..." << std::endl;
+  testQuadrature(quadrature.getGaussRadau(5));
+
+  std::cout << "Testing Gauss-Lobatto-Legendre quadrature..." << std::endl;
+  testQuadrature(quadrature.getGaussLobatto(5));
+}
+
+void Tester::testQuadrature(const std::map<double, double>& q)
+{
+  double sum = 0.0;
+
+  for(std::map<double, double>::const_iterator qIter(q.begin()); qIter!=q.end(); ++qIter)
+    sum += qIter->second;
+
+  assertEqual(sum, 2.0);
 }
 
 void Tester::testLinearBasis()
