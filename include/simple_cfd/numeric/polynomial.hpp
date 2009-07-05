@@ -39,8 +39,9 @@ private:
   void addIndependentVariables(const Monomial& m);
   void cleanZeros();
 
-  Polynomial& operator*=(const Monomial& m);
+  void addMonomial(const double coefficient, const Monomial& m);
   Polynomial operator*(const Monomial& m) const;
+  Polynomial& operator*=(const Monomial& m);
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)

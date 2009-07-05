@@ -135,6 +135,12 @@ Polynomial& Polynomial::operator*=(const Polynomial& p)
   return *this;
 }
 
+void Polynomial::addMonomial(const double coefficient, const Monomial& m)
+{
+  coefficients[m] += coefficient;
+}
+
+
 Polynomial& Polynomial::operator+=(const Polynomial& p)
 {
   addIndependentVariables(p);
@@ -210,7 +216,7 @@ Polynomial Polynomial::derivative(const std::string& variable) const
   for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
   {
     const std::pair<double, Monomial> mDerivative(cIter->first.derivative(variable));
-    result.coefficients.insert(std::make_pair(mDerivative.second, mDerivative.first * cIter->second));
+    result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
   }
 
   result.cleanZeros();
