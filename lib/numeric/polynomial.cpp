@@ -1,23 +1,27 @@
 #include <utility>
 #include <simple_cfd/numeric/polynomial.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
 #include <cassert>
 #include <ostream>
 
 namespace cfd
 {
 
+using detail::Monomial;
+
+
 Polynomial::Polynomial()
 {
 }
 
-Polynomial::Polynomial(const Polynomial& p) : coefficients(p.coefficients), exponentMap(p.exponentMap)
+Polynomial::Polynomial(const Polynomial& p) : coefficients(p.coefficients)
 {
 }
 
 Polynomial::Polynomial(const double constant)
 {
-  coefficients.push_back(constant);
+  addConstant(constant);
 }
 
 Polynomial::Polynomial(const std::string& variable)
@@ -43,36 +47,24 @@ Polynomial::Polynomial(const double coefficient, const std::string& variable, co
 void Polynomial::addTerm(const double coefficient, const std::string& variable, const std::size_t exponent)
 {
   addIndependentVariable(variable);
-  coefficients.push_back(coefficient);
-
-  for(exponent_map_t::iterator varIter(exponentMap.begin()); varIter!=exponentMap.end(); ++varIter)
-  {
-    varIter->second.push_back(varIter->first == variable ? exponent : 0);
-  }
+  coefficients[Monomial(variable, exponent)] += coefficient;
+  cleanZeros();
 }
 
 void Polynomial::addConstant(const double constant)
 {
-  coefficients.push_back(constant);
-
-  for(exponent_map_t::iterator varIter(exponentMap.begin()); varIter!=exponentMap.end(); ++varIter)
-  {
-    varIter->second.push_back(0);
-  }
+  coefficients[Monomial()] += constant;
+  cleanZeros();
 }
 
 void Polynomial::addIndependentVariable(const std::string& variable)
 {
-  if (exponentMap.find(variable) == exponentMap.end())
-    exponentMap.insert(std::make_pair(variable, std::vector<std::size_t>(coefficients.size(), 0)));
+  independentVariables.insert(variable);
 }
 
 void Polynomial::addIndependentVariables(const Polynomial& p)
 {
-  for(exponent_map_t::const_iterator varIter(p.exponentMap.begin()); varIter!=p.exponentMap.end(); ++varIter)
-  {
-    addIndependentVariable(varIter->first);
-  }
+  independentVariables.insert(p.independentVariables.begin(), p.independentVariables.end());
 }
 
 Polynomial& Polynomial::operator*=(const double x)
@@ -106,26 +98,34 @@ Polynomial Polynomial::operator-() const
   return result;
 }
 
+Polynomial& Polynomial::operator*=(const Monomial& m)
+{
+  std::map<Monomial, double> newCoefficients;
+
+  for(coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    newCoefficients.insert(std::make_pair(cIter->first * m, cIter->second));
+
+  coefficients.swap(newCoefficients);
+  return *this;
+}
+
+Polynomial Polynomial::operator*(const Monomial& m) const
+{
+  Polynomial result(*this);
+  result *= m;
+  return result;
+}
+
 Polynomial& Polynomial::operator*=(const Polynomial& p)
 {
   Polynomial result;
 
-  for(std::size_t pTerm=0; pTerm<p.numTerms(); ++pTerm)
+  for(coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
   {
-    Polynomial multiplied(*this);
-    multiplied.transformCoefficients(boost::lambda::_1 * p.coefficients[pTerm]);
-    
-    for(exponent_map_t::const_iterator pExpIter(p.exponentMap.begin()); pExpIter!=p.exponentMap.end(); ++pExpIter)
-    {
-      multiplied.addIndependentVariable(pExpIter->first);
-      multiplied.transformExponents(pExpIter->first, boost::lambda::_1 + pExpIter->second[pTerm]);
-    }
-
-    result += multiplied;
+    result += (*this) * cIter->first * cIter->second;
   }
 
   result.swap(*this);
-
   return *this;
 }
 
@@ -133,21 +133,12 @@ Polynomial& Polynomial::operator+=(const Polynomial& p)
 {
   addIndependentVariables(p);
 
-  coefficients.insert(coefficients.end(), p.coefficients.begin(), p.coefficients.end());
-
-  for(exponent_map_t::iterator varIter(exponentMap.begin()); varIter!=exponentMap.end(); ++varIter)
+  for(coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
   {
-    const exponent_map_t::const_iterator pIter = p.exponentMap.find(varIter->first);
-    if (pIter != p.exponentMap.end())
-    {
-      varIter->second.insert(varIter->second.end(), pIter->second.begin(), pIter->second.end());
-    }
-    else
-    {
-      varIter->second.resize(numTerms(), 0.0);
-    }
+    coefficients[cIter->first] += cIter->second;
   }
 
+  cleanZeros();
   return *this;
 }
 
@@ -162,33 +153,53 @@ std::size_t Polynomial::numTerms() const
   return coefficients.size();
 }
 
+std::set<std::string> Polynomial::getIndependentVariables() const
+{
+  return independentVariables;
+}
+
 void Polynomial::swap(Polynomial& p)
 {
   coefficients.swap(p.coefficients);
-  exponentMap.swap(p.exponentMap);
+  independentVariables.swap(p.independentVariables);
+}
+
+void Polynomial::cleanZeros()
+{
+  std::set<Monomial> zeroMonomials;
+
+  for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+  {
+    if (cIter->second == 0.0)
+      zeroMonomials.insert(cIter->first);
+  }
+
+  for(std::set<Monomial>::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
+    coefficients.erase(*mIter);
 }
 
 std::ostream& operator<<(std::ostream& out, const Polynomial& p)
 {
-  for(std::size_t pTerm=0; pTerm<p.numTerms(); ++pTerm)
+  for(Polynomial::coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
   {
-    out << p.coefficients[pTerm];
-
-    for(Polynomial::exponent_map_t::const_iterator eIter(p.exponentMap.begin()); eIter!=p.exponentMap.end(); ++eIter)
-    {
-      if (eIter->second[pTerm] > 0)
-      {
-        out << " * ";
-        out << eIter->first;
-        
-        if (eIter->second[pTerm] != 1)
-          out << "^" << eIter->second[pTerm];
-      }
-    }
-
-    if (pTerm < p.numTerms() - 1)
+    if (cIter != p.coefficients.begin())
       out << " + ";
+
+    const bool renderCoefficient = cIter->second != 1.0 || cIter->first.isOne();
+    const bool renderMonomial = !cIter->first.isOne();
+
+    if (renderCoefficient)
+      out << cIter->second; 
+      
+    if (renderCoefficient && renderMonomial)
+      out << "*";
+      
+    if (renderMonomial) 
+      out << cIter->first;
   }
+  
+  if (p.coefficients.empty())
+    out << 0.0;
 
   return out;
 }

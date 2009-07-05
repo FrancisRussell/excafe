@@ -4,10 +4,12 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 #include <cstddef>
 #include <algorithm>
 #include <cassert>
 #include <iosfwd>
+#include <numeric/monomial.hpp>
 #include <boost/operators.hpp>
 
 namespace cfd
@@ -25,27 +27,26 @@ class Polynomial : boost::addable2<Polynomial, double,
 private:
   friend std::ostream& operator<<(std::ostream& o, const Polynomial& p);
 
-  typedef std::map< std::string, std::vector<std::size_t> > exponent_map_t;
-  std::vector<double> coefficients;
-  exponent_map_t exponentMap;
+  typedef std::map<detail::Monomial, double> coefficient_map_t;
+  std::set<std::string> independentVariables;
+  coefficient_map_t coefficients;
 
   void multiply(const std::string& variable, const std::size_t exponent);
   void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
   void addConstant(const double constant);
   void addIndependentVariables(const Polynomial& p);
+  void cleanZeros();
+
+  Polynomial& operator*=(const detail::Monomial& m);
+  Polynomial operator*(const detail::Monomial& m) const;
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
   {
-    std::transform(coefficients.begin(), coefficients.end(), coefficients.begin(), f);
-  }
+    for(coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+      cIter->second = f(cIter->second);
 
-  template<typename UnaryFunction>
-  void transformExponents(const std::string& variable, const UnaryFunction& f)
-  {
-    exponent_map_t::iterator eIter(exponentMap.find(variable));
-    assert(eIter != exponentMap.end());
-    std::transform(eIter->second.begin(), eIter->second.end(), eIter->second.begin(), f);
+    cleanZeros();
   }
 
 public:
@@ -59,6 +60,7 @@ public:
   explicit Polynomial(const double coefficient, const std::string& variable, const std::size_t exponent);
 
   void addIndependentVariable(const std::string& s);
+  std::set<std::string> getIndependentVariables() const;
 
   Polynomial& operator*=(const double x);
   Polynomial& operator/=(const double x);
@@ -71,7 +73,7 @@ public:
 
   Polynomial operator-() const;
 
-  Polynomial derivative(const std::size_t d) const;
+  Polynomial derivative(const std::string& variable) const;
   std::size_t numTerms() const;
   void swap(Polynomial& p);
 

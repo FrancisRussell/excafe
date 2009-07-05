@@ -6,6 +6,7 @@ int main(int argc, char** argv)
 {
   using cfd::Polynomial;
 
+  std::cout << "5.1: " << Polynomial(5.1) << std::endl;
   std::cout << "x: " << Polynomial("x") << std::endl;
   std::cout << "2y: " << Polynomial(2, "y") << std::endl;
   std::cout << "x^3: " << Polynomial("x", 3) << std::endl;
