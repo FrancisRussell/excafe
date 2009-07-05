@@ -54,6 +54,10 @@ template<unsigned int D, unsigned int R, typename T> class Tensor;
 template<typename C> class FEMatrix;
 template<typename C> class FEVector;
 
+// Polynomial types
+class Polynomial;
+class Monomial;
+class OptimisedPolynomial;
 }
 
 #endif

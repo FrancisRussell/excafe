@@ -10,9 +10,6 @@
 namespace cfd
 {
 
-namespace detail
-{
-
 class Monomial
 {
 private:
@@ -31,11 +28,10 @@ public:
 
   bool isOne() const;
   std::set<std::string> getVariables() const;
+  std::size_t getExponent(const std::string& variable) const;
 };
 
 std::ostream& operator<<(std::ostream& o, const Monomial& p);
-
-}
 
 }
 

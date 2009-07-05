@@ -1,10 +1,10 @@
 #include <numeric/monomial.hpp>
 #include <ostream>
+#include <cstddef>
+#include <map>
+#include <string>
 
 namespace cfd
-{
-
-namespace detail
 {
 
 Monomial::Monomial()
@@ -66,6 +66,20 @@ bool Monomial::isOne() const
   return exponents.empty();
 }
 
+std::size_t Monomial::getExponent(const std::string& variable) const
+{
+  const std::map<std::string, std::size_t>::const_iterator varIter(exponents.find(variable));
+
+  if (varIter == exponents.end())
+  {
+    return 0;
+  }
+  else
+  {
+    return varIter->second;
+  }
+}
+
 std::ostream& operator<<(std::ostream& out, const Monomial& m)
 {
   for (std::map<std::string, std::size_t>::const_iterator eIter(m.exponents.begin()); eIter!=m.exponents.end(); ++eIter)
@@ -80,8 +94,6 @@ std::ostream& operator<<(std::ostream& out, const Monomial& m)
     out << "1.0";
 
   return out;
-}
-
 }
 
 }

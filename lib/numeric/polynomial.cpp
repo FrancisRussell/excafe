@@ -1,21 +1,20 @@
 #include <utility>
 #include <simple_cfd/numeric/polynomial.hpp>
+#include <simple_cfd/numeric/monomial.hpp>
+#include <simple_cfd/numeric/optimised_polynomial.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/bind.hpp>
 #include <cassert>
+#include <algorithm>
 #include <ostream>
 
 namespace cfd
 {
 
-using detail::Monomial;
-
-
 Polynomial::Polynomial()
 {
 }
 
-Polynomial::Polynomial(const Polynomial& p) : coefficients(p.coefficients)
+Polynomial::Polynomial(const Polynomial& p) : independentVariables(p.independentVariables), coefficients(p.coefficients)
 {
 }
 
@@ -100,6 +99,9 @@ Polynomial Polynomial::operator-() const
 
 Polynomial& Polynomial::operator*=(const Monomial& m)
 {
+  const std::set<std::string> mVariables(m.getVariables());
+  independentVariables.insert(mVariables.begin(), mVariables.end());
+
   std::map<Monomial, double> newCoefficients;
 
   for(coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
@@ -134,9 +136,7 @@ Polynomial& Polynomial::operator+=(const Polynomial& p)
   addIndependentVariables(p);
 
   for(coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
-  {
     coefficients[cIter->first] += cIter->second;
-  }
 
   cleanZeros();
   return *this;
@@ -176,6 +176,47 @@ void Polynomial::cleanZeros()
 
   for(std::set<Monomial>::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
     coefficients.erase(*mIter);
+}
+
+Polynomial::iterator Polynomial::begin()
+{
+  return coefficients.begin();
+}
+
+Polynomial::iterator Polynomial::end()
+{
+  return coefficients.end();
+}
+
+Polynomial::const_iterator Polynomial::begin() const
+{
+  return coefficients.begin();
+}
+
+Polynomial::const_iterator Polynomial::end() const
+{
+  return coefficients.end();
+}
+
+OptimisedPolynomial Polynomial::optimise() const
+{
+  return OptimisedPolynomial(*this);
+}
+
+void Polynomial::checkConsistent() const
+{
+  // Checks that independentVariables is a superset of all variables referenced
+  // in monomials.
+  std::set<std::string> referencedVariables;
+
+  for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+  {
+    const std::set<std::string> monomialVars(cIter->first.getVariables());
+    referencedVariables.insert(monomialVars.begin(), monomialVars.end()); 
+  }
+
+  assert(std::includes(independentVariables.begin(), independentVariables.end(),
+         referencedVariables.begin(), referencedVariables.end()));
 }
 
 std::ostream& operator<<(std::ostream& out, const Polynomial& p)
