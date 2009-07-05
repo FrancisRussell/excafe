@@ -25,7 +25,7 @@ double MathUtilities::jacobi_a_1_n(const double alpha, const double beta, const 
 
 double MathUtilities::jacobi_a_2_n(const double alpha, const double beta, const std::size_t n)
 {
-  return (2*n + alpha + beta + 1)*(alpha*alpha + beta*beta);
+  return (2*n + alpha + beta + 1)*(alpha*alpha - beta*beta);
 }
 
 double MathUtilities::jacobi_a_3_n(const double alpha, const double beta, const std::size_t n)
