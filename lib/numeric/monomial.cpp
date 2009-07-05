@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace cfd
 {
@@ -17,7 +18,7 @@ Monomial::Monomial(const Monomial& m) : exponents(m.exponents)
 
 Monomial::Monomial(const std::string& variable, const std::size_t exponent)
 {
-  exponents[variable] = exponent;
+  exponents.insert(std::make_pair(variable, exponent));
 }
 
 Monomial& Monomial::operator*=(const Monomial& m)

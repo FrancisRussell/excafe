@@ -42,6 +42,8 @@ std::vector<std::size_t> OptimisedPolynomial::buildExponentVector(const Monomial
 OptimisedPolynomial::OptimisedPolynomial(const Polynomial& p) : variables(p.getIndependentVariables()),
   paramData(variables.size())
 {
+  p.checkConsistent();
+
   for(Polynomial::const_iterator mIter(p.begin()); mIter!=p.end(); ++mIter)
     coefficients.push_back(std::make_pair(buildExponentVector(mIter->first), mIter->second));
 }

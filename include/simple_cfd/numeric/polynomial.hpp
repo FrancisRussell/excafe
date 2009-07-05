@@ -32,7 +32,6 @@ private:
   std::set<std::string> independentVariables;
   coefficient_map_t coefficients;
 
-  void multiply(const std::string& variable, const std::size_t exponent);
   void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
   void addConstant(const double constant);
   void addIndependentVariables(const Polynomial& p);

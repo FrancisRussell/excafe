@@ -140,7 +140,6 @@ void Polynomial::addMonomial(const double coefficient, const Monomial& m)
   coefficients[m] += coefficient;
 }
 
-
 Polynomial& Polynomial::operator+=(const Polynomial& p)
 {
   addIndependentVariables(p);
