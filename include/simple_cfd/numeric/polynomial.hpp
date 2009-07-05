@@ -36,6 +36,7 @@ private:
   void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
   void addConstant(const double constant);
   void addIndependentVariables(const Polynomial& p);
+  void addIndependentVariables(const Monomial& m);
   void cleanZeros();
 
   Polynomial& operator*=(const Monomial& m);

@@ -80,6 +80,26 @@ std::size_t Monomial::getExponent(const std::string& variable) const
   }
 }
 
+std::pair<double, Monomial> Monomial::derivative(const std::string& variable) const
+{
+  const double coefficient = getExponent(variable);
+  Monomial result;
+
+  for (std::map<std::string, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
+  {
+    if (eIter->first != variable)
+    {
+      result.exponents.insert(*eIter);
+    }
+    else if (eIter->second > 1)
+    {
+      result.exponents.insert(std::make_pair(eIter->first, eIter->second - 1));
+    }
+  }
+
+  return std::make_pair(coefficient, result);
+}
+
 std::ostream& operator<<(std::ostream& out, const Monomial& m)
 {
   for (std::map<std::string, std::size_t>::const_iterator eIter(m.exponents.begin()); eIter!=m.exponents.end(); ++eIter)

@@ -31,4 +31,11 @@ int main(int argc, char** argv)
   std::cout << "(x-1)*(y-1): " << (Polynomial("x") - 1)*(Polynomial("y") - 1) << std::endl;
   std::cout << "(x+y)(x-y): " << (Polynomial("x") + Polynomial("y"))*(Polynomial("x") - Polynomial("y")) << std::endl;
 
+  std::cout << std::endl;
+
+
+  const Polynomial dTest = Polynomial(0.5, "x", 3) + Polynomial(4.0, "y", 2);
+  std::cout << "(d/dx) 0.5x^3 + 4y^2: " << dTest.derivative("x")  << std::endl;
+  std::cout << "(d/dy) 0.5x^3 + 4y^2: " << dTest.derivative("y")  << std::endl;
+
 }

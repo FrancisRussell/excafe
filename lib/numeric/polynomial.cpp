@@ -66,6 +66,12 @@ void Polynomial::addIndependentVariables(const Polynomial& p)
   independentVariables.insert(p.independentVariables.begin(), p.independentVariables.end());
 }
 
+void Polynomial::addIndependentVariables(const Monomial& m)
+{
+  const std::set<std::string> mVariables(m.getVariables()); 
+  independentVariables.insert(mVariables.begin(), mVariables.end());
+}
+
 Polynomial& Polynomial::operator*=(const double x)
 {
   transformCoefficients(boost::lambda::_1 * x);
@@ -99,9 +105,7 @@ Polynomial Polynomial::operator-() const
 
 Polynomial& Polynomial::operator*=(const Monomial& m)
 {
-  const std::set<std::string> mVariables(m.getVariables());
-  independentVariables.insert(mVariables.begin(), mVariables.end());
-
+  addIndependentVariables(m);
   std::map<Monomial, double> newCoefficients;
 
   for(coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
@@ -196,6 +200,21 @@ Polynomial::const_iterator Polynomial::begin() const
 Polynomial::const_iterator Polynomial::end() const
 {
   return coefficients.end();
+}
+
+Polynomial Polynomial::derivative(const std::string& variable) const
+{
+  Polynomial result;
+  result.addIndependentVariables(*this);
+
+  for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+  {
+    const std::pair<double, Monomial> mDerivative(cIter->first.derivative(variable));
+    result.coefficients.insert(std::make_pair(mDerivative.second, mDerivative.first * cIter->second));
+  }
+
+  result.cleanZeros();
+  return result;
 }
 
 OptimisedPolynomial Polynomial::optimise() const

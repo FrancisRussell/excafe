@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <set>
 #include <iosfwd>
+#include <utility>
 
 namespace cfd
 {
@@ -29,6 +30,7 @@ public:
   bool isOne() const;
   std::set<std::string> getVariables() const;
   std::size_t getExponent(const std::string& variable) const;
+  std::pair<double, Monomial> derivative(const std::string& variable) const;
 };
 
 std::ostream& operator<<(std::ostream& o, const Monomial& p);
