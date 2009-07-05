@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_NUMERIC_MATH_UTILITIES_HPP
 #define SIMPLE_CFD_NUMERIC_MATH_UTILITIES_HPP
 
+#include <set>
 #include <cstddef>
 #include <simple_cfd/simple_cfd_fwd.hpp>
 
@@ -17,7 +18,8 @@ private:
 
 public:
   static double rising_factorial(const double x, const std::size_t n);
-  static Polynomial jacobi(const double alpha, const double beta, const std::size_t b);
+  static Polynomial jacobi(const double alpha, const double beta, const std::size_t n);
+  static std::set<double> jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon = 1e-8);
 };
 
 }
