@@ -21,13 +21,17 @@ public:
   static const unsigned int vertex_count = 3;
 
 private:
+  const std::map<vertex_type, double> referenceQuadrature;
+
+  static std::map<vertex_type, double> buildReferenceQuadrature();
   static std::map<vertex_type, double> normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value); 
 
 public:
   TriangularCell();
   virtual std::size_t getDimension() const;
   virtual std::size_t getVerticesPerCell() const;
-  static std::map<vertex_type, double> getReferenceQuadrature();
+  std::map<vertex_type, double> getReferenceQuadrature() const;
+  std::map<vertex_type, double> getReferenceQuadratureOld() const;
   virtual std::map<vertex_type, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& v) const;
