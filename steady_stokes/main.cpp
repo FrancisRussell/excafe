@@ -20,19 +20,11 @@ int main(int argc, char* argv[])
 
   std::cout << "Constructing system..." << std::endl;
   stokes_system<cell_type> system(m);
-  std::cout << "Assembling system..." << std::endl;
-  //std::cout << "Applying boundary conditions..." << std::endl;
-  //system.applyBoundaryConditions();
-
-  //std::cout << "Starting solver..." << std::endl;
-  //system.solve();
-  
-  system.initialiseFields();
 
   for(int i=0; i<6000; ++i)
   {
     std::cout << "Starting timestep: " << i << std::endl;
-    system.timeDependentAssembleAndSolve();
+    system.coupledSolve();
     std::stringstream filename;
     filename << "./steady_stokes_" << i << ".vtk";
     system.outputToFile(filename.str());

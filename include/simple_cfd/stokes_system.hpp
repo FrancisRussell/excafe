@@ -454,9 +454,11 @@ public:
     return invertedMatrix;
   }
 
-  void initialiseFields()
+  void coupledSolve()
   {
-    std::cout << "Running coupled solver to find initial fields..." << std::endl;
+    prev_velocity_vector = velocity_vector;
+    prev_pressure_vector = pressure_vector;
+
     std::cout << "Assembling linear terms..." << std::endl;
 
     // Add in all constant terms in the lhs matrix
@@ -464,7 +466,7 @@ public:
     linear_stiffness_matrix.addTerm(m, mass_term);
     linear_stiffness_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
     linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
-    linear_stiffness_matrix.addTerm(m, pressure_term);
+    linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
     linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
 
@@ -511,7 +513,7 @@ public:
       applyCylinderVelocityBoundaryConditions(nonlinear_stiffness_matrix, unknown_vector, load_vector);
 
       // Calculate residual here
-      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      residual = ((nonlinear_stiffness_matrix * unknown_guess) - load_vector).two_norm();
       std::cout << "Current non-linear residual: " << residual << std::endl;
 
       if (residual <= 1e-3)
@@ -527,21 +529,9 @@ public:
     unknown_vector.extractSubvector(velocity_vector);
     pressure_vector.assemble();
     velocity_vector.assemble();
-    std::cout << "Calculated initial fields." << std::endl;
-
-/*
-    FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
-    edgeVelocities.populateDirichletValues(dirichletValues, velocity);
-    cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
-    dirichletValues.assemble();
-
-    velocity_vector.zero();
-    velocity_vector.addSubvector(dirichletValues);
-    velocity_vector.assemble();
-*/
   }
 
-  void timeDependentAssembleAndSolve() 
+  void projectionSolve() 
   {
     prev_velocity_vector = velocity_vector;
     prev_pressure_vector = pressure_vector;
