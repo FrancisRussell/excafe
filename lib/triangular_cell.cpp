@@ -46,10 +46,10 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadratur
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuadrature()
 {
-  const std::size_t degree = 3;
+  const std::size_t degree = 5;
   Quadrature quadrature;
-  const std::map<double, double> rQuadrature(quadrature.getGaussLobatto(degree));
-  const std::map<double, double> sQuadrature(quadrature.getGaussRadau(degree));
+  const std::map<double, double> rQuadrature(quadrature.getGauss(degree));
+  const std::map<double, double> sQuadrature(quadrature.getGauss(degree));
 
   std::map<vertex_type, double> squareQuadrature;
 
@@ -114,21 +114,42 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   {
     const std::size_t cid = m.getContainingCell(entity);
     const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
-    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
-    std::map<vertex_type, double> weightings;
 
-    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    Quadrature quadrature;
+    const std::map<double, double> unitQuadrature = quadrature.getGauss(5);
+    std::map<vertex_type, double> facetWeightings;
+
+    for(std::map<double, double>::const_iterator uIter(unitQuadrature.begin()); uIter!=unitQuadrature.end(); ++uIter)
     {
+      double x = 0.0;
+      double y = 0.0;
+
       //NOTE: the edge mapping MUST match reference_to_physical and getLocalIndex
-      if ((index == 0 && refIter->first[1] == 0.0) ||
-          (index == 1 && std::abs(refIter->first[0] + refIter->first[1] - 1.0) < 1e-5) ||
-          (index == 2 && refIter->first[0] == 0.0))
+      if (index == 0)
       {
-        weightings[reference_to_physical(m, cid, refIter->first)] = refIter->second;
+        x = uIter->first;
+        y = -1.0;
       }
+      else if (index == 1)
+      {
+        x = 1.0;
+        y = uIter->first;
+      }
+      else if (index == 3)
+      {
+        x = -1.0;
+        y = uIter->first;
+      }
+      else
+      {
+        assert(false);
+      }
+
+      const vertex_type location((x*0.5 + 0.5)*(0.5 - y*0.5), y*0.5 + 0.5);
+      facetWeightings[reference_to_physical(m, cid, location)] = uIter->second;
     }
 
-    return normaliseQuadrature(weightings, 1.0 * jacobian);
+    return normaliseQuadrature(facetWeightings, 1.0 * jacobian);
   }
   else
   {
