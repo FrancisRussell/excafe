@@ -21,6 +21,8 @@ void Tester::run()
   testTriangleQuadrature();
   testLinearBasis();
   testQuadraticBasis();
+  testLinearBasisDofs();
+  testQuadraticBasisDofs();
   testRisingFactorial();
 }
 
@@ -111,6 +113,16 @@ void Tester::testLinearBasis()
 void Tester::testQuadraticBasis()
 {
   testBasis< lagrange_triangle_quadratic<0> >("quadratic");
+}
+
+void Tester::testLinearBasisDofs()
+{
+  testBasisDofs< lagrange_triangle_linear<0> >("linear");
+}
+
+void Tester::testQuadraticBasisDofs()
+{
+  testBasisDofs< lagrange_triangle_quadratic<0> >("quadratic");
 }
 
 void Tester::testRisingFactorial()

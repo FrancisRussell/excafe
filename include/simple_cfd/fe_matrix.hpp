@@ -43,12 +43,29 @@ private:
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
     for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    {
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
+      {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
+        {
           for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
+          {
             for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
-              pattern.insert(rowMappings.getGlobalIndex(boost::make_tuple(*rowElemIter, cellIter->getIndex(), rowDof)), 
-                             colMappings.getGlobalIndex(boost::make_tuple(*colElemIter, cellIter->getIndex(), colDof)));
+            {
+              const int rowIndex =
+                rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                cellIter->getIndex(), rowDof)); 
+              const int colIndex =
+                colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                cellIter->getIndex(), colDof));
+
+              if (rowIndex >= 0 && colIndex >= 0)
+                pattern.insert(rowIndex, colIndex); 
+            }
+          }
+        }
+      }
+    }
 
     return pattern;
   }
@@ -118,6 +135,16 @@ public:
   {
   }
 
+  dof_map<cell_type> getRowMappings() const
+  {
+    return rowMappings;
+  }
+
+  dof_map<cell_type> getColMappings() const
+  {
+    return colMappings;
+  }
+
   FEMatrix& operator=(const FEMatrix& f)
   {
     assert(rowMappings == f.rowMappings);
@@ -150,6 +177,12 @@ public:
     addTermGeneral(m, f, true);
   }
 
+  void addToDiagonal(FEVector<cell_type>& v)
+  {
+    assert(rowMappings == v.getRowMappings());
+    matrix.addToDiagonal(v.getVectorHandle());
+  }
+
   void zeroRow(const dof_t& dof, const double diagonal)
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
@@ -168,17 +201,54 @@ public:
     matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
   }
 
+  FEVector<cell_type> getLumpedDiagonal() const
+  {
+    assert(rowMappings == colMappings);
+    return FEVector<cell_type>(rowMappings, matrix.getLumpedDiagonal());
+  }
+
+  void scaleDiagonal(const FEVector<cell_type>& s)
+  {
+    assert(rowMappings == colMappings);
+    assert(rowMappings == s.getRowMappings());
+    matrix.scaleDiagonal(s.getVectorHandle());
+  }
+
   void assemble()
   {
     matrix.assemble();
   }
 
-  FEVector<cell_type> operator*(FEVector<cell_type>& v) const
+  FEVector<cell_type> operator*(const FEVector<cell_type>& v) const
   {
+    assert(colMappings == v.getRowMappings());
     return FEVector<cell_type>(rowMappings, matrix*v.getVectorHandle());
   }
 
+  FEMatrix<cell_type> operator*(const FEMatrix<cell_type>& b) const
+  {
+    assert(colMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
+  }
+
+  FEVector<cell_type> trans_mult(const FEVector<cell_type>& v) const
+  {
+    assert(rowMappings == v.getRowMappings());
+    return FEVector<cell_type>(colMappings, matrix.trans_mult(v.getVectorHandle()));
+  }
+
+  FEMatrix<cell_type> trans_mult(const FEMatrix<cell_type>& b) const
+  {
+    assert(rowMappings == b.getRowMappings());
+    return FEMatrix<cell_type>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
+  }
+
   PETScMatrix& getMatrixHandle()
+  {
+    return matrix;
+  }
+
+  const PETScMatrix& getMatrixHandle() const
   {
     return matrix;
   }
