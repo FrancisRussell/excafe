@@ -17,7 +17,6 @@ private:
   static double jacobi_a_4_n(const double alpha, const double beta, const std::size_t n);
 
 public:
-  static double rising_factorial(const double x, const std::size_t n);
   static Polynomial jacobi(const double alpha, const double beta, const std::size_t n);
   static std::set<double> jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon = 1e-8);
 };

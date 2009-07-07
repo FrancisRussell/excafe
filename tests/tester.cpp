@@ -23,7 +23,6 @@ void Tester::run()
   testQuadraticBasis();
   testLinearBasisDofs();
   testQuadraticBasisDofs();
-  testRisingFactorial();
 }
 
 void Tester::assertTrue(const bool b)
@@ -123,16 +122,4 @@ void Tester::testLinearBasisDofs()
 void Tester::testQuadraticBasisDofs()
 {
   testBasisDofs< lagrange_triangle_quadratic<0> >("quadratic");
-}
-
-void Tester::testRisingFactorial()
-{
-  std::cout << "Testing rising factorial..." << std::endl;
-
-  double x = 5.0;
-  assertEqual(MathUtilities::rising_factorial(x, 0), 1.0);
-  assertEqual(MathUtilities::rising_factorial(x, 1), x);
-  assertEqual(MathUtilities::rising_factorial(x, 2), x*x + x);
-  assertEqual(MathUtilities::rising_factorial(x, 3), x*x*x + 3.0*x*x + 2.0*x);
-  assertEqual(MathUtilities::rising_factorial(x, 4), x*x*x*x + 6.0*x*x*x + 11.0*x*x + 6.0*x);
 }

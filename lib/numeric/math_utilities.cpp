@@ -8,16 +8,6 @@
 namespace cfd
 {
 
-double MathUtilities::rising_factorial(const double x, const std::size_t n)
-{
-  double r = 1.0;
-
-  for(std::size_t m=0; m<n; ++m)
-    r *= x+m;
-
-  return r;
-}
-
 double MathUtilities::jacobi_a_1_n(const double alpha, const double beta, const std::size_t n)
 {
   return 2*(n+1)*(n + alpha + beta + 1)*(2*n + alpha + beta);

@@ -23,7 +23,6 @@ private:
   void testQuadraticBasis();
   void testLinearBasisDofs();
   void testQuadraticBasisDofs();
-  void testRisingFactorial();
 
   template<typename basis_t>
   void testBasis(const std::string& name)
