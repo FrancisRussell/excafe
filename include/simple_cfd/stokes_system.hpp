@@ -830,34 +830,6 @@ public:
      return std::make_pair(xVelocity, yVelocity);
   }
 
-  void renderOld(const double width, const double height, const unsigned xPoints, const unsigned yPoints, std::ostream& out)
-  {
-    const double xSpacing = width/(xPoints-1);
-    const double ySpacing = height/(yPoints-1);
-
-    out << "# vtk DataFile Version 2.0" << std::endl;
-    out << "Simple Stokes Solver" << std::endl;
-    out << "ASCII" << std::endl;
-    out << "DATASET STRUCTURED_POINTS" << std::endl;
-    out << "DIMENSIONS " << xPoints << " " << yPoints << " " << 1 << std::endl;
-    out << "ORIGIN " << 0.0 << " " << 0.0 << " " << 0.0 << std::endl;
-    out << "SPACING " << xSpacing << " " << ySpacing << " " << 0.0 << std::endl;
-    out << "POINT_DATA " << xPoints * yPoints << std::endl;
-    out << "VECTORS velocity_field DOUBLE" << std::endl;
-
-    for(unsigned yPoint=0; yPoint<yPoints; ++yPoint)
-    {
-      for(unsigned xPoint=0; xPoint<xPoints; ++xPoint)
-      {
-        const double x = xPoint * xSpacing;
-        const double y = yPoint * ySpacing;
-
-        const std::pair<double, double> velocity(getVelocityVector(vertex_type(x, y)));
-        out << velocity.first << " " << velocity.second << " " << 0.0 << std::endl;
-      }
-    }
-  }
-
   void render(std::ostream& out)
   {
     std::vector< vertex<2> > vertices;
