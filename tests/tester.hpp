@@ -101,7 +101,7 @@ private:
           const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinate(boost::get<1>(coDof), boost::get<2>(coDof));
           const double coDofValue = basis.evaluate_tensor(boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
           assertTrue(location == coDofLocation);
-          assertZero(localDofValue - coDofValue);
+          assertEqual(localDofValue, coDofValue);
         }
       }
     }
