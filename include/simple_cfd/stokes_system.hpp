@@ -392,7 +392,7 @@ public:
     FEVector<cell_type> unknown_guess(unknown_vector);
     double residual = 0.0;
 
-    do
+    while(true)
     {
       std::cout << "Assembling non-linear terms..." << std::endl;
 
@@ -417,14 +417,18 @@ public:
       applyBoundaryConditions();
       applyCylinderBoundaryConditions();
 
+      // Calculate residual here
+      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
+      std::cout << "Current non-linear residual: " << residual << std::endl;
+
+      if (residual <= 1e-3)
+        break;
+
       std::cout << "Starting solver..." << std::endl;
       solve();
 
       unknown_guess = unknown_vector;
-      residual = ((stiffness_matrix * unknown_guess) - load_vector).two_norm();
-      std::cout << "Current non-linear residual: " << residual << std::endl;
     }
-    while(residual > 1e-3);
 
     unknown_vector.extractSubvector(prev_velocity_vector);
     unknown_vector.extractSubvector(prev_pressure_vector);
