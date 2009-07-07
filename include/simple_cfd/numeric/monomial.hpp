@@ -31,6 +31,7 @@ public:
   std::set<std::string> getVariables() const;
   std::size_t getExponent(const std::string& variable) const;
   std::pair<double, Monomial> derivative(const std::string& variable) const;
+  void swap(Monomial& m);
 };
 
 std::ostream& operator<<(std::ostream& o, const Monomial& p);

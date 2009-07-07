@@ -101,6 +101,11 @@ std::pair<double, Monomial> Monomial::derivative(const std::string& variable) co
   return std::make_pair(coefficient, result);
 }
 
+void Monomial::swap(Monomial& m)
+{
+  exponents.swap(m.exponents); 
+}
+
 std::ostream& operator<<(std::ostream& out, const Monomial& m)
 {
   for (std::map<std::string, std::size_t>::const_iterator eIter(m.exponents.begin()); eIter!=m.exponents.end(); ++eIter)
