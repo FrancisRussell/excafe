@@ -135,7 +135,7 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
         x = 1.0;
         y = uIter->first;
       }
-      else if (index == 3)
+      else if (index == 2)
       {
         x = -1.0;
         y = uIter->first;
