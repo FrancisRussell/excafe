@@ -10,6 +10,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/array.hpp>
 #include <boost/operators.hpp>
+#include <ostream>
 
 namespace cfd
 {
@@ -128,6 +129,23 @@ public:
     return std::sqrt(std::inner_product(delta.begin(), delta.end(), delta.begin(), 0.0));
   }
 };
+
+template<unsigned int D>
+std::ostream& operator<<(std::ostream& o, const vertex<D>& v)
+{
+  o << "(";
+
+  for(typename vertex<D>::const_iterator vIter(v.begin()); vIter!=v.end(); ++vIter)
+  {
+    o << *vIter;
+
+    if (vIter+1 != v.end())
+      o << ", ";
+  }
+
+  o << ")";
+  return o;
+}
 
 }
 

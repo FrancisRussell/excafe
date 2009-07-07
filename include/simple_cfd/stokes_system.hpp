@@ -428,7 +428,7 @@ public:
                                              prev_pressure_vector(pressureDofMap),
                                              velocity_vector(velocityDofMap),
                                              pressure_vector(pressureDofMap),
-                                             k(1.0), theta(0.5), kinematic_viscosity(1.0/250),
+                                             k(0.01), theta(0.5), kinematic_viscosity(1.0/250),
                                              edgeVelocities(edges, edgeConditions), 
                                              cylinderVelocities(cylinder, zero)
   {  
@@ -473,7 +473,7 @@ public:
     FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
     nonlinear_rhs_matrix.addTerm(m, viscosity_term * -((1.0-theta) * k * kinematic_viscosity));
-    nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_term * ((1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_boundary_term * ((1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 

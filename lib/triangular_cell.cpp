@@ -1,7 +1,3 @@
-#include <simple_cfd_fwd.hpp>
-#include <triangular_cell.hpp>
-#include <numeric/tensor.hpp>
-#include <mesh.hpp>
 #include <vector>
 #include <cassert>
 #include <map>
@@ -10,11 +6,17 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
+#include <simple_cfd_fwd.hpp>
+#include <triangular_cell.hpp>
+#include <numeric/tensor.hpp>
+#include <numeric/quadrature.hpp>
+#include <mesh.hpp>
+#include <iostream>
 
 namespace cfd
 {
 
-TriangularCell::TriangularCell()
+TriangularCell::TriangularCell() : referenceQuadrature(buildReferenceQuadrature())
 {
 }
 
@@ -42,7 +44,42 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadratur
   return newQuadrature;
 }
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature()
+std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuadrature()
+{
+  const std::size_t degree = 5;
+  Quadrature quadrature;
+  const std::map<double, double> rQuadrature(quadrature.getGauss(degree));
+  const std::map<double, double> sQuadrature(quadrature.getGauss(degree));
+
+  std::map<vertex_type, double> squareQuadrature;
+
+  for(std::map<double, double>::const_iterator rQuadIter(rQuadrature.begin()); rQuadIter!=rQuadrature.end(); ++rQuadIter)
+    for(std::map<double, double>::const_iterator sQuadIter(sQuadrature.begin()); sQuadIter!=sQuadrature.end(); ++sQuadIter)
+      squareQuadrature[vertex_type(rQuadIter->first, sQuadIter->first)] = rQuadIter->second * sQuadIter->second;
+
+  std::map<vertex_type, double> triangularQuadrature;
+
+  for(std::map<vertex_type, double>::const_iterator sIter(squareQuadrature.begin()); sIter!=squareQuadrature.end(); ++sIter)
+  {
+    const vertex_type oldLocation(sIter->first);
+    const vertex_type newLocation((oldLocation[0]*0.5 + 0.5)*(0.5 - oldLocation[1]*0.5), oldLocation[1]*0.5 + 0.5);
+
+    triangularQuadrature[newLocation] += sIter->second * (1-oldLocation[1]) / 8.0;
+  }
+
+  for(std::map<vertex_type, double>::const_iterator tIter(triangularQuadrature.begin()); tIter!=triangularQuadrature.end(); ++tIter)
+    std::cout << tIter->first << ": " << tIter->second << std::endl;
+  std::cout << std::endl;
+
+  return triangularQuadrature;
+}
+
+std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature() const
+{
+  return referenceQuadrature;
+}
+
+std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadratureOld() const
 {
   /* Cubic Gaussian quadrature values from "Finite Elements: A Gentle Introduction" by Henwood and Bonet */
   /* These co-ordinates are defined on the reference triangle {(0,0), (0,1), (0,1)} */ 
@@ -77,21 +114,42 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
   {
     const std::size_t cid = m.getContainingCell(entity);
     const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
-    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
-    std::map<vertex_type, double> weightings;
 
-    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
+    Quadrature quadrature;
+    const std::map<double, double> unitQuadrature = quadrature.getGauss(5);
+    std::map<vertex_type, double> facetWeightings;
+
+    for(std::map<double, double>::const_iterator uIter(unitQuadrature.begin()); uIter!=unitQuadrature.end(); ++uIter)
     {
+      double x = 0.0;
+      double y = 0.0;
+
       //NOTE: the edge mapping MUST match reference_to_physical and getLocalIndex
-      if ((index == 0 && refIter->first[1] == 0.0) ||
-          (index == 1 && refIter->first[0] + refIter->first[1] == 1.0) ||
-          (index == 2 && refIter->first[0] == 0.0))
+      if (index == 0)
       {
-        weightings[reference_to_physical(m, cid, refIter->first)] = refIter->second;
+        x = uIter->first;
+        y = -1.0;
       }
+      else if (index == 1)
+      {
+        x = 1.0;
+        y = uIter->first;
+      }
+      else if (index == 2)
+      {
+        x = -1.0;
+        y = uIter->first;
+      }
+      else
+      {
+        assert(false);
+      }
+
+      const vertex_type location((x*0.5 + 0.5)*(0.5 - y*0.5), y*0.5 + 0.5);
+      facetWeightings[reference_to_physical(m, cid, location)] = uIter->second;
     }
 
-    return normaliseQuadrature(weightings, 1.0 * jacobian);
+    return normaliseQuadrature(facetWeightings, 1.0 * jacobian);
   }
   else
   {
