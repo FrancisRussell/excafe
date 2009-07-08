@@ -48,8 +48,11 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuad
 {
   const std::size_t degree = 5;
   Quadrature quadrature;
+
+  // We increase degree of s quadrature by one to handle (1-s) factor in Jacobian of co-ordinate
+  // transformation from reference square to triangle.
   const std::map<double, double> rQuadrature(quadrature.getGauss(degree));
-  const std::map<double, double> sQuadrature(quadrature.getGauss(degree));
+  const std::map<double, double> sQuadrature(quadrature.getGauss(degree+1));
 
   std::map<vertex_type, double> squareQuadrature;
 
@@ -96,6 +99,7 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadra
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const
 {
+  const std::size_t degree = 5;
   const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
 
   //FIXME: Assumes constant Jacobian
@@ -116,7 +120,7 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
     const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
 
     Quadrature quadrature;
-    const std::map<double, double> unitQuadrature = quadrature.getGauss(5);
+    const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
     std::map<vertex_type, double> facetWeightings;
 
     for(std::map<double, double>::const_iterator uIter(unitQuadrature.begin()); uIter!=unitQuadrature.end(); ++uIter)
