@@ -5,6 +5,7 @@
 #include <simple_cfd/subdomain.hpp>
 #include <simple_cfd/function.hpp>
 #include <simple_cfd/numeric/tensor.hpp>
+#include <boost/format.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -26,7 +27,7 @@ int main(int argc, char* argv[])
     std::cout << "Starting timestep: " << i << std::endl;
     system.coupledSolve();
     std::stringstream filename;
-    filename << "./steady_stokes_" << i << ".vtk";
+    filename << "./steady_stokes_" << boost::format("%|04|") % i << ".vtk";
     system.outputToFile(filename.str());
   }
 }
