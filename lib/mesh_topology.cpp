@@ -94,29 +94,43 @@ void MeshTopology::performTranspose(const std::size_t d, const std::size_t dPrim
   }
 }
 
+bool MeshTopology::contains(const MeshEntity& m1, const MeshEntity& m2)
+{
+  if (m2.getDimension() > m1.getDimension())
+  {
+    return false;
+  }
+  else if (m1.getDimension() == m2.getDimension())
+  {
+    return m1.getIndex() == m2.getIndex();
+  }
+  else
+  {
+    std::set<std::size_t> m1VertexIndices;
+    outputIndices(m1, 0, std::inserter(m1VertexIndices, m1VertexIndices.begin()));
+
+    std::set<std::size_t> m2VertexIndices;
+    outputIndices(m2, 0, std::inserter(m2VertexIndices, m2VertexIndices.begin()));
+
+    const bool m1_includes_m2 = std::includes(m1VertexIndices.begin(), m1VertexIndices.end(),
+                                m2VertexIndices.begin(), m2VertexIndices.end());
+    return m1_includes_m2;
+  }
+}
+
 void MeshTopology::performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime)
 {
   assert(d >= dPrime);
-
   MeshConnectivity* const newConnectivity = getConnectivityObject(d, dPrime);
   assert(newConnectivity->numEntities() == 0);
 
   for(global_iterator dIter(global_begin(d)); dIter!=global_end(d); ++dIter)
   {
-    std::set<std::size_t> dVertexIndices;
-    outputIndices(*dIter, 0, std::inserter(dVertexIndices, dVertexIndices.begin()));
-
     for(local_iterator dPrimePrimeIter(local_begin(*dIter, dPrimePrime)); dPrimePrimeIter!=local_end(*dIter, dPrimePrime); ++dPrimePrimeIter)
     {
       for(local_iterator dPrimeIter(local_begin(*dPrimePrimeIter, dPrime)); dPrimeIter!=local_end(*dPrimePrimeIter, dPrime); ++dPrimeIter)
       {
-        std::set<std::size_t> dPrimeVertexIndices;
-        outputIndices(*dPrimeIter, 0, std::inserter(dPrimeVertexIndices, dPrimeVertexIndices.begin()));
-
-        const bool dIncludesDPrime = std::includes(dVertexIndices.begin(), dVertexIndices.end(),
-          dPrimeVertexIndices.begin(), dPrimeVertexIndices.end());
-
-        if ((d == dPrime && dIter->getIndex() != dPrimeIter->getIndex()) || (d>dPrime && dIncludesDPrime)) 
+        if ((d == dPrime && dIter->getIndex() != dPrimeIter->getIndex()) || (d>dPrime && contains(*dIter, *dPrimeIter))) 
         {
            const std::size_t j = dPrimeIter->getIndex();
            newConnectivity->addEntity(dIter->getIndex(), &j, &j+1);
