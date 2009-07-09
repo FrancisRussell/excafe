@@ -31,6 +31,7 @@ private:
   void performTranspose(const std::size_t d, const std::size_t dPrime);
   void performIntersection(const std::size_t d, const std::size_t dPrime, const std::size_t dPrimePrime);
   void performBuild(const std::size_t d);
+  void performBuildZeroToZero();
   bool contains(const MeshEntity& m1, const MeshEntity& m2);
 
 public:

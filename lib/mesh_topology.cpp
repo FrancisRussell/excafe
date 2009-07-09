@@ -64,16 +64,23 @@ void MeshTopology::calculateConnectivity(const std::size_t d, const std::size_t 
   {
     performTranspose(d, dPrime);
   }
-  else if (dPrime == 0 && dimension > d && d > 0)
+  else if (dPrime == 0 && d == dimension)
+  {
+    // We need D->0 to already exist!
+    assert(false);
+  }
+  else if (dPrime == 0 && d > 0)
   {
     performBuild(d);
   }
+  else if (dPrime == 0 && d == 0)
+  {
+    // We need this because 0->0 intersection via D is invalid
+    performBuildZeroToZero();
+  }
   else
   {
-    // We need to avoid the case d=d'=d''. We choose d''=0 and have d''=dimension
-    // in the special case where d=d'=0.
-    const std::size_t dPrimePrime = (d == 0 && dPrime == 0) ? dimension : 0;
-    performIntersection(d, dPrime, dPrimePrime);
+    performIntersection(d, dPrime, 0);
   }
 }
 
@@ -171,6 +178,22 @@ void MeshTopology::performBuild(const std::size_t d)
     }
   }
 }
+
+void MeshTopology::performBuildZeroToZero()
+{
+  MeshConnectivity* const newConnectivity = getConnectivityObject(0, 0);
+  assert(newConnectivity->numEntities() == 0);
+
+  for(global_iterator cellIter(global_begin(dimension)); cellIter!=global_end(dimension); ++cellIter)
+  {
+    for(local_iterator vIter(local_begin(*cellIter, 0)); vIter!=local_end(*cellIter, 0); ++vIter)
+    {
+      const std::size_t vid = vIter->getIndex();
+      newConnectivity->addEntity(vid, &vid, &vid+1);
+    }
+  }
+}
+
 
 std::size_t MeshTopology::getConnectivityIndex(const std::size_t d, const std::size_t dPrime) const
 {
