@@ -33,7 +33,6 @@ public:
   void setQuadrature(const MeshEntity& e, const std::map<vertex<dimension>, double> weights)
   {
     assert(e.getDimension() <= dimension);
-
     // We only have one cell per cell, so if we have quadrature for MeshEntity(dimension, k)
     // for k>0, something is wrong
     assert(e.getDimension() < dimension || e.getIndex() == 0);
@@ -48,6 +47,7 @@ public:
 
   const_iterator begin(const MeshEntity& e) const
   {
+    assert(e.getDimension() <= dimension);
     assert(e.getDimension() < dimension || e.getIndex() == 0);
 
     const typename std::map<MeshEntity, qpoints_t>::const_iterator qIter = quadratureMap.find(e);
@@ -57,6 +57,7 @@ public:
 
   const_iterator end(const MeshEntity& e) const
   {
+    assert(e.getDimension() <= dimension);
     assert(e.getDimension() < dimension || e.getIndex() == 0);
 
     const typename std::map<MeshEntity, qpoints_t>::const_iterator qIter = quadratureMap.find(e);
