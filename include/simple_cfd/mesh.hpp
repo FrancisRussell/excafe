@@ -95,6 +95,22 @@ public:
     return cellIndices.front();
   }
 
+  MeshEntity getLocalEntity(const std::size_t cid, const MeshEntity& entity) const
+  {
+    const std::size_t index = referenceCell.getLocalIndex(topology, cid, entity);
+    return MeshEntity(entity.getDimension(), index);
+  }
+
+  vertex<dimension> getLocalCoordinate(const std::size_t cid, const std::size_t vid) const
+  {
+    return referenceCell.getLocalVertex(vid);
+  }
+
+  vertex<dimension> referenceToPhysical(const std::size_t cid, const vertex<dimension>& v) const
+  {
+    return referenceCell.reference_to_physical(*this, cid, v);
+  }
+
   std::map<vertex_type, double> getQuadrature(const MeshEntity& entity) const
   {
     return referenceCell.getQuadrature(*this, entity);

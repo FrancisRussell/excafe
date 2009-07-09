@@ -22,7 +22,9 @@ public:
 
 private:
   const std::map<vertex_type, double> referenceQuadrature;
+  const std::vector<vertex_type> localVertices;
 
+  static std::vector<vertex_type> buildLocalVertices();
   static std::map<vertex_type, double> buildReferenceQuadrature();
   static std::map<vertex_type, double> normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value); 
 
@@ -30,15 +32,15 @@ public:
   TriangularCell();
   virtual std::size_t getDimension() const;
   virtual std::size_t getVerticesPerCell() const;
+  virtual vertex<2> getLocalVertex(const std::size_t index) const;
+  virtual std::size_t getLocalIndex(MeshTopology& topology, std::size_t cid, const MeshEntity& entity) const;
   std::map<vertex_type, double> getReferenceQuadrature() const;
   std::map<vertex_type, double> getReferenceQuadratureOld() const;
   virtual std::map<vertex_type, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& v) const;
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
-  bool contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& v) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
-  virtual std::size_t getLocalIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t cid) const;
   Tensor<dimension, 1, double> getFacetNormal(const mesh<TriangularCell>& m, const std::size_t cid, const std::size_t fid, const vertex_type& v) const;
 };
 

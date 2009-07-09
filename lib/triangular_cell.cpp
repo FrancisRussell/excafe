@@ -11,12 +11,12 @@
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
-#include <iostream>
 
 namespace cfd
 {
 
-TriangularCell::TriangularCell() : referenceQuadrature(buildReferenceQuadrature())
+TriangularCell::TriangularCell() : referenceQuadrature(buildReferenceQuadrature()),
+  localVertices(buildLocalVertices())
 {
 }
 
@@ -70,10 +70,6 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuad
     triangularQuadrature[newLocation] += sIter->second * (1-oldLocation[1]) / 8.0;
   }
 
-  for(std::map<vertex_type, double>::const_iterator tIter(triangularQuadrature.begin()); tIter!=triangularQuadrature.end(); ++tIter)
-    std::cout << tIter->first << ": " << tIter->second << std::endl;
-  std::cout << std::endl;
-
   return triangularQuadrature;
 }
 
@@ -110,14 +106,14 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
     std::map<vertex_type, double> weightings;
     for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
     {
-      weightings[reference_to_physical(m, entity.getIndex(), refIter->first)] = refIter->second * jacobian;
+      weightings[refIter->first] = refIter->second * jacobian;
     }
     return weightings;
   }
   else if (entity.getDimension() == 1)
   {
     const std::size_t cid = m.getContainingCell(entity);
-    const std::size_t index = getLocalIndex(m.getTopology(), entity, cid);
+    const std::size_t index = getLocalIndex(m.getTopology(), cid, entity);
 
     Quadrature quadrature;
     const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
@@ -150,7 +146,7 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
       }
 
       const vertex_type location((x*0.5 + 0.5)*(0.5 - y*0.5), y*0.5 + 0.5);
-      facetWeightings[reference_to_physical(m, cid, location)] = uIter->second;
+      facetWeightings[location] = uIter->second;
     }
 
     return normaliseQuadrature(facetWeightings, 1.0 * jacobian);
@@ -185,7 +181,7 @@ double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEnti
   }
   else if (entity.getDimension() == 1)
   {
-    const std::size_t localIndex = getLocalIndex(m.getTopology(), entity, m.getContainingCell(entity));
+    const std::size_t localIndex = getLocalIndex(m.getTopology(), m.getContainingCell(entity), entity);
     const vertex_type difference = vertices[localIndex] - vertices[(localIndex+1)%3];
     return std::sqrt(difference[0] * difference[0] + difference[1] * difference[1]);
   }
@@ -209,35 +205,6 @@ TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<Tri
                         eta *vertices[2];
 
   return v;
-}
-
-bool TriangularCell::contains(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& v) const
-{
-  const std::vector<vertex_type> vertices(m.getCoordinates(cid));
-  bool contained = true;
-
-  for(unsigned vid=0; vid<vertex_count; ++vid)
-  {
-    const unsigned v1_ind = vid;
-    const unsigned v2_ind = (vid+1)%vertex_count;
-    const unsigned v3_ind = (vid+2)%vertex_count;
-
-    std::vector<double> edgeVector;
-    std::transform(vertices[v1_ind].begin(), vertices[v1_ind].end(), vertices[v2_ind].begin(), std::back_inserter(edgeVector), std::minus<double>());
-
-    // We calculate the perpendicular to the edge which gives us the coefficients for the place
-    std::vector<double> edgeNormal(edgeVector.size());
-    edgeNormal[0] = -edgeVector[1];
-    edgeNormal[1] = edgeVector[0];
-
-    const double d = std::inner_product(edgeNormal.begin(), edgeNormal.end(), vertices[v1_ind].begin(), 0.0);
-    const double vDotProd = std::inner_product(edgeNormal.begin(), edgeNormal.end(), v.begin(), 0.0) - d;
-    const double v3DotProd = std::inner_product(edgeNormal.begin(), edgeNormal.end(), vertices[v3_ind].begin(), 0.0) - d;
-
-    if ((vDotProd<0 && v3DotProd>0) || (vDotProd>0 && v3DotProd<0))
-      contained = false;
-  }
-  return contained;
 }
 
 std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
@@ -279,7 +246,7 @@ std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTop
   return result;
 }
 
-std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t cid) const
+std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const std::size_t cid, const MeshEntity& entity) const
 {
   // Get vertices on entity
   const std::vector<std::size_t> vertexIndices(topology.getIndices(entity, 0));
@@ -287,7 +254,7 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const MeshEnti
 
   // Get sets of vertices corresponding to entities of dimension entity.getDimension() on cell cid.
   const std::vector< std::set<std::size_t> > incidentVertices(getIncidentVertices(topology, MeshEntity(dimension, cid), entity.getDimension()));
-
+  
   const std::vector< std::set<std::size_t> >::const_iterator 
     entityIter(std::find(incidentVertices.begin(), incidentVertices.end(), vertexIndicesSet));
 
@@ -305,7 +272,7 @@ Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(cons
   std::vector< vertex<dimension> > cellVertices(m.getCoordinates(cid));
   assert(cellVertices.size() == 3);
 
-  const std::size_t localFacetID = getLocalIndex(m.getTopology(), MeshEntity(dimension-1, fid), cid);
+  const std::size_t localFacetID = getLocalIndex(m.getTopology(), cid, MeshEntity(dimension-1, fid));
   const vertex_type v1 = cellVertices[localFacetID];
   const vertex_type v2 = cellVertices[(localFacetID+1)%3];
 
@@ -320,6 +287,21 @@ Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(cons
   normal[&one] = -delta[0] / facetLength;
 
   return normal;
+}
+
+TriangularCell::vertex_type TriangularCell::getLocalVertex(const std::size_t index) const
+{
+  assert(index < localVertices.size());
+  return localVertices[index];
+}
+
+std::vector<TriangularCell::vertex_type> TriangularCell::buildLocalVertices()
+{
+  std::vector<vertex_type> vertices;
+  vertices.push_back(vertex_type(0.0, 0.0));
+  vertices.push_back(vertex_type(1.0, 0.0));
+  vertices.push_back(vertex_type(0.0, 1.0));
+  return vertices;
 }
 
 }

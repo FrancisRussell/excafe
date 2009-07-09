@@ -69,9 +69,10 @@ public:
        0  3  1
   */
 
-  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& v) const
+  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
+    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
     std::vector<vertex_type> vertices(m->getCoordinates(cid));
@@ -118,9 +119,10 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& v) const
+  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
+    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
     std::vector<vertex_type> vertices(m->getCoordinates(cid));
@@ -174,9 +176,10 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& v) const
+  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
+    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
 
@@ -363,7 +366,7 @@ public:
 
   virtual std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
-    const std::size_t entityIndex = referenceCell.getLocalIndex(topology, entity, cid);
+    const std::size_t entityIndex = referenceCell.getLocalIndex(topology, cid, entity);
     std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > result;
 
     if (entity.getDimension() == 2) return result;

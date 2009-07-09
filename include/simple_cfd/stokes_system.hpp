@@ -781,39 +781,12 @@ public:
   void outputToFile(const std::string& filename)
   {
     std::ofstream outFile(filename.c_str());
-    //renderOld(3.0, 1.0, 90, 30, outFile);
     render(outFile);
     outFile.close();
   }
 
-  std::pair<double, double> getVelocityVector(const vertex_type& vertex) const
+  std::pair<double, double> getVelocityVector(const std::size_t cid, const vertex_type& vertex) const
   {
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
-    {
-      if (m.getReferenceCell().contains(m, cellIter->getIndex(), vertex))
-      {
-        return getVelocityVector(MeshEntity(m.getDimension(), cellIter->getIndex()), vertex);
-      }
-    }
-    return std::make_pair(0.0, 0.0);
-  }
-
-  std::pair<double, double> getVelocityVector(const MeshEntity& entity, const vertex_type& vertex) const
-  {
-    // From any given mesh entity, we determine a cell we can compute a value from
-    std::size_t cid;
-    if (entity.getDimension() == m.getDimension())
-    {
-      cid = entity.getIndex();
-    }
-    else
-    {
-      const std::vector<std::size_t> cellIndices(m.getIndices(entity, m.getDimension()));
-      assert(cellIndices.size() > 0);
-      cid = cellIndices.front();
-    }
-
-    //assert(m.getReferenceCell().contains(m, cid, vertex));
     double xVelocity(0.0), yVelocity(0.0);
 
     for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
@@ -839,15 +812,25 @@ public:
     {
       const vertex<2> v(m.getVertex(vIter->getIndex()));
       vertices.push_back(v);
-      velocities.push_back(getVelocityVector(v));
+
+      const std::size_t cid = m.getContainingCell(*vIter);
+      const MeshEntity localVertexEntity = m.getLocalEntity(cid, *vIter);
+      const vertex<2> localVertex = m.getLocalCoordinate(cid, localVertexEntity.getIndex());
+      velocities.push_back(getVelocityVector(cid, localVertex));
     }
 
     for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(1)); eIter!=m.global_end(1); ++eIter)
     {
+      const std::size_t cid = m.getContainingCell(*eIter);
       const std::vector<std::size_t> vertexIndices(m.getIndices(*eIter, 0));
-      const vertex<2> v((m.getVertex(vertexIndices[0]) + m.getVertex(vertexIndices[1]))/2);
-      vertices.push_back(v);
-      velocities.push_back(getVelocityVector(*eIter, v));
+      assert(vertexIndices.size() == 2);
+      
+      const MeshEntity v1Entity = m.getLocalEntity(cid, MeshEntity(0, vertexIndices[0]));
+      const MeshEntity v2Entity = m.getLocalEntity(cid, MeshEntity(0, vertexIndices[1]));
+
+      const vertex<2> localVertex((m.getLocalCoordinate(cid, v1Entity.getIndex()) + m.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
+      vertices.push_back(m.referenceToPhysical(cid, localVertex));
+      velocities.push_back(getVelocityVector(cid, localVertex));
     }
 
     out << "# vtk DataFile Version 2.0" << std::endl;
