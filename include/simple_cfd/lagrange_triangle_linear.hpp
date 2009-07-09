@@ -193,10 +193,16 @@ public:
     return dofs;
   }
 
-  vertex_type getDofCoordinate(const cell_id cid, const unsigned dof) const
+  vertex_type getDofCoordinateGlobal(const cell_id cid, const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
-    return m->getCoordinates(cid)[dof % 3];
+    return referenceCell.reference_to_physical(*m, cid, getDofCoordinateLocal(dof));
+  }
+
+  vertex_type getDofCoordinateLocal(const unsigned dof) const
+  {
+    assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
+    return referenceCell.getLocalVertex(dof % 3);
   }
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits

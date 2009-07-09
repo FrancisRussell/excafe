@@ -91,15 +91,15 @@ private:
       if (dofIter->second.size() > 1)
       {
         const local_dof_t localDof(dofIter->second[0]);
-        const vertex_type location = boost::get<0>(localDof)->getDofCoordinate(boost::get<1>(localDof), boost::get<2>(localDof));
+        const vertex_type location = boost::get<0>(localDof)->getDofCoordinateLocal(boost::get<2>(localDof));
         const double localDofValue = basis.evaluate_tensor(boost::get<1>(localDof), boost::get<2>(localDof), location).toScalar();
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
-          const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinate(boost::get<1>(coDof), boost::get<2>(coDof));
+          const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinateLocal(boost::get<2>(coDof));
           const double coDofValue = basis.evaluate_tensor(boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
-          assertTrue(location == coDofLocation);
+          assertTrue(m.referenceToPhysical(boost::get<1>(localDof), location) == m.referenceToPhysical(boost::get<1>(coDof), coDofLocation));
           assertEqual(localDofValue, coDofValue);
         }
       }

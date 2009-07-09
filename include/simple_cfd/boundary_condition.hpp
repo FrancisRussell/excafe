@@ -39,13 +39,14 @@ public:
     for(typename dof_map_type::const_iterator dofMapIter(dofMap.begin()); dofMapIter!=dofMap.end(); ++dofMapIter)
     {
       const dof_t dof(dofMapIter->first);
-      const vertex<dimension> dofLocation(element.getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof)));
+      const vertex<dimension> dofLocationLocal(element.getDofCoordinateLocal(boost::get<1>(dof), boost::get<2>(dof)));
+      const vertex<dimension> dofLocationGlobal(element.getDofCoordinateGlobal(boost::get<1>(dof), boost::get<2>(dof)));
 
-      if (boost::get<0>(dof) == &element && subdomain.inside(dofLocation))
+      if (boost::get<0>(dof) == &element && subdomain.inside(dofLocationGlobal))
       {
-        const Tensor<D, R, double> boundaryValue(function.evaluate(dofLocation));
+        const Tensor<D, R, double> boundaryValue(function.evaluate(dofLocationGlobal));
         const Tensor<D, R, double> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
-                                                                              boost::get<2>(dof), dofLocation));
+                                                                              boost::get<2>(dof), dofLocationLocal));
         const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
         boundaryValues.setValues(1, &dof, &dofValue);
       }

@@ -187,7 +187,8 @@ public:
       for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
           dirichletIter != dirichletConditions.end(); ++dirichletIter)
       {
-        if (dirichletIter->first == boost::get<0>(dof) && dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinate(boost::get<1>(dof), boost::get<2>(dof))))
+        if (dirichletIter->first == boost::get<0>(dof) &&
+          dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinateGlobal(boost::get<1>(dof), boost::get<2>(dof))))
         {
           dirichlet.insert(*mappingIter);
           dirichletElements.insert( boost::get<0>(dof));

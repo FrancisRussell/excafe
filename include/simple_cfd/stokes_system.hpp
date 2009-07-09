@@ -684,7 +684,7 @@ public:
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
       const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
-      const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      const vertex_type position(velocity.getDofCoordinateGlobal(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       
       if (getLocation(position) == LEFT_EDGE)
       {
@@ -707,7 +707,7 @@ public:
       const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
 
       const bool isXDof = velocity.getTensorIndex(boost::get<0>(dofInfo), boost::get<1>(dofInfo)) == 0;
-      const vertex_type position(velocity.getDofCoordinate(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
+      const vertex_type position(velocity.getDofCoordinateGlobal(boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
       const Location location = getLocation(position);
 
       // Check this really is an edge cell
@@ -741,7 +741,7 @@ public:
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const vertex_type dofLocation = velocity.getDofCoordinate(cellIter->getIndex(), dof);
+        const vertex_type dofLocation = velocity.getDofCoordinateGlobal(cellIter->getIndex(), dof);
         const vertex_type offset = dofLocation - centre;
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
