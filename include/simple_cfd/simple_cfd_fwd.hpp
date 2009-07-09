@@ -46,6 +46,10 @@ class MeshEntityIteratorGlobal;
 class MeshEntityIteratorLocal;
 class Polygon;
 
+// Quadrature related
+class Quadrature;
+template<std::size_t D> class QuadraturePoints;
+
 // Numeric types
 class SparsityPattern;
 class PETScMatrix;

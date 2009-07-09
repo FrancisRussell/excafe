@@ -1,14 +1,15 @@
 #ifndef SIMPLE_CFD_TRIANGULAR_CELL_HPP
 #define SIMPLE_CFD_TRIANGULAR_CELL_HPP
 
-#include<vector>
-#include<map>
-#include<set>
-#include<cstddef>
-#include"simple_cfd_fwd.hpp"
-#include"vertex.hpp"
-#include"mesh_topology.hpp"
-#include"general_cell.hpp"
+#include <vector>
+#include <map>
+#include <set>
+#include <cstddef>
+#include "simple_cfd_fwd.hpp"
+#include "vertex.hpp"
+#include "mesh_topology.hpp"
+#include "general_cell.hpp"
+#include "quadrature_points.hpp"
 
 namespace cfd
 {
