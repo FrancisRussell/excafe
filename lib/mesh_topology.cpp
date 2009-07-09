@@ -27,16 +27,7 @@ void MeshTopology::setBaseConnectivity(const MeshConnectivity& c)
 
 std::size_t MeshTopology::numEntities(const std::size_t d)
 {
-  if (d>0)
-  {
-    // This will use build (except when d==dimension)
-    return getConnectivity(d, 0)->numEntities();
-  }
-  else
-  {
-    // This will use transpose
-    return getConnectivity(0, dimension)->numEntities();
-  }
+  return getConnectivity(d, 0)->numEntities();
 }
 
 std::size_t MeshTopology::numRelations(const MeshEntity& entity, const std::size_t d)
