@@ -22,11 +22,10 @@ public:
   static const unsigned int vertex_count = 3;
 
 private:
-  const std::map<vertex_type, double> referenceQuadrature;
   const std::vector<vertex_type> localVertices;
 
   static std::vector<vertex_type> buildLocalVertices();
-  static std::map<vertex_type, double> buildReferenceQuadrature();
+  static std::map<vertex_type, double> buildCellQuadrature(const std::size_t degree);
   static std::map<vertex_type, double> normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value); 
 
 public:
@@ -35,9 +34,7 @@ public:
   virtual std::size_t getVerticesPerCell() const;
   virtual vertex<2> getLocalVertex(const std::size_t index) const;
   virtual std::size_t getLocalIndex(MeshTopology& topology, std::size_t cid, const MeshEntity& entity) const;
-  std::map<vertex_type, double> getReferenceQuadrature() const;
-  std::map<vertex_type, double> getReferenceQuadratureOld() const;
-  virtual std::map<vertex_type, double> getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
+  virtual QuadraturePoints<2> getQuadrature(const std::size_t degree) const;
   double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
   double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& v) const;
   vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;

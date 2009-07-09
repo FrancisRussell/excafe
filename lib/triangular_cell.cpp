@@ -15,8 +15,7 @@
 namespace cfd
 {
 
-TriangularCell::TriangularCell() : referenceQuadrature(buildReferenceQuadrature()),
-  localVertices(buildLocalVertices())
+TriangularCell::TriangularCell() : localVertices(buildLocalVertices())
 {
 }
 
@@ -44,9 +43,8 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadratur
   return newQuadrature;
 }
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuadrature()
+std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadrature(const std::size_t degree)
 {
-  const std::size_t degree = 5;
   Quadrature quadrature;
 
   // We increase degree of s quadrature by one to handle (1-s) factor in Jacobian of co-ordinate
@@ -73,50 +71,16 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::buildReferenceQuad
   return triangularQuadrature;
 }
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadrature() const
+QuadraturePoints<2> TriangularCell::getQuadrature(const std::size_t degree) const
 {
-  return referenceQuadrature;
-}
+  Quadrature quadrature;
+  const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::getReferenceQuadratureOld() const
-{
-  /* Cubic Gaussian quadrature values from "Finite Elements: A Gentle Introduction" by Henwood and Bonet */
-  /* These co-ordinates are defined on the reference triangle {(0,0), (0,1), (0,1)} */ 
-  std::map<vertex_type, double> weightings;
-  weightings[vertex_type(0.0, 0.0)] = 3.0/120.0;
-  weightings[vertex_type(1.0, 0.0)] = 3.0/120.0;
-  weightings[vertex_type(0.0, 1.0)] = 3.0/120.0;
-  weightings[vertex_type(0.5, 0.0)] = 8.0/120.0;
-  weightings[vertex_type(0.5, 0.5)] = 8.0/120.0;
-  weightings[vertex_type(0.0, 0.5)] = 8.0/120.0;
-  weightings[vertex_type(1.0/3, 1.0/3)] = 27.0/120.0;
-  return weightings;
-}
+  QuadraturePoints<2> points;
+  points.setQuadrature(MeshEntity(dimension, 0), buildCellQuadrature(degree));
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(const mesh<TriangularCell>& m, const MeshEntity& entity) const
-{
-  const std::size_t degree = 5;
-  const std::map<vertex_type, double> referenceWeightings(getReferenceQuadrature());
-
-  //FIXME: Assumes constant Jacobian
-  const double jacobian = m.getReferenceCell().getJacobian(m, entity, vertex_type(0.0, 0.0));
-
-  if (entity.getDimension() == 2)
+  for(std::size_t index=0; index<3; ++index)
   {
-    std::map<vertex_type, double> weightings;
-    for(std::map<vertex_type, double>::const_iterator refIter(referenceWeightings.begin()); refIter!=referenceWeightings.end(); ++refIter)
-    {
-      weightings[refIter->first] = refIter->second * jacobian;
-    }
-    return weightings;
-  }
-  else if (entity.getDimension() == 1)
-  {
-    const std::size_t cid = m.getContainingCell(entity);
-    const std::size_t index = getLocalIndex(m.getTopology(), cid, entity);
-
-    Quadrature quadrature;
-    const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
     std::map<vertex_type, double> facetWeightings;
 
     for(std::map<double, double>::const_iterator uIter(unitQuadrature.begin()); uIter!=unitQuadrature.end(); ++uIter)
@@ -148,14 +112,11 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::getQuadrature(cons
       const vertex_type location((x*0.5 + 0.5)*(0.5 - y*0.5), y*0.5 + 0.5);
       facetWeightings[location] = uIter->second;
     }
+    
+    points.setQuadrature(MeshEntity(dimension-1, index), normaliseQuadrature(facetWeightings, 1.0));
+  }
 
-    return normaliseQuadrature(facetWeightings, 1.0 * jacobian);
-  }
-  else
-  {
-    assert(false);
-    return std::map<vertex_type, double>();
-  }
+  return points;
 }
 
 double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const

@@ -2,6 +2,7 @@
 #include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/dof_map_builder.hpp>
 #include <simple_cfd/mesh_entity.hpp>
+#include <simple_cfd/quadrature_points.hpp>
 #include <string>
 #include <vector>
 
@@ -37,19 +38,20 @@ private:
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
     basis_t basis(m);
+
+    cfd::QuadraturePoints<2> quadrature(m.getReferenceCell().getQuadrature(5));
+    const cfd::MeshEntity localCell(dimension, 0);
   
     for(typename cfd::mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       const int dofs = basis.space_dimension();
-      std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
-  
-      for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
+
+      for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
-        {
           sum += basis.evaluate_tensor(cellIter->getIndex(), i, wIter->first).toScalar();
-        }
+
         assertEqual(1.0, sum);
       }
     }

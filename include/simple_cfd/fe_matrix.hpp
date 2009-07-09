@@ -1,17 +1,18 @@
 #ifndef SIMPLE_CFD_FE_MATRIX_HPP
 #define SIMPLE_CFD_FE_MATRIX_HPP
 
-#include "fe_vector.hpp"
-#include "numeric/matrix.hpp"
-#include "numeric/sparsity_pattern.hpp"
-#include "dof_map.hpp"
-#include "fe_binary_function.hpp"
-#include "mesh.hpp"
 #include <algorithm>
 #include <vector>
 #include <set>
 #include <cassert>
 #include <boost/tuple/tuple.hpp>
+#include "dof_map.hpp"
+#include "fe_binary_function.hpp"
+#include "fe_vector.hpp"
+#include "mesh.hpp"
+#include "numeric/matrix.hpp"
+#include "numeric/sparsity_pattern.hpp"
+#include "quadrature_points.hpp"
 
 namespace cfd
 {
@@ -24,6 +25,7 @@ private:
   typedef typename  cell_type::vertex_type vertex_type;
   typedef finite_element<cell_type> finite_element_t;
   typedef typename dof_map<cell_type>::dof_t dof_t;
+  static const std::size_t dimension = cell_type::dimension;
 
   const dof_map<cell_type> rowMappings;
   const dof_map<cell_type> colMappings;
@@ -81,7 +83,7 @@ private:
     assert(trialElements.find(trialFunction) != trialElements.end());
     assert(testElements.find(testFunction) != testElements.end());
 
-    const std::size_t dimension = boundaryIntegral ? m.getDimension()-1 : m.getDimension();
+    const std::size_t entityDimension = boundaryIntegral ? m.getDimension()-1 : m.getDimension();
     const unsigned testSpaceDimension = testFunction->space_dimension();
     const unsigned trialSpaceDimension = trialFunction->space_dimension();
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
@@ -90,12 +92,17 @@ private:
     std::vector<int> trialIndices(trialSpaceDimension);
     std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
 
-    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(dimension)); eIter != m.global_end(dimension); ++eIter)
+    const std::size_t degree = 5;
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
+
+    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
     {
       if (!boundaryIntegral || boundaryFunction(*eIter))
       {
-        const std::map<vertex_type, double> quadrature(m.getQuadrature(*eIter));
+        //FIXME: Assumes constant jacobian
+        const double jacobian = m.getReferenceCell().getJacobian(m, *eIter, vertex_type(0.0, 0.0));
         const std::size_t cid = m.getContainingCell(*eIter);
+        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
 
         std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
@@ -105,11 +112,11 @@ private:
         for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
           trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cid, trial));
 
-        for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
+        for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
               valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *eIter, test, trial,
-              quadIter->first) * quadIter->second;
+              quadIter->first) * quadIter->second * jacobian;
 
         matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
       }

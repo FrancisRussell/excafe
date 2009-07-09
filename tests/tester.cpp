@@ -63,17 +63,18 @@ void Tester::testTriangleQuadrature()
   mesh<cell_type> m(meshBuilder.buildMesh());
   const std::size_t dimension = m.getDimension();
 
+  cfd::QuadraturePoints<2> quadrature(m.getReferenceCell().getQuadrature(5));
+  const cfd::MeshEntity localCell(dimension, 0);
+
   for(mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
   {
     // Check the area is correct first
     assertEqual(m.getArea(cellIter->getIndex()), area);
-    std::map<vertex_type, double> quadrature(m.getQuadrature(*cellIter));
-
+    const double jacobian = m.getReferenceCell().getJacobian(m, *cellIter, vertex_type(0.0, 0.0));
     double accum = 0;
-    for(std::map<vertex_type, double>::const_iterator wIter(quadrature.begin()); wIter!=quadrature.end(); ++wIter)
-    {
-      accum += wIter->second;
-    }
+
+    for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
+      accum += wIter->second * jacobian;
 
     assertEqual(accum, area);
   }

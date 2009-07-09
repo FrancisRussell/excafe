@@ -52,7 +52,7 @@ public:
 
     const typename std::map<MeshEntity, qpoints_t>::const_iterator qIter = quadratureMap.find(e);
     assert(qIter != quadratureMap.end());
-    return qIter->begin();
+    return qIter->second.begin();
   }
 
   const_iterator end(const MeshEntity& e) const
@@ -62,7 +62,7 @@ public:
 
     const typename std::map<MeshEntity, qpoints_t>::const_iterator qIter = quadratureMap.find(e);
     assert(qIter != quadratureMap.end());
-    return qIter->end();
+    return qIter->second.end();
   }
 };
 
