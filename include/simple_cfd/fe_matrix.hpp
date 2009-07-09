@@ -100,10 +100,10 @@ private:
         std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
         for(unsigned test=0; test<testSpaceDimension; ++test)
-          testIndices[test] = rowMappings.getGlobalIndex(boost::make_tuple(testFunction, cid, test));
+          testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cid, test));
 
         for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-          trialIndices[trial] = colMappings.getGlobalIndex(boost::make_tuple(trialFunction, cid, trial));
+          trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cid, trial));
 
         for(typename std::map<vertex_type, double>::const_iterator quadIter(quadrature.begin()); quadIter != quadrature.end(); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)
