@@ -15,6 +15,7 @@
 #include "utility.hpp"
 #include "triangular_cell.hpp"
 #include "dof_map.hpp"
+#include "cell_vertices.hpp"
 
 namespace cfd
 {
