@@ -37,7 +37,7 @@ private:
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
-    basis_t basis(m);
+    basis_t basis;
 
     cfd::QuadraturePoints<2> quadrature(m.getReferenceCell().getQuadrature(5));
     const cfd::MeshEntity localCell(dimension, 0);
@@ -50,7 +50,7 @@ private:
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
-          sum += basis.evaluate_tensor(cellIter->getIndex(), i, wIter->first).toScalar();
+          sum += basis.evaluate_tensor(m, cellIter->getIndex(), i, wIter->first).toScalar();
 
         assertEqual(1.0, sum);
       }
@@ -75,7 +75,7 @@ private:
 
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::mesh<cell_type> m(meshBuilder.buildMesh());
-    basis_t basis(m);
+    basis_t basis;
 
     cfd::dof_map_builder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);
@@ -94,13 +94,13 @@ private:
       {
         const local_dof_t localDof(dofIter->second[0]);
         const vertex_type location = boost::get<0>(localDof)->getDofCoordinateLocal(boost::get<2>(localDof));
-        const double localDofValue = basis.evaluate_tensor(boost::get<1>(localDof), boost::get<2>(localDof), location).toScalar();
+        const double localDofValue = basis.evaluate_tensor(m, boost::get<1>(localDof), boost::get<2>(localDof), location).toScalar();
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
           const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinateLocal(boost::get<2>(coDof));
-          const double coDofValue = basis.evaluate_tensor(boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
+          const double coDofValue = basis.evaluate_tensor(m, boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
           assertTrue(m.referenceToPhysical(boost::get<1>(localDof), location) == m.referenceToPhysical(boost::get<1>(coDof), coDofLocation));
           assertEqual(localDofValue, coDofValue);
         }

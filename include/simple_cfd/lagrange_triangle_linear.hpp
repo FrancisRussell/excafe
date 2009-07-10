@@ -30,7 +30,6 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 3;
-  const mesh<cell_type>* m;
   const cell_type referenceCell;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -54,19 +53,19 @@ public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
-  lagrange_triangle_linear(const mesh<cell_type>& _m) : m(&_m)
+  lagrange_triangle_linear()
   {
   }
 
-  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  value_type evaluate_tensor(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getArea(cid);
+    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -81,15 +80,15 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  gradient_type evaluate_gradient(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getArea(cid);
+    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -107,15 +106,15 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  divergence_type evaluate_divergence(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m->getCoordinates(cid));
-    const double area = m->getArea(cid);
+    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -142,10 +141,10 @@ public:
     return 3 * detail::Power<dimension, rank>::value;
   }
 
-  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
+  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const mesh<cell_type>& m, const cell_id cid, const cell_id cid2) const
   {
-    const std::vector<vertex_id> cid_vertices(m->getIndices(MeshEntity(dimension, cid), 0));
-    const std::vector<vertex_id> cid2_vertices(m->getIndices(MeshEntity(dimension, cid2), 0));
+    const std::vector<vertex_id> cid_vertices(m.getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> cid2_vertices(m.getIndices(MeshEntity(dimension, cid2), 0));
 
     // Map vertices of cid2 onto degrees of freedom
     std::map<vertex_id, unsigned> cid2_dof;
@@ -167,7 +166,7 @@ public:
     return common;
   }
 
-  std::vector<unsigned> getBoundaryDegreesOfFreedom(const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
+  std::vector<unsigned> getBoundaryDegreesOfFreedom(const mesh<cell_type>& m, const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
   {
     // Create set of vertices on boundary
     std::set<vertex_id> boundaryVertices;
@@ -178,7 +177,7 @@ public:
     }
 
     // Create list of local vertices
-    const std::vector<vertex_id> vertexIndices(m->getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> vertexIndices(m.getIndices(MeshEntity(dimension, cid), 0));
 
     // Find vertices on boundary
     std::vector<unsigned> dofs;
@@ -193,10 +192,10 @@ public:
     return dofs;
   }
 
-  vertex_type getDofCoordinateGlobal(const cell_id cid, const unsigned dof) const
+  vertex_type getDofCoordinateGlobal(const mesh<cell_type>& m, const cell_id cid, const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
-    return referenceCell.reference_to_physical(*m, cid, getDofCoordinateLocal(dof));
+    return referenceCell.reference_to_physical(m, cid, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const
@@ -207,7 +206,7 @@ public:
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
   // us to using standard bases.
-  unsigned getTensorIndex(const cell_id cid, const unsigned dof) const
+  unsigned getTensorIndex(const unsigned dof) const
   {
     assert(dof < space_dimension());
     return dof/3;

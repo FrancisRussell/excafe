@@ -188,7 +188,7 @@ public:
           dirichletIter != dirichletConditions.end(); ++dirichletIter)
       {
         if (dirichletIter->first == boost::get<0>(dof) &&
-          dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinateGlobal(boost::get<1>(dof), boost::get<2>(dof))))
+          dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinateGlobal(*m, boost::get<1>(dof), boost::get<2>(dof))))
         {
           dirichlet.insert(*mappingIter);
           dirichletElements.insert( boost::get<0>(dof));

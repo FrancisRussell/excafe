@@ -29,7 +29,6 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 6;
-  const mesh<cell_type>* m;
   const cell_type referenceCell;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -50,7 +49,7 @@ private:
   }
 
 public:
-  lagrange_triangle_quadratic(const mesh<cell_type>& _m) : m(&_m)
+  lagrange_triangle_quadratic()
   {
   }
 
@@ -69,13 +68,13 @@ public:
        0  3  1
   */
 
-  value_type evaluate_tensor(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  value_type evaluate_tensor(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    std::vector<vertex_type> vertices(m.getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -119,13 +118,13 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  gradient_type evaluate_gradient(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    std::vector<vertex_type> vertices(m.getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -176,14 +175,14 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  divergence_type evaluate_divergence(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(*m, cid, vRef);
+    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
 
-    std::vector<vertex_type> vertices(m->getCoordinates(cid));
+    std::vector<vertex_type> vertices(m.getCoordinates(cid));
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -242,10 +241,10 @@ public:
     return 6 * detail::Power<dimension, rank>::value;
   }
 
-  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const cell_id cid, const cell_id cid2) const
+  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const mesh<cell_type>& m, const cell_id cid, const cell_id cid2) const
   {
-    const std::vector<vertex_id> cid_vertices(m->getIndices(MeshEntity(dimension, cid), 0));
-    const std::vector<vertex_id> cid2_vertices(m->getIndices(MeshEntity(dimension, cid2), 0));
+    const std::vector<vertex_id> cid_vertices(m.getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> cid2_vertices(m.getIndices(MeshEntity(dimension, cid2), 0));
 
     std::vector< std::pair<vertex_id, vertex_id> > cid_edges;
     std::vector< std::pair<vertex_id, vertex_id> > cid2_edges;
@@ -302,7 +301,7 @@ public:
   }
 
 
-  std::vector<unsigned> getBoundaryDegreesOfFreedom(const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
+  std::vector<unsigned> getBoundaryDegreesOfFreedom(const mesh<cell_type>& m, const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
   {
     // Create sets for all edges and vertices on boundary
     std::set< std::pair<vertex_id, vertex_id>, unordered_pair_compare<vertex_id> > boundaryEdgeSet(boundary.begin(), boundary.end());
@@ -314,7 +313,7 @@ public:
     }
 
     // Create lists of all local edges and vertices
-    const std::vector<vertex_id> vertexIndices(m->getIndices(MeshEntity(dimension, cid), 0));
+    const std::vector<vertex_id> vertexIndices(m.getIndices(MeshEntity(dimension, cid), 0));
     std::vector< std::pair<unsigned, unsigned> > edges;
     for(unsigned edge=0; edge<3; ++edge)
     {
@@ -340,10 +339,10 @@ public:
     return dofs;
   }
   
-  vertex_type getDofCoordinateGlobal(const cell_id cid, const unsigned dof) const
+  vertex_type getDofCoordinateGlobal(const mesh<cell_type>& m, const cell_id cid, const unsigned dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
-    return referenceCell.reference_to_physical(*m, cid, getDofCoordinateLocal(dof));
+    return referenceCell.reference_to_physical(m, cid, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const
@@ -364,7 +363,7 @@ public:
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
   // us to using standard bases.
-  unsigned getTensorIndex(const cell_id cid, const unsigned dof) const
+  unsigned getTensorIndex(const unsigned dof) const
   {
     assert(dof < space_dimension());
     return dof/6;

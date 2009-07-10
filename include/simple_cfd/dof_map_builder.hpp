@@ -59,7 +59,7 @@ public:
         for(std::set<cell_id>::const_iterator incidentIter(incident.begin()); incidentIter != incident.end(); ++incidentIter)
         {
           const std::vector< std::pair<unsigned, unsigned> > commonDofs =
-            (*elementIter)->getCommonDegreesOfFreedom(cellIter->getIndex(), *incidentIter);
+            (*elementIter)->getCommonDegreesOfFreedom(m, cellIter->getIndex(), *incidentIter);
 
           // Iterate over map of degrees of freedom of current cell to incident cell
           for(std::vector< std::pair<unsigned, unsigned> >::const_iterator dofIter(commonDofs.begin()); dofIter!=commonDofs.end(); ++dofIter)
@@ -107,7 +107,7 @@ public:
     {
       for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
       {
-        const std::vector<unsigned> localDofs((*elementIter)->getBoundaryDegreesOfFreedom(cellIter->getIndex(), boundary));
+        const std::vector<unsigned> localDofs((*elementIter)->getBoundaryDegreesOfFreedom(m, cellIter->getIndex(), boundary));
         for(std::vector<unsigned>::const_iterator localDofIter(localDofs.begin()); localDofIter!=localDofs.end(); ++localDofIter)
         {
           const typename local2global_map::const_iterator
