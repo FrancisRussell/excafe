@@ -29,8 +29,7 @@ struct shape_dimensions<triangle>
 };
 
 // Mesh related types
-template<std::size_t D> class mesh;
-template<typename C> class mesh_builder;
+template<std::size_t D> class Mesh;
 template<unsigned D> class mesh_geometry;
 template<unsigned D> class mesh_geometry_impl;
 template<unsigned int D> class vertex;

@@ -22,15 +22,15 @@ private:
   const double maxCellArea;
   std::vector< std::pair<Polygon, int> > polygons;
 
-  mesh<dimension> buildMeshOld() const;
-  mesh<dimension> buildMeshTriangle() const;
+  Mesh<dimension> buildMeshOld() const;
+  Mesh<dimension> buildMeshTriangle() const;
   void handlePolygons(std::vector<double>& pointList, 
     std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
   void addPolygon(const Polygon& polygon, int label);
-  mesh<dimension> buildMesh() const;
+  Mesh<dimension> buildMesh() const;
 };
 
 }

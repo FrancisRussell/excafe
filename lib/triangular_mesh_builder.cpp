@@ -57,7 +57,7 @@ TriangularMeshBuilder::TriangularMeshBuilder(const double _width, const double _
   assert(height > 0.0);
 }
 
-mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMesh() const
+Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMesh() const
 {
   return buildMeshTriangle();
 }
@@ -67,7 +67,7 @@ void TriangularMeshBuilder::addPolygon(const Polygon& polygon, const int label)
   polygons.push_back(std::make_pair(polygon, label));
 }
 
-mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle() const
+Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle() const
 {
   triangulateio in, out;
   clear(in);
@@ -121,7 +121,7 @@ mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
 
   triangulate(options.get(), &in, &out, NULL);
 
-  mesh<dimension> m;
+  Mesh<dimension> m;
 
   for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
   {
@@ -158,7 +158,7 @@ mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
     const MeshEntity v1Entity(0, v1);
     bool foundEdge = false;
 
-    for(mesh<dimension>::local_iterator facetIter = m.local_begin(v1Entity, facetDim); facetIter!=m.local_end(v1Entity, facetDim); ++facetIter)
+    for(Mesh<dimension>::local_iterator facetIter = m.local_begin(v1Entity, facetDim); facetIter!=m.local_end(v1Entity, facetDim); ++facetIter)
     {
       const std::vector<std::size_t> vertexIndices(m.getIndices(*facetIter, 0));
       if (std::find(vertexIndices.begin(), vertexIndices.end(), v2) != vertexIndices.end())
@@ -208,12 +208,12 @@ void TriangularMeshBuilder::handlePolygons(std::vector<double>& pointList,
   }
 }
 
-mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() const
+Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() const
 {
   const double sideLength = std::sqrt(2*maxCellArea);
   const int x_size = static_cast<int>(std::ceil(width / sideLength)) + 1;
   const int y_size = static_cast<int>(std::ceil(height / sideLength)) + 1;
-  mesh<dimension> m;
+  Mesh<dimension> m;
 
   assert(x_size > 1);
   assert(y_size > 1);

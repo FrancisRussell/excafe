@@ -140,7 +140,7 @@ public:
     return 3 * detail::Power<dimension, rank>::value;
   }
 
-  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const mesh<dimension>& m, const cell_id cid, const cell_id cid2) const
+  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const Mesh<dimension>& m, const cell_id cid, const cell_id cid2) const
   {
     const std::vector<vertex_id> cid_vertices(m.getIndices(MeshEntity(dimension, cid), 0));
     const std::vector<vertex_id> cid2_vertices(m.getIndices(MeshEntity(dimension, cid2), 0));
@@ -165,7 +165,7 @@ public:
     return common;
   }
 
-  std::vector<unsigned> getBoundaryDegreesOfFreedom(const mesh<dimension>& m, const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
+  std::vector<unsigned> getBoundaryDegreesOfFreedom(const Mesh<dimension>& m, const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
   {
     // Create set of vertices on boundary
     std::set<vertex_id> boundaryVertices;
@@ -191,7 +191,7 @@ public:
     return dofs;
   }
 
-  vertex_type getDofCoordinateGlobal(const mesh<dimension>& m, const cell_id cid, const unsigned dof) const
+  vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);

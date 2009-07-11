@@ -27,7 +27,7 @@ public:
   typedef typename local2global_map::const_iterator const_iterator;
 
 private:
-  const mesh<dimension>* m;
+  const Mesh<dimension>* m;
   std::set<const finite_element_t*> elements;
   local2global_map mapping;
   std::set<unsigned> boundaryDofs;
@@ -66,7 +66,7 @@ public:
   {
   }
 
-  dof_map(const mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+  dof_map(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
           m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
@@ -89,7 +89,7 @@ public:
     boundaryDofs == map.boundaryDofs;
   }
 
-  const mesh<dimension>& getMesh() const
+  const Mesh<dimension>& getMesh() const
   {
     return *m;
   }

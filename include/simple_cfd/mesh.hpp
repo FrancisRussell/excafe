@@ -21,7 +21,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class mesh
+class Mesh
 {
 public:
   static const std::size_t dimension = D;
@@ -54,7 +54,7 @@ private:
   }
 
 public:
-  mesh() : topology(referenceCell), facetLabels(getDimension()-1), boundaryFacets(getDimension()-1)
+  Mesh() : topology(referenceCell), facetLabels(getDimension()-1), boundaryFacets(getDimension()-1)
   {
   }
 
@@ -237,7 +237,7 @@ public:
     return topology;
   }
 
-  virtual ~mesh()
+  virtual ~Mesh()
   {
   }
 };

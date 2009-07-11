@@ -60,13 +60,13 @@ void Tester::testTriangleQuadrature()
   const double area = 50.0;
   const double width = 10.0;
   TriangularMeshBuilder meshBuilder(width, width, area);
-  mesh<cell_type::dimension> m(meshBuilder.buildMesh());
+  Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
   const std::size_t dimension = m.getDimension();
 
   cfd::QuadraturePoints<2> quadrature(m.getReferenceCell().getQuadrature(5));
   const cfd::MeshEntity localCell(dimension, 0);
 
-  for(mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+  for(Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
   {
     // Check the area is correct first
     assertEqual(m.getArea(cellIter->getIndex()), area);
