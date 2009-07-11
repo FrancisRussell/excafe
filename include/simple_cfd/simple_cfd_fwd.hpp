@@ -10,24 +10,6 @@ namespace cfd
 typedef std::size_t vertex_id;
 typedef std::size_t cell_id;
 
-// Cell shapes
-enum shape
-{
-  triangle
-};
-
-// Traits call for shapes
-template<shape s>
-struct shape_dimensions
-{
-};
-
-template<>
-struct shape_dimensions<triangle>
-{
-  static const int dimension = 2;
-};
-
 // Mesh related types
 template<std::size_t D> class Mesh;
 template<unsigned D> class MeshGeometry;

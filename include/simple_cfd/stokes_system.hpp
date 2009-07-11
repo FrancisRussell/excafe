@@ -281,14 +281,12 @@ public:
   }
 };
 
-class Edges : public SubDomain<shape_dimensions<triangle>::dimension>
+class Edges : public SubDomain<2>
 {
 private:
   const double EPSILON;
 
 public:
-  static const unsigned int dimension = shape_dimensions<triangle>::dimension;
-
   Edges() : EPSILON(1e-5)
   {
   }
@@ -299,14 +297,14 @@ public:
   }
 };
 
-class Cylinder : public SubDomain<shape_dimensions<triangle>::dimension>
+class Cylinder : public SubDomain<2>
 {
 public:
   bool inside(const vertex<dimension>& v) const
   {
-    const vertex<2> centre(1.0, 0.5);
+    const vertex<dimension> centre(1.0, 0.5);
     const double radius = 0.15;
-    const vertex<2> offset(centre - v);
+    const vertex<dimension> offset(centre - v);
 
     return (offset[0]*offset[0] + offset[1]*offset[1]) < (radius * radius);
   }
@@ -315,7 +313,7 @@ public:
 class Zero : public Function<2, 1, double>
 {
 public:
-  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v) const
+  virtual Tensor<2, 1, double> evaluate(const vertex<dimension>& v) const
   {
     return Tensor<2, 1, double>();
   }
@@ -331,7 +329,7 @@ public:
   {
   }
 
-  virtual Tensor<2, 1, double> evaluate(const vertex<2>& v) const
+  virtual Tensor<2, 1, double> evaluate(const vertex<dimension>& v) const
   {
     Tensor<2, 1, double> t;
 
