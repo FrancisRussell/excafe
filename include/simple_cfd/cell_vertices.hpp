@@ -41,6 +41,11 @@ public:
     assert(index < vertices.size());
     return vertices[index];
   }
+
+  std::size_t size() const
+  {
+    return vertices.size();
+  }
 };
 
 }

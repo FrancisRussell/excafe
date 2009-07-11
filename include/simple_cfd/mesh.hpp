@@ -209,7 +209,7 @@ public:
     return result;
   }
 
-  std::vector< vertex<dimension> > getCoordinates(const cell_id cid) const
+  CellVertices<dimension> getCoordinates(const cell_id cid) const
   {
     const std::vector<vertex_id> vertex_ids(topology.getIndices(MeshEntity(dimension, cid), 0));
     std::vector< vertex<dimension> > coords;
@@ -217,7 +217,7 @@ public:
     for(std::vector<vertex_id>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
       coords.push_back(getVertex(*vertexIter));
 
-    return coords;
+    return CellVertices<dimension>(coords.begin(), coords.end());
   }
 
   std::vector<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d) const

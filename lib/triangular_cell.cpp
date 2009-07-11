@@ -11,6 +11,7 @@
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
+#include <cell_vertices.hpp>
 
 namespace cfd
 {
@@ -130,7 +131,7 @@ double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& 
 
 double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& b) const
 {
-  const std::vector<vertex_type> vertices(m.getCoordinates(m.getContainingCell(entity)));
+  const CellVertices<dimension> vertices(m.getCoordinates(m.getContainingCell(entity)));
 
   if (entity.getDimension() == 2)
   {
@@ -156,7 +157,7 @@ double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEnti
 
 TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const
 {
-  const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+  const CellVertices<dimension> vertices(m.getCoordinates(cid));
 
   const double xsi = vertex[0];
   const double eta = vertex[1];
@@ -230,7 +231,7 @@ Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(cons
   const std::size_t cid, const std::size_t fid, const vertex_type& v) const
 {
   Tensor<dimension, 1, double> normal;
-  std::vector< vertex<dimension> > cellVertices(m.getCoordinates(cid));
+  const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
   assert(cellVertices.size() == 3);
 
   const std::size_t localFacetID = getLocalIndex(m.getTopology(), cid, MeshEntity(dimension-1, fid));

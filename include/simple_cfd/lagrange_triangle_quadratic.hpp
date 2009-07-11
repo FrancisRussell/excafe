@@ -74,7 +74,8 @@ public:
     const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -124,7 +125,8 @@ public:
     const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);
@@ -182,7 +184,8 @@ public:
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
 
-    std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
     vertices.push_back((vertices[0] + vertices[1])/2);

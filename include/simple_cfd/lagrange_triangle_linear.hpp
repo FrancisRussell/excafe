@@ -64,7 +64,7 @@ public:
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> vertices(m.getCoordinates(cid));
     const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
@@ -87,7 +87,7 @@ public:
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> vertices(m.getCoordinates(cid));
     const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
@@ -113,7 +113,7 @@ public:
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
-    const std::vector<vertex_type> vertices(m.getCoordinates(cid));
+    const CellVertices<dimension> vertices(m.getCoordinates(cid));
     const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
