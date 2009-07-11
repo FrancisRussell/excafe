@@ -70,7 +70,7 @@ void Tester::testTriangleQuadrature()
   {
     // Check the area is correct first
     assertEqual(m.getArea(cellIter->getIndex()), area);
-    const double jacobian = m.getReferenceCell().getJacobian(m, *cellIter, vertex_type(0.0, 0.0));
+    const double jacobian = m.getJacobian(cellIter->getIndex(), vertex_type(0.0, 0.0));
     double accum = 0;
 
     for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)

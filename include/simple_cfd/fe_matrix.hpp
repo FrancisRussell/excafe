@@ -100,9 +100,10 @@ private:
       if (!boundaryIntegral || boundaryFunction(*eIter))
       {
         //FIXME: Assumes constant jacobian
-        const double jacobian = m.getReferenceCell().getJacobian(m, *eIter, vertex_type(0.0, 0.0));
         const std::size_t cid = m.getContainingCell(*eIter);
+        const CellVertices<dimension> vertices(m.getCoordinates(cid));
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+        const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
 
         std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
@@ -115,7 +116,7 @@ private:
         for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(m, *eIter, test, trial,
+              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(vertices, *eIter, localEntity, test, trial,
               quadIter->first) * quadIter->second * jacobian;
 
         matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);

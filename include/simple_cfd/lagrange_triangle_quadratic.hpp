@@ -68,13 +68,12 @@ public:
        0  3  1
   */
 
-  value_type evaluate_tensor(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  value_type evaluate_tensor(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
     std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
@@ -119,13 +118,12 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  gradient_type evaluate_gradient(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
     std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
@@ -177,14 +175,13 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  divergence_type evaluate_divergence(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
 
-    const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
+    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
     std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
 
     // Create interpolated vertices
@@ -345,7 +342,8 @@ public:
   vertex_type getDofCoordinateGlobal(const mesh<cell_type>& m, const cell_id cid, const unsigned dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
-    return referenceCell.reference_to_physical(m, cid, getDofCoordinateLocal(dof));
+    const CellVertices<dimension> vertices = m.getCoordinates(cid);
+    return referenceCell.reference_to_physical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const

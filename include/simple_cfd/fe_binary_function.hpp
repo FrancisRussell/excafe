@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_FE_BINARY_FUNCTION_HPP
 
 #include <utility>
+#include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
 
 namespace cfd
@@ -17,7 +18,7 @@ public:
 
   virtual const finite_element_t* getTestFunction() const = 0;
   virtual const finite_element_t* getTrialFunction() const = 0;
-  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const = 0;
+  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const = 0;
 };
 
 template<typename T>
@@ -46,9 +47,9 @@ public:
     return function.getTrialFunction();
   }
 
-  virtual double evaluate(const mesh<TriangularCell>& m, const MeshEntity& entity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    return function.evaluate(m, entity, testDof, trialDof, location) * scaleFactor;
+    return function.evaluate(vertices, gEntity, lEntity, testDof, trialDof, location) * scaleFactor;
   }
 };
 

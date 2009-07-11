@@ -57,15 +57,15 @@ public:
   {
   }
 
-  value_type evaluate_tensor(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  value_type evaluate_tensor(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
+
+    const double area = referenceCell.getArea(vertices);
+
+    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
-
-    const CellVertices<dimension> vertices(m.getCoordinates(cid));
-    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -80,15 +80,14 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  gradient_type evaluate_gradient(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
+    const double area = referenceCell.getArea(vertices);
+
+    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
-
-    const CellVertices<dimension> vertices(m.getCoordinates(cid));
-    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -106,15 +105,15 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const mesh<cell_type>& m, const std::size_t cid, const unsigned int i, const vertex_type& vRef) const
+  divergence_type evaluate_divergence(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const vertex_type v = referenceCell.reference_to_physical(m, cid, vRef);
+
+    const double area = referenceCell.getArea(vertices);
+
+    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
-
-    const CellVertices<dimension> vertices(m.getCoordinates(cid));
-    const double area = m.getArea(cid);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -195,7 +194,8 @@ public:
   vertex_type getDofCoordinateGlobal(const mesh<cell_type>& m, const cell_id cid, const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
-    return referenceCell.reference_to_physical(m, cid, getDofCoordinateLocal(dof));
+    const CellVertices<dimension> vertices = m.getCoordinates(cid);
+    return referenceCell.reference_to_physical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const

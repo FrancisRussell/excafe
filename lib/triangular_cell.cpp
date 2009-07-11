@@ -120,20 +120,18 @@ QuadraturePoints<2> TriangularCell::getQuadrature(const std::size_t degree) cons
   return points;
 }
 
-double TriangularCell::getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const
+double TriangularCell::getArea(const CellVertices<2>& vertices) const
 {
   // Jacobian is constant so v doesn't matter
   const vertex_type v(0.0, 0.0);
-  const double area = 0.5 * getJacobian(m, entity, v);
+  const double area = 0.5 * getJacobian(vertices, MeshEntity(dimension, 0), v);
   assert(area >= 0.0);
   return area;
 }
 
-double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& b) const
+double TriangularCell::getJacobian(const CellVertices<2>& vertices, const MeshEntity& localEntity, const vertex_type& b) const
 {
-  const CellVertices<dimension> vertices(m.getCoordinates(m.getContainingCell(entity)));
-
-  if (entity.getDimension() == 2)
+  if (localEntity.getDimension() == 2)
   {
     assert(vertices.size() == 3);
     const double jacobian = vertices[0][0] * (vertices[1][1] - vertices[2][1]) +
@@ -141,9 +139,9 @@ double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEnti
                             vertices[2][0] * (vertices[0][1] - vertices[1][1]);
     return jacobian;
   }
-  else if (entity.getDimension() == 1)
+  else if (localEntity.getDimension() == 1)
   {
-    const std::size_t localIndex = getLocalIndex(m.getTopology(), m.getContainingCell(entity), entity);
+    const std::size_t localIndex = localEntity.getIndex();
     const vertex_type difference = vertices[localIndex] - vertices[(localIndex+1)%3];
     return std::sqrt(difference[0] * difference[0] + difference[1] * difference[1]);
   }
@@ -155,10 +153,8 @@ double TriangularCell::getJacobian(const mesh<TriangularCell>& m, const MeshEnti
   return 0.0;
 }
 
-TriangularCell::vertex_type TriangularCell::reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const
+TriangularCell::vertex_type TriangularCell::reference_to_physical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const
 {
-  const CellVertices<dimension> vertices(m.getCoordinates(cid));
-
   const double xsi = vertex[0];
   const double eta = vertex[1];
 
@@ -227,16 +223,13 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const std::siz
 }
 
 
-Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(const mesh<TriangularCell>& m, 
-  const std::size_t cid, const std::size_t fid, const vertex_type& v) const
+Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(const CellVertices<2>& vertices, const std::size_t localFacetID, const vertex_type& v) const
 {
   Tensor<dimension, 1, double> normal;
-  const CellVertices<dimension> cellVertices(m.getCoordinates(cid));
-  assert(cellVertices.size() == 3);
+  assert(vertices.size() == 3);
 
-  const std::size_t localFacetID = getLocalIndex(m.getTopology(), cid, MeshEntity(dimension-1, fid));
-  const vertex_type v1 = cellVertices[localFacetID];
-  const vertex_type v2 = cellVertices[(localFacetID+1)%3];
+  const vertex_type v1 = vertices[localFacetID];
+  const vertex_type v2 = vertices[(localFacetID+1)%3];
 
   const std::size_t zero = 0;
   const std::size_t one = 1;

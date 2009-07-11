@@ -3,6 +3,7 @@
 #include <simple_cfd/dof_map_builder.hpp>
 #include <simple_cfd/mesh_entity.hpp>
 #include <simple_cfd/quadrature_points.hpp>
+#include <simple_cfd/cell_vertices.hpp>
 #include <string>
 #include <vector>
 
@@ -44,13 +45,14 @@ private:
   
     for(typename cfd::mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
+      const cfd::CellVertices<2> vertices = m.getCoordinates(cellIter->getIndex());
       const int dofs = basis.space_dimension();
 
       for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
-          sum += basis.evaluate_tensor(m, cellIter->getIndex(), i, wIter->first).toScalar();
+          sum += basis.evaluate_tensor(vertices, i, wIter->first).toScalar();
 
         assertEqual(1.0, sum);
       }
@@ -94,13 +96,15 @@ private:
       {
         const local_dof_t localDof(dofIter->second[0]);
         const vertex_type location = boost::get<0>(localDof)->getDofCoordinateLocal(boost::get<2>(localDof));
-        const double localDofValue = basis.evaluate_tensor(m, boost::get<1>(localDof), boost::get<2>(localDof), location).toScalar();
+        const cfd::CellVertices<2> localDofCellVertices(m.getCoordinates(boost::get<1>(localDof)));
+        const double localDofValue = basis.evaluate_tensor(localDofCellVertices, boost::get<2>(localDof), location).toScalar();
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
+          const cfd::CellVertices<2> coDofCellVertices(m.getCoordinates(boost::get<1>(coDof)));
           const vertex_type coDofLocation = boost::get<0>(coDof)->getDofCoordinateLocal(boost::get<2>(coDof));
-          const double coDofValue = basis.evaluate_tensor(m, boost::get<1>(coDof), boost::get<2>(coDof), coDofLocation).toScalar();
+          const double coDofValue = basis.evaluate_tensor(coDofCellVertices, boost::get<2>(coDof), coDofLocation).toScalar();
           assertTrue(m.referenceToPhysical(boost::get<1>(localDof), location) == m.referenceToPhysical(boost::get<1>(coDof), coDofLocation));
           assertEqual(localDofValue, coDofValue);
         }

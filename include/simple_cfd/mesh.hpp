@@ -113,17 +113,20 @@ public:
 
   vertex<dimension> referenceToPhysical(const std::size_t cid, const vertex<dimension>& v) const
   {
-    return referenceCell.reference_to_physical(*this, cid, v);
+    const CellVertices<dimension>& vertices(getCoordinates(cid));
+    return referenceCell.reference_to_physical(vertices, v);
   }
 
   double getArea(const std::size_t cid) const
   {
-    return referenceCell.getArea(*this, MeshEntity(dimension, cid));
+    const CellVertices<dimension> vertices(getCoordinates(cid));
+    return referenceCell.getArea(vertices);
   }
 
   double getJacobian(const std::size_t cid, const vertex_type& v) const
   {
-    return referenceCell.getJacobian(*this, MeshEntity(dimension, cid), v);
+    const CellVertices<dimension> vertices(getCoordinates(cid));
+    return referenceCell.getJacobian(vertices, MeshEntity(dimension, 0), v);
   }
 
   void setFacetLabelling(const MeshFunction<int>& f)

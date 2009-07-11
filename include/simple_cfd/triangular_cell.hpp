@@ -35,11 +35,11 @@ public:
   virtual vertex<2> getLocalVertex(const std::size_t index) const;
   virtual std::size_t getLocalIndex(MeshTopology& topology, std::size_t cid, const MeshEntity& entity) const;
   virtual QuadraturePoints<2> getQuadrature(const std::size_t degree) const;
-  double getArea(const mesh<TriangularCell>& m, const MeshEntity& entity) const;
-  double getJacobian(const mesh<TriangularCell>& m, const MeshEntity& entity, const vertex_type& v) const;
-  vertex_type reference_to_physical(const mesh<TriangularCell>& m, const std::size_t cid, const vertex_type& vertex) const;
+  double getArea(const CellVertices<2>& vertices) const;
+  double getJacobian(const CellVertices<2>& vertices, const MeshEntity& localEntity, const vertex_type& v) const;
+  vertex_type reference_to_physical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
-  Tensor<dimension, 1, double> getFacetNormal(const mesh<TriangularCell>& m, const std::size_t cid, const std::size_t fid, const vertex_type& v) const;
+  Tensor<dimension, 1, double> getFacetNormal(const CellVertices<2>& vertices, const std::size_t fid, const vertex_type& v) const;
 };
 
 }

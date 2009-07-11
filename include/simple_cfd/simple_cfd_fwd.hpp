@@ -45,6 +45,7 @@ class MeshEntity;
 class MeshEntityIteratorGlobal;
 class MeshEntityIteratorLocal;
 class Polygon;
+template<std::size_t D> class CellVertices;
 
 // Quadrature related
 class Quadrature;
