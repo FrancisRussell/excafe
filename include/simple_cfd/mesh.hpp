@@ -30,7 +30,7 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  mesh_geometry<dimension> geometry;
+  MeshGeometry<dimension> geometry;
   MeshConnectivity baseConnectivity;
   TriangularCell referenceCell;
   mutable MeshTopology topology;
@@ -227,7 +227,7 @@ public:
     return geometry[vid];
   }
 
-  const mesh_geometry<dimension>& getGeometry() const
+  const MeshGeometry<dimension>& getGeometry() const
   {
     return geometry;
   }

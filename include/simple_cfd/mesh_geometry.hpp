@@ -11,22 +11,23 @@ namespace cfd
 {
 
 template<unsigned int D>
-class mesh_geometry
+class MeshGeometry
 {
 public:
   static const unsigned int dimension = D;
 
 private:
-  boost::shared_ptr< mesh_geometry_impl<D> > impl;
+  typedef MeshGeometryImpl<D> impl_t;
+  boost::shared_ptr<impl_t> impl;
 
   void make_unique()
   {
     if (!impl.unique())
-      impl =  boost::shared_ptr< mesh_geometry_impl<D> >(new mesh_geometry_impl<D>(*impl));
+      impl =  boost::shared_ptr<impl_t>(new impl_t(*impl));
   }
 
 public:
-  mesh_geometry() : impl(new mesh_geometry_impl<D>())
+  MeshGeometry() : impl(new impl_t())
   {
   }
 

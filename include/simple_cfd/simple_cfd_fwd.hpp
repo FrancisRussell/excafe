@@ -30,8 +30,8 @@ struct shape_dimensions<triangle>
 
 // Mesh related types
 template<std::size_t D> class Mesh;
-template<unsigned D> class mesh_geometry;
-template<unsigned D> class mesh_geometry_impl;
+template<unsigned D> class MeshGeometry;
+template<unsigned D> class MeshGeometryImpl;
 template<unsigned int D> class vertex;
 template<typename C> class finite_element;
 template<unsigned int D> class SubDomain;

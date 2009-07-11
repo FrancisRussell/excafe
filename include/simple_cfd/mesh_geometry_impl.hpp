@@ -10,7 +10,7 @@ namespace cfd
 {
 
 template<unsigned int D>
-class mesh_geometry_impl
+class MeshGeometryImpl
 {
 public:
   static const unsigned int dimension = D;
@@ -19,7 +19,7 @@ private:
   std::vector< vertex<dimension> > values;
 
 public:
-  mesh_geometry_impl()
+  MeshGeometryImpl()
   {
   }
 
