@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <boost/tuple/tuple.hpp>
+#include <boost/array.hpp>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
@@ -74,12 +75,14 @@ public:
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
     const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
-    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
+
+    boost::array<vertex_type, 6> vertices;
+    std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
 
     // Create interpolated vertices
-    vertices.push_back((vertices[0] + vertices[1])/2);
-    vertices.push_back((vertices[1] + vertices[2])/2);
-    vertices.push_back((vertices[2] + vertices[0])/2);
+    vertices[3] = (vertices[0] + vertices[1])/2;
+    vertices[4] = (vertices[1] + vertices[2])/2;
+    vertices[5] = (vertices[2] + vertices[0])/2;
 
     int j1, j2, k1, k2;
     if (node_on_cell < 3)
@@ -124,12 +127,14 @@ public:
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
     const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
-    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
+
+    boost::array<vertex_type, 6> vertices;
+    std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
 
     // Create interpolated vertices
-    vertices.push_back((vertices[0] + vertices[1])/2);
-    vertices.push_back((vertices[1] + vertices[2])/2);
-    vertices.push_back((vertices[2] + vertices[0])/2);
+    vertices[3] = (vertices[0] + vertices[1])/2;
+    vertices[4] = (vertices[1] + vertices[2])/2;
+    vertices[5] = (vertices[2] + vertices[0])/2;
 
     int j1, j2, k1, k2;
     if (node_on_cell < 3)
@@ -180,14 +185,15 @@ public:
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-
     const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
-    std::vector<vertex_type> vertices(cellVertices.begin(), cellVertices.end());
+
+    boost::array<vertex_type, 6> vertices;
+    std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
 
     // Create interpolated vertices
-    vertices.push_back((vertices[0] + vertices[1])/2);
-    vertices.push_back((vertices[1] + vertices[2])/2);
-    vertices.push_back((vertices[2] + vertices[0])/2);
+    vertices[3] = (vertices[0] + vertices[1])/2;
+    vertices[4] = (vertices[1] + vertices[2])/2;
+    vertices[5] = (vertices[2] + vertices[0])/2;
 
     int j1, j2, k1, k2;
     if (node_on_cell < 3)
