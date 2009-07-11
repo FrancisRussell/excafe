@@ -20,17 +20,11 @@
 namespace cfd
 {
 
-template<typename C>
+template<std::size_t D>
 class mesh
 {
-};
-
-template<>
-class mesh<TriangularCell>
-{
 public:
-  typedef TriangularCell cell_type;
-  static const unsigned int dimension = cell_type::dimension;
+  static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
   typedef MeshTopology::global_iterator global_iterator;
   typedef MeshTopology::local_iterator local_iterator;

@@ -16,20 +16,21 @@ class TriangularMeshBuilder
 private:
   typedef TriangularCell cell_type;
   typedef TriangularCell::vertex_type vertex_type;
+  static const std::size_t dimension = cell_type::dimension;
   const double width;
   const double height;
   const double maxCellArea;
   std::vector< std::pair<Polygon, int> > polygons;
 
-  mesh<cell_type> buildMeshOld() const;
-  mesh<cell_type> buildMeshTriangle() const;
+  mesh<dimension> buildMeshOld() const;
+  mesh<dimension> buildMeshTriangle() const;
   void handlePolygons(std::vector<double>& pointList, 
     std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
   void addPolygon(const Polygon& polygon, int label);
-  mesh<TriangularCell> buildMesh() const;
+  mesh<dimension> buildMesh() const;
 };
 
 }

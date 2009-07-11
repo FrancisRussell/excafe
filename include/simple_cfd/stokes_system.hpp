@@ -351,13 +351,13 @@ public:
   typedef C cell_type;
 
 private:
-  static const unsigned dimension = cell_type::dimension;
+  static const std::size_t dimension = cell_type::dimension;
   typedef typename cell_type::vertex_type vertex_type;
   typedef finite_element<cell_type> finite_element_t;
   typedef lagrange_triangle_linear<0> pressure_basis_t;
   typedef lagrange_triangle_quadratic<1> velocity_basis_t;
 
-  const mesh<cell_type>& m;
+  const mesh<dimension>& m;
   pressure_basis_t pressure;
   velocity_basis_t velocity;
 
@@ -404,7 +404,7 @@ private:
     BODY
   };
 
-  static dof_map<cell_type> buildDofMap(const mesh<cell_type>& m,
+  static dof_map<cell_type> buildDofMap(const mesh<dimension>& m,
                                         const pressure_basis_t& pressure, 
                                         const velocity_basis_t& velocity)
   {
@@ -415,7 +415,7 @@ private:
   }
 
 public:
-  stokes_system(const mesh<cell_type>& _m) : m(_m), systemDofMap(buildDofMap(m, pressure, velocity)),
+  stokes_system(const mesh<dimension>& _m) : m(_m), systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
                                              viscosity_term(&velocity, &velocity),
@@ -736,7 +736,7 @@ public:
     const vertex_type centre(1.0, 0.5);
     const double radius = 0.15;
 
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
@@ -805,21 +805,21 @@ public:
 
   void render(std::ostream& out)
   {
-    std::vector< vertex<2> > vertices;
+    std::vector< vertex<dimension> > vertices;
     std::vector< std::pair<double, double> > velocities;
 
-    for(typename mesh<cell_type>::global_iterator vIter(m.global_begin(0)); vIter!=m.global_end(0); ++vIter)
+    for(typename mesh<dimension>::global_iterator vIter(m.global_begin(0)); vIter!=m.global_end(0); ++vIter)
     {
-      const vertex<2> v(m.getVertex(vIter->getIndex()));
+      const vertex<dimension> v(m.getVertex(vIter->getIndex()));
       vertices.push_back(v);
 
       const std::size_t cid = m.getContainingCell(*vIter);
       const MeshEntity localVertexEntity = m.getLocalEntity(cid, *vIter);
-      const vertex<2> localVertex = m.getLocalCoordinate(cid, localVertexEntity.getIndex());
+      const vertex<dimension> localVertex = m.getLocalCoordinate(cid, localVertexEntity.getIndex());
       velocities.push_back(getVelocityVector(cid, localVertex));
     }
 
-    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(1)); eIter!=m.global_end(1); ++eIter)
+    for(typename mesh<dimension>::global_iterator eIter(m.global_begin(1)); eIter!=m.global_end(1); ++eIter)
     {
       const std::size_t cid = m.getContainingCell(*eIter);
       const std::vector<std::size_t> vertexIndices(m.getIndices(*eIter, 0));
@@ -828,7 +828,7 @@ public:
       const MeshEntity v1Entity = m.getLocalEntity(cid, MeshEntity(0, vertexIndices[0]));
       const MeshEntity v2Entity = m.getLocalEntity(cid, MeshEntity(0, vertexIndices[1]));
 
-      const vertex<2> localVertex((m.getLocalCoordinate(cid, v1Entity.getIndex()) + m.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
+      const vertex<dimension> localVertex((m.getLocalCoordinate(cid, v1Entity.getIndex()) + m.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
       vertices.push_back(m.referenceToPhysical(cid, localVertex));
       velocities.push_back(getVelocityVector(cid, localVertex));
     }
@@ -841,12 +841,12 @@ public:
 
     for(std::size_t point = 0; point < vertices.size(); ++point)
     {
-      const vertex<2> v(vertices[point]);
+      const vertex<dimension> v(vertices[point]);
       out << v[0] << " " << v[1] << " 0" << std::endl;
     }
 
     out << "POLYGONS " << m.numEntities(dimension) << " " << m.numRelations(dimension, 0)+m.numEntities(dimension)  << std::endl; 
-    for(typename mesh<cell_type>::global_iterator cIter(m.global_begin(dimension)); cIter!=m.global_end(dimension); ++cIter)
+    for(typename mesh<dimension>::global_iterator cIter(m.global_begin(dimension)); cIter!=m.global_end(dimension); ++cIter)
     {
       const std::vector<std::size_t> vIndices(m.getIndices(*cIter, 0));
       out << vIndices.size();

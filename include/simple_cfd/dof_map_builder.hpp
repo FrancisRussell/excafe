@@ -20,12 +20,13 @@ private:
   typedef C cell_type;
   typedef finite_element<cell_type> finite_element_type;
   typedef std::map<boost::tuple<const finite_element_type*, cell_id, unsigned>, unsigned> local2global_map;
+  static const std::size_t dimension = cell_type::dimension;
 
-  const mesh<cell_type>& m;
+  const mesh<dimension>& m;
   std::set<const finite_element_type*> elements;
 
 public:
-  dof_map_builder(const mesh<cell_type>& _m) : m(_m)
+  dof_map_builder(const mesh<dimension>& _m) : m(_m)
   {
   }
 
@@ -36,13 +37,13 @@ public:
 
   dof_map<cell_type> getDofMap() const
   {
-    const std::size_t dimension = m.getDimension();
+    const std::size_t mesh_dimension = m.getDimension();
     std::size_t counter = 0;
     local2global_map local2global;
     std::set<unsigned> boundaryDofs;
 
     // Iterate over all cells in order
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
     {
       // Iterate over finite elements
       for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
@@ -103,7 +104,7 @@ public:
 
     // Record degrees of freedom that lie on a boundary
     const std::vector< std::pair<vertex_id, vertex_id> > boundary(m.getEdgeFacets());
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
     {
       for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
       {

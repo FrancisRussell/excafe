@@ -36,14 +36,14 @@ private:
     
     typedef typename basis_t::cell_type cell_type;
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
-    cfd::mesh<cell_type> m(meshBuilder.buildMesh());
+    cfd::mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
     basis_t basis;
 
     cfd::QuadraturePoints<2> quadrature(m.getReferenceCell().getQuadrature(5));
     const cfd::MeshEntity localCell(dimension, 0);
   
-    for(typename cfd::mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename cfd::mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       const cfd::CellVertices<2> vertices = m.getCoordinates(cellIter->getIndex());
       const int dofs = basis.space_dimension();
@@ -76,7 +76,7 @@ private:
     typedef typename std::map< global_dof_t, std::vector<local_dof_t> > global2local_map;
 
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
-    cfd::mesh<cell_type> m(meshBuilder.buildMesh());
+    cfd::mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     basis_t basis;
 
     cfd::dof_map_builder<cell_type> mapBuilder(m);

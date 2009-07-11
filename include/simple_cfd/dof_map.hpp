@@ -22,11 +22,12 @@ public:
   typedef finite_element<cell_type> finite_element_t;
   typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
+  static const std::size_t dimension = cell_type::dimension;
 
   typedef typename local2global_map::const_iterator const_iterator;
 
 private:
-  const mesh<cell_type>* m;
+  const mesh<dimension>* m;
   std::set<const finite_element_t*> elements;
   local2global_map mapping;
   std::set<unsigned> boundaryDofs;
@@ -65,7 +66,7 @@ public:
   {
   }
 
-  dof_map(const mesh<cell_type>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+  dof_map(const mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
           m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
@@ -88,7 +89,7 @@ public:
     boundaryDofs == map.boundaryDofs;
   }
 
-  const mesh<cell_type>& getMesh() const
+  const mesh<dimension>& getMesh() const
   {
     return *m;
   }

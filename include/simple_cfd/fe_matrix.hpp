@@ -38,13 +38,12 @@ private:
     const unsigned colDofs = colMappings.getDegreesOfFreedomCount();
 
     SparsityPattern pattern(rowDofs, colDofs);
-    const mesh<cell_type> m(rowMappings.getMesh());
-    const std::size_t dimension = m.getDimension();
+    const mesh<dimension> m(rowMappings.getMesh());
 
     const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
 
-    for(typename mesh<cell_type>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       for(typename std::set<const finite_element_t*>::const_iterator rowElemIter(rowElements.begin()); rowElemIter!=rowElements.end(); ++rowElemIter)
       {
@@ -72,7 +71,7 @@ private:
     return pattern;
   }
 
-  void addTermGeneral(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f, const bool boundaryIntegral)
+  void addTermGeneral(const mesh<dimension>& m, const FEBinaryFunction<cell_type>& f, const bool boundaryIntegral)
   {
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
@@ -95,7 +94,7 @@ private:
     const std::size_t degree = 5;
     const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
 
-    for(typename mesh<cell_type>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    for(typename mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
     {
       if (!boundaryIntegral || boundaryFunction(*eIter))
       {
@@ -175,12 +174,12 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-  void addTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
+  void addTerm(const mesh<dimension>& m, const FEBinaryFunction<cell_type>& f)
   {
     addTermGeneral(m, f, false);
   }
 
-  void addBoundaryTerm(const mesh<cell_type>& m, const FEBinaryFunction<cell_type>& f)
+  void addBoundaryTerm(const mesh<dimension>& m, const FEBinaryFunction<cell_type>& f)
   {
     addTermGeneral(m, f, true);
   }
