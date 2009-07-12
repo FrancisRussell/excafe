@@ -343,7 +343,7 @@ public:
 };
 
 template<typename C>
-class stokes_system
+class StokesSystem
 {
 public:
   typedef C cell_type;
@@ -413,7 +413,7 @@ private:
   }
 
 public:
-  stokes_system(const Mesh<dimension>& _m) : m(_m), systemDofMap(buildDofMap(m, pressure, velocity)),
+  StokesSystem(const Mesh<dimension>& _m) : m(_m), systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
                                              viscosity_term(&velocity, &velocity),

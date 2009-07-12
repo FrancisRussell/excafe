@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
   Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
 
   std::cout << "Constructing system..." << std::endl;
-  stokes_system<cell_type> system(m);
+  StokesSystem<cell_type> system(m);
 
   for(int i=0; i<6000; ++i)
   {
