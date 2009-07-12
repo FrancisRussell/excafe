@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
+#include <memory>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <numeric/tensor.hpp>
@@ -23,11 +24,6 @@ TriangularCell::TriangularCell() : localVertices(buildLocalVertices())
 std::size_t TriangularCell::getDimension() const
 {
   return dimension;
-}
-
-std::size_t TriangularCell::getVerticesPerCell() const
-{
-  return vertex_count;
 }
 
 std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value)
@@ -153,7 +149,7 @@ double TriangularCell::getJacobian(const CellVertices<2>& vertices, const MeshEn
   return 0.0;
 }
 
-TriangularCell::vertex_type TriangularCell::reference_to_physical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const
+TriangularCell::vertex_type TriangularCell::referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const
 {
   const double xsi = vertex[0];
   const double eta = vertex[1];
@@ -257,6 +253,23 @@ std::vector<TriangularCell::vertex_type> TriangularCell::buildLocalVertices()
   vertices.push_back(vertex_type(1.0, 0.0));
   vertices.push_back(vertex_type(0.0, 1.0));
   return vertices;
+}
+
+std::size_t TriangularCell::numEntities(const std::size_t d) const
+{
+  assert(d <= dimension);
+  std::size_t numEntitiesArray[dimension+1] = {3, 3, 1};
+  return numEntitiesArray[d];
+}
+
+std::auto_ptr< GeneralCell<TriangularCell::dimension> > TriangularCell::cloneGeneralCell() const
+{
+  return std::auto_ptr< GeneralCell<dimension> >(new TriangularCell(*this));
+}
+
+std::auto_ptr<MeshCell> TriangularCell::cloneMeshCell() const
+{
+  return std::auto_ptr<MeshCell>(new TriangularCell(*this));
 }
 
 }

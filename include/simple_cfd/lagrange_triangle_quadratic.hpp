@@ -74,7 +74,7 @@ public:
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -126,7 +126,7 @@ public:
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -185,7 +185,7 @@ public:
     assert(i < space_dimension());
     const unsigned node_on_cell = i % 6;
     const unsigned index_into_tensor = i / 6;
-    const vertex_type v = referenceCell.reference_to_physical(cellVertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -349,7 +349,7 @@ public:
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.reference_to_physical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const

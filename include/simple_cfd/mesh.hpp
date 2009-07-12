@@ -6,7 +6,8 @@
 #include <vector>
 #include <utility>
 #include <cassert>
-#include <iostream>
+#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
 #include "mesh_connectivity.hpp"
@@ -14,6 +15,7 @@
 #include "mesh_function.hpp"
 #include "utility.hpp"
 #include "triangular_cell.hpp"
+#include "general_cell.hpp"
 #include "dof_map.hpp"
 #include "cell_vertices.hpp"
 
@@ -30,12 +32,12 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  MeshGeometry<dimension> geometry;
-  MeshConnectivity baseConnectivity;
-  TriangularCell referenceCell;
+  boost::scoped_ptr< GeneralCell<dimension> > referenceCell;
   mutable MeshTopology topology;
+  MeshGeometry<dimension> geometry;
   MeshFunction<int> facetLabels;
   MeshFunction<bool> boundaryFacets;
+  MeshConnectivity baseConnectivity;
 
   MeshFunction<bool> buildBoundaryFunction() const
   {
@@ -54,13 +56,19 @@ private:
   }
 
 public:
-  Mesh() : topology(referenceCell), facetLabels(getDimension()-1), boundaryFacets(getDimension()-1)
+  Mesh(const GeneralCell<dimension>& cell) : referenceCell(cell.cloneGeneralCell()), topology(*referenceCell), facetLabels(getDimension()-1), 
+    boundaryFacets(getDimension()-1)
+  {
+  }
+
+  Mesh(const Mesh& m) : referenceCell(m.referenceCell->cloneGeneralCell()), topology(m.topology), geometry(m.geometry),
+    facetLabels(m.facetLabels), boundaryFacets(m.boundaryFacets), baseConnectivity(m.baseConnectivity)
   {
   }
 
   std::size_t getDimension() const
   {
-    return referenceCell.getDimension();
+    return referenceCell->getDimension();
   }
 
   const vertex_id addVertex(const vertex_type& v)
@@ -70,14 +78,14 @@ public:
 
   const cell_id addCell(const std::vector<std::size_t> vertexIndices)
   {
-    assert(vertexIndices.size() == referenceCell.getVerticesPerCell());
+    assert(vertexIndices.size() == referenceCell->numEntities(0));
     const cell_id cid = baseConnectivity.addEntity(vertexIndices.begin(), vertexIndices.end());
     return cid;
   }
 
-  const GeneralCell& getReferenceCell() const
+  const GeneralCell<dimension>& getReferenceCell() const
   {
-    return referenceCell;
+    return *referenceCell;
   }
 
   std::size_t getContainingCell(const MeshEntity& entity) const
@@ -96,31 +104,31 @@ public:
     if (entity.getDimension() == dimension)
       return MeshEntity(dimension, 0);
 
-    const std::size_t index = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t index = referenceCell->getLocalIndex(topology, cid, entity);
     return MeshEntity(entity.getDimension(), index);
   }
 
   vertex<dimension> getLocalCoordinate(const std::size_t cid, const std::size_t vid) const
   {
-    return referenceCell.getLocalVertex(vid);
+    return referenceCell->getLocalVertex(vid);
   }
 
   vertex<dimension> referenceToPhysical(const std::size_t cid, const vertex<dimension>& v) const
   {
     const CellVertices<dimension>& vertices(getCoordinates(cid));
-    return referenceCell.reference_to_physical(vertices, v);
+    return referenceCell->referenceToPhysical(vertices, v);
   }
 
   double getArea(const std::size_t cid) const
   {
     const CellVertices<dimension> vertices(getCoordinates(cid));
-    return referenceCell.getArea(vertices);
+    return referenceCell->getArea(vertices);
   }
 
   double getJacobian(const std::size_t cid, const vertex_type& v) const
   {
     const CellVertices<dimension> vertices(getCoordinates(cid));
-    return referenceCell.getJacobian(vertices, MeshEntity(dimension, 0), v);
+    return referenceCell->getJacobian(vertices, MeshEntity(dimension, 0), v);
   }
 
   void setFacetLabelling(const MeshFunction<int>& f)

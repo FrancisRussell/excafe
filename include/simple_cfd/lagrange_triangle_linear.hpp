@@ -63,7 +63,7 @@ public:
 
     const double area = referenceCell.getArea(vertices);
 
-    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
@@ -85,7 +85,7 @@ public:
     assert(i < space_dimension());
     const double area = referenceCell.getArea(vertices);
 
-    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
@@ -111,7 +111,7 @@ public:
 
     const double area = referenceCell.getArea(vertices);
 
-    const vertex_type v = referenceCell.reference_to_physical(vertices, vRef);
+    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
     const unsigned node_on_cell = i % 3;
     const unsigned index_into_tensor = i / 3;
 
@@ -195,7 +195,7 @@ public:
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.reference_to_physical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const unsigned dof) const

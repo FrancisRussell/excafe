@@ -1,5 +1,5 @@
 #include <mesh_topology.hpp>
-#include <general_cell.hpp>
+#include <mesh_cell.hpp>
 #include <iterator>
 #include <set>
 #include <vector>
@@ -8,8 +8,13 @@
 namespace cfd
 {
 
-MeshTopology::MeshTopology(const GeneralCell& _cell) : cell(_cell), dimension(cell.getDimension()), 
+MeshTopology::MeshTopology(const MeshCell& _cell) : cell(_cell.cloneMeshCell()), dimension(cell->getDimension()), 
   relations(numConnectivityRelations(dimension))
+{
+}
+
+MeshTopology::MeshTopology(const MeshTopology& t) : cell(t.cell->cloneMeshCell()), dimension(t.dimension), 
+ relations(t.relations)
 {
 }
 
@@ -147,14 +152,14 @@ void MeshTopology::performBuild(const std::size_t d)
 
   for(global_iterator cellIter(global_begin(dimension)); cellIter!=global_end(dimension); ++cellIter)
   {
-    const std::vector< std::set<std::size_t> > vi(cell.getIncidentVertices(*this, *cellIter, d));
+    const std::vector< std::set<std::size_t> > vi(cell->getIncidentVertices(*this, *cellIter, d));
     std::set< std::set<std::size_t> > seen;
 
     for(local_iterator iCellIter(local_begin(*cellIter, dimension)); iCellIter!=local_end(*cellIter, dimension); ++iCellIter)
     {
       if (iCellIter->getIndex() < cellIter->getIndex())
       {
-        const std::vector< std::set<std::size_t> > vj(cell.getIncidentVertices(*this, *iCellIter, d));
+        const std::vector< std::set<std::size_t> > vj(cell->getIncidentVertices(*this, *iCellIter, d));
         seen.insert(vj.begin(), vj.end());
       }
     }

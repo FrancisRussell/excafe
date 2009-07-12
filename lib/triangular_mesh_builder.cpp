@@ -6,12 +6,13 @@
 #include <string>
 #include <utility>
 #include <iterator>
-#include <simple_cfd_fwd.hpp>
-#include <triangular_mesh_builder.hpp>
-#include <mesh.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libtriangle.hpp>
+#include <simple_cfd_fwd.hpp>
+#include <triangular_mesh_builder.hpp>
+#include <triangular_cell.hpp>
+#include <mesh.hpp>
 
 namespace cfd
 {
@@ -121,7 +122,8 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
 
   triangulate(options.get(), &in, &out, NULL);
 
-  Mesh<dimension> m;
+  const TriangularCell cell;
+  Mesh<dimension> m(cell);
 
   for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
   {
@@ -213,7 +215,9 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() con
   const double sideLength = std::sqrt(2*maxCellArea);
   const int x_size = static_cast<int>(std::ceil(width / sideLength)) + 1;
   const int y_size = static_cast<int>(std::ceil(height / sideLength)) + 1;
-  Mesh<dimension> m;
+
+  const TriangularCell cell;
+  Mesh<dimension> m(cell);
 
   assert(x_size > 1);
   assert(y_size > 1);

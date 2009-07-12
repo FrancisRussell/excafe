@@ -19,6 +19,8 @@ template<typename C> class FiniteElement;
 template<unsigned int D> class SubDomain;
 template<unsigned int D, unsigned int R, typename T> class Function;
 template<typename T> class MeshFunction;
+class MeshCell;
+template<std::size_t> class GeneralCell;
 class TriangularCell;
 class MeshTopology;
 class MeshConnectivity;

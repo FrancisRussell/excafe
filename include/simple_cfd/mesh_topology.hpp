@@ -4,7 +4,8 @@
 #include <mesh_connectivity.hpp>
 #include <mesh_entity_iterator_global.hpp>
 #include <mesh_entity_iterator_local.hpp>
-#include <general_cell.hpp>
+#include <mesh_cell.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <cstddef>
 #include <cassert>
 #include <vector>
@@ -19,7 +20,7 @@ private:
   friend class MeshEntityIteratorGlobal;
   friend class MeshEntityIteratorLocal;
 
-  const GeneralCell& cell;
+  boost::scoped_ptr<MeshCell> cell;
   const std::size_t dimension;
   std::vector<MeshConnectivity> relations;
 
@@ -38,7 +39,9 @@ public:
   typedef MeshEntityIteratorGlobal global_iterator;
   typedef MeshEntityIteratorLocal local_iterator;
 
-  MeshTopology(const GeneralCell& _cell);
+  MeshTopology(const MeshCell& _cell);
+  MeshTopology(const MeshTopology& t);
+
   void setBaseConnectivity(const MeshConnectivity& connectivity);
   std::size_t numEntities(const std::size_t d);
   std::size_t numRelations(const MeshEntity& entity, const std::size_t d);
