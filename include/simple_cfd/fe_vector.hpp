@@ -5,6 +5,7 @@
 #include <ostream>
 #include <iostream>
 #include "numeric/vector.hpp"
+#include "dof_map.hpp"
 
 namespace cfd
 {
@@ -14,9 +15,9 @@ class FEVector
 {
 private:
   typedef C cell_type;
-  typedef finite_element<cell_type> finite_element_t;
-  typedef typename dof_map<cell_type>::dof_t dof_t;
-  const dof_map<cell_type> rowMappings;
+  typedef FiniteElement<cell_type> finite_element_t;
+  typedef typename DofMap<cell_type>::dof_t dof_t;
+  const DofMap<cell_type> rowMappings;
   PETScVector vector;
   
   void addOrSetValues(const unsigned rows, const dof_t* rowDofs, const double* values, const bool add)
@@ -34,11 +35,11 @@ private:
   }
 
 public:
-  FEVector(const dof_map<cell_type>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
+  FEVector(const DofMap<cell_type>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
   {
   }
 
-  FEVector(const dof_map<cell_type>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
+  FEVector(const DofMap<cell_type>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
                                                                            vector(v)
   {
   }
@@ -47,7 +48,7 @@ public:
   {
   }
 
-  dof_map<cell_type> getRowMappings() const
+  DofMap<cell_type> getRowMappings() const
   {
     return rowMappings;
   }

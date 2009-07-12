@@ -16,7 +16,7 @@ namespace cfd
 {
 
 template<unsigned R>
-class lagrange_triangle_linear : public finite_element<TriangularCell>
+class LagrangeTriangleLinear : public FiniteElement<TriangularCell>
 {
 public:
   typedef TriangularCell cell_type;
@@ -53,7 +53,7 @@ public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
-  lagrange_triangle_linear()
+  LagrangeTriangleLinear()
   {
   }
 
@@ -212,10 +212,10 @@ public:
     return dof/3;
   }
 
-  virtual std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
-    std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > result;
+    std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > result;
 
     if (entity.getDimension() == 2 || entity.getDimension() == 1) return result;
 

@@ -9,33 +9,34 @@
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
+#include "dof_map.hpp"
 
 namespace cfd
 {
 
 template<typename C>
-class dof_map_builder
+class DofMapBuilder
 {
 private:
   typedef C cell_type;
-  typedef finite_element<cell_type> finite_element_type;
-  typedef std::map<boost::tuple<const finite_element_type*, cell_id, unsigned>, unsigned> local2global_map;
+  typedef FiniteElement<cell_type> finite_element_t;
+  typedef std::map<boost::tuple<const finite_element_t*, cell_id, unsigned>, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;
 
   const Mesh<dimension>& m;
-  std::set<const finite_element_type*> elements;
+  std::set<const finite_element_t*> elements;
 
 public:
-  dof_map_builder(const Mesh<dimension>& _m) : m(_m)
+  DofMapBuilder(const Mesh<dimension>& _m) : m(_m)
   {
   }
 
-  void addFiniteElement(const finite_element<cell_type>& element)
+  void addFiniteElement(const FiniteElement<cell_type>& element)
   {
     elements.insert(&element);
   }
 
-  dof_map<cell_type> getDofMap() const
+  DofMap<cell_type> getDofMap() const
   {
     const std::size_t mesh_dimension = m.getDimension();
     std::size_t counter = 0;
@@ -46,7 +47,7 @@ public:
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
     {
       // Iterate over finite elements
-      for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
+      for(typename std::set<const FiniteElement<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
       {
         // Add in all degrees of freedom for current cell
         for(unsigned dof=0; dof<(*elementIter)->space_dimension(); ++dof)
@@ -106,7 +107,7 @@ public:
     const std::vector< std::pair<vertex_id, vertex_id> > boundary(m.getEdgeFacets());
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
     {
-      for(typename std::set<const finite_element<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
+      for(typename std::set<const FiniteElement<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
       {
         const std::vector<unsigned> localDofs((*elementIter)->getBoundaryDegreesOfFreedom(m, cellIter->getIndex(), boundary));
         for(std::vector<unsigned>::const_iterator localDofIter(localDofs.begin()); localDofIter!=localDofs.end(); ++localDofIter)
@@ -119,7 +120,7 @@ public:
       }
     }
 
-    return dof_map<cell_type>(m, elements, local2global, boundaryDofs);
+    return DofMap<cell_type>(m, elements, local2global, boundaryDofs);
   }
 };
 

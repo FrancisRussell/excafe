@@ -16,7 +16,7 @@ namespace cfd
 {
 
 template<unsigned int R>
-class lagrange_triangle_quadratic : public finite_element<TriangularCell>
+class LagrangeTriangleQuadratic : public FiniteElement<TriangularCell>
 {
 public:
   typedef TriangularCell cell_type;
@@ -50,7 +50,7 @@ private:
   }
 
 public:
-  lagrange_triangle_quadratic()
+  LagrangeTriangleQuadratic()
   {
   }
 
@@ -376,10 +376,10 @@ public:
     return dof/6;
   }
 
-  virtual std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t entityIndex = referenceCell.getLocalIndex(topology, cid, entity);
-    std::set< boost::tuple<const finite_element<cell_type>*, cell_id, std::size_t> > result;
+    std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > result;
 
     if (entity.getDimension() == 2) return result;
 

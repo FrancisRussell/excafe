@@ -107,20 +107,20 @@ void Tester::testQuadrature(const std::map<double, double>& q)
 
 void Tester::testLinearBasis()
 {
-  testBasis< lagrange_triangle_linear<0> >("linear");
+  testBasis< LagrangeTriangleLinear<0> >("linear");
 }
 
 void Tester::testQuadraticBasis()
 {
-  testBasis< lagrange_triangle_quadratic<0> >("quadratic");
+  testBasis< LagrangeTriangleQuadratic<0> >("quadratic");
 }
 
 void Tester::testLinearBasisDofs()
 {
-  testBasisDofs< lagrange_triangle_linear<0> >("linear");
+  testBasisDofs< LagrangeTriangleLinear<0> >("linear");
 }
 
 void Tester::testQuadraticBasisDofs()
 {
-  testBasisDofs< lagrange_triangle_quadratic<0> >("quadratic");
+  testBasisDofs< LagrangeTriangleQuadratic<0> >("quadratic");
 }

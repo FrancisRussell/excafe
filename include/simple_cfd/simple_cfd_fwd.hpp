@@ -15,7 +15,7 @@ template<std::size_t D> class Mesh;
 template<unsigned D> class MeshGeometry;
 template<unsigned D> class MeshGeometryImpl;
 template<unsigned int D> class vertex;
-template<typename C> class finite_element;
+template<typename C> class FiniteElement;
 template<unsigned int D> class SubDomain;
 template<unsigned int D, unsigned int R, typename T> class Function;
 template<typename T> class MeshFunction;

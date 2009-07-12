@@ -23,16 +23,16 @@ class FEMatrix
 private:
   typedef C cell_type;
   typedef typename  cell_type::vertex_type vertex_type;
-  typedef finite_element<cell_type> finite_element_t;
-  typedef typename dof_map<cell_type>::dof_t dof_t;
+  typedef FiniteElement<cell_type> finite_element_t;
+  typedef typename DofMap<cell_type>::dof_t dof_t;
   static const std::size_t dimension = cell_type::dimension;
 
-  const dof_map<cell_type> rowMappings;
-  const dof_map<cell_type> colMappings;
+  const DofMap<cell_type> rowMappings;
+  const DofMap<cell_type> colMappings;
   PETScMatrix matrix;
 
-  static SparsityPattern createSparsityPattern(const dof_map<cell_type>& rowMappings,
-                                               const dof_map<cell_type>& colMappings)
+  static SparsityPattern createSparsityPattern(const DofMap<cell_type>& rowMappings,
+                                               const DofMap<cell_type>& colMappings)
   {
     const unsigned rowDofs = rowMappings.getDegreesOfFreedomCount();
     const unsigned colDofs = colMappings.getDegreesOfFreedomCount();
@@ -124,7 +124,7 @@ private:
   }
 
 public:
-  FEMatrix(const dof_map<cell_type>& _rowMappings, const dof_map<cell_type>& _colMappings) :
+  FEMatrix(const DofMap<cell_type>& _rowMappings, const DofMap<cell_type>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
   {
     // Make sure the degree-of-freedom maps are defined on the same mesh. Calculating a
@@ -132,7 +132,7 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
-  FEMatrix(const dof_map<cell_type>& _rowMappings, const dof_map<cell_type>& _colMappings, const PETScMatrix& m) :
+  FEMatrix(const DofMap<cell_type>& _rowMappings, const DofMap<cell_type>& _colMappings, const PETScMatrix& m) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(m)
   {
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
@@ -142,12 +142,12 @@ public:
   {
   }
 
-  dof_map<cell_type> getRowMappings() const
+  DofMap<cell_type> getRowMappings() const
   {
     return rowMappings;
   }
 
-  dof_map<cell_type> getColMappings() const
+  DofMap<cell_type> getColMappings() const
   {
     return colMappings;
   }

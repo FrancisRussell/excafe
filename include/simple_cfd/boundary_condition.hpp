@@ -31,7 +31,7 @@ public:
     BOOST_STATIC_ASSERT(dimension == finite_element_t::dimension);
 
     typedef typename finite_element_t::cell_type cell_type;
-    typedef dof_map<typename finite_element_t::cell_type> dof_map_type;
+    typedef DofMap<typename finite_element_t::cell_type> dof_map_type;
     typedef typename dof_map_type::dof_t dof_t;
 
     const dof_map_type dofMap(boundaryValues.getRowMappings());

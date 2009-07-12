@@ -15,11 +15,11 @@ namespace cfd
 {
 
 template<typename C>
-class dof_map
+class DofMap
 {
 public:
   typedef C cell_type;
-  typedef finite_element<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type> finite_element_t;
   typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;
@@ -58,15 +58,15 @@ private:
   }
 
 public:
-  dof_map()
+  DofMap()
   {
   }
 
-  dof_map(const dof_map& d) : m(d.m), elements(d.elements), mapping(d.mapping), boundaryDofs(d.boundaryDofs)
+  DofMap(const DofMap& d) : m(d.m), elements(d.elements), mapping(d.mapping), boundaryDofs(d.boundaryDofs)
   {
   }
 
-  dof_map(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
+  DofMap(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
           m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
   {
   }
@@ -81,7 +81,7 @@ public:
     return mapping.end();
   }
 
-  bool operator==(const dof_map& map) const
+  bool operator==(const DofMap& map) const
   {
     return m == map.m &&
     elements == map.elements &&
@@ -141,7 +141,7 @@ public:
     return global2local;
   }
 
-  dof_map extractDofs(const finite_element_t* element) const
+  DofMap extractDofs(const finite_element_t* element) const
   {
     std::set<const finite_element_t*> newElements;
     std::set<unsigned> newDofs;
@@ -165,12 +165,12 @@ public:
     std::set<unsigned> newBoundaryDofs;
     std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
 
-    dof_map result(*m, newElements, newMapping, newBoundaryDofs);
+    DofMap result(*m, newElements, newMapping, newBoundaryDofs);
     result.makeContiguous();
     return result;
   }
 
-  std::pair<dof_map, dof_map> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >& dirichletConditions)
+  std::pair<DofMap, DofMap> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >& dirichletConditions)
   {
     local2global_map homogeneous;
     std::set<const finite_element_t*> homogeneousElements;
@@ -211,8 +211,8 @@ public:
       }
     }
 
-    dof_map homogeneousMap(*m, homogeneousElements, homogeneous, homogeneousBoundaryDofs);
-    dof_map dirichletMap(*m, dirichletElements, dirichlet, dirichletBoundaryDofs);
+    DofMap homogeneousMap(*m, homogeneousElements, homogeneous, homogeneousBoundaryDofs);
+    DofMap dirichletMap(*m, dirichletElements, dirichlet, dirichletBoundaryDofs);
 
     homogeneousMap.makeContiguous();
     dirichletMap.makeContiguous();
@@ -220,7 +220,7 @@ public:
     return std::make_pair(homogeneousMap, dirichletMap);
   }
 
-  std::vector<int> getIndices(const dof_map& map) const
+  std::vector<int> getIndices(const DofMap& map) const
   {
     std::vector<int> result(getDegreesOfFreedomCount());
     

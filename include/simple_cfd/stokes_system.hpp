@@ -351,20 +351,20 @@ public:
 private:
   static const std::size_t dimension = cell_type::dimension;
   typedef typename cell_type::vertex_type vertex_type;
-  typedef finite_element<cell_type> finite_element_t;
-  typedef lagrange_triangle_linear<0> pressure_basis_t;
-  typedef lagrange_triangle_quadratic<1> velocity_basis_t;
+  typedef FiniteElement<cell_type> finite_element_t;
+  typedef LagrangeTriangleLinear<0> pressure_basis_t;
+  typedef LagrangeTriangleQuadratic<1> velocity_basis_t;
 
   const Mesh<dimension>& m;
   pressure_basis_t pressure;
   velocity_basis_t velocity;
 
-  dof_map<cell_type> systemDofMap;
-  dof_map<cell_type> velocityDofMap;
-  dof_map<cell_type> pressureDofMap;
+  DofMap<cell_type> systemDofMap;
+  DofMap<cell_type> velocityDofMap;
+  DofMap<cell_type> pressureDofMap;
 
-  dof_map<cell_type> velocityDofMapHomogeneous;
-  dof_map<cell_type> velocityDofMapDirichlet;
+  DofMap<cell_type> velocityDofMapHomogeneous;
+  DofMap<cell_type> velocityDofMapDirichlet;
 
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> viscosity_term;
   GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> viscosity_boundary_term;
@@ -402,11 +402,11 @@ private:
     BODY
   };
 
-  static dof_map<cell_type> buildDofMap(const Mesh<dimension>& m,
+  static DofMap<cell_type> buildDofMap(const Mesh<dimension>& m,
                                         const pressure_basis_t& pressure, 
                                         const velocity_basis_t& velocity)
   {
-    dof_map_builder<cell_type> mapBuilder(m);
+    DofMapBuilder<cell_type> mapBuilder(m);
     mapBuilder.addFiniteElement(pressure);
     mapBuilder.addFiniteElement(velocity);
     return mapBuilder.getDofMap();
@@ -437,7 +437,7 @@ public:
     boundaryConditions.push_back(std::make_pair(&velocity, &edges));
     boundaryConditions.push_back(std::make_pair(&velocity, &cylinder));
 
-    const std::pair< dof_map<cell_type>, dof_map<cell_type> > splitDofs(velocityDofMap.splitHomogeneousDirichlet(boundaryConditions));
+    const std::pair< DofMap<cell_type>, DofMap<cell_type> > splitDofs(velocityDofMap.splitHomogeneousDirichlet(boundaryConditions));
     velocityDofMapHomogeneous = splitDofs.first;
     velocityDofMapDirichlet = splitDofs.second;
   }
@@ -685,7 +685,7 @@ public:
       
       if (getLocation(position) == LEFT_EDGE)
       {
-        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
         stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
         // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
@@ -712,7 +712,7 @@ public:
 
       if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
       {
-        const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
+        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
         stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
         const double rhs = 0.0;
@@ -743,7 +743,7 @@ public:
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
-          const typename dof_map<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
+          const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -790,7 +790,7 @@ public:
     for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
     {
       Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
-      const typename dof_map<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cid, dof);
+      const typename DofMap<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cid, dof);
 
       double velocityCoeff;
       velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);
