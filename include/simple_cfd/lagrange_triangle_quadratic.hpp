@@ -330,15 +330,16 @@ public:
   vertex_type getDofCoordinateLocal(const unsigned dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
+    const std::pair<MeshEntity, std::size_t> location = dofNumbering.getLocalLocation(dof);
 
-    if (dof%6 < 3)
+    if (location.first.getDimension() == 0)
     {
-      return referenceCell.getLocalVertex(dof%6);
+      return referenceCell.getLocalVertex(location.first.getIndex());
     }
     else
     {
-      const int vid1 = (dof%6 - 3)%3;
-      const int vid2 = (dof%6 - 2)%3;
+      const int vid1 = (location.first.getIndex())%3;
+      const int vid2 = (location.first.getIndex()+1)%3;
       return (referenceCell.getLocalVertex(vid1) + referenceCell.getLocalVertex(vid2))/2.0;
     }
   }

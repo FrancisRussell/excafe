@@ -189,7 +189,8 @@ public:
   vertex_type getDofCoordinateLocal(const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
-    return referenceCell.getLocalVertex(dof % 3);
+    const std::pair<MeshEntity, std::size_t> location = dofNumbering.getLocalLocation(dof);
+    return referenceCell.getLocalVertex(location.first.getIndex());
   }
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
