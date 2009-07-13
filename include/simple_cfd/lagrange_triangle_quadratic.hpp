@@ -11,6 +11,7 @@
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
+#include "dof_numbering_basic.hpp"
 
 namespace cfd
 {
@@ -31,6 +32,7 @@ private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 6;
   const cell_type referenceCell;
+  DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
   // The order is irrelevent so long as it is consistent and can be used to
@@ -49,8 +51,17 @@ private:
     assert(remainder == 0);
   }
 
+  DofNumberingBasic<dimension> buildDofNumberingHelper() const
+  {
+    boost::array<std::size_t, dimension+1> dofsPerEntity;
+    dofsPerEntity[0] = 1; 
+    dofsPerEntity[1] = 1; 
+    dofsPerEntity[2] = 0; 
+    return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
+  }
+
 public:
-  LagrangeTriangleQuadratic()
+  LagrangeTriangleQuadratic() : dofNumbering(buildDofNumberingHelper())
   {
   }
 
@@ -72,8 +83,9 @@ public:
   value_type evaluate_tensor(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const unsigned node_on_cell = i % 6;
-    const unsigned index_into_tensor = i / 6;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
@@ -124,8 +136,9 @@ public:
   gradient_type evaluate_gradient(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const unsigned node_on_cell = i % 6;
-    const unsigned index_into_tensor = i / 6;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
@@ -183,8 +196,9 @@ public:
   divergence_type evaluate_divergence(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const unsigned node_on_cell = i % 6;
-    const unsigned index_into_tensor = i / 6;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;

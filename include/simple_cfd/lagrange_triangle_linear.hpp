@@ -10,6 +10,7 @@
 #include "mesh.hpp"
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
+#include "dof_numbering_basic.hpp"
 #include <cmath>
 
 namespace cfd
@@ -20,8 +21,8 @@ class LagrangeTriangleLinear : public FiniteElement<TriangularCell>
 {
 public:
   typedef TriangularCell cell_type;
-  static const unsigned int rank = R;
-  static const unsigned int dimension = cell_type::dimension;
+  static const std::size_t rank = R;
+  static const std::size_t dimension = cell_type::dimension;
   typedef Tensor<dimension, rank, double> value_type;
   typedef Tensor<dimension, rank+1, double> gradient_type;
   typedef Tensor<dimension, rank-1, double> divergence_type;
@@ -31,6 +32,7 @@ private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 3;
   const cell_type referenceCell;
+  DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
   // The order is irrelevent so long as it is consistent and can be used to
@@ -39,7 +41,7 @@ private:
   {
     unsigned remainder = index;
 
-    for(int i=0; i<rank; ++i)
+    for(std::size_t i=0; i<rank; ++i)
     {
       indices[rank-i-1] = remainder % dimension;
       remainder /= dimension;
@@ -49,11 +51,20 @@ private:
     assert(remainder == 0);
   }
 
+  DofNumberingBasic<dimension> buildDofNumberingHelper() const
+  {
+    boost::array<std::size_t, dimension+1> dofsPerEntity;
+    dofsPerEntity[0] = 1; 
+    dofsPerEntity[1] = 0; 
+    dofsPerEntity[2] = 0; 
+    return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
+  }
+
 public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
-  LagrangeTriangleLinear()
+  LagrangeTriangleLinear() : dofNumbering(buildDofNumberingHelper())
   {
   }
 
@@ -64,8 +75,9 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const unsigned node_on_cell = i % 3;
-    const unsigned index_into_tensor = i / 3;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -86,8 +98,9 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const unsigned node_on_cell = i % 3;
-    const unsigned index_into_tensor = i / 3;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
@@ -112,8 +125,9 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const unsigned node_on_cell = i % 3;
-    const unsigned index_into_tensor = i / 3;
+    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
