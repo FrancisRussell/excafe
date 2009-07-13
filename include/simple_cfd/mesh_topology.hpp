@@ -10,6 +10,7 @@
 #include <cassert>
 #include <vector>
 #include <set>
+#include <map>
 
 namespace cfd
 {

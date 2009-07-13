@@ -207,6 +207,11 @@ public:
     return dofNumbering.getTensorIndex(dof);
   }
 
+  virtual std::map<std::size_t, DofAssociation> getDofGlobalAssociations(const Mesh<dimension>& m, const std::size_t cid) const
+  {
+    return dofNumbering.getDofGlobalAssociations(m, cid);
+  }
+
   virtual std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);

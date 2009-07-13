@@ -7,6 +7,8 @@
 #include <numeric>
 #include <utility>
 #include <cassert>
+#include <map>
+#include "mesh.hpp"
 #include "general_cell.hpp"
 #include "mesh_entity.hpp"
 #include "dof_association.hpp"
@@ -83,6 +85,26 @@ public:
 
     assert(false && "Index out of range");
     return DofAssociation(MeshEntity(0, 0), 0);
+  }
+
+  std::map<std::size_t, DofAssociation> getDofGlobalAssociations(const Mesh<dimension>& m, const std::size_t cid) const
+  {
+    const std::map<MeshEntity, MeshEntity> localToGlobalMapping(m.getLocalToGlobalMapping(cid));
+    const std::size_t dofCount = numDofs();
+    std::map<std::size_t, DofAssociation> globalAssociations;
+
+    for(std::size_t dof = 0; dof< dofCount; ++dof)
+    {
+      const DofAssociation localAssociation = getLocalAssociation(dof);
+      const std::map<MeshEntity, MeshEntity>::const_iterator entityMapIter = 
+        localToGlobalMapping.find(localAssociation.getEntity());
+      assert(entityMapIter != localToGlobalMapping.end());
+
+      globalAssociations.insert(std::make_pair(dof, 
+        DofAssociation(entityMapIter->second, localAssociation.getIndex())));
+    }
+
+    return globalAssociations;
   }
 
   std::size_t numDofs() const

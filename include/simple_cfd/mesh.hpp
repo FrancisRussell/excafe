@@ -235,7 +235,7 @@ public:
       for(local_iterator eIter(local_begin(cellEntity, d)); eIter!=local_end(cellEntity, d); ++eIter)
       {
         const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, *eIter);
-        mapping.insert(std::make_pair(MeshEntity(d, localIndex), eIter));
+        mapping.insert(std::make_pair(MeshEntity(d, localIndex), *eIter));
       }
     }
     return mapping;
