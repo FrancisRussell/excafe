@@ -30,7 +30,6 @@ private:
   const Mesh<dimension>* m;
   std::set<const finite_element_t*> elements;
   local2global_map mapping;
-  std::set<unsigned> boundaryDofs;
 
   void makeContiguous()
   {
@@ -48,13 +47,6 @@ private:
     // Remap the mappings
     for(typename local2global_map::iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
       mappingIter->second = remapping[mappingIter->second];
-
-    // Remap the boundary dofs
-    std::set<unsigned> newBoundaryDofs;
-    for(std::set<unsigned>::const_iterator boundaryDofIter(boundaryDofs.begin()); boundaryDofIter != boundaryDofs.end(); ++boundaryDofIter)
-      newBoundaryDofs.insert(remapping[*boundaryDofIter]);
-
-    newBoundaryDofs.swap(boundaryDofs);
   }
 
 public:
@@ -62,12 +54,12 @@ public:
   {
   }
 
-  DofMap(const DofMap& d) : m(d.m), elements(d.elements), mapping(d.mapping), boundaryDofs(d.boundaryDofs)
+  DofMap(const DofMap& d) : m(d.m), elements(d.elements), mapping(d.mapping)
   {
   }
 
-  DofMap(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping, const std::set<unsigned> _boundaryDofs) : 
-          m(&_m), elements(_elements), mapping(_mapping), boundaryDofs(_boundaryDofs)
+  DofMap(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping) : 
+          m(&_m), elements(_elements), mapping(_mapping)
   {
   }
 
@@ -85,8 +77,7 @@ public:
   {
     return m == map.m &&
     elements == map.elements &&
-    mapping == map.mapping &&
-    boundaryDofs == map.boundaryDofs;
+    mapping == map.mapping;
   }
 
   const Mesh<dimension>& getMesh() const
@@ -112,11 +103,6 @@ public:
     return dofs.size();
   }
 
-  std::size_t getBoundaryDegreesOfFreedomCount() const
-  {
-    return boundaryDofs.size();
-  }
-
   std::size_t getDofsPerCell() const
   {
     std::size_t dofsPerCell = 0;
@@ -126,25 +112,9 @@ public:
     return dofsPerCell;
   }
 
-  std::map< unsigned, std::set< boost::tuple<cell_id, unsigned> > > getBoundaryDegreesOfFreedom(const finite_element_t* const element) const
-  {
-    std::map< unsigned, std::set<boost::tuple<cell_id, unsigned> > > global2local;
-    for(typename local2global_map::const_iterator mappingIter(mapping.begin()); mappingIter != mapping.end(); ++mappingIter)
-    {
-      if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
-      {
-        // TODO: Work out why tuple.get<N>() won't compile
-        if (boost::get<0>(mappingIter->first) == element)
-          global2local[mappingIter->second].insert(boost::make_tuple(boost::get<1>(mappingIter->first), boost::get<2>(mappingIter->first)));
-      }
-    }
-    return global2local;
-  }
-
   DofMap extractDofs(const finite_element_t* element) const
   {
     std::set<const finite_element_t*> newElements;
-    std::set<unsigned> newDofs;
     local2global_map newMapping;
 
     // We only define a mapping for a single element
@@ -156,16 +126,11 @@ public:
     {
       if (boost::get<0>(mappingIter->first) == element)
       {
-        newDofs.insert(mappingIter->second);
         newMapping.insert(*mappingIter);
       }
     }
 
-    // Work out the subset of dofs on the boundary
-    std::set<unsigned> newBoundaryDofs;
-    std::set_intersection(boundaryDofs.begin(), boundaryDofs.end(), newDofs.begin(), newDofs.end(), std::inserter(newBoundaryDofs, newBoundaryDofs.begin()));
-
-    DofMap result(*m, newElements, newMapping, newBoundaryDofs);
+    DofMap result(*m, newElements, newMapping);
     result.makeContiguous();
     return result;
   }
@@ -174,11 +139,9 @@ public:
   {
     local2global_map homogeneous;
     std::set<const finite_element_t*> homogeneousElements;
-    std::set<unsigned> homogeneousBoundaryDofs;
 
     local2global_map dirichlet;
     std::set<const finite_element_t*> dirichletElements;
-    std::set<unsigned> dirichletBoundaryDofs;
 
     for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
     {
@@ -194,9 +157,6 @@ public:
           dirichlet.insert(*mappingIter);
           dirichletElements.insert( boost::get<0>(dof));
 
-          if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
-            dirichletBoundaryDofs.insert(mappingIter->second);
-
           isDirichlet = true;
         }
       }
@@ -205,14 +165,11 @@ public:
       {
         homogeneous.insert(*mappingIter);
         homogeneousElements.insert(boost::get<0>(dof));
-
-        if (boundaryDofs.find(mappingIter->second) != boundaryDofs.end())
-          homogeneousBoundaryDofs.insert(mappingIter->second);
       }
     }
 
-    DofMap homogeneousMap(*m, homogeneousElements, homogeneous, homogeneousBoundaryDofs);
-    DofMap dirichletMap(*m, dirichletElements, dirichlet, dirichletBoundaryDofs);
+    DofMap homogeneousMap(*m, homogeneousElements, homogeneous);
+    DofMap dirichletMap(*m, dirichletElements, dirichlet);
 
     homogeneousMap.makeContiguous();
     dirichletMap.makeContiguous();

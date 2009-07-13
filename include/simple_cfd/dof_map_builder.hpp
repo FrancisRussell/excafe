@@ -41,7 +41,6 @@ public:
     const std::size_t mesh_dimension = m.getDimension();
     std::size_t counter = 0;
     local2global_map local2global;
-    std::set<unsigned> boundaryDofs;
 
     // Iterate over all cells in order
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
@@ -103,24 +102,7 @@ public:
       mapIter->second = renumberingIter->second;
     }
 
-    // Record degrees of freedom that lie on a boundary
-    const std::vector< std::pair<vertex_id, vertex_id> > boundary(m.getEdgeFacets());
-    for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
-    {
-      for(typename std::set<const FiniteElement<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
-      {
-        const std::vector<unsigned> localDofs((*elementIter)->getBoundaryDegreesOfFreedom(m, cellIter->getIndex(), boundary));
-        for(std::vector<unsigned>::const_iterator localDofIter(localDofs.begin()); localDofIter!=localDofs.end(); ++localDofIter)
-        {
-          const typename local2global_map::const_iterator
-            globalDofIter(local2global.find(boost::make_tuple(*elementIter, cellIter->getIndex(), *localDofIter)));
-          assert(globalDofIter != local2global.end());
-          boundaryDofs.insert(globalDofIter->second);
-        }
-      }
-    }
-
-    return DofMap<cell_type>(m, elements, local2global, boundaryDofs);
+    return DofMap<cell_type>(m, elements, local2global);
   }
 };
 

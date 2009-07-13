@@ -179,32 +179,6 @@ public:
     return common;
   }
 
-  std::vector<unsigned> getBoundaryDegreesOfFreedom(const Mesh<dimension>& m, const cell_id cid, const std::vector< std::pair<vertex_id, vertex_id> >& boundary) const
-  {
-    // Create set of vertices on boundary
-    std::set<vertex_id> boundaryVertices;
-    for(std::vector< std::pair<vertex_id, vertex_id> >::const_iterator edgeIter(boundary.begin()); edgeIter!=boundary.end(); ++edgeIter)
-    {
-      boundaryVertices.insert(edgeIter->first);
-      boundaryVertices.insert(edgeIter->second);
-    }
-
-    // Create list of local vertices
-    const std::vector<vertex_id> vertexIndices(m.getIndices(MeshEntity(dimension, cid), 0));
-
-    // Find vertices on boundary
-    std::vector<unsigned> dofs;
-    for(unsigned i=0; i<vertexIndices.size(); ++i)
-    {
-      if (boundaryVertices.find(vertexIndices[i]) != boundaryVertices.end())
-      {
-        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
-          dofs.push_back(index_into_tensor*3 + i);
-      }
-    }
-    return dofs;
-  }
-
   vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
@@ -223,7 +197,7 @@ public:
   unsigned getTensorIndex(const unsigned dof) const
   {
     assert(dof < space_dimension());
-    return dof/3;
+    return dofNumbering.getTensorIndex(dof);
   }
 
   virtual std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const

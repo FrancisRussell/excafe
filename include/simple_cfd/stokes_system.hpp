@@ -431,7 +431,6 @@ public:
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;
-    std::cout << "Degrees of freedom on boundary: " << systemDofMap.getBoundaryDegreesOfFreedomCount() << std::endl;
 
     std::vector< std::pair<const finite_element_t*, const SubDomain<dimension>*> > boundaryConditions;
     boundaryConditions.push_back(std::make_pair(&velocity, &edges));
@@ -671,55 +670,38 @@ public:
 
   void applyEdgeVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
-    typedef std::map<unsigned, std::set< boost::tuple<cell_id, unsigned> > > element_dof_map;
-    const element_dof_map velocity_dofs(systemDofMap.getBoundaryDegreesOfFreedom(&velocity));
+    const unsigned velocitySpaceDimension = velocity.space_dimension();
 
-    // Assign values for the x velocity degrees of freedom on the left hand side
-    for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
+    for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
-      assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
-      const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
-
-      const bool isXDof = velocity.getTensorIndex(boost::get<1>(dofInfo)) == 0;
-      const vertex_type position(velocity.getDofCoordinateGlobal(m, boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
-      
-      if (getLocation(position) == LEFT_EDGE)
+      for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
+        const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
+        const bool isXDof = velocity.getTensorIndex(dof) == 0;
+        const Location location = getLocation(dofLocation);
 
-        // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
-        const double rhs = isXDof ? 5.0 : 0.0;
-        load_vector.setValues(1, &velocity_globalDof, &rhs);
+        if (location == LEFT_EDGE)
+        {
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-        // To help convergence
-        unknown_vector.setValues(1, &velocity_globalDof, &rhs);
-      }
-    }
+          // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
+          const double rhs = isXDof ? 5.0 : 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
 
-    // Assign values for the velocity degrees of freedom along top and bottom edges
-    for(element_dof_map::const_iterator velocity_iter(velocity_dofs.begin()); velocity_iter!=velocity_dofs.end(); ++velocity_iter)
-    {
-      assert(!velocity_iter->second.empty());  // If this failed, it would mean a degree of freedom tied to no cell
-      const boost::tuple<cell_id, unsigned> dofInfo(*velocity_iter->second.begin());
+          // To help convergence
+          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
+        else if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
+        {
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
 
-      const bool isXDof = velocity.getTensorIndex(boost::get<1>(dofInfo)) == 0;
-      const vertex_type position(velocity.getDofCoordinateGlobal(m, boost::get<0>(dofInfo), boost::get<1>(dofInfo)));
-      const Location location = getLocation(position);
-
-      // Check this really is an edge cell
-      assert(location != BODY);
-
-      if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
-      {
-        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, boost::get<0>(dofInfo), boost::get<1>(dofInfo));
-        stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
-
-        const double rhs = 0.0;
-        load_vector.setValues(1, &velocity_globalDof, &rhs);
+          const double rhs = 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
         
-        // To help convergence
-        unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+          // To help convergence
+          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
       }
     }
 

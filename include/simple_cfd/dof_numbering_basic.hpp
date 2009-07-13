@@ -53,12 +53,14 @@ public:
 
   std::size_t getTensorIndex(const std::size_t dof) const
   {
+    assert(dof < numDofs());
     const std::size_t dofsPerValue = numDofsPerValue();
     return dof / dofsPerValue;
   }
 
   std::pair<MeshEntity, std::size_t> getLocalLocation(const std::size_t dof) const
   {
+    assert(dof < numDofs());
     const std::size_t dofsPerValue = numDofsPerValue();
     const std::size_t scalarDof = dof % dofsPerValue;
 
