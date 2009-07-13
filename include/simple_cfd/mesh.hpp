@@ -225,6 +225,22 @@ public:
     return CellVertices<dimension>(coords.begin(), coords.end());
   }
 
+  std::map<MeshEntity, MeshEntity> getLocalToGlobalMapping(const cell_id cid) const
+  {
+    const MeshEntity cellEntity(dimension, cid);
+    std::map<MeshEntity, MeshEntity> mapping;
+
+    for(std::size_t d=0; d<=dimension; ++d)
+    {
+      for(local_iterator eIter(local_begin(cellEntity, d)); eIter!=local_end(cellEntity, d); ++eIter)
+      {
+        const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, *eIter);
+        mapping.insert(std::make_pair(MeshEntity(d, localIndex), eIter));
+      }
+    }
+    return mapping;
+  }
+
   std::vector<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d) const
   {
     return topology.getIndices(entity, d);

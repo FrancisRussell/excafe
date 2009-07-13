@@ -12,6 +12,7 @@
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
 #include "dof_numbering_basic.hpp"
+#include "dof_association.hpp"
 
 namespace cfd
 {
@@ -83,9 +84,10 @@ public:
   value_type evaluate_tensor(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
-    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
+    const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
+      dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
@@ -136,9 +138,11 @@ public:
   gradient_type evaluate_gradient(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
-    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
+    const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
+      dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
@@ -196,9 +200,10 @@ public:
   divergence_type evaluate_divergence(const CellVertices<dimension>& cellVertices, const unsigned int i, const vertex_type& vRef) const
   {
     assert(i < space_dimension());
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
-    const unsigned node_on_cell = dofLocation.first.getDimension() == 0 ? dofLocation.first.getIndex() : dofLocation.first.getIndex()+3;
+    const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
+      dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
     const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
@@ -330,16 +335,16 @@ public:
   vertex_type getDofCoordinateLocal(const unsigned dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
-    const std::pair<MeshEntity, std::size_t> location = dofNumbering.getLocalLocation(dof);
+    const DofAssociation association = dofNumbering.getLocalAssociation(dof);
 
-    if (location.first.getDimension() == 0)
+    if (association.getEntityDimension() == 0)
     {
-      return referenceCell.getLocalVertex(location.first.getIndex());
+      return referenceCell.getLocalVertex(association.getEntityIndex());
     }
     else
     {
-      const int vid1 = (location.first.getIndex())%3;
-      const int vid2 = (location.first.getIndex()+1)%3;
+      const int vid1 = (association.getEntityIndex())%3;
+      const int vid2 = (association.getEntityIndex()+1)%3;
       return (referenceCell.getLocalVertex(vid1) + referenceCell.getLocalVertex(vid2))/2.0;
     }
   }

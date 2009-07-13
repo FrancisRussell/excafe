@@ -75,8 +75,10 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
-    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+
+    assert(dofAssociation.getEntityDimension() == 0);
+    const unsigned node_on_cell = dofAssociation.getEntityIndex();
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
@@ -98,8 +100,10 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
-    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+
+    assert(dofAssociation.getEntityDimension() == 0);
+    const unsigned node_on_cell = dofAssociation.getEntityIndex();
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
@@ -125,8 +129,10 @@ public:
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
-    const std::pair<MeshEntity, std::size_t> dofLocation = dofNumbering.getLocalLocation(i);
-    const unsigned node_on_cell = dofLocation.first.getIndex();
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+
+    assert(dofAssociation.getEntityDimension() == 0);
+    const unsigned node_on_cell = dofAssociation.getEntityIndex();
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
 
     const int ip1 = (node_on_cell+1) % 3;
@@ -189,8 +195,8 @@ public:
   vertex_type getDofCoordinateLocal(const unsigned dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
-    const std::pair<MeshEntity, std::size_t> location = dofNumbering.getLocalLocation(dof);
-    return referenceCell.getLocalVertex(location.first.getIndex());
+    const DofAssociation association = dofNumbering.getLocalAssociation(dof);
+    return referenceCell.getLocalVertex(association.getEntityIndex());
   }
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits

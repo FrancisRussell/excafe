@@ -1,11 +1,13 @@
 #ifndef SIMPLE_CFD_FINITE_ELEMENT_HPP
 #define SIMPLE_CFD_FINITE_ELEMENT_HPP
 
-#include "simple_cfd_fwd.hpp"
 #include <vector>
 #include <set>
-#include <boost/tuple/tuple.hpp>
 #include <cstddef>
+#include <map>
+#include <boost/tuple/tuple.hpp>
+#include "simple_cfd_fwd.hpp"
+#include "dof_association.hpp"
 
 namespace cfd
 {

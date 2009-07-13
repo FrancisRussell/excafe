@@ -9,6 +9,7 @@
 #include <cassert>
 #include "general_cell.hpp"
 #include "mesh_entity.hpp"
+#include "dof_association.hpp"
 
 namespace cfd
 {
@@ -58,7 +59,7 @@ public:
     return dof / dofsPerValue;
   }
 
-  std::pair<MeshEntity, std::size_t> getLocalLocation(const std::size_t dof) const
+  DofAssociation getLocalAssociation(const std::size_t dof) const
   {
     assert(dof < numDofs());
     const std::size_t dofsPerValue = numDofsPerValue();
@@ -72,7 +73,7 @@ public:
         const MeshEntity localEntity(i, entityDof / dofsPerEntity[i]);
         const std::size_t localIndex(entityDof % dofsPerEntity[i]);
 
-        return std::make_pair(localEntity, localIndex);
+        return DofAssociation(localEntity, localIndex);
       }
       else
       {
@@ -81,7 +82,7 @@ public:
     }
 
     assert(false && "Index out of range");
-    return std::make_pair(MeshEntity(0, 0), 0);
+    return DofAssociation(MeshEntity(0, 0), 0);
   }
 
   std::size_t numDofs() const

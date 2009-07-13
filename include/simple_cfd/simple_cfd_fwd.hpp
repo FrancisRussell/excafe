@@ -30,6 +30,9 @@ class MeshEntityIteratorLocal;
 class Polygon;
 template<std::size_t D> class CellVertices;
 
+// Degree-of-freedom related types
+class DofAssociation;
+
 // Quadrature related
 class Quadrature;
 template<std::size_t D> class QuadraturePoints;
