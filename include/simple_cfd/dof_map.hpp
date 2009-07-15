@@ -19,7 +19,7 @@ class DofMap
 {
 public:
   typedef C cell_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type::dimension> finite_element_t;
   typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;

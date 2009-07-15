@@ -46,7 +46,7 @@ private:
     for(typename cfd::Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       const cfd::CellVertices<2> vertices = m.getCoordinates(cellIter->getIndex());
-      const int dofs = basis.space_dimension();
+      const int dofs = basis.spaceDimension();
 
       for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       {

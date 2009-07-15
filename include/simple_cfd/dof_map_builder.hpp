@@ -19,7 +19,7 @@ class DofMapBuilder
 {
 private:
   typedef C cell_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type::dimension> finite_element_t;
   typedef std::map<boost::tuple<const finite_element_t*, cell_id, unsigned>, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;
 
@@ -31,7 +31,7 @@ public:
   {
   }
 
-  void addFiniteElement(const FiniteElement<cell_type>& element)
+  void addFiniteElement(const finite_element_t& element)
   {
     elements.insert(&element);
   }
@@ -46,10 +46,10 @@ public:
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(mesh_dimension)); cellIter!=m.global_end(mesh_dimension); ++cellIter)
     {
       // Iterate over finite elements
-      for(typename std::set<const FiniteElement<cell_type>*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
+      for(typename std::set<const finite_element_t*>::const_iterator elementIter = elements.begin(); elementIter!=elements.end(); ++elementIter)
       {
         // Add in all degrees of freedom for current cell
-        for(unsigned dof=0; dof<(*elementIter)->space_dimension(); ++dof)
+        for(unsigned dof=0; dof<(*elementIter)->spaceDimension(); ++dof)
         {
           local2global[boost::make_tuple(*elementIter, cellIter->getIndex(), dof)] = counter;
           ++counter;

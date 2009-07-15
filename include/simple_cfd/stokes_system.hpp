@@ -351,7 +351,7 @@ public:
 private:
   static const std::size_t dimension = cell_type::dimension;
   typedef typename cell_type::vertex_type vertex_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<dimension> finite_element_t;
   typedef LagrangeTriangleLinear<0> pressure_basis_t;
   typedef LagrangeTriangleQuadratic<1> velocity_basis_t;
 
@@ -670,7 +670,7 @@ public:
 
   void applyEdgeVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
-    const unsigned velocitySpaceDimension = velocity.space_dimension();
+    const unsigned velocitySpaceDimension = velocity.spaceDimension();
 
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
@@ -678,7 +678,7 @@ public:
       {
         const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
         const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
-        const bool isXDof = velocity.getTensorIndex(dof) == 0;
+        const bool isXDof = velocity.getTensorIndex(m, cellIter->getIndex(), dof) == 0;
         const Location location = getLocation(dofLocation);
 
         if (location == LEFT_EDGE)
@@ -712,7 +712,7 @@ public:
 
   void applyCylinderVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
   {
-    const unsigned velocitySpaceDimension = velocity.space_dimension();
+    const unsigned velocitySpaceDimension = velocity.spaceDimension();
     const vertex_type centre(1.0, 0.5);
     const double radius = 0.15;
 
@@ -769,7 +769,7 @@ public:
     const CellVertices<dimension> vertices(m.getCoordinates(cid));
     double xVelocity(0.0), yVelocity(0.0);
 
-    for(unsigned dof=0; dof<velocity.space_dimension(); ++dof)
+    for(unsigned dof=0; dof<velocity.spaceDimension(); ++dof)
     {
       Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
       const typename DofMap<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cid, dof);

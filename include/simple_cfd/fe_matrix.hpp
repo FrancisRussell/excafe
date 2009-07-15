@@ -23,7 +23,7 @@ class FEMatrix
 private:
   typedef C cell_type;
   typedef typename  cell_type::vertex_type vertex_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type::dimension> finite_element_t;
   typedef typename DofMap<cell_type>::dof_t dof_t;
   static const std::size_t dimension = cell_type::dimension;
 
@@ -49,9 +49,9 @@ private:
       {
         for(typename std::set<const finite_element_t*>::const_iterator colElemIter(colElements.begin()); colElemIter!=colElements.end(); ++colElemIter)
         {
-          for(unsigned rowDof=0; rowDof < (*rowElemIter)->space_dimension(); ++rowDof)
+          for(unsigned rowDof=0; rowDof < (*rowElemIter)->spaceDimension(); ++rowDof)
           {
-            for(unsigned colDof=0; colDof < (*colElemIter)->space_dimension(); ++colDof)
+            for(unsigned colDof=0; colDof < (*colElemIter)->spaceDimension(); ++colDof)
             {
               const int rowIndex =
                 rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
@@ -83,8 +83,8 @@ private:
     assert(testElements.find(testFunction) != testElements.end());
 
     const std::size_t entityDimension = boundaryIntegral ? m.getDimension()-1 : m.getDimension();
-    const unsigned testSpaceDimension = testFunction->space_dimension();
-    const unsigned trialSpaceDimension = trialFunction->space_dimension();
+    const unsigned testSpaceDimension = testFunction->spaceDimension();
+    const unsigned trialSpaceDimension = trialFunction->spaceDimension();
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
 
     std::vector<int> testIndices(testSpaceDimension);

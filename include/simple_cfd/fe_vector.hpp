@@ -15,7 +15,7 @@ class FEVector
 {
 private:
   typedef C cell_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type::dimension> finite_element_t;
   typedef typename DofMap<cell_type>::dof_t dof_t;
   const DofMap<cell_type> rowMappings;
   PETScVector vector;

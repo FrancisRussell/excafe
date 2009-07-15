@@ -17,7 +17,7 @@ namespace cfd
 {
 
 template<unsigned R>
-class LagrangeTriangleLinear : public FiniteElement<TriangularCell>
+class LagrangeTriangleLinear : public FiniteElement<TriangularCell::dimension>
 {
 public:
   typedef TriangularCell cell_type;
@@ -68,9 +68,9 @@ public:
   {
   }
 
-  value_type evaluate_tensor(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
+  value_type evaluate_tensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
-    assert(i < space_dimension());
+    assert(i < spaceDimension());
 
     const double area = referenceCell.getArea(vertices);
 
@@ -94,9 +94,9 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
+  gradient_type evaluate_gradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
-    assert(i < space_dimension());
+    assert(i < spaceDimension());
     const double area = referenceCell.getArea(vertices);
 
     const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
@@ -122,9 +122,9 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const CellVertices<dimension>& vertices, const unsigned int i, const vertex_type& vRef) const
+  divergence_type evaluate_divergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
-    assert(i < space_dimension());
+    assert(i < spaceDimension());
 
     const double area = referenceCell.getArea(vertices);
 
@@ -155,7 +155,7 @@ public:
     return result;
   }
 
-  unsigned space_dimension() const
+  unsigned spaceDimension() const
   {
     return 3 * detail::Power<dimension, rank>::value;
   }
@@ -185,14 +185,14 @@ public:
     return common;
   }
 
-  vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const unsigned dof) const
+  vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
     return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
-  vertex_type getDofCoordinateLocal(const unsigned dof) const
+  vertex_type getDofCoordinateLocal(const std::size_t dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const DofAssociation association = dofNumbering.getLocalAssociation(dof);
@@ -201,21 +201,21 @@ public:
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
   // us to using standard bases.
-  unsigned getTensorIndex(const unsigned dof) const
+  unsigned getTensorIndex(const Mesh<dimension>& mesh, const std::size_t cid, const std::size_t dof) const
   {
-    assert(dof < space_dimension());
+    assert(dof < spaceDimension());
     return dofNumbering.getTensorIndex(dof);
   }
 
-  virtual std::map<std::size_t, DofAssociation> getDofGlobalAssociations(const Mesh<dimension>& m, const std::size_t cid) const
+  virtual MeshEntity getLocalDofMeshAssociation(const Mesh<dimension>& mesh, const std::size_t cid, const std::size_t dof) const
   {
-    return dofNumbering.getDofGlobalAssociations(m, cid);
+    return dofNumbering.getLocalAssociation(dof).getEntity();
   }
 
-  virtual std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
-    std::set< boost::tuple<const FiniteElement<cell_type>*, cell_id, std::size_t> > result;
+    std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > result;
 
     if (entity.getDimension() == 2 || entity.getDimension() == 1) return result;
 

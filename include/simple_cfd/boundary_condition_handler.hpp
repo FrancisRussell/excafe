@@ -12,8 +12,9 @@ namespace cfd
 class BoundaryConditionHandler
 {
 private:
-  typedef Mesh<2> mesh_t;
-  typedef boost::tuple<const FiniteElement<TriangularCell>*, cell_id, std::size_t> local_dof_t;
+  static const std::size_t dimension = 2;
+  typedef Mesh<dimension> mesh_t;
+  typedef boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> local_dof_t;
   mesh_t& m;
 
   std::size_t findCell(const MeshEntity& entity) const

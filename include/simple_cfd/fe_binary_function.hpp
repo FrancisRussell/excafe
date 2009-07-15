@@ -14,7 +14,7 @@ class FEBinaryFunction
 public:
   typedef C cell_type;
   typedef typename cell_type::vertex_type vertex_type;
-  typedef FiniteElement<cell_type> finite_element_t;
+  typedef FiniteElement<cell_type::dimension> finite_element_t;
 
   virtual const finite_element_t* getTestFunction() const = 0;
   virtual const finite_element_t* getTrialFunction() const = 0;
