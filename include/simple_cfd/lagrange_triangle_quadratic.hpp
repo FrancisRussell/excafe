@@ -6,13 +6,13 @@
 #include <map>
 #include <cassert>
 #include <cstddef>
-#include <boost/tuple/tuple.hpp>
 #include <boost/array.hpp>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
 #include "dof_numbering_basic.hpp"
 #include "dof_association.hpp"
+#include "dof.hpp"
 
 namespace cfd
 {
@@ -362,10 +362,10 @@ public:
     return dofNumbering.getLocalAssociation(dof).getEntity();
   }
 
-  virtual std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< Dof<dimension> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t entityIndex = referenceCell.getLocalIndex(topology, cid, entity);
-    std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > result;
+    std::set< Dof<dimension> > result;
 
     if (entity.getDimension() == 2) return result;
 
@@ -373,7 +373,7 @@ public:
     const std::size_t localIndex = (entity.getDimension() == 0) ? entityIndex : entityIndex+3;
     for(std::size_t index=0; index < tensor_size; ++index)
     {
-      result.insert(boost::make_tuple(this, cid, dofs_per_index*index + localIndex));
+      result.insert(Dof<dimension>(this, cid, dofs_per_index*index + localIndex));
     }
 
     return result;

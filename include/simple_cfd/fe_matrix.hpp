@@ -5,7 +5,6 @@
 #include <vector>
 #include <set>
 #include <cassert>
-#include <boost/tuple/tuple.hpp>
 #include "dof_map.hpp"
 #include "fe_binary_function.hpp"
 #include "fe_vector.hpp"
@@ -54,10 +53,10 @@ private:
             for(unsigned colDof=0; colDof < (*colElemIter)->spaceDimension(); ++colDof)
             {
               const int rowIndex =
-                rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(*rowElemIter,
                 cellIter->getIndex(), rowDof)); 
               const int colIndex =
-                colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(*rowElemIter,
+                colMappings.getGlobalIndexWithMissingAsNegative(dof_t(*rowElemIter,
                 cellIter->getIndex(), colDof));
 
               if (rowIndex >= 0 && colIndex >= 0)
@@ -107,10 +106,10 @@ private:
         std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
 
         for(unsigned test=0; test<testSpaceDimension; ++test)
-          testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(testFunction, cid, test));
+          testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
 
         for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-          trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(boost::make_tuple(trialFunction, cid, trial));
+          trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
 
         for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)

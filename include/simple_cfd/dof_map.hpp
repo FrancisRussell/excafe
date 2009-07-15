@@ -1,15 +1,14 @@
 #ifndef SIMPLE_CFD_DOF_MAP_HPP
 #define SIMPLE_CFD_DOF_MAP_HPP
 
-#include "simple_cfd_fwd.hpp"
-#include "numeric/sparsity_pattern.hpp"
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 #include <cassert>
 #include <map>
 #include <set>
 #include <iterator>
 #include <utility>
+#include "simple_cfd_fwd.hpp"
+#include "dof.hpp"
+#include "numeric/sparsity_pattern.hpp"
 
 namespace cfd
 {
@@ -19,10 +18,10 @@ class DofMap
 {
 public:
   typedef C cell_type;
-  typedef FiniteElement<cell_type::dimension> finite_element_t;
-  typedef boost::tuple<const finite_element_t*, cell_id, unsigned> dof_t;
-  typedef std::map<dof_t, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;
+  typedef FiniteElement<dimension> finite_element_t;
+  typedef Dof<dimension> dof_t;
+  typedef std::map<dof_t, unsigned> local2global_map;
 
   typedef typename local2global_map::const_iterator const_iterator;
 
@@ -124,7 +123,7 @@ public:
     // boundary dofs;
     for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
     {
-      if (boost::get<0>(mappingIter->first) == element)
+      if (mappingIter->first.getElement() == element)
       {
         newMapping.insert(*mappingIter);
       }
@@ -151,11 +150,11 @@ public:
       for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
           dirichletIter != dirichletConditions.end(); ++dirichletIter)
       {
-        if (dirichletIter->first == boost::get<0>(dof) &&
-          dirichletIter->second->inside(boost::get<0>(dof)->getDofCoordinateGlobal(*m, boost::get<1>(dof), boost::get<2>(dof))))
+        if (dirichletIter->first == dof.getElement() &&
+          dirichletIter->second->inside(dof.getElement()->getDofCoordinateGlobal(*m, dof.getCell(), dof.getIndex())))
         {
           dirichlet.insert(*mappingIter);
-          dirichletElements.insert( boost::get<0>(dof));
+          dirichletElements.insert(dof.getElement());
 
           isDirichlet = true;
         }
@@ -164,7 +163,7 @@ public:
       if (!isDirichlet) 
       {
         homogeneous.insert(*mappingIter);
-        homogeneousElements.insert(boost::get<0>(dof));
+        homogeneousElements.insert(dof.getElement());
       }
     }
 

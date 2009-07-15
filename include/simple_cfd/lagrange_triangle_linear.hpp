@@ -212,10 +212,10 @@ public:
     return dofNumbering.getLocalAssociation(dof).getEntity();
   }
 
-  virtual std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< Dof<dimension> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
-    std::set< boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> > result;
+    std::set< Dof<dimension> > result;
 
     if (entity.getDimension() == 2 || entity.getDimension() == 1) return result;
 
@@ -223,7 +223,7 @@ public:
     {
       for(std::size_t index=0; index < tensor_size; ++index)
       {
-        result.insert(boost::make_tuple(this, cid, dofs_per_index*index + localIndex));
+        result.insert(Dof<dimension>(this, cid, dofs_per_index*index + localIndex));
       }
     }
 

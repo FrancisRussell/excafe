@@ -5,11 +5,11 @@
 #include <utility>
 #include <set>
 #include <algorithm>
-#include <boost/tuple/tuple.hpp>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
 #include "dof_map.hpp"
+#include "dof.hpp"
 
 namespace cfd
 {
@@ -19,9 +19,10 @@ class DofMapBuilder
 {
 private:
   typedef C cell_type;
-  typedef FiniteElement<cell_type::dimension> finite_element_t;
-  typedef std::map<boost::tuple<const finite_element_t*, cell_id, unsigned>, unsigned> local2global_map;
   static const std::size_t dimension = cell_type::dimension;
+  typedef FiniteElement<dimension> finite_element_t;
+  typedef Dof<dimension> dof_t;
+  typedef std::map<dof_t, unsigned> local2global_map;
 
   const Mesh<dimension>& m;
   std::set<const finite_element_t*> elements;
@@ -51,7 +52,7 @@ public:
         // Add in all degrees of freedom for current cell
         for(unsigned dof=0; dof<(*elementIter)->spaceDimension(); ++dof)
         {
-          local2global[boost::make_tuple(*elementIter, cellIter->getIndex(), dof)] = counter;
+          local2global[dof_t(*elementIter, cellIter->getIndex(), dof)] = counter;
           ++counter;
         }
 
@@ -69,9 +70,9 @@ public:
             // cell 
             if (*incidentIter < cellIter->getIndex())
             {
-              const typename local2global_map::const_iterator globalDofIter = local2global.find(boost::make_tuple(*elementIter, *incidentIter, dofIter->second));
+              const typename local2global_map::const_iterator globalDofIter = local2global.find(dof_t(*elementIter, *incidentIter, dofIter->second));
               assert(globalDofIter != local2global.end());
-              local2global[boost::make_tuple(*elementIter, cellIter->getIndex(), dofIter->first)] = globalDofIter->second;
+              local2global[dof_t(*elementIter, cellIter->getIndex(), dofIter->first)] = globalDofIter->second;
             }
           }
         }

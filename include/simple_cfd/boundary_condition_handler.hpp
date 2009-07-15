@@ -1,10 +1,10 @@
 #ifndef SIMPLE_CFD_BOUNDARY_CONDITION_HANDLER_HPP
 #define SIMPLE_CFD_BOUNDARY_CONDITION_HANDLER_HPP
 
+#include <cstddef>
 #include "simple_cfd_fwd.hpp"
 #include "boundary_condition2.hpp"
-#include <cstddef>
-#include <boost/tuple/tuple.hpp>
+#include "dof.hpp"
 
 namespace cfd
 {
@@ -14,7 +14,7 @@ class BoundaryConditionHandler
 private:
   static const std::size_t dimension = 2;
   typedef Mesh<dimension> mesh_t;
-  typedef boost::tuple<const FiniteElement<dimension>*, cell_id, std::size_t> local_dof_t;
+  typedef Dof<dimension> local_dof_t;
   mesh_t& m;
 
   std::size_t findCell(const MeshEntity& entity) const
@@ -80,7 +80,7 @@ public:
 
           for(std::set<local_dof_t>::const_iterator dofIter(facetDofs.begin()); dofIter!=facetDofs.end(); ++dofIter)
           {
-            if (element.getTensorIndex(boost::get<1>(*dofIter), boost::get<2>(*dofIter)) == constrainedIndex)
+            if (element.getTensorIndex(dofIter->getCell(), dofIter->getIndex()) == constrainedIndex)
               filteredDofs.insert(*dofIter);
           }
 

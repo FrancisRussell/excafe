@@ -1,6 +1,13 @@
 #ifndef SIMPLE_CFD_STOKES_SYSTEM
 #define SIMPLE_CFD_STOKES_SYSTEM
 
+#include <iostream>
+#include <map>
+#include <algorithm>
+#include <ostream>
+#include <fstream>
+#include <utility>
+#include <cstdlib>
 #include "mesh.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "dof_map_builder.hpp"
@@ -17,14 +24,7 @@
 #include "boundary_condition.hpp"
 #include "boundary_condition_handler.hpp"
 #include "cell_vertices.hpp"
-#include <iostream>
-#include <map>
-#include <algorithm>
-#include <ostream>
-#include <fstream>
-#include <utility>
-#include <cstdlib>
-#include <boost/tuple/tuple.hpp>
+#include "dof.hpp"
 
 namespace cfd
 {
@@ -262,15 +262,16 @@ public:
   }
 
   virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
+    const MeshEntity& lEntity, const std::size_t testDofIndex, const std::size_t trialDofIndex, const vertex_type& location) const
   {
-    boost::tuple<const finite_element_t*, cell_id, unsigned> trialDofTuple(trial, gEntity.getIndex(), trialDof);
+    typedef Dof<cell_type::dimension> dof_t;
+    const dof_t trialDof(trial, gEntity.getIndex(), trialDofIndex);
     double prevTrialCoeff;
-    prevTrial.getValues(1, &trialDofTuple, &prevTrialCoeff);
+    prevTrial.getValues(1, &trialDof, &prevTrialCoeff);
 
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDof, location);
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location) * prevTrialCoeff;
-    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
+    typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDofIndex, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDofIndex, location) * prevTrialCoeff;
+    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDofIndex, location);
     const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
     return result;
   }
@@ -350,7 +351,8 @@ public:
 
 private:
   static const std::size_t dimension = cell_type::dimension;
-  typedef typename cell_type::vertex_type vertex_type;
+  typedef typename DofMap<cell_type>::dof_t dof_t;
+  typedef vertex<dimension> vertex_type;
   typedef FiniteElement<dimension> finite_element_t;
   typedef LagrangeTriangleLinear<0> pressure_basis_t;
   typedef LagrangeTriangleQuadratic<1> velocity_basis_t;
@@ -676,7 +678,7 @@ public:
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
+        const dof_t velocity_globalDof = Dof<dimension>(&velocity, cellIter->getIndex(), dof);
         const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
         const bool isXDof = velocity.getTensorIndex(m, cellIter->getIndex(), dof) == 0;
         const Location location = getLocation(dofLocation);
@@ -725,7 +727,7 @@ public:
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
-          const typename DofMap<cell_type>::dof_t velocity_globalDof = boost::make_tuple(&velocity, cellIter->getIndex(), dof);
+          const dof_t velocity_globalDof = Dof<dimension>(&velocity, cellIter->getIndex(), dof);
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
@@ -772,7 +774,7 @@ public:
     for(unsigned dof=0; dof<velocity.spaceDimension(); ++dof)
     {
       Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
-      const typename DofMap<cell_type>::dof_t velocityDof = boost::make_tuple(&velocity, cid, dof);
+      const dof_t velocityDof = dof_t(&velocity, cid, dof);
 
       double velocityCoeff;
       velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);
