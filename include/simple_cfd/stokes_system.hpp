@@ -678,7 +678,7 @@ public:
     {
       for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
       {
-        const dof_t velocity_globalDof = Dof<dimension>(&velocity, cellIter->getIndex(), dof);
+        const dof_t velocity_globalDof = dof_t(&velocity, cellIter->getIndex(), dof);
         const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
         const bool isXDof = velocity.getTensorIndex(m, cellIter->getIndex(), dof) == 0;
         const Location location = getLocation(dofLocation);
@@ -727,7 +727,7 @@ public:
 
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
-          const dof_t velocity_globalDof = Dof<dimension>(&velocity, cellIter->getIndex(), dof);
+          const dof_t velocity_globalDof = dof_t(&velocity, cellIter->getIndex(), dof);
           stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
           const double rhs = 0.0;
           load_vector.setValues(1, &velocity_globalDof, &rhs);
