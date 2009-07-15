@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <boost/array.hpp>
+#include <boost/foreach.hpp>
 #include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
@@ -361,6 +362,25 @@ public:
   {
     return dofNumbering.getLocalAssociation(dof).getEntity();
   }
+
+  virtual std::vector< std::set<dof_t> > resolveIdenticalDofs(const Mesh<dimension>& m, const MeshEntity& entity, const std::set<dof_t>& dofsOnEntity) const
+  {
+    typedef std::map<std::size_t, std::set<dof_t> > tensor_index_to_dofs_map;
+    tensor_index_to_dofs_map tensorIndexToDofsMap;
+
+    BOOST_FOREACH(const dof_t& dof, dofsOnEntity)
+    {
+      tensorIndexToDofsMap[dofNumbering.getTensorIndex(dof.getIndex())].insert(dof);
+    }
+
+    std::vector< std::set<dof_t> > sharedDofs;
+    BOOST_FOREACH(const tensor_index_to_dofs_map::value_type& indexMapping, tensorIndexToDofsMap)
+    {
+      sharedDofs.push_back(indexMapping.second);
+    }
+    return sharedDofs;
+  }
+
 
   virtual std::set< Dof<dimension> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
