@@ -190,6 +190,7 @@ public:
 
     BOOST_FOREACH(const dof_t& dof, dofsOnEntity)
     {
+      assert(dof.getElement() == this);
       tensorIndexToDofsMap[dofNumbering.getTensorIndex(dof.getIndex())].insert(dof);
     }
 
