@@ -161,31 +161,6 @@ public:
     return 3 * detail::Power<dimension, rank>::value;
   }
 
-  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const Mesh<dimension>& m, const cell_id cid, const cell_id cid2) const
-  {
-    const std::vector<vertex_id> cid_vertices(m.getIndices(MeshEntity(dimension, cid), 0));
-    const std::vector<vertex_id> cid2_vertices(m.getIndices(MeshEntity(dimension, cid2), 0));
-
-    // Map vertices of cid2 onto degrees of freedom
-    std::map<vertex_id, unsigned> cid2_dof;
-    for(unsigned dof=0; dof<cid2_vertices.size(); ++dof)
-      cid2_dof[cid2_vertices[dof]] = dof;
-
-    std::vector< std::pair<unsigned, unsigned> > common;
-    // Iterate over degrees of freedom on cid and find ones that correspond to common vertices
-    for(unsigned dof=0; dof<cid_vertices.size(); ++dof)
-    {
-      const std::map<vertex_id, unsigned>::const_iterator sharedVertexIter = cid2_dof.find(cid_vertices[dof]);
-
-      if (sharedVertexIter != cid2_dof.end())
-      {
-        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
-          common.push_back(std::make_pair(index_into_tensor*3 + dof, index_into_tensor*3 + sharedVertexIter->second));
-      }
-    }
-    return common;
-  }
-
   vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
@@ -208,11 +183,6 @@ public:
     return dofNumbering.getTensorIndex(dof);
   }
 
-  virtual MeshEntity getLocalDofMeshAssociation(const Mesh<dimension>& mesh, const std::size_t cid, const std::size_t dof) const
-  {
-    return dofNumbering.getLocalAssociation(dof).getEntity();
-  }
-
   virtual std::vector< std::set<dof_t> > resolveIdenticalDofs(const Mesh<dimension>& m, const MeshEntity& entity, const std::set<dof_t>& dofsOnEntity) const
   {
     typedef std::map<std::size_t, std::set<dof_t> > tensor_index_to_dofs_map;
@@ -232,18 +202,19 @@ public:
   }
 
 
-  virtual std::set< Dof<dimension> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
+    const std::size_t space_dimension = spaceDimension();
     const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
+
     std::set< Dof<dimension> > result;
 
-    if (entity.getDimension() == 2 || entity.getDimension() == 1) return result;
-
-    if (entity.getDimension() == 0)
+    for(std::size_t dof=0; dof<space_dimension; ++dof)
     {
-      for(std::size_t index=0; index < tensor_size; ++index)
+      if (dofNumbering.getLocalAssociation(dof).getEntity() == localEntity)
       {
-        result.insert(Dof<dimension>(this, cid, dofs_per_index*index + localIndex));
+        result.insert(Dof<dimension>(this, cid, dof));
       }
     }
 

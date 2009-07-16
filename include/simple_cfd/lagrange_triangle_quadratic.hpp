@@ -267,65 +267,6 @@ public:
     return 6 * detail::Power<dimension, rank>::value;
   }
 
-  std::vector< std::pair<unsigned, unsigned> > getCommonDegreesOfFreedom(const Mesh<dimension>& m, const cell_id cid, const cell_id cid2) const
-  {
-    const std::vector<vertex_id> cid_vertices(m.getIndices(MeshEntity(dimension, cid), 0));
-    const std::vector<vertex_id> cid2_vertices(m.getIndices(MeshEntity(dimension, cid2), 0));
-
-    std::vector< std::pair<vertex_id, vertex_id> > cid_edges;
-    std::vector< std::pair<vertex_id, vertex_id> > cid2_edges;
-
-    for(unsigned edge=0; edge<3; ++edge)
-    {
-      cid_edges.push_back(std::make_pair(cid_vertices[edge], cid_vertices[(edge+1)%3]));
-      cid2_edges.push_back(std::make_pair(cid2_vertices[edge], cid2_vertices[(edge+1)%3]));
-    }
-
-    // Map vertices and midpoints of cid2 onto degrees of freedom
-    unsigned cid2_dof=0;
-
-    std::map<vertex_id, unsigned> cid2_vertex_dof;
-    for(unsigned v=0; v<cid2_vertices.size(); ++v)
-    {
-      cid2_vertex_dof[cid2_vertices[v]] = cid2_dof;
-      ++cid2_dof;
-    }
-
-    std::map<std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > cid2_midpoint_dof;
-    for(unsigned m=0; m<cid_edges.size(); ++m)
-    {
-      cid2_midpoint_dof[cid2_edges[m]] = cid2_dof;
-      ++cid2_dof;
-    }
-
-    // Iterate over degrees of freedom on cid and find ones that correspond to common vertices and midpoints
-    std::vector< std::pair<unsigned, unsigned> > common;
-    unsigned cid_dof = 0;
-
-    for(unsigned v=0; v<cid_vertices.size(); ++v)
-    {
-      const std::map<vertex_id, unsigned>::const_iterator sharedVertexIter = cid2_vertex_dof.find(cid_vertices[v]);
-
-      if (sharedVertexIter != cid2_vertex_dof.end())
-        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
-          common.push_back(std::make_pair(index_into_tensor*6 + cid_dof, index_into_tensor*6 + sharedVertexIter->second));
-
-      ++cid_dof;
-    }
-
-    for(unsigned m=0; m<cid_edges.size(); ++m)
-    {
-      const std::map<std::pair<vertex_id, vertex_id>, unsigned>::const_iterator sharedEdgeIter = cid2_midpoint_dof.find(cid_edges[m]);
-
-      if (sharedEdgeIter != cid2_midpoint_dof.end())
-        for(unsigned int index_into_tensor = 0; index_into_tensor < detail::Power<dimension, rank>::value; ++index_into_tensor) 
-          common.push_back(std::make_pair(index_into_tensor*6 + cid_dof, index_into_tensor*6 + sharedEdgeIter->second));
-
-      ++cid_dof;
-    }
-    return common;
-  }
-
   vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
@@ -358,11 +299,6 @@ public:
     return dofNumbering.getTensorIndex(dof);
   }
 
-  virtual MeshEntity getLocalDofMeshAssociation(const Mesh<dimension>& mesh, const std::size_t cid, const std::size_t dof) const
-  {
-    return dofNumbering.getLocalAssociation(dof).getEntity();
-  }
-
   virtual std::vector< std::set<dof_t> > resolveIdenticalDofs(const Mesh<dimension>& m, const MeshEntity& entity, const std::set<dof_t>& dofsOnEntity) const
   {
     typedef std::map<std::size_t, std::set<dof_t> > tensor_index_to_dofs_map;
@@ -381,19 +317,20 @@ public:
     return sharedDofs;
   }
 
-
-  virtual std::set< Dof<dimension> > getDegreesOfFreedom(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
+  virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
-    const std::size_t entityIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t space_dimension = spaceDimension();
+    const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
+
     std::set< Dof<dimension> > result;
 
-    if (entity.getDimension() == 2) return result;
-
-    // If we are looking at edges, indices are incremented by 3
-    const std::size_t localIndex = (entity.getDimension() == 0) ? entityIndex : entityIndex+3;
-    for(std::size_t index=0; index < tensor_size; ++index)
+    for(std::size_t dof=0; dof<space_dimension; ++dof)
     {
-      result.insert(Dof<dimension>(this, cid, dofs_per_index*index + localIndex));
+      if (dofNumbering.getLocalAssociation(dof).getEntity() == localEntity)
+      {
+        result.insert(Dof<dimension>(this, cid, dof));
+      }
     }
 
     return result;
