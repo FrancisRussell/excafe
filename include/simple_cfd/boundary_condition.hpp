@@ -17,10 +17,10 @@ public:
 
 private:
   const SubDomain<dimension>& subdomain;
-  const Function<dimension, rank, double>& function;
+  const Function<dimension, rank>& function;
 
 public:
-  BoundaryCondition(const SubDomain<dimension>& s, const Function<dimension, rank, double>& f) : subdomain(s), function(f)
+  BoundaryCondition(const SubDomain<dimension>& s, const Function<dimension, rank>& f) : subdomain(s), function(f)
   {
   }
 
@@ -44,8 +44,8 @@ public:
 
       if (boost::get<0>(dof) == &element && subdomain.inside(dofLocationGlobal))
       {
-        const Tensor<D, R, double> boundaryValue(function.evaluate(dofLocationGlobal));
-        const Tensor<D, R, double> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
+        const Tensor<D, R> boundaryValue(function.evaluate(dofLocationGlobal));
+        const Tensor<D, R> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
                                                                               boost::get<2>(dof), dofLocationLocal));
         const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
         boundaryValues.setValues(1, &dof, &dofValue);

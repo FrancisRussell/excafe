@@ -24,9 +24,9 @@ public:
   typedef TriangularCell cell_type;
   static const std::size_t rank = R;
   static const std::size_t dimension = cell_type::dimension;
-  typedef Tensor<dimension, rank, double> value_type;
-  typedef Tensor<dimension, rank+1, double> gradient_type;
-  typedef Tensor<dimension, rank-1, double> divergence_type;
+  typedef Tensor<dimension, rank> value_type;
+  typedef Tensor<dimension, rank+1> gradient_type;
+  typedef Tensor<dimension, rank-1> divergence_type;
   typedef vertex<dimension> vertex_type;
 
 private:

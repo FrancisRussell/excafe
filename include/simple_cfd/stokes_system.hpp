@@ -104,7 +104,7 @@ public:
     assert(gEntity.getDimension() == cell_type::dimension - 1);
     typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location);
     typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    Tensor<2, 1, double> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
+    Tensor<2, 1> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
     const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal)).toScalar();
     return result;
   }
@@ -311,16 +311,16 @@ public:
   }
 };
 
-class Zero : public Function<2, 1, double>
+class Zero : public Function<2, 1>
 {
 public:
-  virtual Tensor<2, 1, double> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
   {
-    return Tensor<2, 1, double>();
+    return Tensor<2, 1>();
   }
 };
 
-class EdgeConditions : public Function<2, 1, double>
+class EdgeConditions : public Function<2, 1>
 {
 private:
   const double EPSILON;
@@ -330,9 +330,9 @@ public:
   {
   }
 
-  virtual Tensor<2, 1, double> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
   {
-    Tensor<2, 1, double> t;
+    Tensor<2, 1> t;
 
     if (v[0] < EPSILON && v[1] > EPSILON && v[1] < 1.0 - EPSILON)
     {
@@ -773,7 +773,7 @@ public:
 
     for(unsigned dof=0; dof<velocity.spaceDimension(); ++dof)
     {
-      Tensor<dimension, 1, double> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
+      Tensor<dimension, 1> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
       const dof_t velocityDof = dof_t(&velocity, cid, dof);
 
       double velocityCoeff;

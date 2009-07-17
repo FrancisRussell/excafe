@@ -219,9 +219,9 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const std::siz
 }
 
 
-Tensor<TriangularCell::dimension, 1, double> TriangularCell::getFacetNormal(const CellVertices<2>& vertices, const std::size_t localFacetID, const vertex_type& v) const
+Tensor<TriangularCell::dimension, 1> TriangularCell::getFacetNormal(const CellVertices<2>& vertices, const std::size_t localFacetID, const vertex_type& v) const
 {
-  Tensor<dimension, 1, double> normal;
+  Tensor<dimension, 1> normal;
   assert(vertices.size() == 3);
 
   const vertex_type v1 = vertices[localFacetID];

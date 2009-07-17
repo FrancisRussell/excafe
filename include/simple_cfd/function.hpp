@@ -6,15 +6,15 @@
 namespace cfd
 {
 
-template<unsigned int D, unsigned int R, typename T>
+template<unsigned int D, unsigned int R>
 class Function
 {
 public:
   static const int dimension = D;
   static const int rank = R;
-  typedef T value_type;
+  typedef typename Tensor<D, R>::value_type value_type;
 
-  virtual Tensor<D, R, T> evaluate(const vertex<dimension>& v) const = 0;
+  virtual Tensor<D, R> evaluate(const vertex<dimension>& v) const = 0;
 };
 
 }

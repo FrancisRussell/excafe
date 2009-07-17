@@ -39,7 +39,7 @@ public:
   double getJacobian(const CellVertices<dimension>& vertices, const MeshEntity& localEntity, const vertex_type& v) const;
   vertex_type referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
-  Tensor<dimension, 1, double> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
+  Tensor<dimension, 1> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
   virtual std::auto_ptr<MeshCell> cloneMeshCell() const;
   virtual std::auto_ptr< GeneralCell<dimension> > cloneGeneralCell() const;
 };

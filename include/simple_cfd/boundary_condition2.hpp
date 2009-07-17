@@ -17,7 +17,7 @@ public:
   virtual bool applies(MeshTopology& topology, const MeshEntity& entity, const std::size_t label) const = 0;
   virtual bool constrainsIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t label) const = 0;
   virtual std::size_t constrainedIndex(MeshTopology& topology, const MeshEntity& entity, const std::size_t label) const = 0;
-  virtual Tensor<dimension, rank, double> value(MeshTopology& topology, 
+  virtual Tensor<dimension, rank> value(MeshTopology& topology, 
     const MeshEntity& entity, const std::size_t label, const vertex<dimension>& v) const = 0;
   virtual ~BoundaryCondition2() {}
 };
