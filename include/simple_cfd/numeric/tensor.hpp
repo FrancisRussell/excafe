@@ -3,7 +3,6 @@
 
 #include <simple_cfd_fwd.hpp>
 #include <boost/array.hpp>
-#include <vector>
 #include <algorithm>
 #include <cstddef>
 #include <cassert>
@@ -105,10 +104,10 @@ public:
   friend class Tensor;
 
 private:
-  std::vector<value_type>  elements;
+  boost::array<value_type, size>  elements;
 
 public:
-  Tensor() : elements(size)
+  Tensor()
   {
     std::fill(elements.begin(), elements.end(), value_type());
   }
