@@ -69,7 +69,7 @@ public:
   {
   }
 
-  value_type evaluate_tensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
@@ -95,7 +95,7 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const double area = referenceCell.getArea(vertices);
@@ -123,7 +123,7 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  divergence_type evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 

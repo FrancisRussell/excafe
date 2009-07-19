@@ -82,7 +82,7 @@ public:
        0  3  1
   */
 
-  value_type evaluate_tensor(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  value_type evaluateTensor(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
@@ -136,7 +136,7 @@ public:
     return result;
   }
 
-  gradient_type evaluate_gradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
@@ -199,7 +199,7 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  divergence_type evaluateDivergence(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);

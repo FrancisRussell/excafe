@@ -53,7 +53,7 @@ private:
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
-          sum += basis.evaluate_tensor(vertices, i, wIter->first);
+          sum += basis.evaluateTensor(vertices, i, wIter->first);
 
         assertEqual(1.0, sum);
       }
@@ -98,14 +98,14 @@ private:
         const local_dof_t localDof(dofIter->second[0]);
         const vertex_type location = localDof.getElement()->getDofCoordinateLocal(localDof.getIndex());
         const cfd::CellVertices<2> localDofCellVertices(m.getCoordinates(localDof.getCell()));
-        const double localDofValue = basis.evaluate_tensor(localDofCellVertices, localDof.getIndex(), location);
+        const double localDofValue = basis.evaluateTensor(localDofCellVertices, localDof.getIndex(), location);
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
           const cfd::CellVertices<2> coDofCellVertices(m.getCoordinates(coDof.getCell()));
           const vertex_type coDofLocation = coDof.getElement()->getDofCoordinateLocal(coDof.getIndex());
-          const double coDofValue = basis.evaluate_tensor(coDofCellVertices, coDof.getIndex(), coDofLocation);
+          const double coDofValue = basis.evaluateTensor(coDofCellVertices, coDof.getIndex(), coDofLocation);
           assertTrue(m.referenceToPhysical(localDof.getCell(), location) == m.referenceToPhysical(coDof.getCell(), coDofLocation));
           assertEqual(localDofValue, coDofValue);
         }
