@@ -31,95 +31,54 @@ struct Power<X, 0>
 
 }
 
-template<unsigned D, unsigned R, unsigned K>
-class TensorView
-{
-private:
-  typedef typename Tensor<D, R>::value_type value_type;
-  typedef std::size_t size_type;
-
-  static const unsigned int dimension = D;
-  static const unsigned int rank = R;
-  static const unsigned int knownIndicesCount = K;
-
-  Tensor<D, R>& tensor;
-  boost::array<std::size_t, knownIndicesCount>  knownIndices;
-
-public:
-  TensorView(Tensor<D, R>& t, const size_type* const indices) : tensor(t)
-  {
-    std::copy(indices, indices+knownIndicesCount, knownIndices.begin());
-  }
-
-  TensorView<D, R, K+1> operator()(const size_type index)
-  {
-     std::size_t newKnownIndices[knownIndicesCount+1];
-     std::copy(knownIndices.begin(), knownIndices.end(), newKnownIndices);
-     newKnownIndices[knownIndicesCount] = index;
-
-     return TensorView<D, R, K+1>(tensor, newKnownIndices);
-  }
-};
-
-template<unsigned D, unsigned R>
-class TensorView<D, R, R>
-{
-private:
-  typedef typename Tensor<D, R>::value_type value_type;
-  typedef std::size_t size_type;
-  static const unsigned int dimension = D;
-  static const unsigned int rank = R;
-  
-  Tensor<D, R>& tensor;
-  std::size_t knownIndices[rank];
-
-public:
-  TensorView(Tensor<D, R>& t, const size_type* const indices) : tensor(t)
-  {
-    std::copy(indices, indices+rank, knownIndices);
-  }
-
-  value_type toScalar() const
-  {
-    return tensor[knownIndices];
-  }
-
-  value_type& operator=(const value_type value)
-  {
-    return tensor[knownIndices] = value;
-  }
-};
-
-
-template<unsigned int D, unsigned int R>
+template<std::size_t D>
 class Tensor
 {
 public:
   typedef double value_type;
   typedef std::size_t size_type;
-  static const unsigned int dimension = D;
-  static const unsigned int rank = R;
-  static const size_type size = detail::Power<dimension, rank>::value;
-
-  template<unsigned int D_, unsigned int R_>
-  friend class Tensor;
+  static const std::size_t  dimension = D;
+  const std::size_t rank;
+  const size_type size;
 
 private:
   std::vector<value_type>  elements;
 
+  static std::size_t pow(const std::size_t base, const std::size_t exponent)
+  {
+    std::size_t result = 1;
+
+    for(std::size_t i=0; i<exponent; ++i)
+      result *= base;
+
+    return result;
+  }
+
 public:
-  Tensor() : elements(size)
+  Tensor(const std::size_t _rank) : rank(_rank), size(pow(dimension, rank)), elements(size)
   {
     std::fill(elements.begin(), elements.end(), value_type());
   }
 
-  Tensor(const Tensor& t) : elements(t.elements)
+  Tensor(const Tensor& t) : rank(t.rank), size(t.size), elements(t.elements)
   {
   }
 
-  TensorView<D, R, 1> operator()(const size_type index)
+  std::size_t getRank() const
   {
-    return TensorView<D, R, 1>(*this, &index);
+    return rank;
+  }
+
+  std::size_t numValues() const
+  {
+    return size;
+  }
+
+  value_type& operator()(const size_type index)
+  {
+    assert(rank == 1);
+    assert(index < dimension);
+    return elements[index];
   }
 
   value_type& operator[](const size_type* const indices)
@@ -152,54 +111,55 @@ public:
     return x;
   }
 
-  template<unsigned int R2>
-  Tensor<D, R+R2> operator*(const Tensor<D, R2>& t) const
+  Tensor operator*(const Tensor& t) const
   {
-    Tensor<D, R+R2> result;
+    Tensor result(rank + t.rank);
 
-    for(unsigned index=0; index<detail::Power<D, R>::value; ++index)
-      for(unsigned index2=0; index2<detail::Power<D, R2>::value; ++index2)
-        result.elements[index * detail::Power<D, R2>::value + index2] = elements[index] * t.elements[index2];
+    for(unsigned index=0; index<size; ++index)
+      for(unsigned index2=0; index2<t.size; ++index2)
+        result.elements[index * t.size + index2] = elements[index] * t.elements[index2];
 
     return result;
   }
 
-  template<unsigned int R2>
-  Tensor<D, R+R2-2> inner_product(const Tensor<D, R2>& t) const
+  Tensor inner_product(const Tensor& t) const
   {
-    Tensor<D, R+R2-2> result;
+    assert(rank + t.rank >= 2);
 
-    for(unsigned index=0; index<detail::Power<D, R-1>::value; ++index)
+    const std::size_t iterationSize = pow(dimension, rank-1);
+    const std::size_t tIterationSize = pow(dimension, t.rank-1);
+    Tensor result(rank + t.rank - 2);
+
+    for(unsigned index=0; index < iterationSize; ++index)
     {
-      for(unsigned index2=0; index2<detail::Power<D, R2-1>::value; ++index2)
+      for(unsigned index2=0; index2 < tIterationSize; ++index2)
       {
         value_type sum = 0.0;
-        for(unsigned sumIndex=0; sumIndex<D; ++sumIndex)
-          sum += elements[index*rank + sumIndex] * t.elements[sumIndex*detail::Power<D, R2-1>::value + index2];
+        for(unsigned sumIndex=0; sumIndex<dimension; ++sumIndex)
+          sum += elements[index*rank + sumIndex] * t.elements[sumIndex*tIterationSize + index2];
 
-        result.elements[index*detail::Power<D, R2-1>::value + index2] = sum;
+        result.elements[index*tIterationSize + index2] = sum;
       }
     }
 
     return result;
   }
 
-  Tensor<D, 0> colon_product(const Tensor& t) const
+  value_type colon_product(const Tensor& t) const
   {
-    Tensor<D, 0> result;
-    result.elements[0] = std::inner_product(elements.begin(), elements.end(), t.elements.begin(), value_type(0));
-    return result;
+    assert(rank == t.rank);
+    return std::inner_product(elements.begin(), elements.end(), t.elements.begin(), value_type(0));
   }
 
-  value_type toScalar() const
+  operator value_type()
   {
-    assert(rank == 0);
+    assert(rank == 0 && "Attempt to convert non-rank 0 tensor to scalar");
     return elements[0];
   }
 };
 
-template<unsigned int D, unsigned int R> 
-Tensor<D, R>  operator*(const typename Tensor<D, R>::value_type s, const Tensor<D, R>& t)
+template<unsigned int D> 
+Tensor<D>  operator*(const typename Tensor<D>::value_type s, const Tensor<D>& t)
 {
   return t*s;
 }

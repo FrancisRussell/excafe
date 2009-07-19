@@ -61,7 +61,7 @@ public:
   {
     typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location);
     typename TestType::gradient_type test_gradient = test->evaluate_gradient(vertices, testDof, location);
-    const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
+    const double result = (test_gradient.colon_product(trial_gradient));
     return result;
   }
 
@@ -104,8 +104,8 @@ public:
     assert(gEntity.getDimension() == cell_type::dimension - 1);
     typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location);
     typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    Tensor<2, 1> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
-    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal)).toScalar();
+    Tensor<2> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
+    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal));
     return result;
   }
 
@@ -148,7 +148,7 @@ public:
   {
     typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDof, location);
     typename TestType::divergence_type test_divergence = test->evaluate_divergence(vertices, testDof, location);
-    const double result = (trial_value * test_divergence).toScalar();
+    const double result = (trial_value * test_divergence);
     return result;
   }
 
@@ -190,7 +190,7 @@ public:
   {
     typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(vertices, trialDof, location);
     typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    const double result = (test_value * trial_divergence).toScalar();
+    const double result = (test_value * trial_divergence);
     return result;
   }
 };
@@ -227,7 +227,7 @@ public:
   {
     typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDof, location);
     typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    const double result = (test_value.colon_product(trial_value)).toScalar();
+    const double result = (test_value.colon_product(trial_value));
     return result;
   }
 };
@@ -272,7 +272,7 @@ public:
     typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDofIndex, location);
     typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDofIndex, location) * prevTrialCoeff;
     typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDofIndex, location);
-    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
+    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value);
     return result;
   }
 
@@ -311,16 +311,16 @@ public:
   }
 };
 
-class Zero : public Function<2, 1>
+class Zero : public Function<2>
 {
 public:
-  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2> evaluate(const vertex<dimension>& v) const
   {
-    return Tensor<2, 1>();
+    return Tensor<2>(1);
   }
 };
 
-class EdgeConditions : public Function<2, 1>
+class EdgeConditions : public Function<2>
 {
 private:
   const double EPSILON;
@@ -330,9 +330,9 @@ public:
   {
   }
 
-  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2> evaluate(const vertex<dimension>& v) const
   {
-    Tensor<2, 1> t;
+    Tensor<2> t(1);
 
     if (v[0] < EPSILON && v[1] > EPSILON && v[1] < 1.0 - EPSILON)
     {
@@ -773,14 +773,14 @@ public:
 
     for(unsigned dof=0; dof<velocity.spaceDimension(); ++dof)
     {
-      Tensor<dimension, 1> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
+      Tensor<dimension> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
       const dof_t velocityDof = dof_t(&velocity, cid, dof);
 
       double velocityCoeff;
       velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);
 
-      xVelocity += velocity_basis(0).toScalar() * velocityCoeff;
-      yVelocity += velocity_basis(1).toScalar() * velocityCoeff;
+      xVelocity += velocity_basis(0) * velocityCoeff;
+      yVelocity += velocity_basis(1) * velocityCoeff;
      }
      return std::make_pair(xVelocity, yVelocity);
   }
