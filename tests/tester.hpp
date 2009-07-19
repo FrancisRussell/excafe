@@ -7,6 +7,7 @@
 #include <simple_cfd/dof.hpp>
 #include <string>
 #include <vector>
+#include <iostream>
 
 class Tester
 {

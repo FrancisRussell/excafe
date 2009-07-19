@@ -13,7 +13,6 @@
 #include "mesh_connectivity.hpp"
 #include "mesh_topology.hpp"
 #include "mesh_function.hpp"
-#include "utility.hpp"
 #include "triangular_cell.hpp"
 #include "general_cell.hpp"
 #include "dof_map.hpp"

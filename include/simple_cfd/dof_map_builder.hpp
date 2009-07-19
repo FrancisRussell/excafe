@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cassert>
 #include <boost/foreach.hpp>
-#include "utility.hpp"
 #include "simple_cfd_fwd.hpp"
 #include "finite_element.hpp"
 #include "dof_map.hpp"
