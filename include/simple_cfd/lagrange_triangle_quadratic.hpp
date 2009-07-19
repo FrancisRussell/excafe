@@ -23,12 +23,12 @@ class LagrangeTriangleQuadratic : public FiniteElement<TriangularCell::dimension
 {
 public:
   typedef TriangularCell cell_type;
-  static const unsigned int rank = R;
-  static const unsigned int dimension = cell_type::dimension;
-  typedef Tensor<dimension, rank> value_type;
-  typedef Tensor<dimension, rank+1> gradient_type;
-  typedef Tensor<dimension, rank-1> divergence_type;
-  typedef vertex<dimension> vertex_type;
+  typedef Tensor<dimension> value_type;
+  typedef Tensor<dimension> gradient_type;
+  typedef Tensor<dimension> divergence_type;
+
+  static const std::size_t dimension = cell_type::dimension;
+  static const std::size_t rank = R;
 
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
@@ -130,7 +130,7 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    value_type result;
+    value_type result(rank);
     result[tensorIndex.data()] = (gf/gn) * (hf/hn);
 
     return result;
@@ -188,7 +188,8 @@ public:
     xTensorIndex[0] = 0;
     yTensorIndex[0] = 1;
 
-    gradient_type result;
+    gradient_type result(rank + 1);
+
     result[xTensorIndex.data()] = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
                 (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
 
@@ -248,7 +249,7 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    divergence_type result;
+    divergence_type result(rank - 1);
 
     if (tensorIndex[0] == 0)
       result[tensorIndex.data()+1] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +

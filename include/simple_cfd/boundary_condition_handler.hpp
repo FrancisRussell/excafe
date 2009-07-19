@@ -59,7 +59,7 @@ public:
 
   template<typename finite_element_t>
   void handleBoundaryCondition(const finite_element_t& element, 
-    const BoundaryCondition2<finite_element_t::dimension, finite_element_t::rank>& condition)
+    const BoundaryCondition2<finite_element_t::dimension>& condition)
   {
     const std::size_t dimension = m.getDimension();
     std::map< std::size_t, std::set<local_dof_t> > facetDofMap; 

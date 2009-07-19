@@ -25,7 +25,7 @@ public:
   virtual double getArea(const CellVertices<dimension>& vertices) const = 0;
   virtual double getJacobian(const CellVertices<dimension>& vertices, const MeshEntity& localEntity, const vertex<dimension>& v) const = 0;
   virtual vertex<dimension> referenceToPhysical(const CellVertices<dimension>& vertices, const vertex<dimension>& vertex) const = 0;
-  virtual Tensor<dimension, 1> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid,
+  virtual Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid,
     const vertex<dimension>& v) const = 0;
   virtual std::auto_ptr<GeneralCell> cloneGeneralCell() const = 0;
   virtual ~GeneralCell() {}
