@@ -31,7 +31,11 @@ public:
   {
     return literal.getDimension();
   }
-  
+
+  virtual void accept(FieldVisitor& v)
+  {
+    v.visit(*this);
+  }
 };
 
 }

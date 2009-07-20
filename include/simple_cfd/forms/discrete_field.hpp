@@ -18,8 +18,8 @@ private:
  FEVectorHolder vector;
 
 public:
-  template<typename C>
-  DiscreteField(const FEVector<C>& v) : vector(v)
+  template<std::size_t D>
+  DiscreteField(const FEVector<D>& v) : vector(v)
   {
   }
 
@@ -31,6 +31,16 @@ public:
   std::size_t getDimension() const
   {
     return vector.getDimension();
+  }
+
+  virtual void accept(FieldVisitor& v)
+  {
+    v.visit(*this);
+  }
+
+  FEVectorHolder getVector() const
+  {
+    return vector;
   }
 };
 

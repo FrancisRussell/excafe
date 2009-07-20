@@ -25,13 +25,13 @@ public:
   }
 
   template<typename finite_element_t>
-  void populateDirichletValues(FEVector<typename finite_element_t::cell_type>& boundaryValues, const finite_element_t& element)
+  void populateDirichletValues(FEVector<finite_element_t::dimension>& boundaryValues, const finite_element_t& element)
   {
     BOOST_STATIC_ASSERT(rank == finite_element_t::rank);
     BOOST_STATIC_ASSERT(dimension == finite_element_t::dimension);
 
     typedef typename finite_element_t::cell_type cell_type;
-    typedef DofMap<typename finite_element_t::cell_type> dof_map_type;
+    typedef DofMap<finite_element_t::dimension> dof_map_type;
     typedef typename dof_map_type::dof_t dof_t;
 
     const dof_map_type dofMap(boundaryValues.getRowMappings());

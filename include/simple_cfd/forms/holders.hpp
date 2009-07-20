@@ -54,8 +54,8 @@ private:
   std::size_t dimension;
 
 public:
-  template<typename C>
-  FEVectorHolder(const FEVector<C>& vector) : vectorPtr(&vector), rank(vector.getRank()),
+  template<std::size_t D>
+  FEVectorHolder(const FEVector<D>& vector) : vectorPtr(&vector), rank(vector.getRank()),
     dimension(vector.getDimension())
   {
   }

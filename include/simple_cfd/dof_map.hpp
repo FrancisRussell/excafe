@@ -6,6 +6,7 @@
 #include <set>
 #include <iterator>
 #include <utility>
+#include <cstddef>
 #include "simple_cfd_fwd.hpp"
 #include "dof.hpp"
 #include "numeric/sparsity_pattern.hpp"
@@ -13,12 +14,11 @@
 namespace cfd
 {
 
-template<typename C>
+template<std::size_t D>
 class DofMap
 {
 public:
-  typedef C cell_type;
-  static const std::size_t dimension = cell_type::dimension;
+  static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
   typedef Dof<dimension> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
@@ -139,7 +139,7 @@ public:
     return result;
   }
 
-  std::pair<DofMap, DofMap> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >& dirichletConditions)
+  std::pair<DofMap, DofMap> splitHomogeneousDirichlet(const std::vector< std::pair<const finite_element_t*, const SubDomain<dimension>*> >& dirichletConditions)
   {
     local2global_map homogeneous;
     std::set<const finite_element_t*> homogeneousElements;
@@ -152,7 +152,7 @@ public:
       const dof_t dof(mappingIter->first);
       bool isDirichlet = false;
 
-      for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<cell_type::dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
+      for(typename std::vector< std::pair<const finite_element_t*, const SubDomain<dimension>*> >::const_iterator dirichletIter = dirichletConditions.begin(); 
           dirichletIter != dirichletConditions.end(); ++dirichletIter)
       {
         if (dirichletIter->first == dof.getElement() &&

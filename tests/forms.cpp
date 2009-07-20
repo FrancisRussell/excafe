@@ -15,16 +15,18 @@ int main(int argc, char** argv)
 
   // Build mesh
   typedef TriangularCell cell_type;
+  static const std::size_t dimension = cell_type::dimension;
+
   TriangularMeshBuilder meshBuilder(1.0, 1.0, 0.25);
-  Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
+  Mesh<dimension> m(meshBuilder.buildMesh());
 
   // Define bases and dof maps
   LagrangeTriangleLinear<1> vectorBasis;
-  DofMapBuilder<cell_type> mapBuilder(m);
+  DofMapBuilder<dimension> mapBuilder(m);
   mapBuilder.addFiniteElement(vectorBasis);
-  DofMap<cell_type> vectorFieldDofs = mapBuilder.getDofMap();
+  DofMap<dimension> vectorFieldDofs = mapBuilder.getDofMap();
 
-  FEVector<cell_type> vectorField(vectorFieldDofs);
+  FEVector<dimension> vectorField(vectorFieldDofs);
 
   grad(vectorField);
   div(vectorBasis) + div(vectorField);

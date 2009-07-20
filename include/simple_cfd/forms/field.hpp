@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
+#include "field_visitor.hpp"
 
 namespace cfd
 {
@@ -17,6 +18,7 @@ public:
 
   virtual std::size_t getRank() const = 0;
   virtual std::size_t getDimension() const = 0;
+  virtual void accept(FieldVisitor& visitor) = 0;
 };
 
 }

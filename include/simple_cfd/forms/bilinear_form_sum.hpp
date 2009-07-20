@@ -4,6 +4,8 @@
 #include <vector>
 #include <utility>
 #include <boost/shared_ptr.hpp>
+#include "field.hpp"
+#include "bilinear_form.hpp"
 
 namespace cfd
 {

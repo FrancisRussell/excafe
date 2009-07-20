@@ -10,14 +10,14 @@
 namespace cfd
 {
 
-template<typename C>
+template<std::size_t D>
 class FEVector
 {
 private:
-  typedef C cell_type;
-  typedef FiniteElement<cell_type::dimension> finite_element_t;
-  typedef typename DofMap<cell_type>::dof_t dof_t;
-  const DofMap<cell_type> rowMappings;
+  static const std::size_t dimension = D;
+  typedef FiniteElement<dimension> finite_element_t;
+  typedef typename DofMap<dimension>::dof_t dof_t;
+  const DofMap<dimension> rowMappings;
   PETScVector vector;
   
   void addOrSetValues(const unsigned rows, const dof_t* rowDofs, const double* values, const bool add)
@@ -31,15 +31,14 @@ private:
       vector.addValues(rows, &rowIndices[0], values);
     else
       vector.setValues(rows, &rowIndices[0], values);
-
   }
 
 public:
-  FEVector(const DofMap<cell_type>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
+  FEVector(const DofMap<dimension>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
   {
   }
 
-  FEVector(const DofMap<cell_type>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
+  FEVector(const DofMap<dimension>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
                                                                            vector(v)
   {
   }
@@ -65,7 +64,7 @@ public:
     return (*rowMappings.getFiniteElements().begin())->getDimension();
   }
 
-  DofMap<cell_type> getRowMappings() const
+  DofMap<dimension> getRowMappings() const
   {
     return rowMappings;
   }

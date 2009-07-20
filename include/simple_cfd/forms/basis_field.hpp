@@ -31,6 +31,16 @@ public:
   {
     return element.getDimension();
   }
+
+  virtual void accept(FieldVisitor& v)
+  {
+    v.visit(*this);
+  }
+
+  FiniteElementHolder getElement() const
+  {
+    return element;
+  }
 };
 
 }

@@ -70,7 +70,7 @@ private:
     
     typedef typename basis_t::cell_type cell_type;
     typedef typename cell_type::vertex_type vertex_type;
-    typedef typename cfd::DofMap<cell_type> dof_map_t;
+    typedef typename cfd::DofMap<cell_type::dimension> dof_map_t;
     typedef typename dof_map_t::local2global_map local2global_map;
     typedef typename local2global_map::key_type local_dof_t;
     typedef typename local2global_map::mapped_type global_dof_t;
@@ -80,7 +80,7 @@ private:
     cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     basis_t basis;
 
-    cfd::DofMapBuilder<cell_type> mapBuilder(m);
+    cfd::DofMapBuilder<cell_type::dimension> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);
 
     dof_map_t dofMap(mapBuilder.getDofMap());

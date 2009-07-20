@@ -36,8 +36,8 @@ public:
   {
   }
 
-  template<typename C>
-  LinearForm(const FEVector<C>& element) : field(new DiscreteField(element))
+  template<std::size_t D>
+  LinearForm(const FEVector<D>& element) : field(new DiscreteField(element))
   {
   }
 
