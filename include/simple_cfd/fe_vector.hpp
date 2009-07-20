@@ -48,6 +48,23 @@ public:
   {
   }
 
+  bool isComposite() const
+  {
+    return rowMappings.isComposite();
+  }
+
+  std::size_t getRank() const
+  {
+    assert(!isComposite());
+    return (*rowMappings.getFiniteElements().begin())->getRank();
+  }
+
+  std::size_t getDimension() const
+  {
+    assert(!isComposite());
+    return (*rowMappings.getFiniteElements().begin())->getDimension();
+  }
+
   DofMap<cell_type> getRowMappings() const
   {
     return rowMappings;

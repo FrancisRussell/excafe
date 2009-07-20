@@ -68,6 +68,11 @@ public:
     return rank;
   }
 
+  std::size_t getDimension() const
+  {
+    return dimension;
+  }
+
   std::size_t numValues() const
   {
     return size;

@@ -69,6 +69,16 @@ public:
   {
   }
 
+  std::size_t getRank() const
+  {
+    return rank;
+  }
+
+  std::size_t getDimension() const
+  {
+    return dimension;
+  }
+
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());

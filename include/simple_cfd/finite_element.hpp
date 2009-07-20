@@ -18,6 +18,8 @@ public:
   typedef vertex<dimension> vertex_type;
   typedef Dof<dimension> dof_t;
 
+  virtual std::size_t getRank() const = 0;
+  virtual std::size_t getDimension() const = 0;
   virtual unsigned getTensorIndex(const Mesh<dimension>& mesh, const std::size_t cid, const std::size_t dof) const = 0;
   virtual unsigned spaceDimension() const = 0; // Number of basis functions
   virtual std::vector< std::set<dof_t> > resolveIdenticalDofs(const Mesh<dimension>& m, const MeshEntity& entity, const std::set<dof_t>& dofsOnEntity) const = 0;

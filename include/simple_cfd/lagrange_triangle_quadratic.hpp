@@ -67,6 +67,16 @@ public:
   {
   }
 
+  std::size_t getRank() const
+  {
+    return rank;
+  }
+
+  std::size_t getDimension() const
+  {
+    return dimension;
+  }
+
   /*   Triangle Node Numbering for quadratic basis
 
        LL        

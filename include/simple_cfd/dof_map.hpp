@@ -61,6 +61,11 @@ public:
           m(&_m), elements(_elements), mapping(_mapping)
   {
   }
+  
+  bool isComposite() const
+  {
+    return elements.size() > 1;
+  }
 
   const_iterator begin() const
   {
