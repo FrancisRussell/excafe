@@ -7,6 +7,8 @@
 
 #include "field.hpp"
 #include "linear_form.hpp"
+#include "bilinear_form.hpp"
+#include "bilinear_form_sum.hpp"
 
 //Unary
 #include "gradient.hpp"
@@ -21,6 +23,11 @@
 namespace cfd
 {
 
+forms::BilinearForm B(const forms::LinearForm trial, const forms::LinearForm test)
+{
+  return forms::BilinearForm(trial, test);
+}
+
 forms::LinearForm grad(const forms::LinearForm f)
 {
   return forms::LinearForm(new forms::Gradient(f.getField()));
@@ -34,6 +41,13 @@ forms::LinearForm div(const forms::LinearForm f)
 forms::LinearForm operator+(const forms::LinearForm l, const forms::LinearForm r)
 {
   return forms::LinearForm(new forms::Addition(l.getField(), r.getField()));
+}
+
+forms::BilinearFormSum operator+(const forms::BilinearFormSum l, const forms::BilinearFormSum r)
+{
+  forms::BilinearFormSum result(l);
+  result.append(r);
+  return result;
 }
 
 forms::LinearForm inner(const forms::LinearForm l, const forms::LinearForm r)

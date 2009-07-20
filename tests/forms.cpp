@@ -31,4 +31,6 @@ int main(int argc, char** argv)
 
   Tensor<3> rankTwoTensor(2);
   div(rankTwoTensor);
+
+  B(div(rankTwoTensor), div(rankTwoTensor)) + B(div(rankTwoTensor), div(rankTwoTensor));
 }
