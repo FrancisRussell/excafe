@@ -15,6 +15,7 @@
 #include "quadrature_points.hpp"
 #include "forms/bilinear_form_sum.hpp"
 #include "forms/basis_finder.hpp"
+#include "forms/field.hpp"
 
 namespace cfd
 {
@@ -190,6 +191,12 @@ public:
 
   FEMatrix& operator+=(const forms::BilinearFormSum& expr)
   {
+    const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
+    const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
+
+    std::map<std::pair<const finite_element_t*, const finite_element_t*>,
+      std::vector<std::pair<forms::LinearForm, forms::LinearForm> > > forms;
+
     return *this;
   }
 

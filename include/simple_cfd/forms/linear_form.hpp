@@ -20,14 +20,14 @@ namespace forms
 class LinearForm
 {
 private:
-  boost::shared_ptr<Field> field;
+  Field::reference_t field;
 
 public:
   LinearForm(Field* const f) : field(f)
   {
   }
 
-  LinearForm(boost::shared_ptr<Field> f) : field(f)
+  LinearForm(Field::reference_t f) : field(f)
   {
   }
 
