@@ -20,7 +20,8 @@ private:
 
 public:
 
-  BilinearForm(const LinearForm& trial, const LinearForm& test)
+  BilinearForm(const LinearForm& trial, const LinearForm& test) :
+    trialField(trial.getField()), testField(test.getField())
   {
   }
 

@@ -29,6 +29,7 @@ public:
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
+  virtual const GeneralCell<dimension>& getCell() const = 0;
   virtual ~FiniteElement() {}
 };
 

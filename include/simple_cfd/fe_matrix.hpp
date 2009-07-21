@@ -16,6 +16,7 @@
 #include "forms/bilinear_form_sum.hpp"
 #include "forms/basis_finder.hpp"
 #include "forms/field.hpp"
+#include "forms/form_evaluator.hpp"
 
 namespace cfd
 {
@@ -191,11 +192,38 @@ public:
 
   FEMatrix& operator+=(const forms::BilinearFormSum& expr)
   {
-    const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
-    const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
+    using namespace cfd::forms;
 
-    std::map<std::pair<const finite_element_t*, const finite_element_t*>,
-      std::vector<std::pair<forms::LinearForm, forms::LinearForm> > > forms;
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+
+    typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
+    typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
+
+    std::map< element_pair, std::vector<evaluator_pair> > evaluators;
+
+    for(BilinearFormSum::const_iterator formIter = expr.begin(); formIter!=expr.end(); ++formIter)
+    {
+      // Find trial
+      BasisFinder<dimension> trialFinder;
+      formIter->getTrialField()->accept(trialFinder);
+
+      const finite_element_t* const trialBasis = trialFinder.getBasis();
+      assert(trialBasis != NULL);
+      assert(trialElements.find(trialBasis) != trialElements.end());
+
+      // Find test
+      BasisFinder<dimension> testFinder;
+      formIter->getTestField()->accept(testFinder);
+
+      const finite_element_t* const testBasis = testFinder.getBasis();
+      assert(testBasis != NULL);
+      assert(testElements.find(testBasis) != testElements.end());
+
+      const FormEvaluator<dimension> trialEvaluator(formIter->getTrialField(), trialBasis->getCell());
+      const FormEvaluator<dimension> testEvaluator(formIter->getTestField(), testBasis->getCell());
+      evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
+    }
 
     return *this;
   }

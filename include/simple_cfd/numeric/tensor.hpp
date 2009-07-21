@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <algorithm>
+#include <functional>
 
 namespace cfd
 {
@@ -115,7 +117,18 @@ public:
     return x;
   }
 
+  Tensor& operator+=(const Tensor& t)
+  {
+    assert(rank == t.rank);
+    std::transform(elements.begin(), elements.end(), t.elements.begin(), elements.begin(), std::plus<double>());
+  }
+
   Tensor operator*(const Tensor& t) const
+  {
+    return outer_product(t);
+  }
+
+  Tensor outer_product(const Tensor& t) const
   {
     Tensor result(rank + t.rank);
 

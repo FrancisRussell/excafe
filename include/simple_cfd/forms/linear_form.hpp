@@ -50,6 +50,11 @@ public:
   {
     return field;
   }
+
+  void accept(FieldVisitor& visitor)
+  {
+    field->accept(visitor);
+  }
 };
 
 }

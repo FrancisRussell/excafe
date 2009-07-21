@@ -20,7 +20,7 @@ class BasisFinder : public FieldVisitor
 private:
   static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
-  const FiniteElement<D>* basis;
+  const finite_element_t* basis;
 
   void handle(const FiniteElementHolder& holder)
   {
@@ -34,7 +34,7 @@ private:
     const FEVector<dimension>* const vectorPtr = boost::any_cast<const FEVector<dimension>*>(holder.getVectorPtr());
     assert(vectorPtr != NULL);
 
-    const std::set<finite_element_t*> elements(vectorPtr->getRowMappings().getFiniteElements());
+    const std::set<const finite_element_t*> elements(vectorPtr->getRowMappings().getFiniteElements());
     assert(elements.size() == 1);
 
     handle(*elements.begin());
@@ -44,7 +44,7 @@ private:
   {
     assert(element != NULL);
 
-    if (basis == NULL)
+    if (basis == NULL || basis == element)
     {
       basis = element;
     }
@@ -55,6 +55,15 @@ private:
   }
 
 public:
+  BasisFinder() : basis(NULL)
+  {
+  }
+
+  const finite_element_t* getBasis() const
+  {
+    return basis;
+  }
+
   virtual void enter(Addition& addition)
   {
   }

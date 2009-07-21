@@ -16,15 +16,15 @@ namespace forms
 class BilinearFormSum
 {
 private: 
-  std::vector< std::pair<Field::reference_t, Field::reference_t> > forms;
+  std::vector<BilinearForm> forms;
 
 public:
-  typedef std::vector< std::pair<Field::reference_t, Field::reference_t> >::iterator iterator;
-  typedef std::vector< std::pair<Field::reference_t, Field::reference_t> >::const_iterator const_iterator;
+  typedef std::vector<BilinearForm>::iterator iterator;
+  typedef std::vector<BilinearForm>::const_iterator const_iterator;
 
   BilinearFormSum(const BilinearForm& f)
   {
-    forms.push_back(std::make_pair(f.getTrialField(), f.getTestField()));
+    forms.push_back(f);
   }
 
   void append(const BilinearFormSum& b)

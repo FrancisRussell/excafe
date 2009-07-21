@@ -231,6 +231,11 @@ public:
 
     return result;
   }
+
+  virtual const GeneralCell<dimension>& getCell() const
+  {
+    return referenceCell;
+  }
 };
 
 }

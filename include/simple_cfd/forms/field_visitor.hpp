@@ -16,27 +16,27 @@ public:
   virtual void enter(Addition& addition) = 0;
   virtual void exit(Addition& addition) = 0;
 
-  virtual void enter(InnerProduct& addition) = 0;
-  virtual void exit(InnerProduct& addition) = 0;
+  virtual void enter(InnerProduct& inner) = 0;
+  virtual void exit(InnerProduct& inner) = 0;
 
-  virtual void enter(OuterProduct& addition) = 0;
-  virtual void exit(OuterProduct& addition) = 0;
+  virtual void enter(OuterProduct& outer) = 0;
+  virtual void exit(OuterProduct& outer) = 0;
 
-  virtual void enter(ColonProduct& addition) = 0;
-  virtual void exit(ColonProduct& addition) = 0;
+  virtual void enter(ColonProduct& colon) = 0;
+  virtual void exit(ColonProduct& colon) = 0;
 
   virtual void enter(Gradient& gradient) = 0;
   virtual void exit(Gradient& gradient) = 0;
 
-  virtual void enter(Divergence& gradient) = 0;
-  virtual void exit(Divergence& gradient) = 0;
+  virtual void enter(Divergence& divergence) = 0;
+  virtual void exit(Divergence& divergence) = 0;
 
   // Terminals
   virtual void visit(BasisField& basis) = 0;
-  virtual void visit(DiscreteField& basis) = 0;
-  virtual void visit(TensorLiteral& basis) = 0;
+  virtual void visit(DiscreteField& field) = 0;
+  virtual void visit(TensorLiteral& literal) = 0;
 
-  virtual ~FieldVisitor();
+  virtual ~FieldVisitor() {}
 };
 
 }
