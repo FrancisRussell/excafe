@@ -24,9 +24,9 @@ public:
   typedef TriangularCell cell_type;
   static const std::size_t rank = R;
   static const std::size_t dimension = cell_type::dimension;
-  typedef Tensor<dimension, rank> value_type;
-  typedef Tensor<dimension, rank+1> gradient_type;
-  typedef Tensor<dimension, rank-1> divergence_type;
+  typedef Tensor<dimension> value_type;
+  typedef Tensor<dimension> gradient_type;
+  typedef Tensor<dimension> divergence_type;
   typedef vertex<dimension> vertex_type;
 
 private:
@@ -69,7 +69,17 @@ public:
   {
   }
 
-  value_type evaluate_tensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  std::size_t getRank() const
+  {
+    return rank;
+  }
+
+  std::size_t getDimension() const
+  {
+    return dimension;
+  }
+
+  value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
@@ -88,14 +98,14 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    value_type result;
+    value_type result(rank);
     result[tensorIndex.data()] = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
                           (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / (2.0 * area);
 
     return result;
   }
 
-  gradient_type evaluate_gradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const double area = referenceCell.getArea(vertices);
@@ -116,14 +126,14 @@ public:
     xTensorIndex[0] = 0;
     yTensorIndex[0] = 1;
 
-    gradient_type result;
+    gradient_type result(rank + 1);
     result[xTensorIndex.data()] = -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
     result[yTensorIndex.data()] =  (vertices[ip2][0] - vertices[ip1][0]) / (2.0 * area);
 
     return result;
   }
 
-  divergence_type evaluate_divergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  divergence_type evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
@@ -144,7 +154,7 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    divergence_type result;
+    divergence_type result(rank - 1);
 
     if (tensorIndex[0] == 0)
       result[tensorIndex.data()+1] += -(vertices[ip2][1] - vertices[ip1][1]) / (2.0 * area);
@@ -220,6 +230,11 @@ public:
     }
 
     return result;
+  }
+
+  virtual const GeneralCell<dimension>& getCell() const
+  {
+    return referenceCell;
   }
 };
 

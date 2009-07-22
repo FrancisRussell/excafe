@@ -17,21 +17,21 @@ public:
 
 private:
   const SubDomain<dimension>& subdomain;
-  const Function<dimension, rank>& function;
+  const Function<dimension>& function;
 
 public:
-  BoundaryCondition(const SubDomain<dimension>& s, const Function<dimension, rank>& f) : subdomain(s), function(f)
+  BoundaryCondition(const SubDomain<dimension>& s, const Function<dimension>& f) : subdomain(s), function(f)
   {
   }
 
   template<typename finite_element_t>
-  void populateDirichletValues(FEVector<typename finite_element_t::cell_type>& boundaryValues, const finite_element_t& element)
+  void populateDirichletValues(FEVector<finite_element_t::dimension>& boundaryValues, const finite_element_t& element)
   {
     BOOST_STATIC_ASSERT(rank == finite_element_t::rank);
     BOOST_STATIC_ASSERT(dimension == finite_element_t::dimension);
 
     typedef typename finite_element_t::cell_type cell_type;
-    typedef DofMap<typename finite_element_t::cell_type> dof_map_type;
+    typedef DofMap<finite_element_t::dimension> dof_map_type;
     typedef typename dof_map_type::dof_t dof_t;
 
     const dof_map_type dofMap(boundaryValues.getRowMappings());
@@ -44,8 +44,8 @@ public:
 
       if (boost::get<0>(dof) == &element && subdomain.inside(dofLocationGlobal))
       {
-        const Tensor<D, R> boundaryValue(function.evaluate(dofLocationGlobal));
-        const Tensor<D, R> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
+        const Tensor<D> boundaryValue(function.evaluate(dofLocationGlobal));
+        const Tensor<D> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
                                                                               boost::get<2>(dof), dofLocationLocal));
         const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
         boundaryValues.setValues(1, &dof, &dofValue);

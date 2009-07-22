@@ -25,6 +25,7 @@
 #include "boundary_condition_handler.hpp"
 #include "cell_vertices.hpp"
 #include "dof.hpp"
+#include "forms/forms.hpp"
 
 namespace cfd
 {
@@ -59,9 +60,9 @@ public:
   virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
     const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location);
-    typename TestType::gradient_type test_gradient = test->evaluate_gradient(vertices, testDof, location);
-    const double result = (test_gradient.colon_product(trial_gradient)).toScalar();
+    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDof, location);
+    typename TestType::gradient_type test_gradient = test->evaluateGradient(vertices, testDof, location);
+    const double result = (test_gradient.colon_product(trial_gradient));
     return result;
   }
 
@@ -102,10 +103,10 @@ public:
     const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
     assert(gEntity.getDimension() == cell_type::dimension - 1);
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    Tensor<2, 1> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
-    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal)).toScalar();
+    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDof, location);
+    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
+    Tensor<2> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
+    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal));
     return result;
   }
 
@@ -146,9 +147,9 @@ public:
   virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
     const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDof, location);
-    typename TestType::divergence_type test_divergence = test->evaluate_divergence(vertices, testDof, location);
-    const double result = (trial_value * test_divergence).toScalar();
+    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDof, location);
+    typename TestType::divergence_type test_divergence = test->evaluateDivergence(vertices, testDof, location);
+    const double result = (trial_value * test_divergence);
     return result;
   }
 
@@ -188,9 +189,9 @@ public:
   virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
     const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::divergence_type trial_divergence = trial->evaluate_divergence(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    const double result = (test_value * trial_divergence).toScalar();
+    typename TrialType::divergence_type trial_divergence = trial->evaluateDivergence(vertices, trialDof, location);
+    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
+    const double result = (test_value * trial_divergence);
     return result;
   }
 };
@@ -225,9 +226,9 @@ public:
   virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
     const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
   {
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDof, location);
-    const double result = (test_value.colon_product(trial_value)).toScalar();
+    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDof, location);
+    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
+    const double result = (test_value.colon_product(trial_value));
     return result;
   }
 };
@@ -242,11 +243,11 @@ public:
 
 private:
   const TrialType* const trial;
-  const FEVector<cell_type> prevTrial;
+  const FEVector<cell_type::dimension> prevTrial;
   const TestType* const test;
 
 public:
-  TrialDotGradTrialInnerTest(const TrialType* const _trial, const FEVector<cell_type>& _prevTrial, const TestType* const _test) : 
+  TrialDotGradTrialInnerTest(const TrialType* const _trial, const FEVector<cell_type::dimension>& _prevTrial, const TestType* const _test) : 
                              trial(_trial), prevTrial(_prevTrial), test(_test)
   {
   }
@@ -269,10 +270,10 @@ public:
     double prevTrialCoeff;
     prevTrial.getValues(1, &trialDof, &prevTrialCoeff);
 
-    typename TrialType::value_type trial_value = trial->evaluate_tensor(vertices, trialDofIndex, location);
-    typename TrialType::gradient_type trial_gradient = trial->evaluate_gradient(vertices, trialDofIndex, location) * prevTrialCoeff;
-    typename TestType::value_type test_value = test->evaluate_tensor(vertices, testDofIndex, location);
-    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value).toScalar();
+    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDofIndex, location);
+    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDofIndex, location) * prevTrialCoeff;
+    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDofIndex, location);
+    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value);
     return result;
   }
 
@@ -311,16 +312,16 @@ public:
   }
 };
 
-class Zero : public Function<2, 1>
+class Zero : public Function<2>
 {
 public:
-  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2> evaluate(const vertex<dimension>& v) const
   {
-    return Tensor<2, 1>();
+    return Tensor<2>(1);
   }
 };
 
-class EdgeConditions : public Function<2, 1>
+class EdgeConditions : public Function<2>
 {
 private:
   const double EPSILON;
@@ -330,9 +331,9 @@ public:
   {
   }
 
-  virtual Tensor<2, 1> evaluate(const vertex<dimension>& v) const
+  virtual Tensor<2> evaluate(const vertex<dimension>& v) const
   {
-    Tensor<2, 1> t;
+    Tensor<2> t(1);
 
     if (v[0] < EPSILON && v[1] > EPSILON && v[1] < 1.0 - EPSILON)
     {
@@ -351,7 +352,7 @@ public:
 
 private:
   static const std::size_t dimension = cell_type::dimension;
-  typedef typename DofMap<cell_type>::dof_t dof_t;
+  typedef typename DofMap<dimension>::dof_t dof_t;
   typedef vertex<dimension> vertex_type;
   typedef FiniteElement<dimension> finite_element_t;
   typedef LagrangeTriangleLinear<0> pressure_basis_t;
@@ -361,12 +362,12 @@ private:
   pressure_basis_t pressure;
   velocity_basis_t velocity;
 
-  DofMap<cell_type> systemDofMap;
-  DofMap<cell_type> velocityDofMap;
-  DofMap<cell_type> pressureDofMap;
+  DofMap<dimension> systemDofMap;
+  DofMap<dimension> velocityDofMap;
+  DofMap<dimension> pressureDofMap;
 
-  DofMap<cell_type> velocityDofMapHomogeneous;
-  DofMap<cell_type> velocityDofMapDirichlet;
+  DofMap<dimension> velocityDofMapHomogeneous;
+  DofMap<dimension> velocityDofMapDirichlet;
 
   GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> viscosity_term;
   GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> viscosity_boundary_term;
@@ -374,10 +375,10 @@ private:
   DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
   TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
 
-  FEVector<cell_type> prev_velocity_vector;
-  FEVector<cell_type> prev_pressure_vector;
-  FEVector<cell_type> velocity_vector;
-  FEVector<cell_type> pressure_vector;
+  FEVector<dimension> prev_velocity_vector;
+  FEVector<dimension> prev_pressure_vector;
+  FEVector<dimension> velocity_vector;
+  FEVector<dimension> pressure_vector;
 
   const double k;
   const double theta;
@@ -404,14 +405,21 @@ private:
     BODY
   };
 
-  static DofMap<cell_type> buildDofMap(const Mesh<dimension>& m,
+  static DofMap<dimension> buildDofMap(const Mesh<dimension>& m,
                                         const pressure_basis_t& pressure, 
                                         const velocity_basis_t& velocity)
   {
-    DofMapBuilder<cell_type> mapBuilder(m);
+    DofMapBuilder<dimension> mapBuilder(m);
     mapBuilder.addFiniteElement(pressure);
     mapBuilder.addFiniteElement(velocity);
     return mapBuilder.getDofMap();
+  }
+
+  static Tensor<dimension> scalar(const double s)
+  {
+    Tensor<dimension> result(0);
+    result[NULL] = s;
+    return result;
   }
 
 public:
@@ -438,53 +446,59 @@ public:
     boundaryConditions.push_back(std::make_pair(&velocity, &edges));
     boundaryConditions.push_back(std::make_pair(&velocity, &cylinder));
 
-    const std::pair< DofMap<cell_type>, DofMap<cell_type> > splitDofs(velocityDofMap.splitHomogeneousDirichlet(boundaryConditions));
+    const std::pair< DofMap<dimension>, DofMap<dimension> > splitDofs(velocityDofMap.splitHomogeneousDirichlet(boundaryConditions));
     velocityDofMapHomogeneous = splitDofs.first;
     velocityDofMapDirichlet = splitDofs.second;
   }
 
-  FEMatrix<cell_type> getLumpedInverse(const FEMatrix<cell_type>& matrix)
+  FEMatrix<dimension> getLumpedInverse(const FEMatrix<dimension>& matrix)
   {
-    FEVector<cell_type> diagonal(matrix.getLumpedDiagonal());
+    FEVector<dimension> diagonal(matrix.getLumpedDiagonal());
     diagonal.reciprocal();
-    FEMatrix<cell_type> invertedMatrix(matrix.getRowMappings(), matrix.getColMappings());
+    FEMatrix<dimension> invertedMatrix(matrix.getRowMappings(), matrix.getColMappings());
     invertedMatrix.addToDiagonal(diagonal);
     return invertedMatrix;
   }
 
   void coupledSolve()
   {
+    using namespace forms;
+
     prev_velocity_vector = velocity_vector;
     prev_pressure_vector = pressure_vector;
 
     std::cout << "Assembling linear terms..." << std::endl;
 
     // Add in all constant terms in the lhs matrix
-    FEMatrix<cell_type> linear_stiffness_matrix(systemDofMap, systemDofMap);
-    linear_stiffness_matrix.addTerm(m, mass_term);
-    linear_stiffness_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+    FEMatrix<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
+
+    linear_stiffness_matrix += 
+      B(velocity, velocity)*dx +
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(scalar(-1.0) * pressure, div(velocity))*dx +
+      B(div(velocity), pressure)*dx;
+
     linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
-    linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
-    linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
-    TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
-    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
-    nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, viscosity_term * -((1.0-theta) * k * kinematic_viscosity));
+    FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
+    nonlinear_rhs_matrix +=
+      B(velocity, velocity)*dx +
+      B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
+
     nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_boundary_term * ((1.0-theta) * k * kinematic_viscosity));
-    nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
+    FEVector<dimension> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
     rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<cell_type> load_vector(systemDofMap);
-    FEVector<cell_type> unknown_vector(systemDofMap);
-    FEVector<cell_type> unknown_guess(unknown_vector);
+    FEVector<dimension> load_vector(systemDofMap);
+    FEVector<dimension> unknown_vector(systemDofMap);
+    FEVector<dimension> unknown_guess(unknown_vector);
     double residual = 0.0;
 
     while(true)
@@ -492,13 +506,15 @@ public:
       std::cout << "Assembling non-linear terms..." << std::endl;
 
       // Copy the existing matrices
-      FEMatrix<cell_type> nonlinear_stiffness_matrix(linear_stiffness_matrix);
+      FEMatrix<dimension> nonlinear_stiffness_matrix(linear_stiffness_matrix);
 
       // Create non-linear terms for calculating lhs part of system
       TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
 
       // Add non-linear term into stiffness matrix
-      nonlinear_stiffness_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      FEVector<dimension> unknown_velocity(velocityDofMap);
+      unknown_guess.extractSubvector(unknown_velocity);
+      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(velocity, grad(unknown_velocity)), velocity)*dx; 
       nonlinear_stiffness_matrix.assemble();
 
       // Add rhs velocity-related vector into load vector
@@ -536,13 +552,13 @@ public:
 
     std::cout << "Assembling linear terms..." << std::endl;
 
-    FEVector<cell_type> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
+    FEVector<dimension> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
     prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
     homogeneous_prev_velocity_vector.assemble();
 
     // Add in all constant terms in the lhs matrix
-    FEMatrix<cell_type> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
-    FEMatrix<cell_type> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
+    FEMatrix<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    FEMatrix<dimension> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
 
     linear_lhs_matrix.addTerm(m, mass_term);
     linear_lhs_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
@@ -554,34 +570,34 @@ public:
 
     // Add in all constant terms in the rhs matrix
     TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
-    FEMatrix<cell_type> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     nonlinear_rhs_matrix.addTerm(m, mass_term);
     nonlinear_rhs_matrix.addTerm(m, viscosity_term * (-(1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta) * k));
     nonlinear_rhs_matrix.assemble();
 
-    FEMatrix<cell_type> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
+    FEMatrix<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
     pressure_matrix.addTerm(m, pressure_term);
     pressure_matrix.assemble();
 
-    FEMatrix<cell_type> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    FEMatrix<dimension> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     velocity_mass_matrix.addTerm(m, mass_term);
     velocity_mass_matrix.assemble();
 
-    FEMatrix<cell_type> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
+    FEMatrix<dimension> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<cell_type> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
+    FEVector<dimension> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
 
-    FEVector<cell_type> dirichletValues(velocityDofMapDirichlet);
+    FEVector<dimension> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
     dirichletValues.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<cell_type> velocity_guess(prev_velocity_vector);
-    FEVector<cell_type> unknown_velocity(velocityDofMapHomogeneous);
-    FEVector<cell_type> pressure_guess(prev_pressure_vector);
+    FEVector<dimension> velocity_guess(prev_velocity_vector);
+    FEVector<dimension> unknown_velocity(velocityDofMapHomogeneous);
+    FEVector<dimension> pressure_guess(prev_pressure_vector);
     double residual = 0.0;
 
     for(int picard_iteration=0; picard_iteration<2; ++picard_iteration)
@@ -591,8 +607,8 @@ public:
       pressure_guess = prev_pressure_vector;
 
       // Copy the existing matrices
-      FEMatrix<cell_type> nonlinear_lhs_matrix(linear_lhs_matrix);
-      FEMatrix<cell_type> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
+      FEMatrix<dimension> nonlinear_lhs_matrix(linear_lhs_matrix);
+      FEMatrix<dimension> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
 
       // Create non-linear terms for calculating lhs part of system
       TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, velocity_guess, &velocity);
@@ -610,7 +626,7 @@ public:
 
       std::cout << "Starting solver..." << std::endl;
 
-      FEVector<cell_type> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
+      FEVector<dimension> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
       solve(nonlinear_lhs_matrix, unknown_velocity, modified_rhs_velocity);
 
       std::cout << "L2-norm of homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
@@ -620,16 +636,16 @@ public:
       std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
 
       // Now solve mass-lumped continuity equation
-      FEMatrix<cell_type> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
-      FEVector<cell_type> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix*(velocity_mass_matrix*unknown_velocity*-1.0)));
-      FEVector<cell_type> phi(pressureDofMap);
+      FEMatrix<dimension> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
+      FEVector<dimension> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix*(velocity_mass_matrix*unknown_velocity*-1.0)));
+      FEVector<dimension> phi(pressureDofMap);
       std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
       std::cout << "L2-norm of phi: " << phi.two_norm() << std::endl;
 
       //pressure_guess = pressure_guess - (phi * (1/k));
 
-      FEVector<cell_type> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
+      FEVector<dimension> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
       std::cout << "L2-norm of corrected homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
@@ -670,7 +686,7 @@ public:
     return location;
   }
 
-  void applyEdgeVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
+  void applyEdgeVelocityBoundaryConditions(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector)
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
 
@@ -712,7 +728,7 @@ public:
     unknown_vector.assemble();
   }
 
-  void applyCylinderVelocityBoundaryConditions(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector)
+  void applyCylinderVelocityBoundaryConditions(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector)
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
     const vertex_type centre(1.0, 0.5);
@@ -736,7 +752,7 @@ public:
     }
   }
 
-  void solve(FEMatrix<cell_type>& stiffness_matrix, FEVector<cell_type>& unknown_vector, FEVector<cell_type>& load_vector, const bool usePreconditioner = true)
+  void solve(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector, const bool usePreconditioner = true)
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);
@@ -773,14 +789,14 @@ public:
 
     for(unsigned dof=0; dof<velocity.spaceDimension(); ++dof)
     {
-      Tensor<dimension, 1> velocity_basis = velocity.evaluate_tensor(vertices, dof, vertex);
+      Tensor<dimension> velocity_basis = velocity.evaluateTensor(vertices, dof, vertex);
       const dof_t velocityDof = dof_t(&velocity, cid, dof);
 
       double velocityCoeff;
       velocity_vector.getValues(1u, &velocityDof, &velocityCoeff);
 
-      xVelocity += velocity_basis(0).toScalar() * velocityCoeff;
-      yVelocity += velocity_basis(1).toScalar() * velocityCoeff;
+      xVelocity += velocity_basis(0) * velocityCoeff;
+      yVelocity += velocity_basis(1) * velocityCoeff;
      }
      return std::make_pair(xVelocity, yVelocity);
   }

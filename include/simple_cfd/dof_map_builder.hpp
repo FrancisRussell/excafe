@@ -15,12 +15,11 @@
 namespace cfd
 {
 
-template<typename C>
+template<std::size_t D>
 class DofMapBuilder
 {
 private:
-  typedef C cell_type;
-  static const std::size_t dimension = cell_type::dimension;
+  static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
   typedef Dof<dimension> dof_t;
   typedef std::map<dof_t, unsigned> local2global_map;
@@ -38,7 +37,7 @@ public:
     elements.insert(&element);
   }
 
-  DofMap<cell_type> getDofMap() const
+  DofMap<dimension> getDofMap() const
   {
     std::size_t counter = 0;
     local2global_map local2global;
@@ -79,7 +78,7 @@ public:
       }
     }
 
-    return DofMap<cell_type>(m, elements, local2global);
+    return DofMap<dimension>(m, elements, local2global);
   } 
 };
 

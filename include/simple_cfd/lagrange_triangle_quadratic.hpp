@@ -22,12 +22,12 @@ class LagrangeTriangleQuadratic : public FiniteElement<TriangularCell::dimension
 {
 public:
   typedef TriangularCell cell_type;
-  static const unsigned int rank = R;
-  static const unsigned int dimension = cell_type::dimension;
-  typedef Tensor<dimension, rank> value_type;
-  typedef Tensor<dimension, rank+1> gradient_type;
-  typedef Tensor<dimension, rank-1> divergence_type;
-  typedef vertex<dimension> vertex_type;
+  typedef Tensor<dimension> value_type;
+  typedef Tensor<dimension> gradient_type;
+  typedef Tensor<dimension> divergence_type;
+
+  static const std::size_t dimension = cell_type::dimension;
+  static const std::size_t rank = R;
 
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
@@ -66,6 +66,16 @@ public:
   {
   }
 
+  std::size_t getRank() const
+  {
+    return rank;
+  }
+
+  std::size_t getDimension() const
+  {
+    return dimension;
+  }
+
   /*   Triangle Node Numbering for quadratic basis
 
        LL        
@@ -81,7 +91,7 @@ public:
        0  3  1
   */
 
-  value_type evaluate_tensor(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  value_type evaluateTensor(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
@@ -129,13 +139,13 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    value_type result;
+    value_type result(rank);
     result[tensorIndex.data()] = (gf/gn) * (hf/hn);
 
     return result;
   }
 
-  gradient_type evaluate_gradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
@@ -187,7 +197,8 @@ public:
     xTensorIndex[0] = 0;
     yTensorIndex[0] = 1;
 
-    gradient_type result;
+    gradient_type result(rank + 1);
+
     result[xTensorIndex.data()] = ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
                 (gf/gn) * ((vertices[k2][1] - vertices[k1][1])/hn);
 
@@ -197,7 +208,7 @@ public:
     return result;
   }
 
-  divergence_type evaluate_divergence(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
+  divergence_type evaluateDivergence(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
@@ -247,7 +258,7 @@ public:
     boost::array<std::size_t, rank> tensorIndex;
     convert_to_tensor_index(index_into_tensor, tensorIndex.data());
 
-    divergence_type result;
+    divergence_type result(rank - 1);
 
     if (tensorIndex[0] == 0)
       result[tensorIndex.data()+1] += ((vertices[j2][1] - vertices[j1][1])/gn) * (hf/hn) +
@@ -334,6 +345,11 @@ public:
     }
 
     return result;
+  }
+
+  virtual const GeneralCell<dimension>& getCell() const
+  {
+    return referenceCell;
   }
 };
 
