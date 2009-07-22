@@ -470,10 +470,12 @@ public:
     // Add in all constant terms in the lhs matrix
     FEMatrix<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
 
-    linear_stiffness_matrix += B(velocity, velocity);
-
+    //linear_stiffness_matrix += 
+    //  B(velocity, velocity) + 
+    //  B(outer(scalar(theta * k * kinematic_viscosity), grad(velocity)), grad(velocity));
     linear_stiffness_matrix.addTerm(m, mass_term);
     linear_stiffness_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+
     linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
     linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
     linear_stiffness_matrix.addTerm(m, continuity_term);

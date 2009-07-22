@@ -32,6 +32,11 @@ public:
     return literal.getDimension();
   }
 
+  TensorHolder getTensor() const
+  {
+    return literal;
+  }
+
   virtual void accept(FieldVisitor& v)
   {
     v.visit(*this);

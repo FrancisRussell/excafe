@@ -42,6 +42,22 @@ private:
   EvaluationState evaluationState;
   std::stack< Tensor<dimension> > valueStack;
 
+  Tensor<dimension> evaluateBasis(const FiniteElement<dimension>& element) const
+  {
+    if (evaluationState == GRADIENT)
+    {
+      return element.evaluateGradient(vertices, dof.getIndex(), localVertex);
+    }
+    else if (evaluationState == DIVERGENCE)
+    {
+      return element.evaluateDivergence(vertices, dof.getIndex(), localVertex);
+    }
+    else
+    {
+      return element.evaluateTensor(vertices, dof.getIndex(), localVertex);
+    }
+  }
+
 public:
   FormEvaluatorVisitor(const LinearForm& _form, const CellVertices<dimension>& _cellVertices,
     const vertex<dimension>& v, const Dof<dimension>& _dof) : form(_form), vertices(_cellVertices),
@@ -144,10 +160,26 @@ public:
     const FiniteElement<dimension>* const element = 
       boost::any_cast<const FiniteElement<dimension>*>(basis.getElement().getElementPtr());
 
+    assert(element!=NULL);
+    valueStack.push(evaluateBasis(*element));
   }
 
-  virtual void visit(DiscreteField& field) = 0;
-  virtual void visit(TensorLiteral& literal) = 0;
+  virtual void visit(DiscreteField& field)
+  {
+    const FEVector<dimension>* const vector = 
+      boost::any_cast<const FEVector<dimension>*>(field.getVector().getVectorPtr());
+
+    assert(vector!=NULL);
+
+    double prevTrialCoeff;
+    vector->getValues(1, &dof, &prevTrialCoeff);
+    valueStack.push(evaluateBasis(*dof.getElement()) * prevTrialCoeff);
+  }
+
+  virtual void visit(TensorLiteral& literal)
+  {
+    valueStack.push(boost::any_cast< Tensor<dimension> >(literal.getTensor().getTensor()));
+  }
 };
 
 }
@@ -170,11 +202,10 @@ public:
   {
   }
 
-
   Tensor<dimension> evaluate(const CellVertices<dimension>& vertices, 
-    const vertex<dimension>& v, const Dof<dimension>& dof)
+    const vertex<dimension>& v, const Dof<dimension>& dof) const
   {
-    FormEvaluatorVisitor<dimension> visitor(vertices, v, dof);
+    FormEvaluatorVisitor<dimension> visitor(form, vertices, v, dof);
     form.accept(visitor);
     return visitor.getResult();
   }

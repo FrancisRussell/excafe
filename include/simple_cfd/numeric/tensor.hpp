@@ -39,8 +39,8 @@ public:
   typedef double value_type;
   typedef std::size_t size_type;
   static const std::size_t  dimension = D;
-  const std::size_t rank;
-  const size_type size;
+  std::size_t rank;
+  size_type size;
 
 private:
   std::vector<value_type>  elements;
@@ -56,6 +56,11 @@ private:
   }
 
 public:
+  Tensor() : rank(0), size(pow(dimension, rank)), elements(size)
+  {
+    std::fill(elements.begin(), elements.end(), value_type());
+  }
+
   Tensor(const std::size_t _rank) : rank(_rank), size(pow(dimension, rank)), elements(size)
   {
     std::fill(elements.begin(), elements.end(), value_type());
@@ -121,6 +126,14 @@ public:
   {
     assert(rank == t.rank);
     std::transform(elements.begin(), elements.end(), t.elements.begin(), elements.begin(), std::plus<double>());
+    return *this;
+  }
+
+  Tensor operator+(const Tensor& t) const
+  {
+    Tensor result(*this);
+    result+=t;
+    return result;
   }
 
   Tensor operator*(const Tensor& t) const

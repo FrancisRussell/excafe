@@ -225,6 +225,61 @@ public:
       evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
     }
 
+    const Mesh<dimension>& m = rowMappings.getMesh();
+    const std::size_t degree = 5;
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
+
+    const std::size_t entityDimension = dimension;
+
+    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    {
+      for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
+      {
+        const finite_element_t* const trialFunction = evaluatorIter->first.first;
+        const finite_element_t* const testFunction = evaluatorIter->first.second;
+
+        const unsigned trialSpaceDimension = trialFunction->spaceDimension();
+        const unsigned testSpaceDimension = testFunction->spaceDimension();
+
+        std::vector<int> trialIndices(trialSpaceDimension);
+        std::vector<int> testIndices(testSpaceDimension);
+
+        std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
+        std::vector< Tensor<dimension> > testValues(testSpaceDimension);
+
+        std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
+
+        for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.begin(); ++bFormIter)
+        {
+          //FIXME: Assumes constant jacobian
+          const std::size_t cid = m.getContainingCell(*eIter);
+          const CellVertices<dimension> vertices(m.getCoordinates(cid));
+          const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+          const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+
+          for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+            trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
+
+          for(unsigned test=0; test<testSpaceDimension; ++test)
+            testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
+
+          for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
+          {
+            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              trialValues[trial] = bFormIter->first.evaluate(vertices, quadIter->first, Dof<dimension>(trialFunction, cid, trial));
+
+            for(unsigned test=0; test<testSpaceDimension; ++test)
+              testValues[test] = bFormIter->second.evaluate(vertices, quadIter->first, Dof<dimension>(testFunction, cid, test));
+
+            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              for(unsigned test=0; test<testSpaceDimension; ++test)
+                valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
+          }
+        }
+        matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
+      }
+    }
+
     return *this;
   }
 

@@ -51,7 +51,7 @@ public:
     return field;
   }
 
-  void accept(FieldVisitor& visitor)
+  void accept(FieldVisitor& visitor) const
   {
     field->accept(visitor);
   }
