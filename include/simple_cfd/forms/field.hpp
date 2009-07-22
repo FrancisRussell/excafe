@@ -17,7 +17,6 @@ public:
   typedef boost::shared_ptr<Field> reference_t;
 
   virtual std::size_t getRank() const = 0;
-  virtual std::size_t getDimension() const = 0;
   virtual void accept(FieldVisitor& visitor) = 0;
 };
 

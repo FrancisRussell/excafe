@@ -11,6 +11,8 @@
 int main(int argc, char** argv)
 {
   using namespace cfd;
+  using namespace cfd::forms;
+
   PETScManager::instance().init(argc, argv);
 
   // Build mesh
@@ -34,5 +36,5 @@ int main(int argc, char** argv)
   Tensor<3> rankTwoTensor(2);
   div(rankTwoTensor);
 
-  B(div(rankTwoTensor), div(rankTwoTensor)) + B(div(rankTwoTensor), div(rankTwoTensor));
+  B(div(rankTwoTensor), div(rankTwoTensor))*dx + B(div(rankTwoTensor), div(rankTwoTensor))*ds;
 }

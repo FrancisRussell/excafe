@@ -27,11 +27,6 @@ public:
     return element.getRank();
   }
 
-  std::size_t getDimension() const
-  {
-    return element.getDimension();
-  }
-
   virtual void accept(FieldVisitor& v)
   {
     v.visit(*this);

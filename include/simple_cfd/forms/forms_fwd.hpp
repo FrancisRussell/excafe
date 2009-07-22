@@ -17,6 +17,7 @@ class Divergence;
 class BasisField;
 class DiscreteField;
 class TensorLiteral;
+class FacetNormal;
 
 }
 

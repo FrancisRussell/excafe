@@ -27,11 +27,6 @@ public:
     return literal.getRank();
   }
 
-  std::size_t getDimension() const
-  {
-    return literal.getDimension();
-  }
-
   TensorHolder getTensor() const
   {
     return literal;

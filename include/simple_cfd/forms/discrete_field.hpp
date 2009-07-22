@@ -28,11 +28,6 @@ public:
     return vector.getRank();
   }
 
-  std::size_t getDimension() const
-  {
-    return vector.getDimension();
-  }
-
   virtual void accept(FieldVisitor& v)
   {
     v.visit(*this);

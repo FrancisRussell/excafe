@@ -15,7 +15,6 @@ class OuterProduct : public BinaryOperator
 public:
   OuterProduct(Field::reference_t l, Field::reference_t r) : BinaryOperator(l, r)
   {
-    assert(l->getDimension() == r->getDimension());
   }
 
   std::size_t getRank() const
@@ -23,11 +22,6 @@ public:
     return getLeft()->getRank() + getRight()->getRank();
   }
 
-  std::size_t getDimension() const
-  {
-    return getLeft()->getDimension();
-  }
-  
   virtual void accept(FieldVisitor& v)
   {
     v.enter(*this);

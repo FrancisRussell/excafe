@@ -16,17 +16,11 @@ public:
   InnerProduct(Field::reference_t l, Field::reference_t r) : BinaryOperator(l, r)
   {
     assert(l->getRank() + r->getRank() >= 2);
-    assert(l->getDimension() == r->getDimension());
   }
 
   std::size_t getRank() const
   {
     return getLeft()->getRank() + getRight()->getRank() - 2;
-  }
-
-  std::size_t getDimension() const
-  {
-    return getLeft()->getDimension();
   }
 
   virtual void accept(FieldVisitor& v)

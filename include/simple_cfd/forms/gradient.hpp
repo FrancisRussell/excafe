@@ -24,11 +24,6 @@ public:
     return getOperand()->getRank() + 1;
   }
 
-  std::size_t getDimension() const
-  {
-    return getOperand()->getDimension();
-  }
-
   virtual void accept(FieldVisitor& v)
   {
     v.enter(*this);

@@ -15,18 +15,12 @@ class ColonProduct : public BinaryOperator
 public:
   ColonProduct(Field::reference_t l, Field::reference_t r) : BinaryOperator(l, r)
   {
-    assert(l->getDimension() == r->getDimension());
     assert(l->getRank() == r->getRank());
   }
 
   std::size_t getRank() const
   {
     return 0;
-  }
-
-  std::size_t getDimension() const
-  {
-    return getLeft()->getDimension();
   }
 
   virtual void accept(FieldVisitor& v)

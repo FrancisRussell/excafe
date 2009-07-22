@@ -155,6 +155,12 @@ public:
     evaluationState = VALUE;
   }
 
+  virtual void visit(FacetNormal& normal)
+  {
+    // TODO: Implement me!
+    assert(false);
+  }
+
   virtual void visit(BasisField& basis)
   {
     const FiniteElement<dimension>* const element = 

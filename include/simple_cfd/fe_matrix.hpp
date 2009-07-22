@@ -13,7 +13,7 @@
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
-#include "forms/bilinear_form_sum.hpp"
+#include "forms/bilinear_form_integral_sum.hpp"
 #include "forms/basis_finder.hpp"
 #include "forms/field.hpp"
 #include "forms/form_evaluator.hpp"
@@ -119,11 +119,8 @@ private:
         for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
           for(unsigned test=0; test<testSpaceDimension; ++test)
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            {
               valueBlock[test * trialSpaceDimension + trial] += f.evaluate(vertices, *eIter, localEntity, test, trial,
               quadIter->first) * quadIter->second * jacobian;
-              //std::cout << "old implementation on cell " << cid << " with (trial, test) = (" << trial << ", " << test << ") = " << valueBlock[test * trialSpaceDimension + trial] << std::endl;
-            }
 
         matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
       }
@@ -193,7 +190,7 @@ public:
     addTermGeneral(m, f, true);
   }
 
-  FEMatrix& operator+=(const forms::BilinearFormSum& expr)
+  FEMatrix& operator+=(const forms::BilinearFormIntegralSum& expr)
   {
     using namespace cfd::forms;
 
@@ -205,7 +202,7 @@ public:
 
     std::map< element_pair, std::vector<evaluator_pair> > evaluators;
 
-    for(BilinearFormSum::const_iterator formIter = expr.begin(); formIter!=expr.end(); ++formIter)
+    for(BilinearFormIntegralSum::const_iterator formIter = expr.begin(); formIter!=expr.end(); ++formIter)
     {
       // Find trial
       BasisFinder<dimension> trialFinder;
@@ -276,10 +273,7 @@ public:
 
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
               for(unsigned test=0; test<testSpaceDimension; ++test)
-              {
                 valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
-                //std::cout << "new implementation on cell " << cid << " with (trial, test) = (" << trial << ", " << test << ") = " << valueBlock[test * trialSpaceDimension + trial] << std::endl;
-              }
           }
         }
         matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);

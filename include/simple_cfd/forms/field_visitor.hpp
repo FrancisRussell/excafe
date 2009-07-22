@@ -32,6 +32,7 @@ public:
   virtual void exit(Divergence& divergence) = 0;
 
   // Terminals
+  virtual void visit(FacetNormal& normal) = 0;
   virtual void visit(BasisField& basis) = 0;
   virtual void visit(DiscreteField& field) = 0;
   virtual void visit(TensorLiteral& literal) = 0;

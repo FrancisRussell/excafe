@@ -113,6 +113,10 @@ public:
   }
 
   // Terminals
+  virtual void visit(FacetNormal& normal)
+  {
+  }
+
   virtual void visit(BasisField& basis)
   {
     handle(basis.getElement());

@@ -462,6 +462,8 @@ public:
 
   void coupledSolve()
   {
+    using namespace forms;
+
     prev_velocity_vector = velocity_vector;
     prev_pressure_vector = pressure_vector;
 
@@ -471,10 +473,10 @@ public:
     FEMatrix<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
 
     linear_stiffness_matrix += 
-      B(velocity, velocity) +
-      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity)) +
-      B(scalar(-1.0) * pressure, div(velocity)) +
-      B(div(velocity), pressure);
+      B(velocity, velocity)*dx +
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(scalar(-1.0) * pressure, div(velocity))*dx +
+      B(div(velocity), pressure)*dx;
 
     linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
     linear_stiffness_matrix.assemble();
@@ -482,9 +484,9 @@ public:
     // Add in all constant terms in the rhs matrix
     FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix +=
-      B(velocity, velocity) +
-      B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity)) +
-      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity);
+      B(velocity, velocity)*dx +
+      B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
 
     nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_boundary_term * ((1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.assemble();
@@ -512,7 +514,7 @@ public:
       // Add non-linear term into stiffness matrix
       FEVector<dimension> unknown_velocity(velocityDofMap);
       unknown_guess.extractSubvector(unknown_velocity);
-      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(velocity, grad(unknown_velocity)), velocity); 
+      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(velocity, grad(unknown_velocity)), velocity)*dx; 
       nonlinear_stiffness_matrix.assemble();
 
       // Add rhs velocity-related vector into load vector

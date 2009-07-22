@@ -17,17 +17,11 @@ public:
   Addition(Field::reference_t l, Field::reference_t r) : BinaryOperator(l, r)
   {
     assert(l->getRank() == r->getRank());
-    assert(l->getDimension() == r->getDimension());
   }
 
   std::size_t getRank() const
   {
     return getLeft()->getRank();
-  }
-
-  std::size_t getDimension() const
-  {
-    return getLeft()->getDimension();
   }
 
   virtual void accept(FieldVisitor& v)

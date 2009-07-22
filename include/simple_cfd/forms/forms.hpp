@@ -8,7 +8,8 @@
 #include "field.hpp"
 #include "linear_form.hpp"
 #include "bilinear_form.hpp"
-#include "bilinear_form_sum.hpp"
+#include "bilinear_form_integral.hpp"
+#include "bilinear_form_integral_sum.hpp"
 
 //Unary
 #include "gradient.hpp"
@@ -22,6 +23,17 @@
 
 namespace cfd
 {
+
+namespace forms
+{
+
+BilinearFormIntegral::Region dx = BilinearFormIntegral::CELL;
+BilinearFormIntegral::Region ds = BilinearFormIntegral::EXTERIOR_FACET;
+
+forms::BilinearFormIntegral operator*(const forms::BilinearForm& form, const forms::BilinearFormIntegral::Region region)
+{
+  return forms::BilinearFormIntegral(form, region);
+}
 
 forms::BilinearForm B(const forms::LinearForm trial, const forms::LinearForm test)
 {
@@ -43,9 +55,9 @@ forms::LinearForm operator+(const forms::LinearForm l, const forms::LinearForm r
   return forms::LinearForm(new forms::Addition(l.getField(), r.getField()));
 }
 
-forms::BilinearFormSum operator+(const forms::BilinearFormSum l, const forms::BilinearFormSum r)
+forms::BilinearFormIntegralSum operator+(const forms::BilinearFormIntegralSum l, const forms::BilinearFormIntegralSum r)
 {
-  forms::BilinearFormSum result(l);
+  forms::BilinearFormIntegralSum result(l);
   result.append(r);
   return result;
 }
@@ -70,6 +82,7 @@ forms::LinearForm colon(const forms::LinearForm l, const forms::LinearForm r)
   return forms::LinearForm(new forms::ColonProduct(l.getField(), r.getField()));
 }
 
+}
 
 }
 
