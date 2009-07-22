@@ -233,6 +233,12 @@ public:
 
     for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
     {
+      //FIXME: Assumes constant jacobian
+      const std::size_t cid = m.getContainingCell(*eIter);
+      const CellVertices<dimension> vertices(m.getCoordinates(cid));
+      const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+      const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+
       for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
       {
         const finite_element_t* const trialFunction = evaluatorIter->first.first;
@@ -251,11 +257,6 @@ public:
 
         for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
         {
-          //FIXME: Assumes constant jacobian
-          const std::size_t cid = m.getContainingCell(*eIter);
-          const CellVertices<dimension> vertices(m.getCoordinates(cid));
-          const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-          const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
 
           for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
             trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
@@ -266,10 +267,10 @@ public:
           for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
           {
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              trialValues[trial] = bFormIter->first.evaluate(vertices, quadIter->first, Dof<dimension>(trialFunction, cid, trial));
+              trialValues[trial] = bFormIter->first.evaluate(vertices, quadIter->first, localEntity, Dof<dimension>(trialFunction, cid, trial));
 
             for(unsigned test=0; test<testSpaceDimension; ++test)
-              testValues[test] = bFormIter->second.evaluate(vertices, quadIter->first, Dof<dimension>(testFunction, cid, test));
+              testValues[test] = bFormIter->second.evaluate(vertices, quadIter->first, localEntity, Dof<dimension>(testFunction, cid, test));
 
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
               for(unsigned test=0; test<testSpaceDimension; ++test)

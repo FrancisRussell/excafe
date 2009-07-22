@@ -10,6 +10,7 @@
 #include <simple_cfd/cell_vertices.hpp>
 #include <simple_cfd/vertex.hpp>
 #include <simple_cfd/general_cell.hpp>
+#include <simple_cfd/mesh_entity.hpp>
 #include "linear_form.hpp"
 
 namespace cfd
@@ -209,7 +210,7 @@ public:
   }
 
   Tensor<dimension> evaluate(const CellVertices<dimension>& vertices, 
-    const vertex<dimension>& v, const Dof<dimension>& dof) const
+    const vertex<dimension>& v, const MeshEntity& localEntity, const Dof<dimension>& dof) const
   {
     FormEvaluatorVisitor<dimension> visitor(form, vertices, v, dof);
     form.accept(visitor);
