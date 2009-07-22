@@ -166,7 +166,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
       if (std::find(vertexIndices.begin(), vertexIndices.end(), v2) != vertexIndices.end())
       {
         foundEdge = true;
-        facetNumbering(*facetIter) = label;
+        facetNumbering.setValue(*facetIter, label);
       }
     }
     assert(foundEdge);

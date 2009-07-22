@@ -48,7 +48,7 @@ private:
       assert(numCells != 0);
 
       if (numCells == 1)
-        boundary(*facetIter) = true;
+        boundary.setValue(*facetIter, true);
     }
 
     return boundary;
