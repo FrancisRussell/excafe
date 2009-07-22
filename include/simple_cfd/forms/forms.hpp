@@ -60,6 +60,11 @@ forms::LinearForm outer(const forms::LinearForm l, const forms::LinearForm r)
   return forms::LinearForm(new forms::OuterProduct(l.getField(), r.getField()));
 }
 
+forms::LinearForm operator*(const forms::LinearForm l, const forms::LinearForm r)
+{
+  return outer(l, r);
+}
+
 forms::LinearForm colon(const forms::LinearForm l, const forms::LinearForm r)
 {
   return forms::LinearForm(new forms::ColonProduct(l.getField(), r.getField()));

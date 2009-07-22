@@ -470,24 +470,23 @@ public:
     // Add in all constant terms in the lhs matrix
     FEMatrix<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
 
-    //linear_stiffness_matrix += 
-    //  B(velocity, velocity) + 
-    //  B(outer(scalar(theta * k * kinematic_viscosity), grad(velocity)), grad(velocity));
-    linear_stiffness_matrix.addTerm(m, mass_term);
-    linear_stiffness_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+    linear_stiffness_matrix += 
+      B(velocity, velocity) +
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity)) +
+      B(scalar(-1.0) * pressure, div(velocity)) +
+      B(div(velocity), pressure);
 
     linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
-    linear_stiffness_matrix.addTerm(m, pressure_term * -1.0);
-    linear_stiffness_matrix.addTerm(m, continuity_term);
     linear_stiffness_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
-    TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
     FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
-    nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, viscosity_term * -((1.0-theta) * k * kinematic_viscosity));
+    nonlinear_rhs_matrix +=
+      B(velocity, velocity) +
+      B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity)) +
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity);
+
     nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_boundary_term * ((1.0-theta) * k * kinematic_viscosity));
-    nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta)*k));
     nonlinear_rhs_matrix.assemble();
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
@@ -511,7 +510,9 @@ public:
       TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
 
       // Add non-linear term into stiffness matrix
-      nonlinear_stiffness_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      FEVector<dimension> unknown_velocity(velocityDofMap);
+      unknown_guess.extractSubvector(unknown_velocity);
+      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(velocity, grad(unknown_velocity)), velocity); 
       nonlinear_stiffness_matrix.assemble();
 
       // Add rhs velocity-related vector into load vector
