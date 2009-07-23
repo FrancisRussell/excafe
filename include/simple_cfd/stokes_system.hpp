@@ -374,7 +374,7 @@ public:
       solve(continuity_lhs, phi, continuity_rhs);
       std::cout << "L2-norm of phi: " << phi.two_norm() << std::endl;
 
-      //pressure_guess = pressure_guess - (phi * (1/k));
+      pressure_guess = pressure_guess - (phi * (1/k));
 
       FEVector<dimension> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
