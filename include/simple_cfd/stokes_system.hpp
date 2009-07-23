@@ -476,9 +476,9 @@ public:
       B(velocity, velocity)*dx +
       B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
       B(scalar(-1.0) * pressure, div(velocity))*dx +
-      B(div(velocity), pressure)*dx;
+      B(div(velocity), pressure)*dx +
+      B(scalar(theta * k * kinematic_viscosity * -1.0) * inner(grad(velocity), n), velocity)*ds;
 
-    linear_stiffness_matrix.addBoundaryTerm(m, viscosity_boundary_term * (theta * k * kinematic_viscosity * -1.0));
     linear_stiffness_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
@@ -486,9 +486,9 @@ public:
     nonlinear_rhs_matrix +=
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
-      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx +
+      B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
 
-    nonlinear_rhs_matrix.addBoundaryTerm(m, viscosity_boundary_term * ((1.0-theta) * k * kinematic_viscosity));
     nonlinear_rhs_matrix.assemble();
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector

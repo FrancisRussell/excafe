@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_FORMS_BILINEAR_FORM_INTEGRAL_SUM_HPP
 #define SIMPLE_CFD_FORMS_BILINEAR_FORM_INTEGRAL_SUM_HPP
 
+#include <cassert>
 #include <vector>
 #include <utility>
 #include <boost/shared_ptr.hpp>
@@ -17,7 +18,8 @@ namespace forms
 class BilinearFormIntegralSum
 {
 private: 
-  std::vector<BilinearForm> forms;
+  std::vector<BilinearForm> dxForms;
+  std::vector<BilinearForm> dsForms;
 
 public:
   typedef std::vector<BilinearForm>::iterator iterator;
@@ -25,32 +27,64 @@ public:
 
   BilinearFormIntegralSum(const BilinearFormIntegral& i)
   {
-    forms.push_back(i.getForm());
+    if (i.isCellIntegral())
+    {
+      dxForms.push_back(i.getForm());
+    }
+    else if (i.isExteriorFacetIntegral())
+    {
+      dsForms.push_back(i.getForm());
+    }
+    else
+    {
+      assert(false);
+    }
   }
 
   void append(const BilinearFormIntegralSum& b)
   {
-    forms.insert(forms.end(), b.forms.begin(), b.forms.end());
+    dxForms.insert(dxForms.end(), b.dxForms.begin(), b.dxForms.end());
+    dsForms.insert(dsForms.end(), b.dsForms.begin(), b.dsForms.end());
   }
 
-  iterator begin()
+  iterator begin_dx()
   {
-    return forms.begin();
+    return dxForms.begin();
   }
 
-  iterator end()
+  iterator end_dx()
   {
-    return forms.end();
+    return dxForms.end();
   }
 
-  const_iterator begin() const
+  const_iterator begin_dx() const
   {
-    return forms.begin();
+    return dxForms.begin();
   }
 
-  const_iterator end() const
+  const_iterator end_dx() const
   {
-    return forms.end();
+    return dxForms.end();
+  }
+
+  iterator begin_ds()
+  {
+    return dsForms.begin();
+  }
+
+  iterator end_ds()
+  {
+    return dsForms.end();
+  }
+
+  const_iterator begin_ds() const
+  {
+    return dsForms.begin();
+  }
+
+  const_iterator end_ds() const
+  {
+    return dsForms.end();
   }
 };
 

@@ -127,6 +127,104 @@ private:
     }
   }
 
+  void addTermGeneral(const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
+    const forms::BilinearFormIntegralSum::const_iterator sumEnd,
+    const MeshFunction<bool>& subDomain)
+  {
+    using namespace cfd::forms;
+
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+
+    typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
+    typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
+
+    std::map< element_pair, std::vector<evaluator_pair> > evaluators;
+
+    for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      // Find trial
+      BasisFinder<dimension> trialFinder;
+      formIter->getTrialField()->accept(trialFinder);
+
+      const finite_element_t* const trialBasis = trialFinder.getBasis();
+      assert(trialBasis != NULL);
+      assert(trialElements.find(trialBasis) != trialElements.end());
+
+      // Find test
+      BasisFinder<dimension> testFinder;
+      formIter->getTestField()->accept(testFinder);
+
+      const finite_element_t* const testBasis = testFinder.getBasis();
+      assert(testBasis != NULL);
+      assert(testElements.find(testBasis) != testElements.end());
+
+      const FormEvaluator<dimension> trialEvaluator(formIter->getTrialField(), trialBasis->getCell());
+      const FormEvaluator<dimension> testEvaluator(formIter->getTestField(), testBasis->getCell());
+      evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
+    }
+
+    const Mesh<dimension>& m = rowMappings.getMesh();
+    const std::size_t degree = 5;
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
+
+    const std::size_t entityDimension = subDomain.getDimension();
+
+    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    {
+      if (subDomain(*eIter))
+      {
+        //FIXME: Assumes constant jacobian
+        const std::size_t cid = m.getContainingCell(*eIter);
+        const CellVertices<dimension> vertices(m.getCoordinates(cid));
+        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+        const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+  
+        for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
+        {
+          const finite_element_t* const trialFunction = evaluatorIter->first.first;
+          const finite_element_t* const testFunction = evaluatorIter->first.second;
+  
+          const unsigned trialSpaceDimension = trialFunction->spaceDimension();
+          const unsigned testSpaceDimension = testFunction->spaceDimension();
+  
+          std::vector<int> trialIndices(trialSpaceDimension);
+          std::vector<int> testIndices(testSpaceDimension);
+  
+          std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
+          std::vector< Tensor<dimension> > testValues(testSpaceDimension);
+  
+          std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
+  
+          for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
+          {
+  
+            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
+  
+            for(unsigned test=0; test<testSpaceDimension; ++test)
+              testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
+  
+            for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
+            {
+              for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+                trialValues[trial] = bFormIter->first.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(trialFunction, cid, trial));
+  
+              for(unsigned test=0; test<testSpaceDimension; ++test)
+                testValues[test] = bFormIter->second.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(testFunction, cid, test));
+  
+              for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+                for(unsigned test=0; test<testSpaceDimension; ++test)
+                  valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
+            }
+          }
+          matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
+        }
+      }
+    }
+  }
+
+
 public:
   FEMatrix(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
@@ -192,94 +290,13 @@ public:
 
   FEMatrix& operator+=(const forms::BilinearFormIntegralSum& expr)
   {
-    using namespace cfd::forms;
+    const Mesh<dimension> m(rowMappings.getMesh());
 
-    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+    const MeshFunction<bool> allCells(dimension, true);
+    addTermGeneral(expr.begin_dx(), expr.end_dx(), allCells);
 
-    typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
-    typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
-
-    std::map< element_pair, std::vector<evaluator_pair> > evaluators;
-
-    for(BilinearFormIntegralSum::const_iterator formIter = expr.begin(); formIter!=expr.end(); ++formIter)
-    {
-      // Find trial
-      BasisFinder<dimension> trialFinder;
-      formIter->getTrialField()->accept(trialFinder);
-
-      const finite_element_t* const trialBasis = trialFinder.getBasis();
-      assert(trialBasis != NULL);
-      assert(trialElements.find(trialBasis) != trialElements.end());
-
-      // Find test
-      BasisFinder<dimension> testFinder;
-      formIter->getTestField()->accept(testFinder);
-
-      const finite_element_t* const testBasis = testFinder.getBasis();
-      assert(testBasis != NULL);
-      assert(testElements.find(testBasis) != testElements.end());
-
-      const FormEvaluator<dimension> trialEvaluator(formIter->getTrialField(), trialBasis->getCell());
-      const FormEvaluator<dimension> testEvaluator(formIter->getTestField(), testBasis->getCell());
-      evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
-    }
-
-    const Mesh<dimension>& m = rowMappings.getMesh();
-    const std::size_t degree = 5;
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
-
-    const std::size_t entityDimension = dimension;
-
-    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
-    {
-      //FIXME: Assumes constant jacobian
-      const std::size_t cid = m.getContainingCell(*eIter);
-      const CellVertices<dimension> vertices(m.getCoordinates(cid));
-      const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-      const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
-
-      for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
-      {
-        const finite_element_t* const trialFunction = evaluatorIter->first.first;
-        const finite_element_t* const testFunction = evaluatorIter->first.second;
-
-        const unsigned trialSpaceDimension = trialFunction->spaceDimension();
-        const unsigned testSpaceDimension = testFunction->spaceDimension();
-
-        std::vector<int> trialIndices(trialSpaceDimension);
-        std::vector<int> testIndices(testSpaceDimension);
-
-        std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
-        std::vector< Tensor<dimension> > testValues(testSpaceDimension);
-
-        std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-
-        for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
-        {
-
-          for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-            trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
-
-          for(unsigned test=0; test<testSpaceDimension; ++test)
-            testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
-
-          for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
-          {
-            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              trialValues[trial] = bFormIter->first.evaluate(vertices, quadIter->first, localEntity, Dof<dimension>(trialFunction, cid, trial));
-
-            for(unsigned test=0; test<testSpaceDimension; ++test)
-              testValues[test] = bFormIter->second.evaluate(vertices, quadIter->first, localEntity, Dof<dimension>(testFunction, cid, test));
-
-            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              for(unsigned test=0; test<testSpaceDimension; ++test)
-                valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
-          }
-        }
-        matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
-      }
-    }
+    const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
+    addTermGeneral(expr.begin_ds(), expr.end_ds(), boundaryFunction);
 
     return *this;
   }

@@ -35,7 +35,9 @@ private:
 
   static const std::size_t dimension = D;
   const LinearForm form;
+  const std::auto_ptr< GeneralCell<dimension> > cell;
   const CellVertices<dimension> vertices;
+  const MeshEntity localEntity;
   const vertex<dimension> localVertex;
   const Dof<dimension> dof;
 
@@ -60,9 +62,10 @@ private:
   }
 
 public:
-  FormEvaluatorVisitor(const LinearForm& _form, const CellVertices<dimension>& _cellVertices,
-    const vertex<dimension>& v, const Dof<dimension>& _dof) : form(_form), vertices(_cellVertices),
-    localVertex(v), dof(_dof), evaluationState(VALUE)
+  FormEvaluatorVisitor(const LinearForm& _form, const GeneralCell<dimension>& _cell, const CellVertices<dimension>& _cellVertices,
+    const MeshEntity& _localEntity, const vertex<dimension>& v, const Dof<dimension>& _dof) : 
+    form(_form), cell(_cell.cloneGeneralCell()), vertices(_cellVertices), localEntity(_localEntity), localVertex(v), 
+    dof(_dof), evaluationState(VALUE)
   {
   }
 
@@ -158,8 +161,9 @@ public:
 
   virtual void visit(FacetNormal& normal)
   {
-    // TODO: Implement me!
-    assert(false);
+    assert(localEntity.getDimension() == dimension-1);
+    const Tensor<dimension> facetNormal = cell->getFacetNormal(vertices, localEntity.getIndex(), localVertex);
+    valueStack.push(facetNormal);
   }
 
   virtual void visit(BasisField& basis)
@@ -210,9 +214,9 @@ public:
   }
 
   Tensor<dimension> evaluate(const CellVertices<dimension>& vertices, 
-    const vertex<dimension>& v, const MeshEntity& localEntity, const Dof<dimension>& dof) const
+    const MeshEntity& localEntity, const vertex<dimension>& v, const Dof<dimension>& dof) const
   {
-    FormEvaluatorVisitor<dimension> visitor(form, vertices, v, dof);
+    FormEvaluatorVisitor<dimension> visitor(form, *cell, vertices, localEntity, v, dof);
     form.accept(visitor);
     return visitor.getResult();
   }

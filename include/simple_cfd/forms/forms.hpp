@@ -10,6 +10,7 @@
 #include "bilinear_form.hpp"
 #include "bilinear_form_integral.hpp"
 #include "bilinear_form_integral_sum.hpp"
+#include "facet_normal.hpp"
 
 //Unary
 #include "gradient.hpp"
@@ -29,6 +30,8 @@ namespace forms
 
 BilinearFormIntegral::Region dx = BilinearFormIntegral::CELL;
 BilinearFormIntegral::Region ds = BilinearFormIntegral::EXTERIOR_FACET;
+
+facet_normal_tag n;
 
 forms::BilinearFormIntegral operator*(const forms::BilinearForm& form, const forms::BilinearFormIntegral::Region region)
 {

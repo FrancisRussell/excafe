@@ -10,6 +10,7 @@
 #include "basis_field.hpp"
 #include "discrete_field.hpp"
 #include "tensor_literal.hpp"
+#include "facet_normal.hpp"
 
 namespace cfd
 {
@@ -43,6 +44,10 @@ public:
 
   template<std::size_t D>
   LinearForm(const Tensor<D>& tensor) : field(new TensorLiteral(tensor))
+  {
+  }
+
+  LinearForm(const facet_normal_tag& tag) : field(new FacetNormal())
   {
   }
 
