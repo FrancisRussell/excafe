@@ -210,9 +210,9 @@ public:
     linear_stiffness_matrix += 
       B(velocity, velocity)*dx +
       B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(scalar(theta * k * kinematic_viscosity * -1.0) * inner(grad(velocity), n), velocity)*ds +
       B(scalar(-1.0) * pressure, div(velocity))*dx +
-      B(div(velocity), pressure)*dx +
-      B(scalar(theta * k * kinematic_viscosity * -1.0) * inner(grad(velocity), n), velocity)*ds;
+      B(div(velocity), pressure)*dx;
 
     linear_stiffness_matrix.assemble();
 
@@ -221,8 +221,8 @@ public:
     nonlinear_rhs_matrix +=
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
-      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx +
-      B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
+      B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
 
     nonlinear_rhs_matrix.assemble();
 
@@ -296,12 +296,14 @@ public:
 
     linear_lhs_matrix += 
       B(velocity, velocity)*dx +
-      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx;
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(scalar(-1.0 * theta * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
     linear_lhs_matrix.assemble();
 
     linear_dirichlet_rhs_matrix +=
       B(velocity, velocity)*dx +
-      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx;
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
+      B(scalar(-1.0 * theta * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
     linear_dirichlet_rhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
@@ -310,6 +312,7 @@ public:
     nonlinear_rhs_matrix +=
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx + 
+      B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
       B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx +
     nonlinear_rhs_matrix.assemble();
 
