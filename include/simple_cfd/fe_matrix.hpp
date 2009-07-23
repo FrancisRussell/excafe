@@ -7,7 +7,6 @@
 #include <cassert>
 #include "vertex.hpp"
 #include "dof_map.hpp"
-#include "fe_binary_function.hpp"
 #include "fe_vector.hpp"
 #include "mesh.hpp"
 #include "numeric/matrix.hpp"
@@ -72,59 +71,6 @@ private:
     }
 
     return pattern;
-  }
-
-  template<typename cell_type>
-  void addTermGeneral(const Mesh<dimension>& m, const FEBinaryFunction<cell_type>& f, const bool boundaryIntegral)
-  {
-    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
-    
-    const finite_element_t* const trialFunction = f.getTrialFunction();
-    const finite_element_t* const testFunction = f.getTestFunction();
-
-    assert(trialElements.find(trialFunction) != trialElements.end());
-    assert(testElements.find(testFunction) != testElements.end());
-
-    const std::size_t entityDimension = boundaryIntegral ? m.getDimension()-1 : m.getDimension();
-    const unsigned testSpaceDimension = testFunction->spaceDimension();
-    const unsigned trialSpaceDimension = trialFunction->spaceDimension();
-    const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
-
-    std::vector<int> testIndices(testSpaceDimension);
-    std::vector<int> trialIndices(trialSpaceDimension);
-    std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-
-    const std::size_t degree = 5;
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
-
-    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
-    {
-      if (!boundaryIntegral || boundaryFunction(*eIter))
-      {
-        //FIXME: Assumes constant jacobian
-        const std::size_t cid = m.getContainingCell(*eIter);
-        const CellVertices<dimension> vertices(m.getCoordinates(cid));
-        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-        const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
-
-        std::fill(valueBlock.begin(), valueBlock.end(), 0.0);
-
-        for(unsigned test=0; test<testSpaceDimension; ++test)
-          testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
-
-        for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-          trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
-
-        for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
-          for(unsigned test=0; test<testSpaceDimension; ++test)
-            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              valueBlock[test * trialSpaceDimension + trial] += f.evaluate(vertices, *eIter, localEntity, test, trial,
-              quadIter->first) * quadIter->second * jacobian;
-
-        matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
-      }
-    }
   }
 
   void addTermGeneral(const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
@@ -274,18 +220,6 @@ public:
       colIndices[col] = colMappings.getGlobalIndex(colDofs[col]);
 
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
-  }
-
-  template<typename cell_type>
-  void addTerm(const Mesh<dimension>& m, const FEBinaryFunction<cell_type>& f)
-  {
-    addTermGeneral(m, f, false);
-  }
-
-  template<typename cell_type>
-  void addBoundaryTerm(const Mesh<dimension>& m, const FEBinaryFunction<cell_type>& f)
-  {
-    addTermGeneral(m, f, true);
   }
 
   FEMatrix& operator+=(const forms::BilinearFormIntegralSum& expr)

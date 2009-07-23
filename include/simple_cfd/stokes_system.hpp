@@ -18,7 +18,6 @@
 #include "numeric/tensor.hpp"
 #include "fe_matrix.hpp"
 #include "fe_vector.hpp"
-#include "fe_binary_function.hpp"
 #include "subdomain.hpp"
 #include "function.hpp"
 #include "boundary_condition.hpp"
@@ -29,259 +28,6 @@
 
 namespace cfd
 {
-
-template<typename TrialType, typename TestType>
-class GradTrialInnerGradTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const TestType* const test;
-
-public:
-  GradTrialInnerGradTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
-  {
-    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDof, location);
-    typename TestType::gradient_type test_gradient = test->evaluateGradient(vertices, testDof, location);
-    const double result = (test_gradient.colon_product(trial_gradient));
-    return result;
-  }
-
-  ScaledFEBinaryFunction<GradTrialInnerGradTest> operator*(const double s) const
-  {
-    return ScaledFEBinaryFunction<GradTrialInnerGradTest>(*this, s);
-  }
-};
-
-template<typename TrialType, typename TestType>
-class GradTrialInnerNormalMulTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const TestType* const test;
-
-public:
-  GradTrialInnerNormalMulTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
-  {
-    assert(gEntity.getDimension() == cell_type::dimension - 1);
-    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
-    Tensor<2> facetNormal = cell_type().getFacetNormal(vertices, lEntity.getIndex(), location);
-    const double result = test_value.colon_product(trial_gradient.inner_product(facetNormal));
-    return result;
-  }
-
-  ScaledFEBinaryFunction<GradTrialInnerNormalMulTest> operator*(const double s) const
-  {
-    return ScaledFEBinaryFunction<GradTrialInnerNormalMulTest>(*this, s);
-  }
-};
-
-
-template<typename TrialType, typename TestType>
-class TrialInnerDivTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const TestType* const test;
-
-public:
-  TrialInnerDivTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
-  {
-    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDof, location);
-    typename TestType::divergence_type test_divergence = test->evaluateDivergence(vertices, testDof, location);
-    const double result = (trial_value * test_divergence);
-    return result;
-  }
-
-  ScaledFEBinaryFunction<TrialInnerDivTest> operator*(const double s) const
-  {
-    return ScaledFEBinaryFunction<TrialInnerDivTest>(*this, s);
-  }
-};
-
-template<typename TrialType, typename TestType>
-class DivTrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const TestType* const test;
-
-public:
-  DivTrialInnerTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
-  {
-    typename TrialType::divergence_type trial_divergence = trial->evaluateDivergence(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
-    const double result = (test_value * trial_divergence);
-    return result;
-  }
-};
-
-template<typename TrialType, typename TestType>
-class TrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const TestType* const test;
-
-public:
-  TrialInnerTest(const TrialType* const _trial, const TestType* const _test) : trial(_trial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDof, const std::size_t trialDof, const vertex_type& location) const
-  {
-    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDof, location);
-    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDof, location);
-    const double result = (test_value.colon_product(trial_value));
-    return result;
-  }
-};
-
-template<typename TrialType, typename TestType>
-class TrialDotGradTrialInnerTest : public FEBinaryFunction<typename TrialType::cell_type>
-{
-public:
-  typedef typename TrialType::cell_type cell_type;
-  typedef typename FEBinaryFunction<cell_type>::vertex_type vertex_type;
-  typedef typename FEBinaryFunction<cell_type>::finite_element_t finite_element_t;
-
-private:
-  const TrialType* const trial;
-  const FEVector<cell_type::dimension> prevTrial;
-  const TestType* const test;
-
-public:
-  TrialDotGradTrialInnerTest(const TrialType* const _trial, const FEVector<cell_type::dimension>& _prevTrial, const TestType* const _test) : 
-                             trial(_trial), prevTrial(_prevTrial), test(_test)
-  {
-  }
-
-  virtual const finite_element_t* getTestFunction() const
-  {
-    return test;
-  }
-
-  virtual const finite_element_t* getTrialFunction() const 
-  {
-    return trial;
-  }
-
-  virtual double evaluate(const CellVertices<cell_type::dimension>& vertices, const MeshEntity& gEntity, 
-    const MeshEntity& lEntity, const std::size_t testDofIndex, const std::size_t trialDofIndex, const vertex_type& location) const
-  {
-    typedef Dof<cell_type::dimension> dof_t;
-    const dof_t trialDof(trial, gEntity.getIndex(), trialDofIndex);
-    double prevTrialCoeff;
-    prevTrial.getValues(1, &trialDof, &prevTrialCoeff);
-
-    typename TrialType::value_type trial_value = trial->evaluateTensor(vertices, trialDofIndex, location);
-    typename TrialType::gradient_type trial_gradient = trial->evaluateGradient(vertices, trialDofIndex, location) * prevTrialCoeff;
-    typename TestType::value_type test_value = test->evaluateTensor(vertices, testDofIndex, location);
-    const double result = (trial_value.inner_product(trial_gradient)).inner_product(test_value);
-    return result;
-  }
-
-  ScaledFEBinaryFunction<TrialDotGradTrialInnerTest> operator*(const double s) const
-  {
-    return ScaledFEBinaryFunction<TrialDotGradTrialInnerTest>(*this, s);
-  }
-};
 
 class Edges : public SubDomain<2>
 {
@@ -369,12 +115,6 @@ private:
   DofMap<dimension> velocityDofMapHomogeneous;
   DofMap<dimension> velocityDofMapDirichlet;
 
-  GradTrialInnerGradTest<velocity_basis_t, velocity_basis_t> viscosity_term;
-  GradTrialInnerNormalMulTest<velocity_basis_t, velocity_basis_t> viscosity_boundary_term;
-  TrialInnerDivTest<pressure_basis_t, velocity_basis_t> pressure_term;
-  DivTrialInnerTest<velocity_basis_t, pressure_basis_t> continuity_term;
-  TrialInnerTest<velocity_basis_t, velocity_basis_t> mass_term;
-
   FEVector<dimension> prev_velocity_vector;
   FEVector<dimension> prev_pressure_vector;
   FEVector<dimension> velocity_vector;
@@ -426,11 +166,6 @@ public:
   StokesSystem(const Mesh<dimension>& _m) : m(_m), systemDofMap(buildDofMap(m, pressure, velocity)),
                                              velocityDofMap(systemDofMap.extractDofs(&velocity)),
                                              pressureDofMap(systemDofMap.extractDofs(&pressure)),
-                                             viscosity_term(&velocity, &velocity),
-                                             viscosity_boundary_term(&velocity, &velocity),
-                                             pressure_term(&pressure, &velocity),
-                                             continuity_term(&velocity, &pressure),
-                                             mass_term(&velocity, &velocity),
                                              prev_velocity_vector(velocityDofMap),
                                              prev_pressure_vector(pressureDofMap),
                                              velocity_vector(velocityDofMap),
@@ -507,9 +242,6 @@ public:
 
       // Copy the existing matrices
       FEMatrix<dimension> nonlinear_stiffness_matrix(linear_stiffness_matrix);
-
-      // Create non-linear terms for calculating lhs part of system
-      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, unknown_guess, &velocity);
 
       // Add non-linear term into stiffness matrix
       FEVector<dimension> unknown_velocity(velocityDofMap);
