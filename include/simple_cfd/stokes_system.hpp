@@ -222,7 +222,7 @@ public:
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
       B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
-      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
+      B(scalar(-(1.0-theta)*k) * inner(velocity, grad(prev_velocity_vector)), velocity)*dx;
 
     nonlinear_rhs_matrix.assemble();
 
