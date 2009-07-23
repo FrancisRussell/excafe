@@ -1,6 +1,8 @@
 #ifndef SIMPLE_CFD_FORMS_BILINEAR_FORM_INTEGRAL_HPP
 #define SIMPLE_CFD_FORMS_BILINEAR_FORM_INTEGRAL_HPP
 
+#include <boost/variant.hpp>
+#include <boost/static_assert.hpp>
 #include "bilinear_form.hpp"
 
 namespace cfd
@@ -12,21 +14,19 @@ namespace forms
 class BilinearFormIntegral
 {
 public:
-  enum Region
-  {
-    CELL,
-    EXTERIOR_FACET
-  };
+  class cell_integral_tag {};
+  class exterior_facet_integral_tag {};
+  typedef boost::variant<cell_integral_tag, exterior_facet_integral_tag> region_t;
 
 private:
   BilinearForm form;
-  Region region;
+  region_t region;
 
 public:
-  BilinearFormIntegral(const BilinearForm& _form, const Region _region) :
+  template<typename integral_type>
+  BilinearFormIntegral(const BilinearForm& _form, const integral_type& _region) : 
     form(_form), region(_region)
   {
-    assert(region == CELL || region == EXTERIOR_FACET);
   }
 
   BilinearForm getForm() const
@@ -34,14 +34,9 @@ public:
     return form;
   }
 
-  bool isCellIntegral() const
+  region_t getRegion() const
   {
-    return region == CELL;
-  }
-
-  bool isExteriorFacetIntegral() const
-  {
-    return region == EXTERIOR_FACET;
+    return region;
   }
 };
 

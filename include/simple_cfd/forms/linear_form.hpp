@@ -24,6 +24,8 @@ private:
   Field::reference_t field;
 
 public:
+  class facet_normal_tag {};
+
   LinearForm(Field* const f) : field(f)
   {
   }

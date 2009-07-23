@@ -11,7 +11,6 @@ namespace cfd
 namespace forms
 {
 
-class facet_normal_tag {};
 
 class FacetNormal : public Field
 {

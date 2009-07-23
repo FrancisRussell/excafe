@@ -28,12 +28,16 @@ namespace cfd
 namespace forms
 {
 
-BilinearFormIntegral::Region dx = BilinearFormIntegral::CELL;
-BilinearFormIntegral::Region ds = BilinearFormIntegral::EXTERIOR_FACET;
+BilinearFormIntegral::cell_integral_tag dx;
+BilinearFormIntegral::exterior_facet_integral_tag ds;
+LinearForm::facet_normal_tag n;
 
-facet_normal_tag n;
+forms::BilinearFormIntegral operator*(const forms::BilinearForm form, const forms::BilinearFormIntegral::cell_integral_tag region)
+{
+  return forms::BilinearFormIntegral(form, region);
+}
 
-forms::BilinearFormIntegral operator*(const forms::BilinearForm& form, const forms::BilinearFormIntegral::Region region)
+forms::BilinearFormIntegral operator*(const forms::BilinearForm form, const forms::BilinearFormIntegral::exterior_facet_integral_tag region)
 {
   return forms::BilinearFormIntegral(form, region);
 }
