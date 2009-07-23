@@ -3,6 +3,11 @@
 
 #include "simple_cfd_fwd.hpp"
 #include "vertex.hpp"
+#include "dof.hpp"
+#include "fe_vector.hpp"
+#include "subdomain.hpp"
+#include "function.hpp"
+#include "cell_vertices.hpp"
 #include <boost/static_assert.hpp>
 
 namespace cfd
@@ -35,19 +40,20 @@ public:
     typedef typename dof_map_type::dof_t dof_t;
 
     const dof_map_type dofMap(boundaryValues.getRowMappings());
+    const Mesh<dimension>& m = dofMap.getMesh();
 
     for(typename dof_map_type::const_iterator dofMapIter(dofMap.begin()); dofMapIter!=dofMap.end(); ++dofMapIter)
     {
       const dof_t dof(dofMapIter->first);
-      const vertex<dimension> dofLocationLocal(element.getDofCoordinateLocal(boost::get<1>(dof), boost::get<2>(dof)));
-      const vertex<dimension> dofLocationGlobal(element.getDofCoordinateGlobal(boost::get<1>(dof), boost::get<2>(dof)));
+      const vertex<dimension> dofLocationLocal(element.getDofCoordinateLocal(dof.getIndex()));
+      const vertex<dimension> dofLocationGlobal(element.getDofCoordinateGlobal(m, dof.getCell(), dof.getIndex()));
 
-      if (boost::get<0>(dof) == &element && subdomain.inside(dofLocationGlobal))
+      if (dof.getElement() == &element && subdomain.inside(dofLocationGlobal))
       {
+        const CellVertices<dimension> vertices = m.getCoordinates(dof.getCell());
         const Tensor<D> boundaryValue(function.evaluate(dofLocationGlobal));
-        const Tensor<D> basisAtDofLocation(element.evaluate_tensor(boost::get<1>(dof),
-                                                                              boost::get<2>(dof), dofLocationLocal));
-        const double dofValue = boundaryValue.colon_product(basisAtDofLocation).toScalar();
+        const Tensor<D> basisAtDofLocation(element.evaluateTensor(vertices, dof.getIndex(), dofLocationLocal));
+        const double dofValue = boundaryValue.colon_product(basisAtDofLocation);
         boundaryValues.setValues(1, &dof, &dofValue);
       }
     }
