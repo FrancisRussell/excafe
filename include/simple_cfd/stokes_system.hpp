@@ -547,6 +547,8 @@ public:
 
   void projectionSolve() 
   {
+    using namespace forms;
+
     prev_velocity_vector = velocity_vector;
     prev_pressure_vector = pressure_vector;
 
@@ -560,28 +562,31 @@ public:
     FEMatrix<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     FEMatrix<dimension> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
 
-    linear_lhs_matrix.addTerm(m, mass_term);
-    linear_lhs_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+    linear_lhs_matrix += 
+      B(velocity, velocity)*dx +
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx;
     linear_lhs_matrix.assemble();
 
-    linear_dirichlet_rhs_matrix.addTerm(m, mass_term);
-    linear_dirichlet_rhs_matrix.addTerm(m, viscosity_term * (theta * k * kinematic_viscosity));
+    linear_dirichlet_rhs_matrix +=
+      B(velocity, velocity)*dx +
+      B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx;
     linear_dirichlet_rhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
-    TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermPrev(&velocity, prev_velocity_vector, &velocity);
     FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
-    nonlinear_rhs_matrix.addTerm(m, mass_term);
-    nonlinear_rhs_matrix.addTerm(m, viscosity_term * (-(1.0-theta) * k * kinematic_viscosity));
-    nonlinear_rhs_matrix.addTerm(m, nonLinearTermPrev * (-(1.0-theta) * k));
+
+    nonlinear_rhs_matrix +=
+      B(velocity, velocity)*dx +
+      B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx + 
+      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx +
     nonlinear_rhs_matrix.assemble();
 
     FEMatrix<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
-    pressure_matrix.addTerm(m, pressure_term);
+    pressure_matrix += B(pressure, div(velocity))*dx;
     pressure_matrix.assemble();
 
     FEMatrix<dimension> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
-    velocity_mass_matrix.addTerm(m, mass_term);
+    velocity_mass_matrix += B(velocity, velocity)*dx;
     velocity_mass_matrix.assemble();
 
     FEMatrix<dimension> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
@@ -610,19 +615,13 @@ public:
       FEMatrix<dimension> nonlinear_lhs_matrix(linear_lhs_matrix);
       FEMatrix<dimension> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
 
-      // Create non-linear terms for calculating lhs part of system
-      TrialDotGradTrialInnerTest<velocity_basis_t, velocity_basis_t> nonLinearTermCurrent(&velocity, velocity_guess, &velocity);
-
       // Add non-linear term into stiffness matrix
-      nonlinear_lhs_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_lhs_matrix += B(velocity_guess * scalar(theta*k), velocity)*dx;
       nonlinear_lhs_matrix.assemble();
 
-      nonlinear_dirichlet_rhs_matrix.addTerm(m, nonLinearTermCurrent * (theta*k));
+      nonlinear_dirichlet_rhs_matrix += B(velocity_guess * scalar(theta*k), velocity)*dx;
       nonlinear_dirichlet_rhs_matrix.assemble();
 
-      //std::cout << "Applying boundary conditions..." << std::endl;
-      //applyEdgeVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
-      //applyCylinderVelocityBoundaryConditions(nonlinear_lhs_matrix, unknown_velocity, rhs_velocity);
 
       std::cout << "Starting solver..." << std::endl;
 
