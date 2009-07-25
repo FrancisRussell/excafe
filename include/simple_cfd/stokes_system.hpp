@@ -211,7 +211,7 @@ public:
       B(velocity, velocity)*dx +
       B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
       B(scalar(theta * k * kinematic_viscosity * -1.0) * inner(grad(velocity), n), velocity)*ds +
-      B(scalar(-1.0) * pressure, div(velocity))*dx +
+      B(scalar(-1.0 * k) * pressure, div(velocity))*dx +
       B(div(velocity), pressure)*dx;
 
     linear_stiffness_matrix.assemble();
