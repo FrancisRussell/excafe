@@ -294,15 +294,15 @@ public:
     FEMatrix<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     FEMatrix<dimension> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
 
-    BilinearFormIntegralSum linearLhsTerms = 
+    BilinearFormIntegralSum linearTerms = 
       B(velocity, velocity)*dx +
       B(scalar(theta * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
       B(scalar(-1.0 * theta * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
 
-    linear_lhs_matrix += linearLhsTerms;
+    linear_lhs_matrix += linearTerms;
     linear_lhs_matrix.assemble();
 
-    linear_dirichlet_rhs_matrix += linearLhsTerms;
+    linear_dirichlet_rhs_matrix += linearTerms;
     linear_dirichlet_rhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
