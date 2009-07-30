@@ -312,7 +312,7 @@ public:
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx + 
       B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
-      B(prev_velocity_vector * scalar(-(1.0-theta)*k), velocity)*dx;
+      B(scalar(-(1.0-theta)*k) * inner(prev_velocity_vector, grad(velocity)), velocity)*dx; 
     nonlinear_rhs_matrix.assemble();
 
     FEMatrix<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
@@ -350,10 +350,10 @@ public:
       FEMatrix<dimension> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
 
       // Add non-linear term into stiffness matrix
-      nonlinear_lhs_matrix += B(velocity_guess * scalar(theta*k), velocity)*dx;
+      nonlinear_lhs_matrix += B(scalar(theta*k) * inner(velocity_guess, grad(velocity)), velocity)*dx; 
       nonlinear_lhs_matrix.assemble();
 
-      nonlinear_dirichlet_rhs_matrix += B(velocity_guess * scalar(theta*k), velocity)*dx;
+      nonlinear_dirichlet_rhs_matrix += B(scalar(theta*k) * inner(velocity_guess, grad(velocity)), velocity)*dx; 
       nonlinear_dirichlet_rhs_matrix.assemble();
 
       std::cout << "Starting solver..." << std::endl;
