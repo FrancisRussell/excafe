@@ -42,11 +42,13 @@ void trifreeMembers(triangulateio& t)
   trifree(t.neighborlist);
   trifree(t.segmentlist);
   trifree(t.segmentmarkerlist);
-  trifree(t.holelist);
-  trifree(t.regionlist);
   trifree(t.edgelist);
   trifree(t.edgemarkerlist);
   trifree(t.normlist);
+
+  // Both of these are copied from the input structure
+  // trifree(t.holelist);
+  // trifree(t.regionlist);
 }
 
 }
@@ -77,6 +79,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
   std::vector<double> pointList;
   std::vector<int> segmentList;
   std::vector<int> segmentMarkerList;
+  std::vector<double> holeList;
 
   // BL
   pointList.push_back(0.0);
@@ -105,13 +108,16 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
   segmentMarkerList.push_back(3);
   segmentMarkerList.push_back(4);
 
-  handlePolygons(pointList, segmentList, segmentMarkerList);
+  handlePolygons(pointList, segmentList, segmentMarkerList, holeList);
 
   in.pointlist = &pointList[0];
   in.numberofpoints = pointList.size() / 2;
 
   in.segmentlist = &segmentList[0];
   in.numberofsegments = segmentList.size() / 2;
+
+  in.holelist = &holeList[0];
+  in.numberofholes = holeList.size() / 2;
 
   assert(static_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
   in.segmentmarkerlist = &segmentMarkerList[0];
@@ -178,7 +184,8 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
 }
 
 void TriangularMeshBuilder::handlePolygons(std::vector<double>& pointList, 
-  std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const
+  std::vector<int>& segmentList, std::vector<int>& segmentMarkerList,
+  std::vector<double>& holeList) const
 {
   for(std::vector< std::pair<Polygon, int> >::const_iterator polyIter(polygons.begin());
     polyIter!=polygons.end(); ++polyIter)
@@ -207,6 +214,9 @@ void TriangularMeshBuilder::handlePolygons(std::vector<double>& pointList,
     pointList.insert(pointList.end(), points.begin(), points.end());
     segmentList.insert(segmentList.end(), segments.begin(), segments.end());
     std::fill_n(std::back_inserter(segmentMarkerList), polygon.getNumSides(), label);
+
+    holeList.push_back(polygon.getOrigin()[0]);
+    holeList.push_back(polygon.getOrigin()[1]);
   }
 }
 
