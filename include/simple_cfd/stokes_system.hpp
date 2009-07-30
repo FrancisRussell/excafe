@@ -222,7 +222,7 @@ public:
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
       B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
-      B(scalar(-(1.0-theta)*k) * inner(velocity, grad(prev_velocity_vector)), velocity)*dx;
+      B(scalar(-(1.0-theta)*k) * inner(prev_velocity_vector, grad(velocity)), velocity)*dx;
 
     nonlinear_rhs_matrix.assemble();
 
@@ -246,7 +246,7 @@ public:
       // Add non-linear term into stiffness matrix
       FEVector<dimension> unknown_velocity(velocityDofMap);
       unknown_guess.extractSubvector(unknown_velocity);
-      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(velocity, grad(unknown_velocity)), velocity)*dx; 
+      nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(unknown_velocity, grad(velocity)), velocity)*dx; 
       nonlinear_stiffness_matrix.assemble();
 
       // Add rhs velocity-related vector into load vector
@@ -355,7 +355,6 @@ public:
 
       nonlinear_dirichlet_rhs_matrix += B(velocity_guess * scalar(theta*k), velocity)*dx;
       nonlinear_dirichlet_rhs_matrix.assemble();
-
 
       std::cout << "Starting solver..." << std::endl;
 
