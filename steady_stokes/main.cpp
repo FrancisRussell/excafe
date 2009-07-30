@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
   PETScManager::instance().init(argc, argv);
   typedef TriangularCell cell_type;
   TriangularMeshBuilder meshBuilder(3.0, 1.0, 1.0/900.0);
-  meshBuilder.addPolygon(Polygon(vertex<2>(1.0, 0.5), 16, 0.148, 0), 5);
+  meshBuilder.addPolygon(Polygon(vertex<2>(0.5, 0.5), 16, 0.148, 0), 5);
   Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
 
   std::cout << "Constructing system..." << std::endl;

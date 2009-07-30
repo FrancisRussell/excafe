@@ -463,7 +463,7 @@ public:
   void applyCylinderVelocityBoundaryConditions(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector)
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
-    const vertex_type centre(1.0, 0.5);
+    const vertex_type centre(0.5, 0.5);
     const double radius = 0.15;
 
     for(typename Mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
