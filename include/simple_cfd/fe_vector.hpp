@@ -55,13 +55,19 @@ public:
   std::size_t getRank() const
   {
     assert(!isComposite());
-    return (*rowMappings.getFiniteElements().begin())->getRank();
+    return rowMappings.getFiniteElement()->getRank();
   }
 
   std::size_t getDimension() const
   {
     assert(!isComposite());
-    return (*rowMappings.getFiniteElements().begin())->getDimension();
+    return rowMappings.getFiniteElement()->getDimension();
+  }
+
+  const finite_element_t* getElement() const
+  {
+    assert(!isComposite());
+    return rowMappings.getFiniteElement();
   }
 
   DofMap<dimension> getRowMappings() const

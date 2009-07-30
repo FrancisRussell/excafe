@@ -67,6 +67,12 @@ public:
     return elements.size() > 1;
   }
 
+  const finite_element_t* getFiniteElement() const
+  {
+    assert(!isComposite());
+    return *elements.begin();
+  }
+
   const_iterator begin() const
   {
     return mapping.begin();

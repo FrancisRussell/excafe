@@ -45,19 +45,19 @@ private:
   EvaluationState evaluationState;
   std::stack< Tensor<dimension> > valueStack;
 
-  Tensor<dimension> evaluateBasis(const FiniteElement<dimension>& element) const
+  Tensor<dimension> evaluateBasis(const FiniteElement<dimension>& element, const std::size_t index) const
   {
     if (evaluationState == GRADIENT)
     {
-      return element.evaluateGradient(vertices, dof.getIndex(), localVertex);
+      return element.evaluateGradient(vertices, index, localVertex);
     }
     else if (evaluationState == DIVERGENCE)
     {
-      return element.evaluateDivergence(vertices, dof.getIndex(), localVertex);
+      return element.evaluateDivergence(vertices, index, localVertex);
     }
     else
     {
-      return element.evaluateTensor(vertices, dof.getIndex(), localVertex);
+      return element.evaluateTensor(vertices, index, localVertex);
     }
   }
 
@@ -172,7 +172,7 @@ public:
       boost::any_cast<const FiniteElement<dimension>*>(basis.getElement().getElementPtr());
 
     assert(element!=NULL);
-    valueStack.push(evaluateBasis(*element));
+    valueStack.push(evaluateBasis(*element, dof.getIndex()));
   }
 
   virtual void visit(DiscreteField& field)
@@ -181,10 +181,25 @@ public:
       boost::any_cast<const FEVector<dimension>*>(field.getVector().getVectorPtr());
 
     assert(vector!=NULL);
+    assert(!vector->isComposite());
 
-    double prevTrialCoeff;
-    vector->getValues(1, &dof, &prevTrialCoeff);
-    valueStack.push(evaluateBasis(*dof.getElement()) * prevTrialCoeff);
+    const FiniteElement<dimension>* const element = vector->getElement();
+
+    std::size_t rank = element->getRank();
+    if (evaluationState == DIVERGENCE) --rank;
+    if (evaluationState == GRADIENT) ++rank;
+
+    Tensor<dimension> value(rank);
+
+    for(std::size_t i=0; i<element->spaceDimension(); ++i)
+    {
+      const Dof<dimension> discreteDof(element, dof.getCell(), i);
+      double prevTrialCoeff;
+      vector->getValues(1, &discreteDof, &prevTrialCoeff);
+      value += evaluateBasis(*element, i) * prevTrialCoeff;
+    }
+
+    valueStack.push(value);
   }
 
   virtual void visit(TensorLiteral& literal)
