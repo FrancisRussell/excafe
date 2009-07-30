@@ -25,7 +25,8 @@ private:
   Mesh<dimension> buildMeshOld() const;
   Mesh<dimension> buildMeshTriangle() const;
   void handlePolygons(std::vector<double>& pointList, 
-    std::vector<int>& segmentList, std::vector<int>& segmentMarkerList) const;
+    std::vector<int>& segmentList, std::vector<int>& segmentMarkerList,
+    std::vector<double>& holeList) const;
 
 public:
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
