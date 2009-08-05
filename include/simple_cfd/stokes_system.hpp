@@ -278,7 +278,7 @@ public:
     std::cout << "Assembling linear terms..." << std::endl;
 
     DiscreteField<dimension> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
-    prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
+    prev_velocity_vector.extractField(homogeneous_prev_velocity_vector);
 
     // Add in all constant terms in the lhs matrix
     DiscreteOperator<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
@@ -364,13 +364,13 @@ public:
       std::cout << "L2-norm of C^Tu with modified velocity vector: " << pressure_matrix.trans_mult(unknown_velocity).two_norm() << std::endl;
 
       velocity_guess.zero();
-      velocity_guess.addSubvector(unknown_velocity);
-      velocity_guess.addSubvector(dirichletValues);
+      velocity_guess.addField(unknown_velocity);
+      velocity_guess.addField(dirichletValues);
     }
 
     velocity_vector.zero();
-    velocity_vector.addSubvector(unknown_velocity);
-    velocity_vector.addSubvector(dirichletValues);
+    velocity_vector.addField(unknown_velocity);
+    velocity_vector.addField(dirichletValues);
 
     pressure_vector = pressure_guess;
   }
