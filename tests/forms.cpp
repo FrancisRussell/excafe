@@ -4,7 +4,7 @@
 #include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/dof_map_builder.hpp>
-#include <simple_cfd/fe_vector.hpp>
+#include <simple_cfd/discrete_field.hpp>
 #include <simple_cfd/petsc_manager.hpp>
 #include <simple_cfd/numeric/tensor.hpp>
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   mapBuilder.addFiniteElement(vectorBasis);
   DofMap<dimension> vectorFieldDofs = mapBuilder.getDofMap();
 
-  FEVector<dimension> vectorField(vectorFieldDofs);
+  DiscreteField<dimension> vectorField(vectorFieldDofs);
 
   grad(vectorField);
   div(vectorBasis) + div(vectorField);

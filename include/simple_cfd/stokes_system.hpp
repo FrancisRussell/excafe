@@ -16,8 +16,8 @@
 #include "lagrange_triangle_quadratic.hpp"
 #include "numeric/solver.hpp"
 #include "numeric/tensor.hpp"
-#include "fe_matrix.hpp"
-#include "fe_vector.hpp"
+#include "discrete_operator.hpp"
+#include "discrete_field.hpp"
 #include "subdomain.hpp"
 #include "function.hpp"
 #include "boundary_condition.hpp"
@@ -115,10 +115,10 @@ private:
   DofMap<dimension> velocityDofMapHomogeneous;
   DofMap<dimension> velocityDofMapDirichlet;
 
-  FEVector<dimension> prev_velocity_vector;
-  FEVector<dimension> prev_pressure_vector;
-  FEVector<dimension> velocity_vector;
-  FEVector<dimension> pressure_vector;
+  DiscreteField<dimension> prev_velocity_vector;
+  DiscreteField<dimension> prev_pressure_vector;
+  DiscreteField<dimension> velocity_vector;
+  DiscreteField<dimension> pressure_vector;
 
   const double k;
   const double theta;
@@ -186,11 +186,11 @@ public:
     velocityDofMapDirichlet = splitDofs.second;
   }
 
-  FEMatrix<dimension> getLumpedInverse(const FEMatrix<dimension>& matrix)
+  DiscreteOperator<dimension> getLumpedInverse(const DiscreteOperator<dimension>& matrix)
   {
-    FEVector<dimension> diagonal(matrix.getLumpedDiagonal());
+    DiscreteField<dimension> diagonal(matrix.getLumpedDiagonal());
     diagonal.reciprocal();
-    FEMatrix<dimension> invertedMatrix(matrix.getRowMappings(), matrix.getColMappings());
+    DiscreteOperator<dimension> invertedMatrix(matrix.getRowMappings(), matrix.getColMappings());
     invertedMatrix.addToDiagonal(diagonal);
     return invertedMatrix;
   }
@@ -205,7 +205,7 @@ public:
     std::cout << "Assembling linear terms..." << std::endl;
 
     // Add in all constant terms in the lhs matrix
-    FEMatrix<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
+    DiscreteOperator<dimension> linear_stiffness_matrix(systemDofMap, systemDofMap);
 
     linear_stiffness_matrix += 
       B(velocity, velocity)*dx +
@@ -217,7 +217,7 @@ public:
     linear_stiffness_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
-    FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
+    DiscreteOperator<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix +=
       B(velocity, velocity)*dx +
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx +
@@ -227,13 +227,13 @@ public:
     nonlinear_rhs_matrix.assemble();
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<dimension> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
+    DiscreteField<dimension> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
     rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<dimension> load_vector(systemDofMap);
-    FEVector<dimension> unknown_vector(systemDofMap);
-    FEVector<dimension> unknown_guess(unknown_vector);
+    DiscreteField<dimension> load_vector(systemDofMap);
+    DiscreteField<dimension> unknown_vector(systemDofMap);
+    DiscreteField<dimension> unknown_guess(unknown_vector);
     double residual = 0.0;
 
     while(true)
@@ -241,10 +241,10 @@ public:
       std::cout << "Assembling non-linear terms..." << std::endl;
 
       // Copy the existing matrices
-      FEMatrix<dimension> nonlinear_stiffness_matrix(linear_stiffness_matrix);
+      DiscreteOperator<dimension> nonlinear_stiffness_matrix(linear_stiffness_matrix);
 
       // Add non-linear term into stiffness matrix
-      FEVector<dimension> unknown_velocity(velocityDofMap);
+      DiscreteField<dimension> unknown_velocity(velocityDofMap);
       unknown_guess.extractSubvector(unknown_velocity);
       nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(unknown_velocity, grad(velocity)), velocity)*dx; 
       nonlinear_stiffness_matrix.assemble();
@@ -286,13 +286,13 @@ public:
 
     std::cout << "Assembling linear terms..." << std::endl;
 
-    FEVector<dimension> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
+    DiscreteField<dimension> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
     prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
     homogeneous_prev_velocity_vector.assemble();
 
     // Add in all constant terms in the lhs matrix
-    FEMatrix<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
-    FEMatrix<dimension> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
+    DiscreteOperator<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    DiscreteOperator<dimension> linear_dirichlet_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapDirichlet);
 
     BilinearFormIntegralSum linearTerms = 
       B(velocity, velocity)*dx +
@@ -306,7 +306,7 @@ public:
     linear_dirichlet_rhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
-    FEMatrix<dimension> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    DiscreteOperator<dimension> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
 
     nonlinear_rhs_matrix +=
       B(velocity, velocity)*dx +
@@ -315,28 +315,28 @@ public:
       B(scalar(-(1.0-theta)*k) * inner(prev_velocity_vector, grad(velocity)), velocity)*dx; 
     nonlinear_rhs_matrix.assemble();
 
-    FEMatrix<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
+    DiscreteOperator<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
     pressure_matrix += B(pressure, div(velocity))*dx;
     pressure_matrix.assemble();
 
-    FEMatrix<dimension> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
+    DiscreteOperator<dimension> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     velocity_mass_matrix += B(velocity, velocity)*dx;
     velocity_mass_matrix.assemble();
 
-    FEMatrix<dimension> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
+    DiscreteOperator<dimension> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
 
     // Add non-linear term into rhs matrix then multiply to get rhs vector
-    FEVector<dimension> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
+    DiscreteField<dimension> rhs_velocity(nonlinear_rhs_matrix*homogeneous_prev_velocity_vector);
 
-    FEVector<dimension> dirichletValues(velocityDofMapDirichlet);
+    DiscreteField<dimension> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
     dirichletValues.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
-    FEVector<dimension> velocity_guess(prev_velocity_vector);
-    FEVector<dimension> unknown_velocity(velocityDofMapHomogeneous);
-    FEVector<dimension> pressure_guess(prev_pressure_vector);
+    DiscreteField<dimension> velocity_guess(prev_velocity_vector);
+    DiscreteField<dimension> unknown_velocity(velocityDofMapHomogeneous);
+    DiscreteField<dimension> pressure_guess(prev_pressure_vector);
     double residual = 0.0;
 
     for(int picard_iteration=0; picard_iteration<2; ++picard_iteration)
@@ -346,8 +346,8 @@ public:
       pressure_guess = prev_pressure_vector;
 
       // Copy the existing matrices
-      FEMatrix<dimension> nonlinear_lhs_matrix(linear_lhs_matrix);
-      FEMatrix<dimension> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
+      DiscreteOperator<dimension> nonlinear_lhs_matrix(linear_lhs_matrix);
+      DiscreteOperator<dimension> nonlinear_dirichlet_rhs_matrix(linear_dirichlet_rhs_matrix);
 
       // Add non-linear term into stiffness matrix
       nonlinear_lhs_matrix += B(scalar(theta*k) * inner(velocity_guess, grad(velocity)), velocity)*dx; 
@@ -358,7 +358,7 @@ public:
 
       std::cout << "Starting solver..." << std::endl;
 
-      FEVector<dimension> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
+      DiscreteField<dimension> modified_rhs_velocity(rhs_velocity - nonlinear_dirichlet_rhs_matrix*dirichletValues + pressure_matrix * pressure_guess * k);
       solve(nonlinear_lhs_matrix, unknown_velocity, modified_rhs_velocity);
 
       std::cout << "L2-norm of homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
@@ -368,16 +368,16 @@ public:
       std::cout << "Current non-linear residual in momentum equation: " << residual << std::endl;
 
       // Now solve mass-lumped continuity equation
-      FEMatrix<dimension> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
-      FEVector<dimension> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix*(velocity_mass_matrix*unknown_velocity*-1.0)));
-      FEVector<dimension> phi(pressureDofMap);
+      DiscreteOperator<dimension> continuity_lhs(pressure_matrix.trans_mult(inverted_mass_matrix)*pressure_matrix);
+      DiscreteField<dimension> continuity_rhs(pressure_matrix.trans_mult(inverted_mass_matrix*(velocity_mass_matrix*unknown_velocity*-1.0)));
+      DiscreteField<dimension> phi(pressureDofMap);
       std::cout << "Solving for phi..." << std::endl;
       solve(continuity_lhs, phi, continuity_rhs);
       std::cout << "L2-norm of phi: " << phi.two_norm() << std::endl;
 
       pressure_guess = pressure_guess - (phi * (1/k));
 
-      FEVector<dimension> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
+      DiscreteField<dimension> velocity_correction_rhs(velocity_mass_matrix*unknown_velocity + pressure_matrix*phi);
       std::cout << "Solving velocity correction..." << std::endl;
       solve(velocity_mass_matrix, unknown_velocity, velocity_correction_rhs); 
       std::cout << "L2-norm of corrected homogeneous velocity vector: " << unknown_velocity.two_norm() << std::endl;
@@ -418,7 +418,7 @@ public:
     return location;
   }
 
-  void applyEdgeVelocityBoundaryConditions(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector)
+  void applyEdgeVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector)
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
 
@@ -460,7 +460,7 @@ public:
     unknown_vector.assemble();
   }
 
-  void applyCylinderVelocityBoundaryConditions(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector)
+  void applyCylinderVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector)
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
     const vertex_type centre(0.5, 0.5);
@@ -484,7 +484,7 @@ public:
     }
   }
 
-  void solve(FEMatrix<dimension>& stiffness_matrix, FEVector<dimension>& unknown_vector, FEVector<dimension>& load_vector, const bool usePreconditioner = true)
+  void solve(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector, const bool usePreconditioner = true)
   {
     PETScKrylovSolver solver;
     solver.setMaxIterations(25000);

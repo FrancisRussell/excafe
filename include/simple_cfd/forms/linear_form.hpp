@@ -4,11 +4,11 @@
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
 #include <simple_cfd/finite_element.hpp>
-#include <simple_cfd/fe_vector.hpp>
+#include <simple_cfd/discrete_field.hpp>
 
 #include "field.hpp"
 #include "basis_field.hpp"
-#include "discrete_field.hpp"
+#include "discrete_field_reference.hpp"
 #include "tensor_literal.hpp"
 #include "facet_normal.hpp"
 
@@ -40,7 +40,7 @@ public:
   }
 
   template<std::size_t D>
-  LinearForm(const FEVector<D>& element) : field(new DiscreteField(element))
+  LinearForm(const DiscreteField<D>& element) : field(new DiscreteFieldReference(element))
   {
   }
 

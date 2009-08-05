@@ -11,7 +11,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class FEVector
+class DiscreteField
 {
 private:
   static const std::size_t dimension = D;
@@ -34,16 +34,16 @@ private:
   }
 
 public:
-  FEVector(const DofMap<dimension>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
+  DiscreteField(const DofMap<dimension>& _rowMappings) : rowMappings(_rowMappings), vector(rowMappings.getDegreesOfFreedomCount())
   {
   }
 
-  FEVector(const DofMap<dimension>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
+  DiscreteField(const DofMap<dimension>& _rowMappings, const PETScVector& v) : rowMappings(_rowMappings), 
                                                                            vector(v)
   {
   }
 
-  FEVector(const FEVector& v) : rowMappings(v.rowMappings), vector(v.vector)
+  DiscreteField(const DiscreteField& v) : rowMappings(v.rowMappings), vector(v.vector)
   {
   }
 
@@ -75,54 +75,54 @@ public:
     return rowMappings;
   }
 
-  FEVector& operator=(const FEVector& f)
+  DiscreteField& operator=(const DiscreteField& f)
   {
     assert(rowMappings == f.rowMappings);
     vector = f.vector;
     return *this;
   }
 
-  FEVector& operator=(const double s)
+  DiscreteField& operator=(const double s)
   {
     vector = s;
     return *this;
   }
 
-  FEVector& operator*=(const double d)
+  DiscreteField& operator*=(const double d)
   {
     vector *= d;
     return *this;
   }
 
-  FEVector& operator+=(const FEVector& f)
+  DiscreteField& operator+=(const DiscreteField& f)
   {
     assert(rowMappings == f.rowMappings);
     vector += f.vector;
     return *this;
   }
   
-  FEVector& operator-=(const FEVector& f)
+  DiscreteField& operator-=(const DiscreteField& f)
   {
     assert(rowMappings == f.rowMappings);
     vector -= f.vector;
     return *this;
   }
 
-  FEVector operator*(const double d) const
+  DiscreteField operator*(const double d) const
   {
-    return FEVector(rowMappings, vector * d);
+    return DiscreteField(rowMappings, vector * d);
   }
 
-  FEVector operator+(const FEVector& f) const
+  DiscreteField operator+(const DiscreteField& f) const
   {
     assert(rowMappings == f.rowMappings);
-    return FEVector(rowMappings, vector + f.vector);
+    return DiscreteField(rowMappings, vector + f.vector);
   }
 
-  FEVector operator-(const FEVector& f) const
+  DiscreteField operator-(const DiscreteField& f) const
   {
     assert(rowMappings == f.rowMappings);
-    return FEVector(rowMappings, vector - f.vector);
+    return DiscreteField(rowMappings, vector - f.vector);
   }
 
   double two_norm() const
@@ -165,13 +165,13 @@ public:
     vector.assemble();
   }
 
-  void extractSubvector(FEVector& s) const
+  void extractSubvector(DiscreteField& s) const
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.extractSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
   }
 
-  void addSubvector(const FEVector& s)
+  void addSubvector(const DiscreteField& s)
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);

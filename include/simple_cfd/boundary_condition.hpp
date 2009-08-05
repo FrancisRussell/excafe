@@ -4,7 +4,7 @@
 #include "simple_cfd_fwd.hpp"
 #include "vertex.hpp"
 #include "dof.hpp"
-#include "fe_vector.hpp"
+#include "discrete_field.hpp"
 #include "subdomain.hpp"
 #include "function.hpp"
 #include "cell_vertices.hpp"
@@ -30,7 +30,7 @@ public:
   }
 
   template<typename finite_element_t>
-  void populateDirichletValues(FEVector<finite_element_t::dimension>& boundaryValues, const finite_element_t& element)
+  void populateDirichletValues(DiscreteField<finite_element_t::dimension>& boundaryValues, const finite_element_t& element)
   {
     BOOST_STATIC_ASSERT(rank == finite_element_t::rank);
     BOOST_STATIC_ASSERT(dimension == finite_element_t::dimension);

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include "field.hpp"
 #include "holders.hpp"
-#include <simple_cfd/fe_vector.hpp>
+#include <simple_cfd/discrete_field.hpp>
 
 namespace cfd
 {
@@ -12,14 +12,14 @@ namespace cfd
 namespace forms
 {
 
-class DiscreteField : public Field
+class DiscreteFieldReference : public Field
 {
 private:
- FEVectorHolder vector;
+ DiscreteFieldHolder vector;
 
 public:
   template<std::size_t D>
-  DiscreteField(const FEVector<D>& v) : vector(v)
+  DiscreteFieldReference(const DiscreteField<D>& v) : vector(v)
   {
   }
 
@@ -33,7 +33,7 @@ public:
     v.visit(*this);
   }
 
-  FEVectorHolder getVector() const
+  DiscreteFieldHolder getVector() const
   {
     return vector;
   }

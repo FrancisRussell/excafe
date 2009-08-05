@@ -44,8 +44,8 @@ class PETScMatrix;
 class PETScVector;
 class PETScKrylovSolver;
 template<std::size_t> class Tensor;
-template<std::size_t D> class FEMatrix;
-template<std::size_t D> class FEVector;
+template<std::size_t D> class DiscreteOperator;
+template<std::size_t D> class DiscreteField;
 
 // Polynomial types
 class Polynomial;

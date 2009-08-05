@@ -6,7 +6,7 @@
 #include <boost/any.hpp>
 #include "field_visitor.hpp"
 #include <simple_cfd/finite_element.hpp>
-#include <simple_cfd/fe_vector.hpp>
+#include <simple_cfd/discrete_field.hpp>
 
 namespace cfd
 {
@@ -29,9 +29,9 @@ private:
     handle(elementPtr);
   }
 
-  void handle(const FEVectorHolder& holder)
+  void handle(const DiscreteFieldHolder& holder)
   {
-    const FEVector<dimension>* const vectorPtr = boost::any_cast<const FEVector<dimension>*>(holder.getVectorPtr());
+    const DiscreteField<dimension>* const vectorPtr = boost::any_cast<const DiscreteField<dimension>*>(holder.getVectorPtr());
     assert(vectorPtr != NULL);
 
     const std::set<const finite_element_t*> elements(vectorPtr->getRowMappings().getFiniteElements());
@@ -122,7 +122,7 @@ public:
     handle(basis.getElement());
   }
 
-  virtual void visit(DiscreteField& d)
+  virtual void visit(DiscreteFieldReference& d)
   {
     handle(d.getVector());
   }

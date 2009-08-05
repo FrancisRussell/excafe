@@ -175,10 +175,10 @@ public:
     valueStack.push(evaluateBasis(*element, dof.getIndex()));
   }
 
-  virtual void visit(DiscreteField& field)
+  virtual void visit(DiscreteFieldReference& field)
   {
-    const FEVector<dimension>* const vector = 
-      boost::any_cast<const FEVector<dimension>*>(field.getVector().getVectorPtr());
+    const DiscreteField<dimension>* const vector = 
+      boost::any_cast<const DiscreteField<dimension>*>(field.getVector().getVectorPtr());
 
     assert(vector!=NULL);
     assert(!vector->isComposite());

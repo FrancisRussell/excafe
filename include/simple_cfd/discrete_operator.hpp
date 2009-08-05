@@ -7,7 +7,7 @@
 #include <cassert>
 #include "vertex.hpp"
 #include "dof_map.hpp"
-#include "fe_vector.hpp"
+#include "discrete_field.hpp"
 #include "mesh.hpp"
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
@@ -21,7 +21,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class FEMatrix
+class DiscreteOperator
 {
 private:
   static const std::size_t dimension = D;
@@ -172,7 +172,7 @@ private:
 
 
 public:
-  FEMatrix(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
+  DiscreteOperator(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
   {
     // Make sure the degree-of-freedom maps are defined on the same mesh. Calculating a
@@ -180,13 +180,13 @@ public:
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
-  FEMatrix(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings, const PETScMatrix& m) :
+  DiscreteOperator(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings, const PETScMatrix& m) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(m)
   {
     assert(&rowMappings.getMesh() == &colMappings.getMesh());
   }
 
-  FEMatrix(const FEMatrix& m) : rowMappings(m.rowMappings), colMappings(m.colMappings), matrix(m.matrix)
+  DiscreteOperator(const DiscreteOperator& m) : rowMappings(m.rowMappings), colMappings(m.colMappings), matrix(m.matrix)
   {
   }
 
@@ -200,7 +200,7 @@ public:
     return colMappings;
   }
 
-  FEMatrix& operator=(const FEMatrix& f)
+  DiscreteOperator& operator=(const DiscreteOperator& f)
   {
     assert(rowMappings == f.rowMappings);
     assert(colMappings == f.colMappings);
@@ -222,7 +222,7 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-  FEMatrix& operator+=(const forms::BilinearFormIntegralSum& expr)
+  DiscreteOperator& operator+=(const forms::BilinearFormIntegralSum& expr)
   {
     const Mesh<dimension> m(rowMappings.getMesh());
 
@@ -235,7 +235,7 @@ public:
     return *this;
   }
 
-  void addToDiagonal(FEVector<dimension>& v)
+  void addToDiagonal(DiscreteField<dimension>& v)
   {
     assert(rowMappings == v.getRowMappings());
     matrix.addToDiagonal(v.getVectorHandle());
@@ -252,20 +252,20 @@ public:
     matrix.zero();
   }
 
-  void extractSubmatrix(FEMatrix& s) const
+  void extractSubmatrix(DiscreteOperator& s) const
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     const std::vector<int> colIndices = s.colMappings.getIndices(colMappings);
     matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
   }
 
-  FEVector<dimension> getLumpedDiagonal() const
+  DiscreteField<dimension> getLumpedDiagonal() const
   {
     assert(rowMappings == colMappings);
-    return FEVector<dimension>(rowMappings, matrix.getLumpedDiagonal());
+    return DiscreteField<dimension>(rowMappings, matrix.getLumpedDiagonal());
   }
 
-  void scaleDiagonal(const FEVector<dimension>& s)
+  void scaleDiagonal(const DiscreteField<dimension>& s)
   {
     assert(rowMappings == colMappings);
     assert(rowMappings == s.getRowMappings());
@@ -277,28 +277,28 @@ public:
     matrix.assemble();
   }
 
-  FEVector<dimension> operator*(const FEVector<dimension>& v) const
+  DiscreteField<dimension> operator*(const DiscreteField<dimension>& v) const
   {
     assert(colMappings == v.getRowMappings());
-    return FEVector<dimension>(rowMappings, matrix*v.getVectorHandle());
+    return DiscreteField<dimension>(rowMappings, matrix*v.getVectorHandle());
   }
 
-  FEMatrix<dimension> operator*(const FEMatrix<dimension>& b) const
+  DiscreteOperator<dimension> operator*(const DiscreteOperator<dimension>& b) const
   {
     assert(colMappings == b.getRowMappings());
-    return FEMatrix<dimension>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
+    return DiscreteOperator<dimension>(rowMappings, b.getColMappings(), matrix*b.getMatrixHandle());
   }
 
-  FEVector<dimension> trans_mult(const FEVector<dimension>& v) const
+  DiscreteField<dimension> trans_mult(const DiscreteField<dimension>& v) const
   {
     assert(rowMappings == v.getRowMappings());
-    return FEVector<dimension>(colMappings, matrix.trans_mult(v.getVectorHandle()));
+    return DiscreteField<dimension>(colMappings, matrix.trans_mult(v.getVectorHandle()));
   }
 
-  FEMatrix<dimension> trans_mult(const FEMatrix<dimension>& b) const
+  DiscreteOperator<dimension> trans_mult(const DiscreteOperator<dimension>& b) const
   {
     assert(rowMappings == b.getRowMappings());
-    return FEMatrix<dimension>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
+    return DiscreteOperator<dimension>(colMappings, b.getColMappings(), matrix.trans_mult(b.getMatrixHandle()));
   }
 
   PETScMatrix& getMatrixHandle()

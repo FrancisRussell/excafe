@@ -46,7 +46,7 @@ public:
   }
 };
 
-class FEVectorHolder
+class DiscreteFieldHolder
 {
 private:
   boost::any vectorPtr;
@@ -55,7 +55,7 @@ private:
 
 public:
   template<std::size_t D>
-  FEVectorHolder(const FEVector<D>& vector) : vectorPtr(&vector), rank(vector.getRank()),
+  DiscreteFieldHolder(const DiscreteField<D>& vector) : vectorPtr(&vector), rank(vector.getRank()),
     dimension(vector.getDimension())
   {
   }

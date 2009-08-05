@@ -15,7 +15,7 @@ class ColonProduct;
 class Gradient;
 class Divergence;
 class BasisField;
-class DiscreteField;
+class DiscreteFieldReference;
 class TensorLiteral;
 class FacetNormal;
 

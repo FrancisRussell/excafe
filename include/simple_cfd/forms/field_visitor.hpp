@@ -34,7 +34,7 @@ public:
   // Terminals
   virtual void visit(FacetNormal& normal) = 0;
   virtual void visit(BasisField& basis) = 0;
-  virtual void visit(DiscreteField& field) = 0;
+  virtual void visit(DiscreteFieldReference& field) = 0;
   virtual void visit(TensorLiteral& literal) = 0;
 
   virtual ~FieldVisitor() {}
