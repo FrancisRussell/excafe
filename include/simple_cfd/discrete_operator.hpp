@@ -232,6 +232,8 @@ public:
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
     addTermGeneral(expr.begin_ds(), expr.end_ds(), boundaryFunction);
 
+    assemble();
+
     return *this;
   }
 

@@ -214,8 +214,6 @@ public:
       B(scalar(-1.0 * k) * pressure, div(velocity))*dx +
       B(div(velocity), pressure)*dx;
 
-    linear_stiffness_matrix.assemble();
-
     // Add in all constant terms in the rhs matrix
     DiscreteOperator<dimension> nonlinear_rhs_matrix(velocityDofMap, velocityDofMap);
     nonlinear_rhs_matrix +=
@@ -224,11 +222,8 @@ public:
       B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
       B(scalar(-(1.0-theta)*k) * inner(prev_velocity_vector, grad(velocity)), velocity)*dx;
 
-    nonlinear_rhs_matrix.assemble();
-
     // Add non-linear term into rhs matrix then multiply to get rhs vector
     DiscreteField<dimension> rhs_velocity(nonlinear_rhs_matrix*prev_velocity_vector);
-    rhs_velocity.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
     DiscreteField<dimension> load_vector(systemDofMap);
@@ -245,14 +240,12 @@ public:
 
       // Add non-linear term into stiffness matrix
       DiscreteField<dimension> unknown_velocity(velocityDofMap);
-      unknown_guess.extractSubvector(unknown_velocity);
+      unknown_guess.extractField(unknown_velocity);
       nonlinear_stiffness_matrix += B(scalar(theta*k) * inner(unknown_velocity, grad(velocity)), velocity)*dx; 
-      nonlinear_stiffness_matrix.assemble();
 
       // Add rhs velocity-related vector into load vector
       load_vector.zero();
-      load_vector.addSubvector(rhs_velocity);
-      load_vector.assemble();
+      load_vector.addField(rhs_velocity);
 
       std::cout << "Applying boundary conditions..." << std::endl;
       applyEdgeVelocityBoundaryConditions(nonlinear_stiffness_matrix, unknown_vector, load_vector);
@@ -271,10 +264,8 @@ public:
       unknown_guess = unknown_vector;
     }
 
-    unknown_vector.extractSubvector(pressure_vector);
-    unknown_vector.extractSubvector(velocity_vector);
-    pressure_vector.assemble();
-    velocity_vector.assemble();
+    unknown_vector.extractField(pressure_vector);
+    unknown_vector.extractField(velocity_vector);
   }
 
   void projectionSolve() 
@@ -288,7 +279,6 @@ public:
 
     DiscreteField<dimension> homogeneous_prev_velocity_vector(velocityDofMapHomogeneous);
     prev_velocity_vector.extractSubvector(homogeneous_prev_velocity_vector);
-    homogeneous_prev_velocity_vector.assemble();
 
     // Add in all constant terms in the lhs matrix
     DiscreteOperator<dimension> linear_lhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
@@ -300,10 +290,7 @@ public:
       B(scalar(-1.0 * theta * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds;
 
     linear_lhs_matrix += linearTerms;
-    linear_lhs_matrix.assemble();
-
     linear_dirichlet_rhs_matrix += linearTerms;
-    linear_dirichlet_rhs_matrix.assemble();
 
     // Add in all constant terms in the rhs matrix
     DiscreteOperator<dimension> nonlinear_rhs_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
@@ -313,15 +300,12 @@ public:
       B(scalar(-(1.0-theta) * k * kinematic_viscosity) * grad(velocity), grad(velocity))*dx + 
       B(scalar((1.0-theta) * k * kinematic_viscosity) * inner(grad(velocity), n), velocity)*ds +
       B(scalar(-(1.0-theta)*k) * inner(prev_velocity_vector, grad(velocity)), velocity)*dx; 
-    nonlinear_rhs_matrix.assemble();
 
     DiscreteOperator<dimension> pressure_matrix(velocityDofMapHomogeneous, pressureDofMap);
     pressure_matrix += B(pressure, div(velocity))*dx;
-    pressure_matrix.assemble();
 
     DiscreteOperator<dimension> velocity_mass_matrix(velocityDofMapHomogeneous, velocityDofMapHomogeneous);
     velocity_mass_matrix += B(velocity, velocity)*dx;
-    velocity_mass_matrix.assemble();
 
     DiscreteOperator<dimension> inverted_mass_matrix(getLumpedInverse(velocity_mass_matrix));
 
@@ -331,7 +315,6 @@ public:
     DiscreteField<dimension> dirichletValues(velocityDofMapDirichlet);
     edgeVelocities.populateDirichletValues(dirichletValues, velocity);
     cylinderVelocities.populateDirichletValues(dirichletValues, velocity);
-    dirichletValues.assemble();
 
     // This vector will hold the guesses for the unknowns each iteration
     DiscreteField<dimension> velocity_guess(prev_velocity_vector);
@@ -351,10 +334,7 @@ public:
 
       // Add non-linear term into stiffness matrix
       nonlinear_lhs_matrix += B(scalar(theta*k) * inner(velocity_guess, grad(velocity)), velocity)*dx; 
-      nonlinear_lhs_matrix.assemble();
-
       nonlinear_dirichlet_rhs_matrix += B(scalar(theta*k) * inner(velocity_guess, grad(velocity)), velocity)*dx; 
-      nonlinear_dirichlet_rhs_matrix.assemble();
 
       std::cout << "Starting solver..." << std::endl;
 
@@ -386,13 +366,11 @@ public:
       velocity_guess.zero();
       velocity_guess.addSubvector(unknown_velocity);
       velocity_guess.addSubvector(dirichletValues);
-      velocity_guess.assemble();
     }
 
     velocity_vector.zero();
     velocity_vector.addSubvector(unknown_velocity);
     velocity_vector.addSubvector(dirichletValues);
-    velocity_vector.assemble();
 
     pressure_vector = pressure_guess;
   }
@@ -482,6 +460,10 @@ public:
         }
       }
     }
+
+    stiffness_matrix.assemble();
+    load_vector.assemble();
+    unknown_vector.assemble();
   }
 
   void solve(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector, const bool usePreconditioner = true)

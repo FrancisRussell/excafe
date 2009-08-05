@@ -165,16 +165,18 @@ public:
     vector.assemble();
   }
 
-  void extractSubvector(DiscreteField& s) const
+  void extractField(DiscreteField& s) const
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.extractSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+    s.assemble();
   }
 
-  void addSubvector(const DiscreteField& s)
+  void addField(const DiscreteField& s)
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+    assemble();
   }
 
   void print(std::ostream& out = std::cout)
