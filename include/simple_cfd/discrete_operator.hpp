@@ -59,7 +59,7 @@ private:
                 rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(*rowElemIter,
                 cellIter->getIndex(), rowDof)); 
               const int colIndex =
-                colMappings.getGlobalIndexWithMissingAsNegative(dof_t(*rowElemIter,
+                colMappings.getGlobalIndexWithMissingAsNegative(dof_t(*colElemIter,
                 cellIter->getIndex(), colDof));
 
               if (rowIndex >= 0 && colIndex >= 0)
