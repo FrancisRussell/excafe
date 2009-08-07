@@ -9,12 +9,12 @@ int main(int argc, char* argv[])
   meshBuilder.addPolygon(Polygon(vertex<2>(0.5, 0.5), 16, 0.148, 0), 5);
   Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
 
-  FESystem system(m);
-  Basis velocity = system.addBasis(lagrangeQuadratic);
-  Basis pressure = system.addBasis(lagrangeLinear);
+  FESystem<cell_type::dimension> system(m);
+  Element velocity = system.addElement(new LagrangeTriangleQuadratic());
+  Element pressure = system.addElement(new LagrangeTriangleLinear());
 
-  FunctionSpace velocitySpace = FunctionSpace(lagrangeQuadratic, m);
-  FunctionSpace pressureSpace = FunctionSpace(lagrangeLinear, m);
+  FunctionSpace velocitySpace = FunctionSpace(velocity, m);
+  FunctionSpace pressureSpace = FunctionSpace(pressure, m);
   FunctionSpace coupledSpace = velocitySpace + pressureSpace;
 
   m.addField("velocity", velocitySpace);
@@ -71,12 +71,13 @@ Problem buildNavierStokesSolve()
   /* boundary condition magic */
 
   residual[n] = ((linearisedSystem[n] * unknown_guess[n]) - load).two_norm();
-  coupledSolution = linear_solve(linearisedSystem[n], unknownGuess[n], load);
+  coupledSolution[n] = linear_solve(linearisedSystem[n], unknownGuess[n], load);
 
   n.setTermination(residual[n] < 1e-3);
 
-  p.setNewValue("velocity", coupledSolution.subField(velocitySpace[final]));
-  p.setNewValue("pressure", coupledSolution.subField(pressureSpace[final]));
+  p.setNewValue("velocity", coupledSolution[final].subField(velocitySpace));
+  p.setNewValue("pressure", coupledSolution[final].subField(pressureSpace));
 
   p.finish();
+  return p;
 }
