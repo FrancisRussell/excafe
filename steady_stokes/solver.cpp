@@ -26,8 +26,8 @@ private:
   FunctionSpace pressureSpace;
   FunctionSpace coupledSpace;
 
-  Field velocityField;
-  Field pressureField;
+  NamedField velocityField;
+  NamedField pressureField;
 
 public:
   NavierStokesSolver(Mesh<dimension>& _mesh) : mesh(_mesh), scenario(mesh)
@@ -38,6 +38,9 @@ public:
     velocitySpace = scenario.defineFunctionSpace(velocity, mesh);
     pressureSpace = scenario.defineFunctionSpace(pressure, mesh);
     coupledSpace = velocitySpace + pressureSpace;
+
+    velocityField = scenario.defineNamedField("velocity", velocitySpace);
+    pressureField = scenario.defineNamedField("pressure", pressureSpace);
   }
 };
 

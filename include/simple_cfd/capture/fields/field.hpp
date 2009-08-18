@@ -17,6 +17,10 @@ public:
   Field() : expr(new detail::FieldEmpty())
   {
   }
+
+  Field(detail::FieldExpr* const _expr) : expr(_expr)
+  {
+  }
 };
 
 }

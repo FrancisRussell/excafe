@@ -22,6 +22,7 @@ class Field;
 class FieldExpr;
 class FieldVisitor;
 class FieldEmpty;
+class FieldPersistent;
 }
 
 }

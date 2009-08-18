@@ -13,6 +13,7 @@ class FieldVisitor
 {
 public:
   virtual void visit(FieldEmpty& e) = 0;
+  virtual void visit(FieldPersistent& p) = 0;
   virtual ~FieldVisitor() {}
 };
 

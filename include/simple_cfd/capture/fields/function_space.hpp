@@ -30,6 +30,11 @@ public:
     expr = expr_ptr(new detail::FunctionSpaceAddition(expr, f.expr)); 
     return *this;
   }
+
+  expr_ptr getExpr() const
+  {
+    return expr;
+  }
 };
 
 }
