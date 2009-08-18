@@ -6,6 +6,7 @@
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/mesh_function.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include "solve_operation.hpp"
 #include "fields/element.hpp"
 #include "fields/function_space.hpp"
 #include "fields/function_space_mesh_function.hpp"
@@ -45,6 +46,11 @@ public:
     NamedField field(name, functionSpace);
     persistentFields.push_back(field);
     return field;
+  }
+
+  SolveOperation newSolveOperation()
+  {
+    return SolveOperation();
   }
 };
 

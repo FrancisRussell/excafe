@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <simple_cfd/capture/scenario.hpp>
+#include <simple_cfd/capture/solve_operation.hpp>
 #include <simple_cfd/petsc_manager.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
 #include <simple_cfd/lagrange_triangle_linear.hpp>
@@ -29,6 +30,8 @@ private:
   NamedField velocityField;
   NamedField pressureField;
 
+  SolveOperation coupledSolve;
+
 public:
   NavierStokesSolver(Mesh<dimension>& _mesh) : mesh(_mesh), scenario(mesh)
   {
@@ -41,6 +44,14 @@ public:
 
     velocityField = scenario.defineNamedField("velocity", velocitySpace);
     pressureField = scenario.defineNamedField("pressure", pressureSpace);
+
+    coupledSolve = constructCoupledSolver();
+  }
+
+  SolveOperation constructCoupledSolver()
+  {
+    SolveOperation s = scenario.newSolveOperation();
+    return s;
   }
 };
 
