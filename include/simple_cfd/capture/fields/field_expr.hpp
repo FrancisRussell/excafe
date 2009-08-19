@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_FIELD_EXPR_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_FIELD_EXPR_HPP
 
+#include <boost/shared_ptr.hpp>
 #include "fields_fwd.hpp"
 
 namespace cfd

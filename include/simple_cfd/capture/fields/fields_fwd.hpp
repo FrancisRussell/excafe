@@ -4,11 +4,13 @@
 namespace cfd
 {
 
+class Field;
+class FunctionSpace;
+
 namespace detail
 {
 
 // Function Space Related
-class FunctionSpace;
 class FunctionSpaceExpr;
 class FunctionSpaceVisitor;
 class FunctionSpaceMeshFunction;
@@ -18,7 +20,6 @@ class FunctionSpaceAddition;
 
 
 // Fields related
-class Field;
 class FieldExpr;
 class FieldVisitor;
 class FieldEmpty;

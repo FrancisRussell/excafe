@@ -8,6 +8,7 @@
 #include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/fields/function_space.hpp>
 #include <simple_cfd/capture/fields/field.hpp>
+#include <simple_cfd/capture/fields/operator.hpp>
 #include <simple_cfd/mesh.hpp>
 
 using namespace cfd;
@@ -51,6 +52,8 @@ public:
   SolveOperation constructCoupledSolver()
   {
     SolveOperation s = scenario.newSolveOperation();
+
+    Operator systemMatrix(coupledSpace, coupledSpace);
     return s;
   }
 };

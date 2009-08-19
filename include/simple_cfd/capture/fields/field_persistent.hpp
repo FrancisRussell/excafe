@@ -4,7 +4,7 @@
 #include <string>
 #include "field_expr.hpp"
 #include "field_visitor.hpp"
-#include "function_space_expr.hpp"
+#include "function_space.hpp"
 
 namespace cfd
 {
@@ -16,10 +16,10 @@ class FieldPersistent : public FieldExpr
 {
 private:
   const std::string name;
-  const FunctionSpaceExpr::expr_ptr functionSpace;
+  const FunctionSpace functionSpace;
 
 public:
-  FieldPersistent(const std::string& _name, const FunctionSpaceExpr::expr_ptr& _functionSpace) :
+  FieldPersistent(const std::string& _name, const FunctionSpace& _functionSpace) :
     name(_name), functionSpace(_functionSpace)
   {
   }
