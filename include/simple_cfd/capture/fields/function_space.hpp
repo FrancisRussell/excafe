@@ -3,8 +3,6 @@
 
 #include "fields_fwd.hpp"
 #include "function_space_expr.hpp"
-#include "function_space_empty.hpp"
-#include "function_space_addition.hpp"
 #include <boost/operators.hpp>
 
 namespace cfd
@@ -17,24 +15,10 @@ private:
   expr_ptr expr;
 
 public:
-  FunctionSpace() : expr(new detail::FunctionSpaceEmpty())
-  {
-  }
-
-  FunctionSpace(detail::FunctionSpaceExpr* const _expr) : expr(_expr)
-  {
-  }
-  
-  FunctionSpace& operator+=(const FunctionSpace& f)
-  {
-    expr = expr_ptr(new detail::FunctionSpaceAddition(expr, f.expr)); 
-    return *this;
-  }
-
-  expr_ptr getExpr() const
-  {
-    return expr;
-  }
+  FunctionSpace();
+  FunctionSpace(detail::FunctionSpaceExpr* const _expr);
+  FunctionSpace& operator+=(const FunctionSpace& f);
+  expr_ptr getExpr() const;
 };
 
 }

@@ -4,8 +4,11 @@
 namespace cfd
 {
 
+class Scalar;
 class Field;
+class NamedField;
 class FunctionSpace;
+class Operator;
 
 namespace detail
 {
@@ -18,12 +21,24 @@ class FunctionSpaceEmpty;
 class FunctionSpaceBinaryOperator;
 class FunctionSpaceAddition;
 
+class DiscreteExprVisitor;
 
 // Fields related
-class FieldExpr;
-class FieldVisitor;
-class FieldEmpty;
-class FieldPersistent;
+class DiscreteFieldExpr;
+class DiscreteFieldUndefined;
+class DiscreteFieldPersistent;
+class DiscreteFieldZero;
+
+// Scalar related
+class ScalarExpr;
+class ScalarLiteral;
+class ScalarBinaryOperator;
+
+// Operator related
+class OperatorExpr;
+class OperatorAssembly;
+class OperatorApplication;
+class OperatorUndefined;
 }
 
 }

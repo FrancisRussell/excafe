@@ -24,7 +24,6 @@
 #include "boundary_condition_handler.hpp"
 #include "cell_vertices.hpp"
 #include "dof.hpp"
-#include "forms/forms.hpp"
 
 namespace cfd
 {
@@ -195,6 +194,7 @@ public:
     return invertedMatrix;
   }
 
+/*
   void coupledSolve()
   {
     using namespace forms;
@@ -267,7 +267,9 @@ public:
     unknown_vector.extractField(pressure_vector);
     unknown_vector.extractField(velocity_vector);
   }
+*/
 
+/*
   void projectionSolve() 
   {
     using namespace forms;
@@ -374,6 +376,7 @@ public:
 
     pressure_vector = pressure_guess;
   }
+*/
 
   Location getLocation(const vertex_type& v)
   {

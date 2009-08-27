@@ -7,8 +7,11 @@
 #include <simple_cfd/lagrange_triangle_quadratic.hpp>
 #include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/fields/function_space.hpp>
+#include <simple_cfd/capture/fields/scalar.hpp>
 #include <simple_cfd/capture/fields/field.hpp>
+#include <simple_cfd/capture/fields/named_field.hpp>
 #include <simple_cfd/capture/fields/operator.hpp>
+#include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
 
 using namespace cfd;
@@ -51,9 +54,32 @@ public:
 
   SolveOperation constructCoupledSolver()
   {
+    using namespace forms;
+
     SolveOperation s = scenario.newSolveOperation();
 
+    Scalar theta = 0.5;
+    Scalar k  = 0.01;
+    Scalar kinematic_viscosity = 1.0/250;
+
     Operator systemMatrix(coupledSpace, coupledSpace);
+    systemMatrix = 
+      B(velocity, velocity)*dx +
+      B(theta * k * kinematic_viscosity * grad(velocity), grad(velocity))*dx +
+      B(theta * k * kinematic_viscosity * -1.0 * inner(grad(velocity), n), velocity)*ds +
+      B(-1.0 * k * pressure, div(velocity))*dx +
+      B(div(velocity), pressure)*dx;
+
+    Operator nonLinearRhs(velocitySpace, velocitySpace);
+    nonLinearRhs =
+      B(velocity, velocity)*dx +
+      B(-(1.0-theta) * k * kinematic_viscosity * grad(velocity), grad(velocity))*dx +
+      B((1.0-theta) * k * kinematic_viscosity * inner(grad(velocity), n), velocity)*ds +
+      B(-(1.0-theta)*k * inner(velocityField, grad(velocity)), velocity)*dx;
+
+    Field velocityRhs = nonLinearRhs * velocityField;
+    Field load(coupledSpace);
+
     return s;
   }
 };

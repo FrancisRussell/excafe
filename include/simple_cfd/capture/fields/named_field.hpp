@@ -4,7 +4,7 @@
 #include <string>
 #include "field.hpp"
 #include "function_space.hpp"
-#include "field_persistent.hpp"
+#include "discrete_field_persistent.hpp"
 
 namespace cfd
 {
@@ -20,8 +20,13 @@ public:
   }
 
   NamedField(const std::string& name, const FunctionSpace& functionSpace) : 
-    field(new detail::FieldPersistent(name, functionSpace))
+    field(new detail::DiscreteFieldPersistent(name, functionSpace))
   {
+  }
+
+  operator Field() const
+  {
+    return field;
   }
 };
 

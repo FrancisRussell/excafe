@@ -1,26 +1,25 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_FIELD_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_FIELD_HPP
 
-#include "field_expr.hpp"
-#include "field_empty.hpp"
+#include "fields_fwd.hpp"
+#include "discrete_field_expr.hpp"
 
 namespace cfd
 {
 
 class Field
 {
+public:
+  typedef detail::DiscreteFieldExpr::expr_ptr expr_ptr;
+
 private:
-  typedef detail::FieldExpr::expr_ptr expr_ptr;
   expr_ptr expr;
 
 public:
-  Field() : expr(new detail::FieldEmpty())
-  {
-  }
-
-  Field(detail::FieldExpr* const _expr) : expr(_expr)
-  {
-  }
+  Field();
+  Field(const FunctionSpace& functionSpace);
+  Field(detail::DiscreteFieldExpr* const _expr);
+  expr_ptr getExpr() const;
 };
 
 }
