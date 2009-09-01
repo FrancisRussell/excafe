@@ -11,6 +11,7 @@
 #include <simple_cfd/capture/fields/field.hpp>
 #include <simple_cfd/capture/fields/named_field.hpp>
 #include <simple_cfd/capture/fields/operator.hpp>
+#include <simple_cfd/capture/fields/temporal_index.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
 
@@ -79,6 +80,8 @@ public:
 
     Field velocityRhs = nonLinearRhs * velocityField;
     Field load(coupledSpace);
+
+    TemporalIndex n;
 
     return s;
   }
