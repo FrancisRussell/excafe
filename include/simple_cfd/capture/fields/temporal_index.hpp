@@ -2,7 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_TEMPORAL_INDEX_HPP
 
 #include "temporal_index_value.hpp"
-#include "temporal_index_offset.hpp"
+#include "temporal_index_expr.hpp"
 
 namespace cfd
 {
@@ -17,9 +17,9 @@ public:
   {
   }
 
-  detail::TemporalIndexOffset operator-(const unsigned offset) const
+  detail::TemporalIndexExpr operator-(const unsigned offset) const
   {
-    return detail::TemporalIndexOffset(value, offset);
+    return detail::TemporalIndexExpr::relative(value, offset);
   }
 };
 
