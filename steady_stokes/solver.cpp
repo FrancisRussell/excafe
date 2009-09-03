@@ -6,13 +6,7 @@
 #include <simple_cfd/lagrange_triangle_linear.hpp>
 #include <simple_cfd/lagrange_triangle_quadratic.hpp>
 #include <simple_cfd/capture/scenario.hpp>
-#include <simple_cfd/capture/fields/function_space.hpp>
-#include <simple_cfd/capture/fields/scalar.hpp>
-#include <simple_cfd/capture/fields/field.hpp>
-#include <simple_cfd/capture/fields/named_field.hpp>
-#include <simple_cfd/capture/fields/operator.hpp>
-#include <simple_cfd/capture/fields/temporal_index.hpp>
-#include <simple_cfd/capture/fields/indexed_holder.hpp>
+#include <simple_cfd/capture/fields/fields.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
 
