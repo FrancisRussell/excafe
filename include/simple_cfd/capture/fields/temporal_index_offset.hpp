@@ -12,50 +12,27 @@ namespace detail
 class TemporalIndexOffset
 {
 public:
-  class absolute
-  { 
-  private:
-    unsigned int offsetValue;
+  struct absolute_tag {};
+  struct relative_tag {};
+  struct final_tag {};
 
-  public: 
-    absolute(const unsigned int _offsetValue) : offsetValue(_offsetValue)
-    {
-    }
+  typedef boost::variant<absolute_tag, relative_tag, final_tag> offset_t;
+  offset_t offsetType;
+  unsigned int offset;
 
-    unsigned int getOffsetValue() const
-    {
-      return offsetValue;
-    }
-  };
-
-  class relative
-  { 
-  private:
-    unsigned int offsetValue;
-
-  public: 
-    relative(const unsigned int _offsetValue) : offsetValue(_offsetValue)
-    {
-    }
-
-    unsigned int getOffsetValue() const
-    {
-      return offsetValue;
-    }
-  };
-
-  class final {};
-
-  typedef boost::variant<absolute, relative, final> offset_t;
-  offset_t offset_detail;
-
-  TemporalIndexOffset(const offset_t& _offset_detail) : offset_detail(_offset_detail)
+  TemporalIndexOffset(const offset_t& _offsetType, const unsigned _offset) : offsetType(_offsetType),
+    offset(_offset)
   {
   }
 
-  offset_t getOffset() const
+  offset_t getType() const
   {
-    return offset_detail;
+    return offsetType;
+  }
+
+  unsigned int getOffset() const
+  {
+    return offset;
   }
 };
 

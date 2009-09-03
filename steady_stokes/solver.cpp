@@ -77,14 +77,20 @@ public:
     Field load(coupledSpace);
 
     TemporalIndex n;
-    IndexedScalar residual(n);
     IndexedField unknownGuess(n);
 
     unknownGuess[-1] = velocityField;
+    Operator linearisedSystem = systemMatrix + B(theta * k * inner(unknownGuess[n-1], grad(velocity)), velocity)*dx;
 
-    Operator linearisedSystem = systemMatrix;
-    //linearisedSystem[n] += B(scalar(theta*k) * inner(unknownVelocity[n], grad(velocity)), velocity)*dx;
+    Scalar residual = ((linearisedSystem * unknownGuess[n-1]) - load).two_norm();
+    unknownGuess[n] = linear_solve(linearisedSystem, load);
 
+    n.setTermination(residual < 1e-3);
+
+    //s.setNewValue(velocityField, unknownGuess[final-1]);
+    //s.setNewValue(pressureField, unknownGuess[final-1]);
+
+    //s.finish();
     return s;
   }
 };

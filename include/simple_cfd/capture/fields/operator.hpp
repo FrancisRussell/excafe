@@ -20,7 +20,10 @@ private:
 
 public:
   Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace);
+  Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace, detail::OperatorExpr* const _expr);
   Operator& operator=(const forms::BilinearFormIntegralSum& sum);
+  Operator operator+(const Operator& o) const;
+  Operator operator+(const forms::BilinearFormIntegralSum& sum) const;
   Field operator*(const Field& field);
   expr_ptr getExpr() const;
 };

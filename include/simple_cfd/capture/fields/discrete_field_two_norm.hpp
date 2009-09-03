@@ -1,0 +1,34 @@
+#ifndef SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_TWO_NORM_HPP
+#define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_TWO_NORM_HPP
+
+#include "scalar_expr.hpp"
+
+namespace cfd
+{
+
+namespace detail
+{
+
+class DiscreteFieldTwoNorm : public ScalarExpr
+{
+private:
+  DiscreteFieldExpr::expr_ptr field;
+
+public:
+  DiscreteFieldTwoNorm(const DiscreteFieldExpr::expr_ptr& f) : field(f)
+  {
+  }
+
+  void accept(DiscreteExprVisitor& v)
+  {
+    v.enter(*this);
+    field->accept(v);
+    v.exit(*this);
+  }
+};
+
+}
+
+}
+
+#endif

@@ -9,5 +9,16 @@
 #include "operator.hpp"
 #include "temporal_index.hpp"
 #include "indexed_holder.hpp"
+#include "linear_solve.hpp"
+
+namespace cfd
+{
+
+Field linear_solve(const Operator& A, const Field& b)
+{
+ return Field(new detail::LinearSolve(A.getExpr(), b.getExpr()));
+}
+
+}
 
 #endif

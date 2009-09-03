@@ -31,6 +31,11 @@ public:
   {
     return value;
   }
+
+  void setTermination(const Scalar& s)
+  {
+    value->setTermination(s.getExpr());
+  }
 };
 
 }

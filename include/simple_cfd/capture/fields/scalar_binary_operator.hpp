@@ -18,7 +18,12 @@ public:
   class sub_tag {};
   class div_tag {};
   class mul_tag {};
-  typedef boost::variant<add_tag,sub_tag,div_tag,mul_tag> operator_t;
+  class lt_tag {};
+  class gt_tag {};
+  class lte_tag {};
+  class gte_tag {};
+  class eq_tag {};
+  typedef boost::variant<add_tag,sub_tag,div_tag,mul_tag,lt_tag,gt_tag,lte_tag,gte_tag,eq_tag> operator_t;
 
 private:
   operator_t operation;

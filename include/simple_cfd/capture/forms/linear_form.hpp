@@ -8,6 +8,8 @@
 #include <simple_cfd/capture/fields/field.hpp>
 #include <simple_cfd/capture/fields/named_field.hpp>
 #include <simple_cfd/capture/fields/scalar.hpp>
+#include <simple_cfd/capture/fields/indexed_value_helper.hpp>
+#include <simple_cfd/capture/fields/discrete_traits.hpp>
 
 #include "field_expr.hpp"
 #include "field_basis.hpp"
@@ -43,6 +45,11 @@ public:
   }
 
   LinearForm(const Field& f) : field(new detail::FieldDiscreteReference(f))
+  {
+  }
+
+  LinearForm(const detail::IndexedValueHelper<detail::discrete_field_tag>& f) : 
+    field(new detail::FieldDiscreteReference(f))
   {
   }
 

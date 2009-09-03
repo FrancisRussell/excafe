@@ -20,12 +20,18 @@ private:
 public:
   Scalar();
   Scalar(const double s);
+  Scalar(detail::ScalarExpr* const expr);
   Scalar& operator+=(const Scalar& s);
   Scalar& operator-=(const Scalar& s);
   Scalar& operator*=(const Scalar& s);
   Scalar& operator/=(const Scalar& s);
   Scalar operator-() const;
   Scalar& operator=(const Scalar& s);
+  Scalar operator<(const Scalar& s);
+  Scalar operator<=(const Scalar& s);
+  Scalar operator>(const Scalar& s);
+  Scalar operator>=(const Scalar& s);
+  Scalar operator==(const Scalar& s);
   expr_ptr getExpr() const;
 };
 

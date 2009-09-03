@@ -1,10 +1,11 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_NAMED_FIELD_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_NAMED_FIELD_HPP
 
-#include <string>
 #include "field.hpp"
 #include "function_space.hpp"
 #include "discrete_field_persistent.hpp"
+#include <string>
+#include <cassert>
 
 namespace cfd
 {
@@ -12,16 +13,29 @@ namespace cfd
 class NamedField
 {
 private:
+  bool defined;
+  std::string name;
   Field field;
 
 public:
-  NamedField()
+  NamedField() : defined(false)
   {
   }
 
-  NamedField(const std::string& name, const FunctionSpace& functionSpace) : 
-    field(new detail::DiscreteFieldPersistent(name, functionSpace))
+  NamedField(const std::string& _name, const FunctionSpace& functionSpace) : 
+    defined(true), name(_name), field(new detail::DiscreteFieldPersistent(name, functionSpace))
   {
+    assert(!name.empty());
+  }
+
+  bool operator<(const NamedField& f) const
+  {
+    return name < f.name;
+  }
+
+  bool operator==(const NamedField& f) const
+  {
+    return name == f.name;
   }
 
   operator Field() const

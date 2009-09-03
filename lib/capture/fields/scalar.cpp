@@ -1,4 +1,5 @@
 #include <simple_cfd/capture/fields/scalar.hpp>
+#include <simple_cfd/capture/fields/scalar_expr.hpp>
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
 #include <simple_cfd/capture/fields/scalar_binary_operator.hpp>
 
@@ -10,6 +11,10 @@ Scalar::Scalar() : expr(new detail::ScalarLiteral(0))
 }
 
 Scalar::Scalar(const double s) : expr(new detail::ScalarLiteral(s))
+{
+}
+
+Scalar::Scalar(detail::ScalarExpr* const _expr) : expr(_expr)
 {
 }
 
@@ -46,6 +51,31 @@ Scalar& Scalar::operator=(const Scalar& s)
 {
   expr = s.expr;
   return *this;
+}
+
+Scalar Scalar::operator<(const Scalar& s)
+{
+  return Scalar(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::lt_tag()));
+}
+
+Scalar Scalar::operator<=(const Scalar& s)
+{
+  return Scalar(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::lte_tag()));
+}
+
+Scalar Scalar::operator>(const Scalar& s)
+{
+  return Scalar(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::gt_tag()));
+}
+
+Scalar Scalar::operator>=(const Scalar& s)
+{
+  return Scalar(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::gte_tag()));
+}
+
+Scalar Scalar::operator==(const Scalar& s)
+{
+  return Scalar(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::eq_tag()));
 }
 
 Scalar::expr_ptr Scalar::getExpr() const

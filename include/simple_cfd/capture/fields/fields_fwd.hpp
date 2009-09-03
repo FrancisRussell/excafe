@@ -29,6 +29,8 @@ class DiscreteFieldExpr;
 class DiscreteFieldUndefined;
 class DiscreteFieldPersistent;
 class DiscreteFieldZero;
+class DiscreteFieldElementWise;
+class DiscreteFieldTwoNorm;
 
 // Scalar related
 class ScalarExpr;
@@ -40,12 +42,16 @@ class OperatorExpr;
 class OperatorAssembly;
 class OperatorApplication;
 class OperatorUndefined;
+class OperatorAddition;
 
 // Index related
 class TemporalIndexExpr;
 class TemporalIndexOffset;
 class TemporalIndexValue;
 template<typename discrete_object_tag> class DiscreteObjectIndexed;
+
+// Solve related
+class LinearSolve;
 }
 
 }
