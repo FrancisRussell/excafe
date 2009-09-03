@@ -21,6 +21,16 @@ public:
   {
     return detail::TemporalIndexExpr::relative(value, offset);
   }
+
+  operator detail::TemporalIndexExpr() const
+  {
+    return detail::TemporalIndexExpr::absolute(value, 0);
+  }
+
+  detail::TemporalIndexValue::index_ptr getIndex() const
+  {
+    return value;
+  }
 };
 
 }

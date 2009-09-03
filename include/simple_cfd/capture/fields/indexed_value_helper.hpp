@@ -1,30 +1,50 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_INDEXED_VALUE_HELPER_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_INDEXED_VALUE_HELPER_HPP
 
+#include "indexable_value.hpp"
+#include "temporal_index_expr.hpp"
+#include "discrete_object_indexed.hpp"
+
 namespace cfd
 {
 
 namespace detail
 {
 
-template<typename discrete_object_type>
+template<typename discrete_object_tag>
 class IndexedValueHelper
 {
 private:
-  typedef IndexableValue<discrete_object_type> parent_t
-  parent_t::value_ptr parent;
+  typedef IndexableValue<discrete_object_tag> parent_t;
+  typedef typename DiscreteTraits<discrete_object_tag>::holder_t holder_t;
+
+  typename parent_t::value_ptr parent;
+  TemporalIndexExpr indexExpr;
 
 public:
-  IndexedValueHelper(const parent_t::value_ptr& _parent)
+  IndexedValueHelper(const typename parent_t::value_ptr& _parent, const TemporalIndexExpr& index) : 
+    parent(_parent), indexExpr(index)
   {
   }
 
-// Casting operator to actual discrete type
-// assignment operator that refers to parent
+  void operator=(const holder_t& expr)
+  {
+    parent->handleAssignment(indexExpr, expr.getExpr());
+  }
+
+  void operator=(const IndexedValueHelper& expr)
+  {
+    *this = static_cast<holder_t>(expr);
+  }
+
+  operator holder_t() const
+  {
+    return holder_t(new DiscreteObjectIndexed<discrete_object_tag>(parent, indexExpr));
+  }
 };
 
 }
 
-};
+}
 
 #endif

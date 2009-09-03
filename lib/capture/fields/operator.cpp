@@ -24,4 +24,9 @@ Field Operator::operator*(const Field& field)
   return Field(new detail::OperatorApplication(expr, field.getExpr()));
 }
 
+Operator::expr_ptr Operator::getExpr() const
+{
+  return expr;
+}
+
 }

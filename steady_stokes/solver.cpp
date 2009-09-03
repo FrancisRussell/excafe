@@ -12,6 +12,7 @@
 #include <simple_cfd/capture/fields/named_field.hpp>
 #include <simple_cfd/capture/fields/operator.hpp>
 #include <simple_cfd/capture/fields/temporal_index.hpp>
+#include <simple_cfd/capture/fields/indexed_holder.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
 
@@ -82,6 +83,13 @@ public:
     Field load(coupledSpace);
 
     TemporalIndex n;
+    IndexedScalar residual(n);
+    IndexedField unknownGuess(n);
+
+    unknownGuess[-1] = velocityField;
+
+    Operator linearisedSystem = systemMatrix;
+    //linearisedSystem[n] += B(scalar(theta*k) * inner(unknownVelocity[n], grad(velocity)), velocity)*dx;
 
     return s;
   }

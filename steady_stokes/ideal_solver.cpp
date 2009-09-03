@@ -57,20 +57,20 @@ Problem buildNavierStokesSolve()
 
   TemporalIndex n;
   Scalar residual(n);
-  Field unknownVelocity(velocitySpace, n)
+  Field unknownVelocity(velocitySpace, n);
   Field unknownGuess(coupledSpace, n);
   Field coupledSolution(coupledSpace, n);
 
-  unknownGuess[0] += velocityField;
-  unknownGuess[n] += coupledSolution[n-1];
-  unknownVelocity[n] += unknown[n];
+  unknownGuess[0] = velocityField;
+  unknownGuess[n] = coupledSolution[n-1];
+  unknownVelocity[n] = unknown[n];
 
   Operator linearisedSystem[n] = systemMatrix;
   linearisedSystem[n] += B(scalar(theta*k) * inner(unknownVelocity[n], grad(velocity)), velocity)*dx;
 
   /* boundary condition magic */
 
-  residual[n] = ((linearisedSystem[n] * unknown_guess[n]) - load).two_norm();
+  residual[n] = ((linearisedSystem[n] * unknownGuess[n]) - load).two_norm();
   coupledSolution[n] = linear_solve(linearisedSystem[n], unknownGuess[n], load);
 
   n.setTermination(residual[n] < 1e-3);

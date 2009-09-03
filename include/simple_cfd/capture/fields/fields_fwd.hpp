@@ -9,6 +9,7 @@ class Field;
 class NamedField;
 class FunctionSpace;
 class Operator;
+class TemporalIndex;
 
 namespace detail
 {
@@ -39,6 +40,12 @@ class OperatorExpr;
 class OperatorAssembly;
 class OperatorApplication;
 class OperatorUndefined;
+
+// Index related
+class TemporalIndexExpr;
+class TemporalIndexOffset;
+class TemporalIndexValue;
+template<typename discrete_object_tag> class DiscreteObjectIndexed;
 }
 
 }

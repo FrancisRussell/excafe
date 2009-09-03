@@ -22,6 +22,7 @@ public:
   Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace);
   Operator& operator=(const forms::BilinearFormIntegralSum& sum);
   Field operator*(const Field& field);
+  expr_ptr getExpr() const;
 };
 
 }
