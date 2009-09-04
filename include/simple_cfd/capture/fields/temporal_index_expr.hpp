@@ -46,6 +46,18 @@ public:
   {
     return offset;
   }
+
+  bool operator==(const TemporalIndexExpr& t) const
+  {
+    return index == t.index && offset == t.offset;
+  }
+
+  bool operator<(const TemporalIndexExpr& t) const
+  {
+    if (index < t.index) return true;
+    if (index == t.index && offset < t.offset) return true;
+    return false;
+  }
 };
 
 }

@@ -17,13 +17,6 @@ public:
   {
   }
 
-/*
-  detail::TemporalIndexExpr operator-(const unsigned offset) const
-  {
-    return detail::TemporalIndexExpr::relative(value, offset);
-  }
-*/
-
   operator detail::TemporalIndexExpr() const
   {
     return detail::TemporalIndexExpr::absolute(value, 0);

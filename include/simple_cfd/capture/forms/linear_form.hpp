@@ -61,6 +61,11 @@ public:
   {
   }
 
+  LinearForm(const detail::IndexedValueHelper<detail::discrete_scalar_tag>& s) : 
+    field(new detail::FieldScalar(s))
+  {
+  }
+
   LinearForm(const facet_normal_tag& tag) : field(new detail::FacetNormal())
   {
   }
