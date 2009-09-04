@@ -52,6 +52,11 @@ public:
   {
     return SolveOperation();
   }
+
+  void outputFieldsToFile(const std::string& filename) const
+  {
+    // TODO: implement me!
+  }
 };
 
 }

@@ -1,4 +1,6 @@
 #include <cstddef>
+#include <sstream>
+#include <boost/format.hpp>
 #include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/solve_operation.hpp>
 #include <simple_cfd/petsc_manager.hpp>
@@ -96,6 +98,16 @@ public:
     s.finish();
     return s;
   }
+
+  void step()
+  {
+    coupledSolve.execute();
+  }
+
+  void outputFieldsToFile(const std::string& filename)
+  {
+    scenario.outputFieldsToFile(filename);
+  }
 };
 
 int main(int argc, char** argv)
@@ -109,4 +121,12 @@ int main(int argc, char** argv)
   Mesh<dimension> mesh(meshBuilder.buildMesh());
 
   NavierStokesSolver<dimension> solver(mesh);
+
+  for(int i=0; i<6000; ++i)
+  {
+    solver.step();
+    std::stringstream filename;
+    filename << "./navier_stokes_" << boost::format("%|04|") % i << ".vtk";
+    solver.outputFieldsToFile(filename.str());
+  }
 }
