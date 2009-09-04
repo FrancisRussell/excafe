@@ -80,9 +80,12 @@ public:
     IndexedField unknownGuess(n);
 
     unknownGuess[-1] = project(velocityField, coupledSpace) + project(pressureField, coupledSpace);
-    Operator linearisedSystem = systemMatrix + B(theta * k * inner(unknownGuess[n-1], grad(velocity)), velocity)*dx;
+    Operator linearisedSystem = 
+      systemMatrix + B(theta * k * inner(project(unknownGuess[n-1], velocitySpace), grad(velocity)), velocity)*dx;
 
     Scalar residual = ((linearisedSystem * unknownGuess[n-1]) - load).two_norm();
+
+    // TODO: Boundary condition magic
     unknownGuess[n] = linear_solve(linearisedSystem, load);
 
     n.setTermination(residual < 1e-3);
