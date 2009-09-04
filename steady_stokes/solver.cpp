@@ -87,10 +87,10 @@ public:
 
     n.setTermination(residual < 1e-3);
 
-    //s.setNewValue(velocityField, unknownGuess[final-1]);
-    //s.setNewValue(pressureField, unknownGuess[final-1]);
+    s.setNewValue(velocityField, unknownGuess[final-1]);
+    s.setNewValue(pressureField, unknownGuess[final-1]);
 
-    //s.finish();
+    s.finish();
     return s;
   }
 };

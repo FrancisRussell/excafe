@@ -17,10 +17,12 @@ public:
   {
   }
 
+/*
   detail::TemporalIndexExpr operator-(const unsigned offset) const
   {
     return detail::TemporalIndexExpr::relative(value, offset);
   }
+*/
 
   operator detail::TemporalIndexExpr() const
   {

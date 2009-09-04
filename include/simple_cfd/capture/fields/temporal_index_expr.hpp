@@ -16,11 +16,6 @@ private:
   const TemporalIndexValue::index_ptr index;
   const TemporalIndexOffset offset;
 
-  TemporalIndexExpr(const TemporalIndexValue::index_ptr& _index, const TemporalIndexOffset& _offset) :
-    index(_index), offset(_offset)
-  {
-  }
-
 public:
   static TemporalIndexExpr absolute(const TemporalIndexValue::index_ptr& _index, const unsigned _offset)
   {
@@ -35,6 +30,21 @@ public:
   static TemporalIndexExpr final(const TemporalIndexValue::index_ptr& _index, const unsigned _offset)
   {
     return TemporalIndexExpr(_index, TemporalIndexOffset(TemporalIndexOffset::final_tag(), _offset));
+  }
+
+  TemporalIndexExpr(const TemporalIndexValue::index_ptr& _index, const TemporalIndexOffset& _offset) :
+    index(_index), offset(_offset)
+  {
+  }
+
+  TemporalIndexValue::index_ptr getIndex() const
+  {
+    return index;
+  }
+
+  TemporalIndexOffset getOffset() const
+  {
+    return offset;
   }
 };
 

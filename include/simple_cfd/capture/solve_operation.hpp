@@ -22,6 +22,11 @@ public:
   {
     newValues[f] = value;
   }
+
+  void finish()
+  {
+    // TODO: Implement me!
+  }
 };
 
 }
