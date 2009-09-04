@@ -18,6 +18,8 @@ public:
   virtual void exit(DiscreteFieldElementWise& p) = 0;
   virtual void enter(DiscreteFieldTwoNorm& p) = 0;
   virtual void exit(DiscreteFieldTwoNorm& p) = 0;
+  virtual void enter(DiscreteFieldProjection& p) = 0;
+  virtual void exit(DiscreteFieldProjection& p) = 0;
   virtual void visit(DiscreteFieldUndefined& u) = 0;
   virtual void visit(DiscreteFieldZero& z) = 0;
   virtual void visit(DiscreteFieldPersistent& p) = 0;

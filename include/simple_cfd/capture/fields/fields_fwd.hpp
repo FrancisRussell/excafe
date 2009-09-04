@@ -31,6 +31,7 @@ class DiscreteFieldPersistent;
 class DiscreteFieldZero;
 class DiscreteFieldElementWise;
 class DiscreteFieldTwoNorm;
+class DiscreteFieldProjection;
 
 // Scalar related
 class ScalarExpr;

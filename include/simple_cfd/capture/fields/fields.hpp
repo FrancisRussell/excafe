@@ -11,6 +11,7 @@
 #include "indexed_holder.hpp"
 #include "linear_solve.hpp"
 #include "temporal_index_offset.hpp"
+#include "discrete_field_projection.hpp"
 
 namespace cfd
 {
@@ -37,6 +38,11 @@ detail::TemporalIndexExpr operator-(const TemporalIndex& e, const unsigned offse
 detail::TemporalIndexOffset operator-(const detail::final_tag&, const unsigned offset)
 {
   return detail::TemporalIndexOffset(detail::TemporalIndexOffset::final_tag(), offset);
+}
+
+Field project(const Field& field, const FunctionSpace& functionSpace)
+{
+  return Field(new detail::DiscreteFieldProjection(field.getExpr(), functionSpace.getExpr()));
 }
 
 
