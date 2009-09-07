@@ -18,7 +18,7 @@ namespace detail
 class FunctionSpaceExpr;
 class FunctionSpaceVisitor;
 class FunctionSpaceMeshFunction;
-class FunctionSpaceEmpty;
+class FunctionSpaceUndefined;
 class FunctionSpaceBinaryOperator;
 class FunctionSpaceAddition;
 
@@ -37,6 +37,7 @@ class DiscreteFieldProjection;
 class ScalarExpr;
 class ScalarLiteral;
 class ScalarBinaryOperator;
+class ScalarUndefined;
 
 // Operator related
 class OperatorExpr;
@@ -49,7 +50,9 @@ class OperatorAddition;
 class TemporalIndexExpr;
 class TemporalIndexOffset;
 class TemporalIndexValue;
-template<typename discrete_object_tag> class DiscreteObjectIndexed;
+class DiscreteIndexedScalar; 
+class DiscreteIndexedField; 
+class DiscreteIndexedOperator; 
 
 // Solve related
 class LinearSolve;

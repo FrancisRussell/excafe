@@ -23,7 +23,7 @@ private:
 
 public:
   IndexedHolder(const TemporalIndex& i) : 
-    indexableValue(new IndexableValue<discrete_object_tag>()), indexVariable(i)
+    indexableValue(new IndexableValue<discrete_object_tag>(i)), indexVariable(i)
   {
   }
 

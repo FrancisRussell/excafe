@@ -31,7 +31,7 @@ public:
     return offsetType;
   }
 
-  unsigned int getOffset() const
+  unsigned int getValue() const
   {
     return offset;
   }

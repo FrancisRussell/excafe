@@ -10,8 +10,10 @@ namespace cfd
 
 class FunctionSpace : boost::addable<FunctionSpace>
 {
-private:
+public:
   typedef detail::FunctionSpaceExpr::expr_ptr expr_ptr;
+
+private:
   expr_ptr expr;
 
 public:

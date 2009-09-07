@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_EXPR_VISITOR_HPP
 
 #include "fields_fwd.hpp"
-#include "discrete_traits.hpp"
 
 namespace cfd
 {
@@ -36,11 +35,12 @@ public:
   virtual void enter(ScalarBinaryOperator& o) = 0;
   virtual void exit(ScalarBinaryOperator& o) = 0;
   virtual void visit(ScalarLiteral& l) = 0;
+  virtual void visit(ScalarUndefined& l) = 0;
 
   // Temporal related
-  virtual void visit(DiscreteObjectIndexed<discrete_scalar_tag>& s) = 0;
-  virtual void visit(DiscreteObjectIndexed<discrete_field_tag>& s) = 0;
-  virtual void visit(DiscreteObjectIndexed<discrete_operator_tag>& s) = 0;
+  virtual void visit(DiscreteIndexedScalar& s) = 0;
+  virtual void visit(DiscreteIndexedField& s) = 0;
+  virtual void visit(DiscreteIndexedOperator& s) = 0;
 
   // Solve related
   virtual void enter(LinearSolve& s) = 0;

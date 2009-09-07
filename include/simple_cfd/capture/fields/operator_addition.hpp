@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ADDITION_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ADDITION_HPP
 
+#include <cassert>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 
@@ -28,6 +29,18 @@ public:
     left->accept(v);
     right->accept(v);
     v.exit(*this);
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getTrialSpace() const
+  {
+    assert(left->getTrialSpace() == right->getTrialSpace());
+    return left->getTrialSpace();
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getTestSpace() const
+  {
+    assert(left->getTestSpace() == right->getTestSpace());
+    return left->getTestSpace();
   }
 };
 

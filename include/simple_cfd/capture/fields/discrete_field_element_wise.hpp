@@ -46,6 +46,12 @@ public:
     return operation;
   }
 
+  virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    assert(left->getFunctionSpace() == right->getFunctionSpace());
+    return left->getFunctionSpace();
+  }
+
   void accept(DiscreteExprVisitor& v)
   {
     v.enter(*this);

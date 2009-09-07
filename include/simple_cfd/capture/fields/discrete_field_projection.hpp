@@ -29,6 +29,11 @@ public:
     field->accept(v);
     v.exit(*this);
   }
+
+  virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    return functionSpace;
+  }
 };
 
 }

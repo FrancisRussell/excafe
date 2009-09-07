@@ -25,6 +25,11 @@ public:
   {
     v.visit(*this);
   }
+
+  virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    return functionSpace.getExpr();
+  }
 };
 
 }

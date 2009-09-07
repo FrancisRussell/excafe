@@ -1,12 +1,12 @@
 #include <simple_cfd/capture/fields/function_space.hpp>
-#include <simple_cfd/capture/fields/function_space_empty.hpp>
+#include <simple_cfd/capture/fields/function_space_undefined.hpp>
 #include <simple_cfd/capture/fields/function_space_addition.hpp>
 
 
 namespace cfd
 {
 
-FunctionSpace::FunctionSpace() : expr(new detail::FunctionSpaceEmpty())
+FunctionSpace::FunctionSpace() : expr(new detail::FunctionSpaceUndefined())
 {
 }
 

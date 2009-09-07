@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_LINEAR_SOLVE_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_LINEAR_SOLVE_HPP
 
+#include <cassert>
 #include "discrete_expr_visitor.hpp"
 #include "discrete_field_expr.hpp"
 
@@ -28,6 +29,12 @@ public:
     operation->accept(v);
     operand->accept(v);
     v.exit(*this);
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    assert(operation->getTestSpace() == operand->getFunctionSpace());
+    return operation->getTrialSpace();
   }
 };
 

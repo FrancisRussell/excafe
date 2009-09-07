@@ -30,6 +30,16 @@ public:
   {
     v.visit(*this);
   }
+
+  virtual FunctionSpaceExpr::expr_ptr getTrialSpace() const
+  {
+    return trialSpace;
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getTestSpace() const
+  {
+    return testSpace;
+  }
 };
 
 }

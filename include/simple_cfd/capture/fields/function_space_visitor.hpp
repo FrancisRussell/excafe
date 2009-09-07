@@ -16,7 +16,7 @@ public:
   virtual void exit(FunctionSpaceAddition& f) = 0;
 
   virtual void visit(FunctionSpaceMeshFunction& f) = 0;
-  virtual void visit(FunctionSpaceEmpty& f) = 0;
+  virtual void visit(FunctionSpaceUndefined& f) = 0;
   virtual ~FunctionSpaceVisitor() {}
 };
 

@@ -28,6 +28,11 @@ public:
   {
     visitor.visit(*this);
   }
+
+  FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    return functionSpace.getExpr();
+  }
 };
 
 }

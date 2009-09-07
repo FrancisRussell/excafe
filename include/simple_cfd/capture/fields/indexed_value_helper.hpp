@@ -3,7 +3,8 @@
 
 #include "indexable_value.hpp"
 #include "temporal_index_expr.hpp"
-#include "discrete_object_indexed.hpp"
+#include "discrete_indexed_object.hpp"
+#include "discrete_traits.hpp"
 
 namespace cfd
 {
@@ -39,7 +40,7 @@ public:
 
   operator holder_t() const
   {
-    return holder_t(new DiscreteObjectIndexed<discrete_object_tag>(parent, indexExpr));
+    return holder_t(new typename DiscreteTraits<discrete_object_tag>::indexed_expr_t(parent, indexExpr));
   }
 };
 

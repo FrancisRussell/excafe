@@ -3,6 +3,7 @@
 
 #include "discrete_expr_visitor.hpp"
 #include "discrete_field_expr.hpp"
+#include "function_space_undefined.hpp"
 
 namespace cfd
 {
@@ -16,6 +17,11 @@ public:
   void accept(DiscreteExprVisitor& v)
   {
     v.visit(*this);
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
+  {
+    return FunctionSpaceExpr::expr_ptr(new FunctionSpaceUndefined());
   }
 };
 
