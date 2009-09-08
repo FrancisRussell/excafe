@@ -26,18 +26,18 @@ public:
 
 private:
   const TemporalIndexValue::index_ptr indexVariable;
-  std::map<unsigned, expr_ptr> initialValues;
+  std::map<signed, expr_ptr> initialValues;
   expr_ptr assignedValue;
 
   class OffsetTypeVisitor : public boost::static_visitor<void>
   {
   private:
     IndexableValue& parent;
-    const unsigned offsetValue;
+    const signed offsetValue;
     const expr_ptr rhs;
 
   public:
-    OffsetTypeVisitor(IndexableValue& _parent, const unsigned _offsetValue, const expr_ptr _rhs) : 
+    OffsetTypeVisitor(IndexableValue& _parent, const signed _offsetValue, const expr_ptr _rhs) : 
       parent(_parent), offsetValue(_offsetValue), rhs(_rhs)
     {
     }
@@ -57,7 +57,7 @@ private:
 
     void operator()(const TemporalIndexOffset::final_tag&) const
     {
-      assert(false && "Can't assign final value of indexed value");
+      assert(false && "Can't assign to indexed value using relative-to-final index");
     }
   };
 
@@ -69,7 +69,7 @@ public:
 
   void handleAssignment(const TemporalIndexExpr& indexExpr, const expr_ptr& rhs)
   {
-    assert(indexExpr.getIndex() == indexVariable && "Incorrect index used for variable");
+    assert(indexExpr.getIndex() == indexVariable && "Incorrect index used for expression lhs");
     
     TemporalIndexOffset offset = indexExpr.getOffset();
     TemporalIndexOffset::offset_t offsetType = offset.getType();

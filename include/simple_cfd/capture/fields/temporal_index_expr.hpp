@@ -17,17 +17,17 @@ private:
   const TemporalIndexOffset offset;
 
 public:
-  static TemporalIndexExpr absolute(const TemporalIndexValue::index_ptr& _index, const unsigned _offset)
+  static TemporalIndexExpr absolute(const TemporalIndexValue::index_ptr& _index, const signed _offset)
   {
     return TemporalIndexExpr(_index, TemporalIndexOffset(TemporalIndexOffset::absolute_tag(), _offset));
   }
 
-  static TemporalIndexExpr relative(const TemporalIndexValue::index_ptr& _index, const unsigned _offset)
+  static TemporalIndexExpr relative(const TemporalIndexValue::index_ptr& _index, const signed _offset)
   {
     return TemporalIndexExpr(_index, TemporalIndexOffset(TemporalIndexOffset::relative_tag(), _offset));
   }
 
-  static TemporalIndexExpr final(const TemporalIndexValue::index_ptr& _index, const unsigned _offset)
+  static TemporalIndexExpr final(const TemporalIndexValue::index_ptr& _index, const signed _offset)
   {
     return TemporalIndexExpr(_index, TemporalIndexOffset(TemporalIndexOffset::final_tag(), _offset));
   }

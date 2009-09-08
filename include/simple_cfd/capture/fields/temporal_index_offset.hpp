@@ -19,9 +19,9 @@ public:
 
   typedef boost::variant<absolute_tag, relative_tag, final_tag> offset_t;
   offset_t offsetType;
-  unsigned int offset;
+  signed offset;
 
-  TemporalIndexOffset(const offset_t& _offsetType, const unsigned _offset) : offsetType(_offsetType),
+  TemporalIndexOffset(const offset_t& _offsetType, const signed _offset) : offsetType(_offsetType),
     offset(_offset)
   {
   }
@@ -31,7 +31,7 @@ public:
     return offsetType;
   }
 
-  unsigned int getValue() const
+  signed getValue() const
   {
     return offset;
   }

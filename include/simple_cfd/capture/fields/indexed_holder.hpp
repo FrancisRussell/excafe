@@ -5,6 +5,7 @@
 #include "temporal_index.hpp"
 #include "indexed_value_helper.hpp"
 #include "indexable_value.hpp"
+#include <cassert>
 
 namespace cfd
 {
@@ -27,7 +28,7 @@ public:
   {
   }
 
-  helper_t operator[](unsigned int absoluteIndex)
+  helper_t operator[](const signed absoluteIndex)
   {
     return helper_t(indexableValue, TemporalIndexExpr::absolute(indexVariable.getIndex(), absoluteIndex));
   }

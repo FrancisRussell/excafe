@@ -19,7 +19,7 @@ public:
 
   operator detail::TemporalIndexExpr() const
   {
-    return detail::TemporalIndexExpr::absolute(value, 0);
+    return detail::TemporalIndexExpr::relative(value, 0);
   }
 
   detail::TemporalIndexValue::index_ptr getIndex() const
