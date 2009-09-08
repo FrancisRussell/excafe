@@ -11,6 +11,7 @@
 #include <simple_cfd/capture/fields/fields.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
+#include <simple_cfd/exception.hpp>
 
 using namespace cfd;
 
@@ -112,21 +113,29 @@ public:
 
 int main(int argc, char** argv)
 {
-  PETScManager::instance().init(argc, argv);
-
-  static const std::size_t dimension = TriangularMeshBuilder::cell_dimension;
-
-  TriangularMeshBuilder meshBuilder(3.0, 1.0, 1.0/900.0);
-  meshBuilder.addPolygon(Polygon(vertex<2>(0.5, 0.5), 16, 0.148, 0), 5);
-  Mesh<dimension> mesh(meshBuilder.buildMesh());
-
-  NavierStokesSolver<dimension> solver(mesh);
-
-  for(int i=0; i<6000; ++i)
+  try
   {
-    solver.step();
-    std::stringstream filename;
-    filename << "./navier_stokes_" << boost::format("%|04|") % i << ".vtk";
-    solver.outputFieldsToFile(filename.str());
+    PETScManager::instance().init(argc, argv);
+  
+    static const std::size_t dimension = TriangularMeshBuilder::cell_dimension;
+  
+    TriangularMeshBuilder meshBuilder(3.0, 1.0, 1.0/900.0);
+    meshBuilder.addPolygon(Polygon(vertex<2>(0.5, 0.5), 16, 0.148, 0), 5);
+    Mesh<dimension> mesh(meshBuilder.buildMesh());
+  
+    NavierStokesSolver<dimension> solver(mesh);
+  
+    for(int i=0; i<6000; ++i)
+    {
+      solver.step();
+      std::stringstream filename;
+      filename << "./navier_stokes_" << boost::format("%|04|") % i << ".vtk";
+      solver.outputFieldsToFile(filename.str());
+    }
+  }
+  catch(const CFDException& e)
+  {
+    std::cerr << "A simple_cfd specific exception was generated: " << std::endl;
+    std::cerr << e.what() << std::endl;
   }
 }

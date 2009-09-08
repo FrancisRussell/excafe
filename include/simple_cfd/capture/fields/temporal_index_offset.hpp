@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_TEMPORAL_INDEX_OFFSET_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_TEMPORAL_INDEX_OFFSET_HPP
 
-#include <simple_cfd/util.hpp>
+#include <simple_cfd/util/tag.hpp>
 #include <boost/variant.hpp>
 
 namespace cfd

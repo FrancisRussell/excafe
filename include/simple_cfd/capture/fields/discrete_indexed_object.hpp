@@ -5,7 +5,7 @@
 #include "indexable_value.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "temporal_index_expr.hpp"
-#include <cassert>
+#include <simple_cfd/exception.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 
@@ -36,17 +36,19 @@ protected:
 
     void operator()(const TemporalIndexOffset::absolute_tag&) const
     {
-      assert(false && "Cannot use an absolute value when indexing an r-value");
+      CFD_EXCEPTION("Cannot use an absolute value when indexing an r-value");
     }
 
     void operator()(const TemporalIndexOffset::relative_tag&) const
     {
-      assert(offsetValue <=0 && "Cannot refer to values from a future iteration");
+      if(offsetValue > 0)
+        CFD_EXCEPTION("Cannot refer to values from a future iteration");
     }
 
     void operator()(const TemporalIndexOffset::final_tag&) const
     {
-      assert(offsetValue <=0 && "Cannot refer to values beyond the final iteration of a loop");
+      if (offsetValue > 0)
+        CFD_EXCEPTION("Cannot refer to values beyond the final iteration of a loop");
     }
   };
 
@@ -54,7 +56,8 @@ public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
     parent(_parent), indexExpr(_indexExpr)
   {
-    assert(indexExpr.getIndex() == parent->getIndexVariable() && "Incorrect index used on expression rhs");
+    if(indexExpr.getIndex() != parent->getIndexVariable())
+      CFD_EXCEPTION("Incorrect index used on expression rhs");
     
     TemporalIndexOffset offset = indexExpr.getOffset();
     TemporalIndexOffset::offset_t offsetType = offset.getType();

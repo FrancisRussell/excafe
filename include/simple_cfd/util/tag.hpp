@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CFD_UTIL_HPP
-#define SIMPLE_CFD_UTIL_HPP
+#ifndef SIMPLE_CFD_UTIL_TAG_HPP
+#define SIMPLE_CFD_UTIL_TAG_HPP
 
 namespace cfd
 {
