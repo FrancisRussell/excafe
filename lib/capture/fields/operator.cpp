@@ -1,5 +1,6 @@
 #include <simple_cfd/capture/fields/operator.hpp>
 #include <simple_cfd/capture/fields/function_space.hpp>
+#include <simple_cfd/capture/fields/function_space_expr.hpp>
 #include <simple_cfd/capture/fields/operator_assembly.hpp>
 #include <simple_cfd/capture/fields/operator_application.hpp>
 #include <simple_cfd/capture/fields/operator_addition.hpp>
@@ -9,12 +10,14 @@
 namespace cfd
 {
 
-Operator::Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace) : trialSpace(_trialSpace),
-    testSpace(_testSpace), expr(new detail::OperatorUndefined())
+Operator::Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace) : trialSpace(_trialSpace.getExpr()),
+  testSpace(_testSpace.getExpr()), expr(new detail::OperatorUndefined())
 {
 }
 
-Operator::Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace, detail::OperatorExpr* const _expr) : 
+Operator::Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace, 
+                   const detail::FunctionSpaceExpr::expr_ptr& _testSpace, 
+                   detail::OperatorExpr* const _expr) : 
   trialSpace(_trialSpace), testSpace(_testSpace), expr(_expr)
 {
 }
@@ -37,8 +40,7 @@ Operator Operator::operator+(const Operator& o) const
 
 Operator Operator::operator+(const forms::BilinearFormIntegralSum& sum) const
 {
-  Operator assembled(trialSpace, testSpace);
-  assembled = sum;
+  const Operator assembled(trialSpace, testSpace, new detail::OperatorAssembly(trialSpace, testSpace, sum));
   return *this + assembled;
 }
 

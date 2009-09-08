@@ -18,7 +18,7 @@ private:
   OperatorExpr::expr_ptr right;
 
 public:
-  OperatorAddition(const OperatorExpr::expr_ptr _left, const OperatorExpr::expr_ptr _right) :
+  OperatorAddition(const OperatorExpr::expr_ptr& _left, const OperatorExpr::expr_ptr& _right) :
     left(_left), right(_right)
   {
   }

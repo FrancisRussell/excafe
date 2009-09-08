@@ -2,6 +2,8 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_TWO_NORM_HPP
 
 #include "scalar_expr.hpp"
+#include "discrete_field_expr.hpp"
+#include "discrete_expr_visitor.hpp"
 
 namespace cfd
 {

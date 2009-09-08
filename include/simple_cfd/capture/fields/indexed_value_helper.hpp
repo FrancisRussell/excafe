@@ -20,7 +20,7 @@ private:
   typedef typename DiscreteTraits<discrete_object_tag>::holder_t holder_t;
 
   typename parent_t::value_ptr parent;
-  TemporalIndexExpr indexExpr;
+  const TemporalIndexExpr indexExpr;
 
 public:
   IndexedValueHelper(const typename parent_t::value_ptr& _parent, const TemporalIndexExpr& index) : 

@@ -4,7 +4,7 @@
 #include <string>
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
-#include "function_space.hpp"
+#include "function_space_expr.hpp"
 
 namespace cfd
 {
@@ -16,10 +16,10 @@ class DiscreteFieldPersistent : public DiscreteFieldExpr
 {
 private:
   const std::string name;
-  const FunctionSpace functionSpace;
+  const FunctionSpaceExpr::expr_ptr functionSpace;
 
 public:
-  DiscreteFieldPersistent(const std::string& _name, const FunctionSpace& _functionSpace) :
+  DiscreteFieldPersistent(const std::string& _name, const FunctionSpaceExpr::expr_ptr& _functionSpace) :
     name(_name), functionSpace(_functionSpace)
   {
   }
@@ -31,7 +31,7 @@ public:
 
   FunctionSpaceExpr::expr_ptr getFunctionSpace() const
   {
-    return functionSpace.getExpr();
+    return functionSpace;
   }
 };
 

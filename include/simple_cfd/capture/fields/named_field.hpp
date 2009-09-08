@@ -23,7 +23,7 @@ public:
   }
 
   NamedField(const std::string& _name, const FunctionSpace& functionSpace) : 
-    defined(true), name(_name), field(new detail::DiscreteFieldPersistent(name, functionSpace))
+    defined(true), name(_name), field(new detail::DiscreteFieldPersistent(name, functionSpace.getExpr()))
   {
     assert(!name.empty());
   }

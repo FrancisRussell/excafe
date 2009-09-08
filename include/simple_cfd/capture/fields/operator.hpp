@@ -3,6 +3,7 @@
 
 #include "fields_fwd.hpp"
 #include "operator_expr.hpp"
+#include "function_space_expr.hpp"
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 
 namespace cfd
@@ -14,13 +15,15 @@ public:
   typedef detail::OperatorExpr::expr_ptr expr_ptr;
 
 private:
-  FunctionSpace trialSpace;
-  FunctionSpace testSpace;
+  detail::FunctionSpaceExpr::expr_ptr trialSpace;
+  detail::FunctionSpaceExpr::expr_ptr testSpace;
   expr_ptr expr;
 
 public:
   Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace);
-  Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace, detail::OperatorExpr* const _expr);
+  Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace, 
+           const detail::FunctionSpaceExpr::expr_ptr& _testSpace, 
+           detail::OperatorExpr* const _expr);
   Operator& operator=(const forms::BilinearFormIntegralSum& sum);
   Operator operator+(const Operator& o) const;
   Operator operator+(const forms::BilinearFormIntegralSum& sum) const;

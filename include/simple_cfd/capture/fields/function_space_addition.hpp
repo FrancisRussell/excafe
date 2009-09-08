@@ -13,8 +13,8 @@ namespace detail
 class FunctionSpaceAddition : public FunctionSpaceBinaryOperator
 {
 public:
-  FunctionSpaceAddition(FunctionSpaceExpr::expr_ptr _left,
-                        FunctionSpaceExpr::expr_ptr _right) :
+  FunctionSpaceAddition(const FunctionSpaceExpr::expr_ptr& _left,
+                        const FunctionSpaceExpr::expr_ptr& _right) :
     FunctionSpaceBinaryOperator(_left, _right)
   {
   }

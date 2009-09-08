@@ -4,6 +4,7 @@
 #include "discrete_traits.hpp"
 #include "indexable_value.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "temporal_index_expr.hpp"
 #include <cassert>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
@@ -40,7 +41,7 @@ protected:
 
     void operator()(const TemporalIndexOffset::relative_tag&) const
     {
-      assert(offsetValue <=0 && "Cannot refer to values in a future iteration");
+      assert(offsetValue <=0 && "Cannot refer to values from a future iteration");
     }
 
     void operator()(const TemporalIndexOffset::final_tag&) const

@@ -3,6 +3,7 @@
 
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "function_space_expr.hpp"
 #include <boost/variant.hpp>
 
 namespace cfd

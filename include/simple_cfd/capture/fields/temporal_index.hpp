@@ -3,6 +3,7 @@
 
 #include "temporal_index_value.hpp"
 #include "temporal_index_expr.hpp"
+#include "scalar.hpp"
 
 namespace cfd
 {

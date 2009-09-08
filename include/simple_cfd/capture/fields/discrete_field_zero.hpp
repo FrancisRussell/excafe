@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_ZERO_HPP
 
 #include "function_space.hpp"
+#include "function_space_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "discrete_field_expr.hpp"
 
@@ -14,10 +15,10 @@ namespace detail
 class DiscreteFieldZero : public DiscreteFieldExpr
 {
 private:
-  const FunctionSpace functionSpace;
+  const FunctionSpaceExpr::expr_ptr functionSpace;
 
 public:
-  DiscreteFieldZero(const FunctionSpace& _functionSpace) : functionSpace(_functionSpace)
+  DiscreteFieldZero(const FunctionSpace& _functionSpace) : functionSpace(_functionSpace.getExpr())
   {
   }
 
@@ -28,7 +29,7 @@ public:
 
   virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
   {
-    return functionSpace.getExpr();
+    return functionSpace;
   }
 };
 

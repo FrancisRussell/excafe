@@ -17,8 +17,8 @@ private:
   FunctionSpaceExpr::expr_ptr right;
 
 public:
-  FunctionSpaceBinaryOperator(FunctionSpaceExpr::expr_ptr _left,
-                              FunctionSpaceExpr::expr_ptr _right) :
+  FunctionSpaceBinaryOperator(const FunctionSpaceExpr::expr_ptr& _left,
+                              const FunctionSpaceExpr::expr_ptr& _right) :
     left(_left), right(_right)
   {
   }

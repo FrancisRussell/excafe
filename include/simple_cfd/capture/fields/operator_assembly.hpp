@@ -20,9 +20,9 @@ private:
   const forms::BilinearFormIntegralSum sum;
 
 public:
-  OperatorAssembly(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace,
+  OperatorAssembly(const FunctionSpaceExpr::expr_ptr& _trialSpace, const FunctionSpaceExpr::expr_ptr& _testSpace,
                    const forms::BilinearFormIntegralSum& _sum) : 
-    trialSpace(_trialSpace.getExpr()), testSpace(_testSpace.getExpr()), sum(_sum)
+    trialSpace(_trialSpace), testSpace(_testSpace), sum(_sum)
   {
   }
 

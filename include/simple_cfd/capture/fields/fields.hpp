@@ -8,6 +8,7 @@
 #include "named_field.hpp"
 #include "operator.hpp"
 #include "temporal_index.hpp"
+#include "temporal_index_expr.hpp"
 #include "indexed_holder.hpp"
 #include "linear_solve.hpp"
 #include "temporal_index_offset.hpp"
