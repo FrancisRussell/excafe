@@ -35,7 +35,6 @@ public:
 
   helper_t operator[](const TemporalIndexExpr& indexExpr)
   {
-    assert(indexExpr.getIndex() == indexVariable.getIndex());
     return helper_t(indexableValue, indexExpr);
   }
 

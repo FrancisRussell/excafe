@@ -1,7 +1,6 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_OBJECT_INDEXED_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_OBJECT_INDEXED_HPP
 
-#include <boost/static_assert.hpp>
 #include "discrete_traits.hpp"
 #include "indexable_value.hpp"
 #include "discrete_expr_visitor.hpp"
@@ -22,7 +21,7 @@ protected:
   typedef IndexableValue<discrete_object_tag> parent_t; 
   typedef typename parent_t::value_ptr parent_ptr;
   parent_ptr parent;
-  TemporalIndexExpr index;
+  TemporalIndexExpr indexExpr;
 
   class IndexValidator : public boost::static_visitor<void>
   {
@@ -51,10 +50,10 @@ protected:
   };
 
 public:
-  AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
-    parent(_parent), index(indexExpr)
+  AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
+    parent(_parent), indexExpr(_indexExpr)
   {
-    assert(indexExpr.getIndex() == index.getIndex() && "Incorrect index used on expression rhs");
+    assert(indexExpr.getIndex() == parent->getIndexVariable() && "Incorrect index used on expression rhs");
     
     TemporalIndexOffset offset = indexExpr.getOffset();
     TemporalIndexOffset::offset_t offsetType = offset.getType();

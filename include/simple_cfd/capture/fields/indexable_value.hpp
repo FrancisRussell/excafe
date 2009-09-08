@@ -82,6 +82,11 @@ public:
   {
     return assignedValue;
   }
+
+  TemporalIndexValue::index_ptr getIndexVariable() const
+  {
+    return indexVariable;
+  }
 };
 
 }
