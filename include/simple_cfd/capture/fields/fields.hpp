@@ -20,7 +20,13 @@ namespace cfd
 namespace detail
 {
 
-struct final_tag {};
+struct final_tag
+{
+  operator detail::TemporalIndexOffset() const
+  {
+    return detail::TemporalIndexOffset(detail::TemporalIndexOffset::final_tag(), 0);
+  }
+};
 
 }
 
