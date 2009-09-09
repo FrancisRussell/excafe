@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CFD_UTIL_EXCEPTION_TRACE_HPP
 #define SIMPLE_CFD_UTIL_EXCEPTION_TRACE_HPP
 
-#ifndef __LINUX__
+#ifdef __linux__
 extern "C" {
 #include <execinfo.h>
 }
@@ -16,46 +16,52 @@ namespace cfd
 namespace util
 {
 
-class ExceptionTrace
+#ifdef __linux__
+
+class LinuxExceptionTrace
 {
 private:
   static const std::size_t maxSize = 25;
+  void* bt[maxSize];
   int btLength;
-  char** symbols;
 
 public:
-  ExceptionTrace() : symbols(NULL)
+  LinuxExceptionTrace()
   {
-#ifdef __linux__
-    void* bt[maxSize];
     btLength = backtrace(bt, maxSize);
-    symbols = backtrace_symbols(bt, btLength);
-
-#endif
   }
 
   const std::string getTrace() const
   {
-    if (symbols == NULL)
-    {
-      return "Stack trace unavailable for this platform.\n";
-    }
-    else
-    {
-      std::stringstream traceStream;
+    char** const symbols = backtrace_symbols(bt, btLength);
+    std::stringstream traceStream;
 
-      for(int i=0; i<btLength; ++i)
-        traceStream << symbols[i] << std::endl;
+    for(int i=0; i<btLength; ++i)
+      traceStream << symbols[i] << std::endl;
 
-      return traceStream.str();
-    }
-  }
-
-  ~ExceptionTrace()
-  {
     free(symbols);
+    return traceStream.str();
   }
 };
+typedef LinuxExceptionTrace ExceptionTrace;
+
+#else
+
+class GenericExceptionTrace
+{
+public:
+  GenericExceptionTrace()
+  {
+  }
+
+  const std::string getTrace() const
+  {
+    return "Stack trace unavailable for this platform.\n";
+  }
+};
+typedef GenericExceptionTrace ExceptionTrace;
+
+#endif
 
 }
 
