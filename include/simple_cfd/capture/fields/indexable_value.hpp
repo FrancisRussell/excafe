@@ -1,15 +1,15 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_INDEXABLE_VALUE_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_INDEXABLE_VALUE_HPP
 
-#include "temporal_index_expr.hpp"
-#include "temporal_index.hpp"
-#include "discrete_traits.hpp"
 #include <map>
-#include <cassert>
 #include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include "temporal_index_expr.hpp"
+#include "temporal_index.hpp"
+#include "discrete_traits.hpp"
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -44,20 +44,26 @@ private:
 
     void operator()(const TemporalIndexOffset::absolute_tag&) const
     {
-      assert(offsetValue < 0 && "Can only assign variables for absolute index values below 0");
-      assert(parent.initialValues.find(offsetValue) == parent.initialValues.end() && "Can only assign absolute value once");
+      if (offsetValue >= 0)
+        CFD_EXCEPTION("Can only assign variables for absolute index values below 0");
+
+      if (parent.initialValues.find(offsetValue) != parent.initialValues.end())
+        CFD_EXCEPTION("Can only assign absolute value once");
+
       parent.initialValues.insert(std::make_pair(offsetValue, rhs)); 
     }
 
     void operator()(const TemporalIndexOffset::relative_tag&) const
     {
-      assert(offsetValue == 0 && "Can only assign current value of an iteration");
+      if (offsetValue != 0)
+        CFD_EXCEPTION("Can only assign current value of an iteration");
+
       parent.assignedValue = rhs;
     }
 
     void operator()(const TemporalIndexOffset::final_tag&) const
     {
-      assert(false && "Cannot assign to indexed value using relative-to-final index");
+      CFD_EXCEPTION("Cannot assign to indexed value using relative-to-final index");
     }
   };
 
@@ -69,7 +75,8 @@ public:
 
   void handleAssignment(const TemporalIndexExpr& indexExpr, const expr_ptr& rhs)
   {
-    assert(indexExpr.getIndex() == indexVariable && "Incorrect index used in expression lhs");
+    if(indexExpr.getIndex() != indexVariable)
+      CFD_EXCEPTION("Incorrect index used in expression lhs");
     
     TemporalIndexOffset offset = indexExpr.getOffset();
     TemporalIndexOffset::offset_t offsetType = offset.getType();

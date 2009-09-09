@@ -20,7 +20,7 @@ private:
 public:
   typedef boost::shared_ptr<TemporalIndexValue> index_ptr;
 
-  TemporalIndexValue()
+  TemporalIndexValue() : terminationSet(false)
   {
   }
 
