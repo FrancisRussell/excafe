@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CFD_UTIL_EXCEPTION_TRACE_HPP
 #define SIMPLE_CFD_UTIL_EXCEPTION_TRACE_HPP
 
-#ifdef __linux__
+#if defined(__linux__)
 extern "C" {
 #include <execinfo.h>
 }
@@ -16,7 +16,7 @@ namespace cfd
 namespace util
 {
 
-#ifdef __linux__
+#if defined(__linux__)
 
 class LinuxExceptionTrace
 {
