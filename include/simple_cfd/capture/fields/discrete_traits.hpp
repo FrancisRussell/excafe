@@ -32,6 +32,7 @@ struct DiscreteTraits<discrete_scalar_tag>
   typedef ScalarExpr::expr_ptr expr_ptr;
   typedef DiscreteIndexedScalar indexed_expr_t;  
   typedef ScalarUndefined undefined_t;  
+  typedef IndexableValue<discrete_scalar_tag> indexable_t;
 };
 
 template<>
@@ -42,6 +43,7 @@ struct DiscreteTraits<discrete_field_tag>
   typedef DiscreteFieldExpr::expr_ptr expr_ptr;
   typedef DiscreteIndexedField indexed_expr_t;  
   typedef DiscreteFieldUndefined undefined_t;  
+  typedef IndexableValue<discrete_field_tag> indexable_t;
 };
 
 template<>
@@ -52,6 +54,7 @@ struct DiscreteTraits<discrete_operator_tag>
   typedef OperatorExpr::expr_ptr expr_ptr;
   typedef DiscreteIndexedOperator indexed_expr_t;  
   typedef OperatorUndefined undefined_t;  
+  typedef IndexableValue<discrete_operator_tag> indexable_t;
 };
 
 }

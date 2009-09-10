@@ -53,6 +53,7 @@ class TemporalIndexValue;
 class DiscreteIndexedScalar; 
 class DiscreteIndexedField; 
 class DiscreteIndexedOperator; 
+template<typename discrete_object_tag> class IndexableValue;
 
 // Solve related
 class LinearSolve;

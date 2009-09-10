@@ -4,6 +4,7 @@
 #include <map>
 #include "fields/named_field.hpp"
 #include "fields/field.hpp"
+#include "fields/discrete_expr_container.hpp"
 
 namespace cfd
 {
@@ -26,6 +27,8 @@ public:
   void finish()
   {
     // TODO: Implement me!
+
+    detail::DiscreteExprContainer exprContainer;
   }
 
   void execute()
