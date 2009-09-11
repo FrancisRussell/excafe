@@ -10,6 +10,7 @@
 #include "temporal_index.hpp"
 #include "discrete_traits.hpp"
 #include <simple_cfd/exception.hpp>
+#include <boost/iterator.hpp>
 
 namespace cfd
 {
@@ -18,11 +19,27 @@ namespace detail
 {
 
 template<typename discrete_object_tag>
+class IndexableValueInitialisationIterator
+{
+private:
+  typedef typename DiscreteTraits<discrete_object_tag>::expr_t expr_t;
+  typedef typename DiscreteTraits<discrete_object_tag>::expr_ptr expr_ptr;
+  typedef typename std::map<signed, expr_ptr>::iterator iterator_t;
+  iterator_t pos;
+
+public:
+  IndexableValueInitialisationIterator(const iterator_t& _pos) : pos(_pos) 
+  {
+  }
+};
+
+template<typename discrete_object_tag>
 class IndexableValue
 {
 public:
   typedef boost::shared_ptr<IndexableValue> value_ptr;
   typedef typename DiscreteTraits<discrete_object_tag>::expr_ptr expr_ptr;
+  typedef IndexableValueInitialisationIterator<discrete_object_tag> initialiser_iter;
 
 private:
   const TemporalIndexValue::index_ptr indexVariable;
@@ -83,6 +100,16 @@ public:
 
     OffsetTypeVisitor visitor(*this, offset.getValue(), rhs);
     boost::apply_visitor(visitor, offsetType);
+  }
+
+  initialiser_iter begin_initialisers()
+  {
+    return initialiser_iter(initialValues.begin());
+  }
+
+  initialiser_iter end_initialisers()
+  {
+    return initialiser_iter(initialValues.end());
   }
 
   expr_ptr getIterationAssignment() const

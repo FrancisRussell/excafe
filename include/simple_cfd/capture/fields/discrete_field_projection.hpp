@@ -32,6 +32,11 @@ public:
   {
     return functionSpace;
   }
+
+  DiscreteFieldExpr& getField() const
+  {
+    return *field;
+  }
 };
 
 }

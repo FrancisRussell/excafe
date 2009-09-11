@@ -5,6 +5,7 @@
 #include "fields/named_field.hpp"
 #include "fields/field.hpp"
 #include "fields/discrete_expr_container.hpp"
+#include "fields/discrete_expr_container_builder.hpp"
 
 namespace cfd
 {

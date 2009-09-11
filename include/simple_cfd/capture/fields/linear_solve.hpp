@@ -33,6 +33,16 @@ public:
     assert(operation->getTestSpace() == operand->getFunctionSpace());
     return operation->getTrialSpace();
   }
+
+  OperatorExpr& getOperator() const
+  {
+    return *operation;
+  }
+
+  DiscreteFieldExpr& getField() const
+  {
+    return *operand;
+  }
 };
 
 }

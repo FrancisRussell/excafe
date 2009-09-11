@@ -30,6 +30,11 @@ public:
     terminationSet = true;
     termination = c;
   }
+
+  ScalarExpr& getTermination() const
+  {
+    return *termination;
+  }
 };
 
 }

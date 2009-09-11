@@ -39,6 +39,16 @@ public:
     assert(left->getTestSpace() == right->getTestSpace());
     return left->getTestSpace();
   }
+
+  OperatorExpr& getLeft() const
+  {
+    return *left;
+  }
+
+  OperatorExpr& getRight() const
+  {
+    return *right;
+  }
 };
 
 }

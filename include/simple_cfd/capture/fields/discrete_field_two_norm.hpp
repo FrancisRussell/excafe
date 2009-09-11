@@ -25,6 +25,11 @@ public:
   {
     v.visit(*this);
   }
+  
+  DiscreteFieldExpr& getField() const
+  {
+    return *field;
+  }
 };
 
 }

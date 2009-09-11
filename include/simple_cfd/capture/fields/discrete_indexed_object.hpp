@@ -65,6 +65,11 @@ public:
     const IndexValidator validator(offset.getValue());
     boost::apply_visitor(validator, offsetType);
   }
+
+  parent_t& getParent() const
+  {
+    return *parent;
+  }
 };
 
 class DiscreteIndexedScalar : public AbstractDiscreteObjectIndexed<discrete_scalar_tag>

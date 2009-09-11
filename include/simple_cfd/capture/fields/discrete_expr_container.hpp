@@ -14,11 +14,47 @@ namespace detail
 
 class DiscreteExprContainer
 {
-public:
-  std::set<TemporalIndexValue::index_ptr> temporalIndices;
+private:
+  std::set<TemporalIndexValue*> temporalIndices;
   DiscreteExprSet<discrete_scalar_tag> scalarExpressions;
   DiscreteExprSet<discrete_field_tag> fieldExpressions;
   DiscreteExprSet<discrete_operator_tag> operatorExpressions;
+
+public:
+  bool insert(DiscreteFieldExpr& d)
+  {
+    return fieldExpressions.insert(d);
+  }
+
+  bool insert(ScalarExpr& d)
+  {
+    return scalarExpressions.insert(d);
+  }
+
+  bool insert(OperatorExpr& d)
+  {
+    return operatorExpressions.insert(d);
+  }
+
+  bool insert(IndexableValue<discrete_scalar_tag>& i)
+  {
+    return scalarExpressions.insert(i);
+  }
+
+  bool insert(IndexableValue<discrete_field_tag>& i)
+  {
+    return fieldExpressions.insert(i);
+  }
+
+  bool insert(IndexableValue<discrete_operator_tag>& i)
+  {
+    return operatorExpressions.insert(i);
+  }
+
+  bool insert(TemporalIndexValue& v)
+  {
+    return temporalIndices.insert(&v).second;
+  }
 };
 
 }

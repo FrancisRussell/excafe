@@ -18,14 +18,14 @@ private:
   std::set<typename DiscreteTraits<discrete_object_tag>::indexable_t*> indexedParents;
 
 public:
-  void addExpr(typename DiscreteTraits<discrete_object_tag>::expr_t& e)
+  bool insert(typename DiscreteTraits<discrete_object_tag>::expr_t& e)
   {
-    expressions.insert(&e);
+    return expressions.insert(&e).second;
   }
 
-  void addIndexed(typename DiscreteTraits<discrete_object_tag>::indexable_t& i)
+  bool insert(typename DiscreteTraits<discrete_object_tag>::indexable_t& i)
   {
-    indexedParents.insert(&i);
+    return indexedParents.insert(&i).second;
   }
 };
 
