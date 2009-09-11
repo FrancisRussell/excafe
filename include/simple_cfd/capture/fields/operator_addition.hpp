@@ -25,10 +25,7 @@ public:
 
   virtual void accept(DiscreteExprVisitor& v)
   {
-    v.enter(*this);
-    left->accept(v);
-    right->accept(v);
-    v.exit(*this);
+    v.visit(*this);
   }
 
   virtual FunctionSpaceExpr::expr_ptr getTrialSpace() const

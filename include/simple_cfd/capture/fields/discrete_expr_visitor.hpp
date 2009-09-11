@@ -13,27 +13,21 @@ class DiscreteExprVisitor
 {
 public:
   // Discrete field related
-  virtual void enter(DiscreteFieldElementWise& p) = 0;
-  virtual void exit(DiscreteFieldElementWise& p) = 0;
-  virtual void enter(DiscreteFieldTwoNorm& p) = 0;
-  virtual void exit(DiscreteFieldTwoNorm& p) = 0;
-  virtual void enter(DiscreteFieldProjection& p) = 0;
-  virtual void exit(DiscreteFieldProjection& p) = 0;
+  virtual void visit(DiscreteFieldElementWise& p) = 0;
+  virtual void visit(DiscreteFieldTwoNorm& p) = 0;
+  virtual void visit(DiscreteFieldProjection& p) = 0;
   virtual void visit(DiscreteFieldUndefined& u) = 0;
   virtual void visit(DiscreteFieldZero& z) = 0;
   virtual void visit(DiscreteFieldPersistent& p) = 0;
 
   // Discrete operator related
-  virtual void enter(OperatorApplication& a) = 0;
-  virtual void exit(OperatorApplication& a) = 0;
-  virtual void enter(OperatorAddition& u) = 0;
-  virtual void exit(OperatorAddition& u) = 0;
+  virtual void visit(OperatorApplication& a) = 0;
+  virtual void visit(OperatorAddition& u) = 0;
   virtual void visit(OperatorAssembly& a) = 0;
   virtual void visit(OperatorUndefined& u) = 0;
 
   // Scalar related
-  virtual void enter(ScalarBinaryOperator& o) = 0;
-  virtual void exit(ScalarBinaryOperator& o) = 0;
+  virtual void visit(ScalarBinaryOperator& o) = 0;
   virtual void visit(ScalarLiteral& l) = 0;
   virtual void visit(ScalarUndefined& l) = 0;
 
@@ -43,8 +37,7 @@ public:
   virtual void visit(DiscreteIndexedOperator& s) = 0;
 
   // Solve related
-  virtual void enter(LinearSolve& s) = 0;
-  virtual void exit(LinearSolve& s) = 0;
+  virtual void visit(LinearSolve& s) = 0;
 
   virtual ~DiscreteExprVisitor() {}
 };

@@ -55,10 +55,7 @@ public:
 
   void accept(DiscreteExprVisitor& v)
   {
-    v.enter(*this);
-    left->accept(v);
-    right->accept(v);
-    v.exit(*this);
+    v.visit(*this);
   }
 };
 

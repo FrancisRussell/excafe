@@ -29,10 +29,7 @@ public:
 
   void accept(DiscreteExprVisitor& v)
   {
-    v.enter(*this);
-    operation->accept(v);
-    field->accept(v);
-    v.exit(*this);
+    v.visit(*this);
   }
 
   virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const

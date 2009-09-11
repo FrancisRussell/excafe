@@ -23,9 +23,7 @@ public:
 
   void accept(DiscreteExprVisitor& v)
   {
-    v.enter(*this);
-    field->accept(v);
-    v.exit(*this);
+    v.visit(*this);
   }
 };
 
