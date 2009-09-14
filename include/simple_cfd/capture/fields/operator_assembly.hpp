@@ -26,6 +26,11 @@ public:
   {
   }
 
+  forms::BilinearFormIntegralSum getBilinearFormIntegralSum() const
+  {
+    return sum;
+  }
+
   void accept(DiscreteExprVisitor& v)
   {
     v.visit(*this);

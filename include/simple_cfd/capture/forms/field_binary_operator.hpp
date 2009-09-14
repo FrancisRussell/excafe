@@ -21,14 +21,14 @@ public:
   {
   }
 
-  FieldExpr::reference_t getLeft() const
+  FieldExpr& getLeft() const
   {
-    return left;
+    return *left;
   }
 
-  FieldExpr::reference_t getRight() const
+  FieldExpr& getRight() const
   {
-    return right;
+    return *right;
   }
 };
 

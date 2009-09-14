@@ -22,6 +22,7 @@ class BilinearFormIntegralSum
 private: 
   std::vector<BilinearForm> dxForms;
   std::vector<BilinearForm> dsForms;
+  std::vector<BilinearForm> dSForms;
 
   class IntegralAdderVisitor : public boost::static_visitor<void>
   {
@@ -99,6 +100,26 @@ public:
   const_iterator end_ds() const
   {
     return dsForms.end();
+  }
+
+  iterator begin_dS()
+  {
+    return dSForms.begin();
+  }
+
+  iterator end_dS()
+  {
+    return dSForms.end();
+  }
+
+  const_iterator begin_dS() const
+  {
+    return dSForms.begin();
+  }
+
+  const_iterator end_dS() const
+  {
+    return dSForms.end();
   }
 };
 

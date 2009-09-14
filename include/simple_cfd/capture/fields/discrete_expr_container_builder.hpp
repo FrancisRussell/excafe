@@ -1,6 +1,8 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_EXPR_CONTAINER_BUILDER_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_EXPR_CONTAINER_BUILDER_HPP
 
+// Disrete expression related
+#include "fields_fwd.hpp"
 #include "discrete_expr_container.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "discrete_field_element_wise.hpp"
@@ -17,20 +19,22 @@
 #include "scalar_literal.hpp"
 #include "scalar_undefined.hpp"
 #include "linear_solve.hpp"
+
+// Index related
 #include "discrete_indexed_object.hpp"
 #include "indexable_value.hpp"
+
+// Form related
+#include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
+
+// Helper
+#include "discrete_expr_container_builder_form_visitor.hpp"
 
 namespace cfd
 {
 
 namespace detail
 {
-
-class DiscreteExprContainerBuilderFormVisitor : public FieldVisitor
-{
-public:
-
-};
 
 class DiscreteExprContainerBuilder : public DiscreteExprVisitor
 {
@@ -59,6 +63,18 @@ private:
     if (container.insert(v))
     {
       v.getTermination().accept(*this);
+    }
+  }
+
+  template<typename ForwardIterator>
+  void handleForms(const ForwardIterator& begin, const ForwardIterator& end)
+  {
+    DiscreteExprContainerBuilderFormVisitor v(*this);
+
+    for(ForwardIterator bilinearFormIter(begin); bilinearFormIter!=end; ++bilinearFormIter)
+    {
+      bilinearFormIter->getTrialField()->accept(v);
+      bilinearFormIter->getTestField()->accept(v);
     }
   }
 
@@ -130,8 +146,12 @@ public:
 
   virtual void visit(OperatorAssembly& a)
   {
-    // TODO: handle referenced fields in the assembled expressions
     container.insert(a);
+
+    const forms::BilinearFormIntegralSum sum(a.getBilinearFormIntegralSum());
+    handleForms(sum.begin_dx(), sum.end_dx());
+    handleForms(sum.begin_ds(), sum.end_ds());
+    handleForms(sum.begin_dS(), sum.end_dS());
   }
 
   virtual void visit(OperatorUndefined& u)

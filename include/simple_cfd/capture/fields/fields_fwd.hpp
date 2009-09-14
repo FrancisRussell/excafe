@@ -57,6 +57,10 @@ template<typename discrete_object_tag> class IndexableValue;
 
 // Solve related
 class LinearSolve;
+
+// Utility
+class DiscreteExprContainerBuilder;
+class DiscreteExprContainerBuilderFormVisitor;
 }
 
 }

@@ -21,9 +21,9 @@ public:
   {
   }
 
-  FieldExpr::reference_t getOperand() const
+  FieldExpr& getOperand() const
   {
-    return operand;
+    return *operand;
   }
 };
 
