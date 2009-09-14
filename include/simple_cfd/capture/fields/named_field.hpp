@@ -38,6 +38,11 @@ public:
     return name == f.name;
   }
 
+  Field getField()
+  {
+    return field;
+  }
+
   operator Field() const
   {
     return field;

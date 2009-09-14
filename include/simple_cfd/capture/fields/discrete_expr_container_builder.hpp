@@ -83,6 +83,16 @@ public:
   {
   }
 
+  bool containsUndefinedNodes() const
+  {
+    return undefinedNodes;
+  }
+
+  DiscreteExprContainer getContainer() const
+  {
+    return container;
+  }
+
   // Discrete field related
   virtual void visit(DiscreteFieldElementWise& p)
   {

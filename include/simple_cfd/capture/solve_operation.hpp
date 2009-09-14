@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_SOLVE_OPERATION_HPP
 #define SIMPLE_CFD_CAPTURE_SOLVE_OPERATION_HPP
 
+#include <cassert>
 #include <map>
 #include "fields/named_field.hpp"
 #include "fields/field.hpp"
@@ -29,7 +30,15 @@ public:
   {
     // TODO: Implement me!
 
-    detail::DiscreteExprContainer exprContainer;
+    detail::DiscreteExprContainerBuilder containerBuilder;
+
+    for(std::map<NamedField, Field>::const_iterator newValuesIter(newValues.begin()); newValuesIter!=newValues.end(); ++newValuesIter)
+    {
+      newValuesIter->second.getExpr()->accept(containerBuilder);
+    }
+
+    assert(!containerBuilder.containsUndefinedNodes());
+    detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
   }
 
   void execute()
