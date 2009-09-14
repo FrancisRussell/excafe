@@ -26,6 +26,12 @@ namespace cfd
 namespace detail
 {
 
+class DiscreteExprContainerBuilderFormVisitor : public FieldVisitor
+{
+public:
+
+};
+
 class DiscreteExprContainerBuilder : public DiscreteExprVisitor
 {
 private:
