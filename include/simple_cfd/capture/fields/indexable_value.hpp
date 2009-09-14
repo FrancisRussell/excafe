@@ -3,6 +3,7 @@
 
 #include <map>
 #include <utility>
+#include <iterator>
 #include <boost/shared_ptr.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
@@ -10,7 +11,7 @@
 #include "temporal_index.hpp"
 #include "discrete_traits.hpp"
 #include <simple_cfd/exception.hpp>
-#include <boost/iterator.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
 namespace cfd
 {
@@ -19,17 +20,45 @@ namespace detail
 {
 
 template<typename discrete_object_tag>
-class IndexableValueInitialisationIterator
+class IndexableValueInitialisationIterator : public boost::iterator_facade<
+  IndexableValueInitialisationIterator<discrete_object_tag>, 
+  typename DiscreteTraits<discrete_object_tag>::expr_t,
+  boost::bidirectional_traversal_tag>
 {
 private:
   typedef typename DiscreteTraits<discrete_object_tag>::expr_t expr_t;
   typedef typename DiscreteTraits<discrete_object_tag>::expr_ptr expr_ptr;
-  typedef typename std::map<signed, expr_ptr>::iterator iterator_t;
+  typedef typename std::map<signed, expr_ptr>::const_iterator iterator_t;
   iterator_t pos;
 
 public:
   IndexableValueInitialisationIterator(const iterator_t& _pos) : pos(_pos) 
   {
+  }
+
+  signed getOffset() const
+  {
+    return pos->first;
+  }
+
+  expr_t& dereference() const
+  {
+    return *pos->second;
+  }
+
+  void increment()
+  {
+    ++pos;
+  }
+
+  void decrement()
+  {
+    --pos;
+  }
+
+  bool equal(const IndexableValueInitialisationIterator& i) const
+  {
+    return pos == i.pos;
   }
 };
 
@@ -39,7 +68,7 @@ class IndexableValue
 public:
   typedef boost::shared_ptr<IndexableValue> value_ptr;
   typedef typename DiscreteTraits<discrete_object_tag>::expr_ptr expr_ptr;
-  typedef IndexableValueInitialisationIterator<discrete_object_tag> initialiser_iter;
+  typedef IndexableValueInitialisationIterator<discrete_object_tag> init_iterator;
 
 private:
   const TemporalIndexValue::index_ptr indexVariable;
@@ -102,14 +131,14 @@ public:
     boost::apply_visitor(visitor, offsetType);
   }
 
-  initialiser_iter begin_initialisers()
+  init_iterator begin_inits() const
   {
-    return initialiser_iter(initialValues.begin());
+    return init_iterator(initialValues.begin());
   }
 
-  initialiser_iter end_initialisers()
+  init_iterator end_inits() const
   {
-    return initialiser_iter(initialValues.end());
+    return init_iterator(initialValues.end());
   }
 
   expr_ptr getIterationAssignment() const

@@ -39,7 +39,11 @@ private:
     {
       handleTemporalIndex(*indexableValue.getIndexVariable());
 
-      //TODO: now we have to handle all the expressions assigned to this
+      for(typename IndexableValue<discrete_object_tag>::init_iterator initIter(indexableValue.begin_inits());
+          initIter!=indexableValue.end_inits(); ++initIter)
+      {
+        initIter->accept(*this);
+      }
     }
   }
 
