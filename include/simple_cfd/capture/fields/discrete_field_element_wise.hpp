@@ -53,6 +53,11 @@ public:
     return left->getFunctionSpace();
   }
 
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return left->getTemporalIndices() + right->getTemporalIndices();
+  }
+
   void accept(DiscreteExprVisitor& v)
   {
     v.visit(*this);

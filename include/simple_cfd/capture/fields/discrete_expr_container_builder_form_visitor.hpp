@@ -18,12 +18,25 @@ private:
 
 public:
   DiscreteExprContainerBuilderFormVisitor(DiscreteExprContainerBuilder& _parent);
-  virtual void visit(FieldAddition& addition);
-  virtual void visit(FieldInnerProduct& inner);
-  virtual void visit(FieldOuterProduct& outer);
-  virtual void visit(FieldColonProduct& colon);
-  virtual void visit(FieldGradient& gradient);
-  virtual void visit(FieldDivergence& divergence);
+
+  virtual void enter(FieldAddition& addition);
+  virtual void exit(FieldAddition& addition);
+
+  virtual void enter(FieldInnerProduct& inner);
+  virtual void exit(FieldInnerProduct& inner);
+
+  virtual void enter(FieldOuterProduct& outer);
+  virtual void exit(FieldOuterProduct& outer);
+
+  virtual void enter(FieldColonProduct& colon);
+  virtual void exit(FieldColonProduct& colon);
+
+  virtual void enter(FieldGradient& gradient);
+  virtual void exit(FieldGradient& gradient);
+
+  virtual void enter(FieldDivergence& divergence);
+  virtual void exit(FieldDivergence& divergence);
+
   virtual void visit(FacetNormal& normal);
   virtual void visit(FieldBasis& basis);
   virtual void visit(FieldDiscreteReference& field);

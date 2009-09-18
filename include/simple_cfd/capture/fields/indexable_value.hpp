@@ -4,14 +4,16 @@
 #include <map>
 #include <utility>
 #include <iterator>
+#include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include "temporal_index_set.hpp"
 #include "temporal_index_expr.hpp"
 #include "temporal_index.hpp"
 #include "discrete_traits.hpp"
 #include <simple_cfd/exception.hpp>
-#include <boost/iterator/iterator_facade.hpp>
 
 namespace cfd
 {
@@ -149,6 +151,23 @@ public:
   TemporalIndexValue::index_ptr getIndexVariable() const
   {
     return indexVariable;
+  }
+
+  TemporalIndexSet getTemporalIndices() const
+  {
+    TemporalIndexSet indices;
+
+    for(init_iterator initIter(begin_inits()); initIter!=end_inits(); ++initIter)
+    {
+      indices += initIter->getTemporalIndices();
+    }
+
+    indices += assignedValue->getTemporalIndices();
+    indices += &(*indexVariable);
+    
+    assert(indices.contains(indexVariable->getTermination().getTemporalIndices()));
+
+    return indices;
   }
 };
 

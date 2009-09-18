@@ -5,6 +5,7 @@
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
+#include "temporal_index_set.hpp"
 
 namespace cfd
 {
@@ -27,6 +28,11 @@ public:
   void accept(DiscreteExprVisitor& visitor)
   {
     visitor.visit(*this);
+  }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return TemporalIndexSet();
   }
 
   FunctionSpaceExpr::expr_ptr getFunctionSpace() const

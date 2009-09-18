@@ -50,6 +50,7 @@ class OperatorAddition;
 class TemporalIndexExpr;
 class TemporalIndexOffset;
 class TemporalIndexValue;
+class TemporalIndexSet;
 class DiscreteIndexedScalar; 
 class DiscreteIndexedField; 
 class DiscreteIndexedOperator; 

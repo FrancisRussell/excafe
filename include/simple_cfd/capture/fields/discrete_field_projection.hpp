@@ -37,6 +37,11 @@ public:
   {
     return *field;
   }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return field->getTemporalIndices();
+  }
 };
 
 }

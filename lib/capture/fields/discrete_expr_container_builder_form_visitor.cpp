@@ -18,38 +18,64 @@ DiscreteExprContainerBuilderFormVisitor::DiscreteExprContainerBuilderFormVisitor
 {
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldAddition& addition)
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldAddition& addition)
 {
-  addition.getLeft().accept(*this);
-  addition.getRight().accept(*this);
+  // Non-terminal
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldInnerProduct& inner)
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldAddition& addition)
 {
-  inner.getLeft().accept(*this);
-  inner.getRight().accept(*this);
+  // Non-terminal
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldOuterProduct& outer)
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldInnerProduct& inner)
 {
-  outer.getLeft().accept(*this);
-  outer.getRight().accept(*this);
+  // Non-terminal
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldColonProduct& colon)
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldInnerProduct& inner)
 {
-  colon.getLeft().accept(*this);
-  colon.getRight().accept(*this);
+  // Non-terminal
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldGradient& gradient)
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldOuterProduct& outer)
 {
-  gradient.getOperand().accept(*this);
+  // Non-terminal
 }
 
-void DiscreteExprContainerBuilderFormVisitor::visit(FieldDivergence& divergence)
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldOuterProduct& outer)
 {
-  divergence.getOperand().accept(*this);
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldColonProduct& colon)
+{
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldColonProduct& colon)
+{
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldGradient& gradient)
+{
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldGradient& gradient)
+{
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::enter(FieldDivergence& divergence)
+{
+  // Non-terminal
+}
+
+void DiscreteExprContainerBuilderFormVisitor::exit(FieldDivergence& divergence)
+{
+  // Non-terminal
 }
 
 void DiscreteExprContainerBuilderFormVisitor::visit(FacetNormal& normal)

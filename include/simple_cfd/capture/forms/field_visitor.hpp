@@ -13,12 +13,23 @@ class FieldVisitor
 {
 public:
   // Non Terminals
-  virtual void visit(FieldAddition& addition) = 0;
-  virtual void visit(FieldInnerProduct& inner) = 0;
-  virtual void visit(FieldOuterProduct& outer) = 0;
-  virtual void visit(FieldColonProduct& colon) = 0;
-  virtual void visit(FieldGradient& gradient) = 0;
-  virtual void visit(FieldDivergence& divergence) = 0;
+  virtual void enter(FieldAddition& addition) = 0;
+  virtual void exit(FieldAddition& addition) = 0;
+
+  virtual void enter(FieldInnerProduct& inner) = 0;
+  virtual void exit(FieldInnerProduct& inner) = 0;
+
+  virtual void enter(FieldOuterProduct& outer) = 0;
+  virtual void exit(FieldOuterProduct& outer) = 0;
+
+  virtual void enter(FieldColonProduct& colon) = 0;
+  virtual void exit(FieldColonProduct& colon) = 0;
+
+  virtual void enter(FieldGradient& gradient) = 0;
+  virtual void exit(FieldGradient& gradient) = 0;
+
+  virtual void enter(FieldDivergence& divergence) = 0;
+  virtual void exit(FieldDivergence& divergence) = 0;
 
   // Terminals
   virtual void visit(FacetNormal& normal) = 0;

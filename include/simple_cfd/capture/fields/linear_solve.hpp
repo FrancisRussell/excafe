@@ -4,6 +4,7 @@
 #include <cassert>
 #include "discrete_expr_visitor.hpp"
 #include "discrete_field_expr.hpp"
+#include "temporal_index_set.hpp"
 
 namespace cfd
 {
@@ -42,6 +43,11 @@ public:
   DiscreteFieldExpr& getField() const
   {
     return *operand;
+  }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return operation->getTemporalIndices() + operand->getTemporalIndices();
   }
 };
 

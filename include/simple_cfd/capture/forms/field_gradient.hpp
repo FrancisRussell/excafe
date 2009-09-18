@@ -21,7 +21,9 @@ public:
 
   virtual void accept(FieldVisitor& v)
   {
-    v.visit(*this);
+    v.enter(*this);
+    getOperand().accept(v);
+    v.exit(*this);
   }
 };
 

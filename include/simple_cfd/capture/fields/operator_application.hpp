@@ -5,6 +5,7 @@
 #include "function_space_expr.hpp"
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "temporal_index_set.hpp"
 
 namespace cfd
 {
@@ -46,6 +47,11 @@ public:
   DiscreteFieldExpr& getField() const
   {
     return *field;
+  }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return operation->getTemporalIndices() + field->getTemporalIndices();
   }
 };
 

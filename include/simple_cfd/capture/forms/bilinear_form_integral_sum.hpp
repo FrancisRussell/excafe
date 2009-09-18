@@ -60,6 +60,7 @@ public:
   {
     dxForms.insert(dxForms.end(), b.dxForms.begin(), b.dxForms.end());
     dsForms.insert(dsForms.end(), b.dsForms.begin(), b.dsForms.end());
+    dSForms.insert(dsForms.end(), b.dSForms.begin(), b.dSForms.end());
   }
 
   iterator begin_dx()

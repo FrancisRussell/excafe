@@ -21,7 +21,10 @@ public:
 
   virtual void accept(FieldVisitor& v)
   {
-    v.visit(*this);
+    v.enter(*this);
+    getLeft().accept(v);
+    getRight().accept(v);
+    v.exit(*this);
   }
 };
 

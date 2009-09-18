@@ -14,7 +14,7 @@ class ScalarExpr
 {
 public:
   typedef boost::shared_ptr<ScalarExpr> expr_ptr;
-
+  virtual TemporalIndexSet getTemporalIndices() const = 0;
   virtual void accept(DiscreteExprVisitor& visitor) = 0;
   virtual ~ScalarExpr() {}
 };

@@ -3,6 +3,7 @@
 
 #include "scalar_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "temporal_index_set.hpp"
 
 namespace cfd
 {
@@ -23,6 +24,11 @@ public:
   double getValue() const
   {
     return value;
+  }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return TemporalIndexSet();
   }
 
   void accept(DiscreteExprVisitor& v)

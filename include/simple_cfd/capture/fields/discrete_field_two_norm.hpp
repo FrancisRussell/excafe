@@ -4,6 +4,7 @@
 #include "scalar_expr.hpp"
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "temporal_index_set.hpp"
 
 namespace cfd
 {
@@ -25,6 +26,12 @@ public:
   {
     v.visit(*this);
   }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return field->getTemporalIndices();
+  }
+
   
   DiscreteFieldExpr& getField() const
   {

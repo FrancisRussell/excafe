@@ -3,6 +3,7 @@
 
 #include "scalar_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "temporal_index_set.hpp"
 #include <boost/variant.hpp>
 
 namespace cfd
@@ -50,6 +51,11 @@ public:
   operator_t getOperator() const
   {
     return operation;
+  }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return left->getTemporalIndices() + right->getTemporalIndices();
   }
 
   void accept(DiscreteExprVisitor& v)

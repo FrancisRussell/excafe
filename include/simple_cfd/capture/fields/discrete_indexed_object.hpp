@@ -52,6 +52,26 @@ protected:
     }
   };
 
+  class InsideLoopHelper : public boost::static_visitor<bool>
+  {
+  public:
+    bool operator()(const TemporalIndexOffset::absolute_tag&) const
+    {
+      return false;
+    }
+
+    bool operator()(const TemporalIndexOffset::relative_tag&) const
+    {
+      return true;
+    }
+
+    bool operator()(const TemporalIndexOffset::final_tag&) const
+    {
+      return false;
+    }
+  };
+
+
 public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
     parent(_parent), indexExpr(_indexExpr)
@@ -69,6 +89,24 @@ public:
   parent_t& getParent() const
   {
     return *parent;
+  }
+
+  TemporalIndexSet getTemporalIndices() const
+  {
+    TemporalIndexOffset offset = indexExpr.getOffset();
+    TemporalIndexOffset::offset_t offsetType = offset.getType();
+
+    const InsideLoopHelper helper;
+    const bool insideLoop = boost::apply_visitor(helper, offsetType);
+
+    TemporalIndexSet indices = parent->getTemporalIndices();
+
+    if (!insideLoop)
+    {
+      indices -= &(*parent->getIndexVariable());
+    }
+
+    return indices;
   }
 };
 

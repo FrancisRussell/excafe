@@ -49,6 +49,11 @@ public:
   {
     return *right;
   }
+
+  virtual TemporalIndexSet getTemporalIndices() const
+  {
+    return left->getTemporalIndices() + right->getTemporalIndices();
+  }
 };
 
 }

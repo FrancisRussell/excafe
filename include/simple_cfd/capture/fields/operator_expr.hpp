@@ -19,6 +19,7 @@ public:
   virtual void accept(DiscreteExprVisitor& v) = 0;
   virtual FunctionSpaceExpr::expr_ptr getTrialSpace() const = 0;
   virtual FunctionSpaceExpr::expr_ptr getTestSpace() const = 0;
+  virtual TemporalIndexSet getTemporalIndices() const = 0;
   virtual ~OperatorExpr() {}
 };
 
