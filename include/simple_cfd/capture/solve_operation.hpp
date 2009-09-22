@@ -7,6 +7,7 @@
 #include "fields/field.hpp"
 #include "fields/discrete_expr_container.hpp"
 #include "fields/discrete_expr_container_builder.hpp"
+#include "evaluation/evaluation_strategy.hpp"
 
 namespace cfd
 {
@@ -39,6 +40,7 @@ public:
 
     assert(!containerBuilder.containsUndefinedNodes());
     detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
+    detail::EvaluationStrategy evaluationStrategy(exprContainer);
   }
 
   void execute()

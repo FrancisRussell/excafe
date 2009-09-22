@@ -5,6 +5,7 @@
 #include "discrete_traits.hpp"
 #include "discrete_expr_set.hpp"
 #include "temporal_index_value.hpp"
+#include <boost/static_assert.hpp>
 
 namespace cfd
 {
@@ -54,6 +55,21 @@ public:
   bool insert(TemporalIndexValue& v)
   {
     return temporalIndices.insert(&v).second;
+  }
+
+  DiscreteExprSet<discrete_scalar_tag> getScalarExpressions() const
+  {
+    return scalarExpressions;
+  }
+
+  DiscreteExprSet<discrete_field_tag> getFieldExpressions() const
+  {
+    return fieldExpressions;
+  }
+
+  DiscreteExprSet<discrete_operator_tag> getOperatorExpressions() const
+  {
+    return operatorExpressions;
   }
 };
 
