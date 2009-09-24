@@ -22,6 +22,7 @@ class FunctionSpaceUndefined;
 class FunctionSpaceBinaryOperator;
 class FunctionSpaceAddition;
 
+class DiscreteExpr;
 class DiscreteExprVisitor;
 
 // Fields related

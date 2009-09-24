@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_SCALAR_EXPR_HPP
 
 #include "fields_fwd.hpp"
+#include "discrete_expr.hpp"
 #include <boost/shared_ptr.hpp>
 
 namespace cfd
@@ -10,13 +11,10 @@ namespace cfd
 namespace detail
 {
 
-class ScalarExpr
+class ScalarExpr : public DiscreteExpr
 {
 public:
   typedef boost::shared_ptr<ScalarExpr> expr_ptr;
-  virtual TemporalIndexSet getTemporalIndices() const = 0;
-  virtual void accept(DiscreteExprVisitor& visitor) = 0;
-  virtual ~ScalarExpr() {}
 };
 
 }
