@@ -152,23 +152,6 @@ public:
   {
     return indexVariable;
   }
-
-  TemporalIndexSet getTemporalIndices() const
-  {
-    TemporalIndexSet indices;
-
-    for(init_iterator initIter(begin_inits()); initIter!=end_inits(); ++initIter)
-    {
-      indices += initIter->getTemporalIndices();
-    }
-
-    indices += assignedValue->getTemporalIndices();
-    indices += &(*indexVariable);
-    
-    assert(indices.contains(indexVariable->getTermination().getTemporalIndices()));
-
-    return indices;
-  }
 };
 
 }

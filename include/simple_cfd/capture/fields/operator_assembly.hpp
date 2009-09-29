@@ -1,10 +1,12 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ASSEMBLY_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ASSEMBLY_HPP
 
+#include <memory>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
 
 namespace cfd
 {
@@ -12,19 +14,18 @@ namespace cfd
 namespace detail
 {
 
-namespace
-{
-
-class FormTemporalIndexFinder : public FieldVisitor
+class FormPropagationRulesGetter : public FieldVisitor
 {
 private:
-  TemporalIndexSet indices;
+  OperatorAssembly& parent;
+  PropagationRules rules;
 
 public:
-  TemporalIndexSet getIndices() const
+  FormPropagationRulesGetter(OperatorAssembly& _parent) : parent(_parent)
   {
-    return indices;
   }
+  
+  PropagationRules getRules() const;
 
   virtual void enter(FieldAddition& addition) {}
   virtual void exit(FieldAddition& addition) {}
@@ -47,18 +48,11 @@ public:
   // Terminals
   virtual void visit(FacetNormal& normal) {}
   virtual void visit(FieldBasis& basis) {}
-  virtual void visit(FieldDiscreteReference& field)
-  {
-    indices += field.getDiscreteField().getExpr()->getTemporalIndices();
-  }
 
-  virtual void visit(FieldScalar& s)
-  {
-    indices += s.getValue().getExpr()->getTemporalIndices();
-  }
+  // References to discrete expressions
+  virtual void visit(FieldDiscreteReference& field);
+  virtual void visit(FieldScalar& s);
 };
-
-}
 
 class OperatorAssembly : public OperatorExpr
 {
@@ -68,19 +62,19 @@ private:
   const forms::BilinearFormIntegralSum sum;
 
   template<typename ForwardIterator>
-  TemporalIndexSet getTemporalIndices(const ForwardIterator begin, const ForwardIterator end) const
+  PropagationRules getPropagationRules(const ForwardIterator begin, const ForwardIterator end)
   {
-    FormTemporalIndexFinder indexFinder;
+    FormPropagationRulesGetter ruleGetter(*this);
 
     for(ForwardIterator i(begin); i!=end; ++i)
     {
-      i->getTrialField()->accept(indexFinder);
-      i->getTestField()->accept(indexFinder);
+      i->getTrialField()->accept(ruleGetter);
+      i->getTestField()->accept(ruleGetter);
     }
-    
-    return indexFinder.getIndices();
-  }
 
+    return ruleGetter.getRules();
+  }
+ 
 public:
   OperatorAssembly(const FunctionSpaceExpr::expr_ptr& _trialSpace, const FunctionSpaceExpr::expr_ptr& _testSpace,
                    const forms::BilinearFormIntegralSum& _sum) : 
@@ -108,14 +102,13 @@ public:
     return testSpace;
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
+  virtual PropagationRules getPropagationRules()
   {
-    TemporalIndexSet indices;
-    indices += getTemporalIndices(sum.begin_dx(), sum.end_dx());
-    indices += getTemporalIndices(sum.begin_ds(), sum.end_ds());
-    indices += getTemporalIndices(sum.begin_dS(), sum.end_dS());
-
-    return indices;
+    PropagationRules rules;
+    rules += getPropagationRules(sum.begin_dx(), sum.end_dx());
+    rules += getPropagationRules(sum.begin_ds(), sum.end_ds());
+    rules += getPropagationRules(sum.begin_dS(), sum.end_dS());
+    return rules;
   }
 };
 

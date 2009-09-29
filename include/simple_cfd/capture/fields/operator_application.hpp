@@ -2,10 +2,15 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_APPLICATION_HPP
 
 #include <cassert>
+#include <memory>
 #include "function_space_expr.hpp"
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "temporal_index_set.hpp"
+#include "operator_expr.hpp"
+#include <simple_cfd/capture/indices/propagation_rule.hpp>
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
+#include <simple_cfd/capture/indices/index_propagation_all.hpp>
 
 namespace cfd
 {
@@ -49,9 +54,12 @@ public:
     return *field;
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
+  virtual PropagationRules getPropagationRules()
   {
-    return operation->getTemporalIndices() + field->getTemporalIndices();
+    PropagationRules rules;
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*operation, *this)));
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*field, *this)));
+    return rules;
   }
 };
 

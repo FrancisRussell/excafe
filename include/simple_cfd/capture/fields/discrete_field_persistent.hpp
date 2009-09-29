@@ -6,6 +6,7 @@
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
 #include "temporal_index_set.hpp"
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
 
 namespace cfd
 {
@@ -30,14 +31,14 @@ public:
     visitor.visit(*this);
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
-  {
-    return TemporalIndexSet();
-  }
-
   FunctionSpaceExpr::expr_ptr getFunctionSpace() const
   {
     return functionSpace;
+  }
+
+  PropagationRules getPropagationRules()
+  {
+    return PropagationRules();
   }
 };
 

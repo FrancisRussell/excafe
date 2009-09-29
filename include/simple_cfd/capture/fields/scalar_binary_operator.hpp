@@ -5,6 +5,9 @@
 #include "discrete_expr_visitor.hpp"
 #include "temporal_index_set.hpp"
 #include <boost/variant.hpp>
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
+#include <simple_cfd/capture/indices/propagation_rule.hpp>
+#include <simple_cfd/capture/indices/index_propagation_all.hpp>
 
 namespace cfd
 {
@@ -53,14 +56,17 @@ public:
     return operation;
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
-  {
-    return left->getTemporalIndices() + right->getTemporalIndices();
-  }
-
   void accept(DiscreteExprVisitor& v)
   {
     v.visit(*this);
+  }
+
+  virtual PropagationRules getPropagationRules()
+  {
+    PropagationRules rules;
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*left, *this)));
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*right, *this)));
+    return rules;
   }
 };
 

@@ -4,6 +4,9 @@
 #include <cassert>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include <simple_cfd/capture/indices/propagation_rule.hpp>
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
+#include <simple_cfd/capture/indices/index_propagation_all.hpp>
 
 namespace cfd
 {
@@ -50,9 +53,12 @@ public:
     return *right;
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
+  virtual PropagationRules getPropagationRules()
   {
-    return left->getTemporalIndices() + right->getTemporalIndices();
+    PropagationRules rules;
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*left, *this)));
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*right, *this)));
+    return rules;
   }
 };
 

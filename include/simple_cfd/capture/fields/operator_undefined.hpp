@@ -6,6 +6,7 @@
 #include "function_space_undefined.hpp"
 #include "operator_expr.hpp"
 #include "temporal_index_set.hpp"
+#include <simple_cfd/capture/indices/propagation_rules.hpp>
 
 namespace cfd
 {
@@ -31,9 +32,9 @@ public:
     return FunctionSpaceExpr::expr_ptr(new FunctionSpaceUndefined());
   }
 
-  virtual TemporalIndexSet getTemporalIndices() const
+  virtual PropagationRules getPropagationRules()
   {
-    return TemporalIndexSet();
+    return PropagationRules();
   }
 };
 

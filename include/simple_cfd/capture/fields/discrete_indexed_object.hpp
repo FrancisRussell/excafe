@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_OBJECT_INDEXED_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_OBJECT_INDEXED_HPP
 
+#include <memory>
 #include "discrete_traits.hpp"
 #include "indexable_value.hpp"
 #include "discrete_expr_visitor.hpp"
@@ -8,6 +9,9 @@
 #include <simple_cfd/exception.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include <simple_cfd/capture/indices/propagation_rule.hpp>
+#include <simple_cfd/capture/indices/index_propagation_all.hpp>
+#include <simple_cfd/capture/indices/index_propagation_except.hpp>
 
 namespace cfd
 {
@@ -71,6 +75,13 @@ protected:
     }
   };
 
+  std::auto_ptr<PropagationRule> constructRule(DiscreteExpr& expr, const bool insideLoop)
+  {
+    if (insideLoop)
+      return std::auto_ptr<PropagationRule>(new IndexPropagationAll(expr, *this));
+    else
+      return std::auto_ptr<PropagationRule>(new IndexPropagationExcept(expr, *this, *parent->getIndexVariable()));
+  }
 
 public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
@@ -99,14 +110,31 @@ public:
     const InsideLoopHelper helper;
     const bool insideLoop = boost::apply_visitor(helper, offsetType);
 
-    TemporalIndexSet indices = parent->getTemporalIndices();
+    TemporalIndexSet indices;
 
-    if (!insideLoop)
-    {
-      indices -= &(*parent->getIndexVariable());
-    }
+    if (insideLoop)
+      indices += &(*parent->getIndexVariable());
 
     return indices;
+  }
+
+  virtual PropagationRules getPropagationRules()
+  {
+    TemporalIndexOffset offset = indexExpr.getOffset();
+    TemporalIndexOffset::offset_t offsetType = offset.getType();
+    const InsideLoopHelper helper;
+    const bool insideLoop = boost::apply_visitor(helper, offsetType);
+
+    PropagationRules rules;
+    rules.insert(constructRule(*parent->getIterationAssignment(), insideLoop));
+
+    for(typename IndexableValue<discrete_object_tag>::init_iterator initIter(parent->begin_inits());
+      initIter!=parent->end_inits(); ++initIter)
+    {
+      rules.insert(constructRule(*initIter, insideLoop));
+    }
+
+    return rules;
   }
 };
 
