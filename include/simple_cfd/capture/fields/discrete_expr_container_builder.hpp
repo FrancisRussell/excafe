@@ -194,16 +194,19 @@ public:
   // Temporal related
   virtual void visit(DiscreteIndexedScalar& s)
   {
+    container.insert(s);
     handleIndexedNode(s.getParent());
   }
 
   virtual void visit(DiscreteIndexedField& s)
   {
+    container.insert(s);
     handleIndexedNode(s.getParent());
   }
 
   virtual void visit(DiscreteIndexedOperator& s)
   {
+    container.insert(s);
     handleIndexedNode(s.getParent());
   }
 

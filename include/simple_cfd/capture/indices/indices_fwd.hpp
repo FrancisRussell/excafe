@@ -8,6 +8,11 @@ namespace detail
 {
 
 class PropagationRules;
+class PropagationRuleVisitor;
+
+class PropagationRule;
+class IndexPropagationAll;
+class IndexPropagationExcept;
 
 }
 

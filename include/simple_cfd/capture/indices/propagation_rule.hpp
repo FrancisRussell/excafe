@@ -1,6 +1,8 @@
 #ifndef SIMPLE_CFD_CAPTURE_INDICES_PROPAGATION_RULE_HPP
 #define SIMPLE_CFD_CAPTURE_INDICES_PROPAGATION_RULE_HPP
 
+#include "indices_fwd.hpp"
+
 namespace cfd
 {
 
@@ -28,11 +30,7 @@ public:
     return *to;
   }
 
-  //FIXME: This ugly pointer-based comparison operator exists so we can use boost::ptr_set.
-  bool operator<(const PropagationRule& b) const
-  {
-    return this < &b;
-  }
+  virtual void accept(PropagationRuleVisitor& v) = 0;
 
   virtual ~PropagationRule() {}
 };
