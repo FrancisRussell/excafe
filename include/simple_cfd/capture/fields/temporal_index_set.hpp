@@ -3,6 +3,7 @@
 
 #include "temporal_index_value.hpp"
 #include <set>
+#include <cstddef>
 #include <iterator>
 #include <algorithm>
 #include <boost/operators.hpp>
@@ -24,6 +25,14 @@ private:
   index_set_t indices;
 
 public:
+  typedef index_set_t::iterator iterator;
+  typedef index_set_t::const_iterator const_iterator;
+
+  std::size_t size() const
+  {
+    return indices.size();
+  }
+
   bool operator==(const TemporalIndexSet& s) const
   {
     return indices == s.indices;
