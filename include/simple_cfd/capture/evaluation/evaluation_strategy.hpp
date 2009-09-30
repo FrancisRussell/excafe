@@ -3,10 +3,9 @@
 
 #include <map>
 #include <iostream>
-#include <cstddef>
-#include <algorithm>
 #include <simple_cfd/capture/fields/discrete_expr_container.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
+#include "discrete_expr_scoping.hpp"
 
 namespace cfd
 {
@@ -58,17 +57,6 @@ private:
     return exprIndices;
   }
 
-  static std::size_t maxIndices(const std::map<DiscreteExpr*, TemporalIndexSet>& exprIndices)
-  {
-    std::size_t max = 0;
-    for(std::map<DiscreteExpr*, TemporalIndexSet>::const_iterator exprIter(exprIndices.begin());
-      exprIter!=exprIndices.end(); ++exprIter)
-    {
-      max = std::max(max, exprIter->second.size());
-    }
-    return max;
-  }
-
 public:
   EvaluationStrategy(const DiscreteExprContainer& _expr) : expr(_expr)
   {
@@ -78,7 +66,8 @@ public:
   void buildExprScoping()
   {
     const std::map<DiscreteExpr*, TemporalIndexSet> exprIndices = findExpressionIndices();
-    const std::size_t numIndices = maxIndices(exprIndices);
+    DiscreteExprScoping scoping;
+    scoping.addExpressionNodes(exprIndices);
   }
 };
 

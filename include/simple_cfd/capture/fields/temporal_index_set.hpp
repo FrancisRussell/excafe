@@ -7,6 +7,7 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/operators.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
 
 namespace cfd
 {
@@ -25,12 +26,32 @@ private:
   index_set_t indices;
 
 public:
-  typedef index_set_t::iterator iterator;
-  typedef index_set_t::const_iterator const_iterator;
+  typedef boost::indirect_iterator<index_set_t::iterator> iterator;
+  typedef boost::indirect_iterator<index_set_t::const_iterator> const_iterator;
 
   std::size_t size() const
   {
     return indices.size();
+  }
+
+  iterator begin()
+  {
+    return indices.begin();
+  }
+
+  iterator end()
+  {
+    return indices.end();
+  }
+
+  const_iterator begin() const
+  {
+    return indices.begin();
+  }
+
+  const_iterator end() const
+  {
+    return indices.end();
   }
 
   bool operator==(const TemporalIndexSet& s) const
@@ -84,6 +105,14 @@ public:
   bool contains(const TemporalIndexSet& s) const
   {
     return std::includes(indices.begin(), indices.end(), s.indices.begin(), s.indices.end());
+  }
+
+  TemporalIndexSet intersection(const TemporalIndexSet& s) const
+  {
+    TemporalIndexSet result;
+    std::set_intersection(indices.begin(), indices.end(), s.indices.begin(), s.indices.end(),
+      std::inserter(result.indices, result.indices.begin()));
+    return result;
   }
 };
 
