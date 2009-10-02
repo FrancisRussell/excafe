@@ -1,11 +1,13 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ASSEMBLY_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ASSEMBLY_HPP
 
+#include <set>
 #include <memory>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
+#include <simple_cfd/capture/forms/field_discrete_reference_visitor.hpp>
 #include <simple_cfd/capture/indices/propagation_rules.hpp>
 
 namespace cfd
@@ -14,7 +16,7 @@ namespace cfd
 namespace detail
 {
 
-class FormPropagationRulesGetter : public FieldVisitor
+class FormPropagationRulesGetter : public FieldDiscreteReferenceVisitor
 {
 private:
   OperatorAssembly& parent;
@@ -26,33 +28,21 @@ public:
   }
   
   PropagationRules getRules() const;
-
-  virtual void enter(FieldAddition& addition) {}
-  virtual void exit(FieldAddition& addition) {}
-
-  virtual void enter(FieldInnerProduct& inner) {}
-  virtual void exit(FieldInnerProduct& inner) {}
-
-  virtual void enter(FieldOuterProduct& outer) {}
-  virtual void exit(FieldOuterProduct& outer) {}
-
-  virtual void enter(FieldColonProduct& colon) {}
-  virtual void exit(FieldColonProduct& colon) {}
-
-  virtual void enter(FieldGradient& gradient) {}
-  virtual void exit(FieldGradient& gradient) {}
-
-  virtual void enter(FieldDivergence& divergence) {}
-  virtual void exit(FieldDivergence& divergence) {}
-
-  // Terminals
-  virtual void visit(FacetNormal& normal) {}
-  virtual void visit(FieldBasis& basis) {}
-
-  // References to discrete expressions
-  virtual void visit(FieldDiscreteReference& field);
-  virtual void visit(FieldScalar& s);
+  void visit(FieldDiscreteReference& field);
+  void visit(FieldScalar& s);
 };
+
+class FormDependencyGetter : public FieldDiscreteReferenceVisitor
+{
+private:
+  std::set<DiscreteExpr*> dependencies;
+
+public:
+  std::set<DiscreteExpr*> getDependencies() const;
+  void visit(FieldDiscreteReference& field);
+  void visit(FieldScalar& s);
+};
+
 
 class OperatorAssembly : public OperatorExpr
 {
@@ -61,18 +51,14 @@ private:
   const FunctionSpaceExpr::expr_ptr testSpace;
   const forms::BilinearFormIntegralSum sum;
 
-  template<typename ForwardIterator>
-  PropagationRules getPropagationRules(const ForwardIterator begin, const ForwardIterator end)
+  template<typename ForwardIterator, typename Visitor>
+  void applyFormVisitor(Visitor& v, const ForwardIterator begin, const ForwardIterator end) const
   {
-    FormPropagationRulesGetter ruleGetter(*this);
-
     for(ForwardIterator i(begin); i!=end; ++i)
     {
-      i->getTrialField()->accept(ruleGetter);
-      i->getTestField()->accept(ruleGetter);
+      i->getTrialField()->accept(v);
+      i->getTestField()->accept(v);
     }
-
-    return ruleGetter.getRules();
   }
  
 public:
@@ -104,11 +90,20 @@ public:
 
   virtual PropagationRules getPropagationRules()
   {
-    PropagationRules rules;
-    rules += getPropagationRules(sum.begin_dx(), sum.end_dx());
-    rules += getPropagationRules(sum.begin_ds(), sum.end_ds());
-    rules += getPropagationRules(sum.begin_dS(), sum.end_dS());
-    return rules;
+    FormPropagationRulesGetter ruleGetter(*this);
+    applyFormVisitor(ruleGetter, sum.begin_dx(), sum.end_dx());
+    applyFormVisitor(ruleGetter, sum.begin_ds(), sum.end_ds());
+    applyFormVisitor(ruleGetter, sum.begin_dS(), sum.end_dS());
+    return ruleGetter.getRules();
+  }
+
+  virtual std::set<DiscreteExpr*> getDependencies() const 
+  {
+    FormDependencyGetter dependencyGetter;
+    applyFormVisitor(dependencyGetter, sum.begin_dx(), sum.end_dx());
+    applyFormVisitor(dependencyGetter, sum.begin_ds(), sum.end_ds());
+    applyFormVisitor(dependencyGetter, sum.begin_dS(), sum.end_dS());
+    return dependencyGetter.getDependencies();
   }
 };
 

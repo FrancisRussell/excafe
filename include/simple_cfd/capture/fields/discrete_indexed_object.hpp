@@ -136,6 +136,11 @@ public:
 
     return rules;
   }
+
+  virtual std::set<DiscreteExpr*> getDependencies() const 
+  {
+    return std::set<DiscreteExpr*>();
+  }
 };
 
 class DiscreteIndexedScalar : public AbstractDiscreteObjectIndexed<discrete_scalar_tag>

@@ -55,6 +55,14 @@ public:
     rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*operand, *this)));
     return rules;
   }
+
+  virtual std::set<DiscreteExpr*> getDependencies() const 
+  {
+    std::set<DiscreteExpr*> dependencies;
+    dependencies.insert(&(*operation));
+    dependencies.insert(&(*operand));
+    return dependencies;
+  }
 };
 
 }

@@ -61,6 +61,14 @@ public:
     rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*field, *this)));
     return rules;
   }
+
+  virtual std::set<DiscreteExpr*> getDependencies() const 
+  {
+    std::set<DiscreteExpr*> dependencies;
+    dependencies.insert(&(*operation));
+    dependencies.insert(&(*field));
+    return dependencies;
+  }
 };
 
 }

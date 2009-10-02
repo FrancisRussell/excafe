@@ -38,6 +38,11 @@ public:
   {
     return PropagationRules();
   }
+
+  virtual std::set<DiscreteExpr*> getDependencies() const 
+  {
+    return std::set<DiscreteExpr*>();
+  }
 };
 
 }
