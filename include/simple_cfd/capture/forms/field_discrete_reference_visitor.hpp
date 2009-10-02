@@ -35,10 +35,6 @@ public:
   // Terminals
   virtual void visit(FacetNormal& normal) {}
   virtual void visit(FieldBasis& basis) {}
-
-  // Reference to discrete expressions
-  virtual void visit(FieldDiscreteReference& field) = 0;
-  virtual void visit(FieldScalar& s) = 0;
 };
 
 }
