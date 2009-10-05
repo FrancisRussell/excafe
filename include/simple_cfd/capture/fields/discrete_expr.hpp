@@ -16,6 +16,7 @@ class DiscreteExpr
 public:
   virtual void accept(DiscreteExprVisitor& visitor) = 0;
   virtual TemporalIndexSet getTemporalIndices() const;
+  virtual TemporalIndexSet getLoopDependencies() const;
   virtual std::set<DiscreteExpr*> getDependencies() const = 0;
   virtual PropagationRules getPropagationRules() = 0;
   virtual ~DiscreteExpr() {}

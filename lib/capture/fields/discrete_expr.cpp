@@ -12,6 +12,11 @@ TemporalIndexSet DiscreteExpr::getTemporalIndices() const
   return TemporalIndexSet();
 }
 
+TemporalIndexSet DiscreteExpr::getLoopDependencies() const
+{
+  return TemporalIndexSet();
+}
+
 }
 
 }

@@ -83,6 +83,15 @@ protected:
       return std::auto_ptr<PropagationRule>(new IndexPropagationExcept(expr, *this, *parent->getIndexVariable()));
   }
 
+  bool isInsideLoop() const
+  {
+    TemporalIndexOffset offset = indexExpr.getOffset();
+    TemporalIndexOffset::offset_t offsetType = offset.getType();
+
+    const InsideLoopHelper helper;
+    return boost::apply_visitor(helper, offsetType);
+  }
+
 public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
     parent(_parent), indexExpr(_indexExpr)
@@ -104,15 +113,21 @@ public:
 
   TemporalIndexSet getTemporalIndices() const
   {
-    TemporalIndexOffset offset = indexExpr.getOffset();
-    TemporalIndexOffset::offset_t offsetType = offset.getType();
-
-    const InsideLoopHelper helper;
-    const bool insideLoop = boost::apply_visitor(helper, offsetType);
-
     TemporalIndexSet indices;
 
-    if (insideLoop)
+    if (isInsideLoop())
+      indices += &(*parent->getIndexVariable());
+
+    return indices;
+  }
+
+  TemporalIndexSet getLoopDependencies() const
+  {
+    TemporalIndexSet indices;
+
+    // Note: !isInsideLoop -> final
+    // This class should never exist for an absolute reference
+    if (!isInsideLoop())
       indices += &(*parent->getIndexVariable());
 
     return indices;
@@ -120,11 +135,7 @@ public:
 
   virtual PropagationRules getPropagationRules()
   {
-    TemporalIndexOffset offset = indexExpr.getOffset();
-    TemporalIndexOffset::offset_t offsetType = offset.getType();
-    const InsideLoopHelper helper;
-    const bool insideLoop = boost::apply_visitor(helper, offsetType);
-
+    const bool insideLoop = isInsideLoop();
     PropagationRules rules;
     rules.insert(constructRule(*parent->getIterationAssignment(), insideLoop));
 
