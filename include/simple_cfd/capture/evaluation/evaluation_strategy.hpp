@@ -3,6 +3,7 @@
 
 #include <map>
 #include <iostream>
+#include <simple_cfd/capture/fields/fields_fwd.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_container.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include "discrete_expr_scoping.hpp"
@@ -16,6 +17,7 @@ namespace detail
 class EvaluationStrategy
 {
 private:
+  const std::set<DiscreteExpr*> wantedExprs;
   const DiscreteExprContainer expr;
 
   template<typename discrete_object_tag>
@@ -58,7 +60,8 @@ private:
   }
 
 public:
-  EvaluationStrategy(const DiscreteExprContainer& _expr) : expr(_expr)
+  EvaluationStrategy(const DiscreteExprContainer& _expr, const std::set<DiscreteExpr*>& _wantedExprs) :
+    wantedExprs(_wantedExprs), expr(_expr)
   {
     buildExprScoping();
   }
@@ -68,6 +71,7 @@ public:
     const std::map<DiscreteExpr*, TemporalIndexSet> exprIndices = findExpressionIndices();
     DiscreteExprScoping scoping;
     scoping.addExpressionNodes(exprIndices);
+    scoping.order(wantedExprs);
   }
 };
 

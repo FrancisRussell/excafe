@@ -4,11 +4,14 @@
 #include <map>
 #include <set>
 #include <cstddef>
+#include <cassert>
 #include <algorithm>
+#include <iterator>
+#include <boost/variant.hpp>
+#include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include <simple_cfd/capture/fields/discrete_expr.hpp>
-
 
 namespace cfd
 {
@@ -19,8 +22,64 @@ namespace detail
 class DiscreteExprScoping
 {
 private:
+  typedef boost::variant<DiscreteExpr*, TemporalIndexValue*> evaluatable_t;
+
   std::map<TemporalIndexValue*, DiscreteExprScoping> loops;
   std::set<DiscreteExpr*> exprs;
+
+  class OrderCalculationHelper : public boost::static_visitor<void>
+  {
+  private:
+    DiscreteExprScoping& parent;
+    std::set<evaluatable_t>& visited;
+    std::vector<evaluatable_t>& ordered;
+
+  public:
+    OrderCalculationHelper(DiscreteExprScoping& _parent, std::set<evaluatable_t>& _visited,
+      std::vector<evaluatable_t>& _ordered) : parent(_parent), visited(_visited), ordered(_ordered)
+    {
+    }
+
+    void operator()(DiscreteExpr* const expr) const
+    {
+      const std::set<DiscreteExpr*> dependencies = expr->getDependencies();
+      for(std::set<DiscreteExpr*>::const_iterator depIter(dependencies.begin()); depIter!=dependencies.end(); ++depIter)
+      {
+        evaluatable_t evaluatable(*depIter);
+        boost::apply_visitor(*this, evaluatable);
+      }
+
+      const TemporalIndexSet loopDependencies = expr->getLoopDependencies();
+      assert(loopDependencies.size() == 0 || loopDependencies.size() == 1);
+
+      for(TemporalIndexSet::const_iterator loopIter(loopDependencies.begin()); loopIter!=loopDependencies.end(); ++loopIter)
+      {
+        evaluatable_t evaluatable(&(*loopIter));
+        boost::apply_visitor(*this, evaluatable);
+      }
+
+      visited.insert(expr);
+      ordered.push_back(expr);
+    }
+
+    void operator()(TemporalIndexValue* loopIndex) const
+    {
+      const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter = parent.loops.find(loopIndex);
+      assert(loopIter != parent.loops.end());
+
+      DiscreteExprScoping& loopScope = loopIter->second;
+      const std::set<DiscreteExpr*> dependencies = loopScope.getDependencies();
+
+      for(std::set<DiscreteExpr*>::const_iterator depIter(dependencies.begin()); depIter!=dependencies.end(); ++depIter)
+      {
+        evaluatable_t evaluatable(*depIter);
+        boost::apply_visitor(*this, evaluatable);
+      }
+
+      visited.insert(loopIndex);
+      ordered.push_back(loopIndex);
+    }
+  };
 
   TemporalIndexSet getLoopIndices() const
   {
@@ -99,6 +158,48 @@ public:
         }
       }
     }
+  }
+
+  std::set<DiscreteExpr*> getDependencies() const
+  {
+    std::set<DiscreteExpr*> dependencies;
+
+    for(std::set<DiscreteExpr*>::const_iterator exprIter(exprs.begin()); exprIter!=exprs.end(); ++exprIter)
+    {
+      const std::set<DiscreteExpr*> exprDependencies((*exprIter)->getDependencies());
+      dependencies.insert(exprDependencies.begin(), exprDependencies.end());
+    }
+
+    for (std::map<TemporalIndexValue*, DiscreteExprScoping>::const_iterator loopIter(loops.begin());
+      loopIter!=loops.end(); ++loopIter)
+    {
+      const std::set<DiscreteExpr*> loopDependencies(loopIter->second.getDependencies());
+      dependencies.insert(loopDependencies.begin(), loopDependencies.end());
+    }
+
+    // Now we've found all dependencies of the nodes and loops in this scope, we need to subtract
+    // any nodes actually present in this scope.
+
+    std::set<DiscreteExpr*> subtractedDependencies;
+    std::set_difference(dependencies.begin(), dependencies.end(), exprs.begin(), exprs.end(), 
+      std::inserter(subtractedDependencies, subtractedDependencies.begin()));
+
+    return subtractedDependencies;
+  }
+
+  void order(const std::set<DiscreteExpr*>& wanted)
+  {
+    std::set<evaluatable_t> visited;
+    std::vector<evaluatable_t> ordered;
+    OrderCalculationHelper helper(*this, visited, ordered);
+
+    for(std::set<DiscreteExpr*>::const_iterator wantedIter(wanted.begin()); wantedIter!=wanted.end(); ++wantedIter)
+    {
+      evaluatable_t evaluatable(*wantedIter);
+      boost::apply_visitor(helper, evaluatable);
+    }
+
+    //TODO: We also need to order all nested loops
   }
 };
 

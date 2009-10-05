@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <map>
+#include "fields/fields_fwd.hpp"
 #include "fields/named_field.hpp"
 #include "fields/field.hpp"
 #include "fields/discrete_expr_container.hpp"
@@ -31,16 +32,18 @@ public:
   {
     // TODO: Implement me!
 
+    std::set<detail::DiscreteExpr*> outputExpressions;
     detail::DiscreteExprContainerBuilder containerBuilder;
 
     for(std::map<NamedField, Field>::const_iterator newValuesIter(newValues.begin()); newValuesIter!=newValues.end(); ++newValuesIter)
     {
       newValuesIter->second.getExpr()->accept(containerBuilder);
+      outputExpressions.insert(&(*newValuesIter->second.getExpr()));
     }
 
     assert(!containerBuilder.containsUndefinedNodes());
     detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
-    detail::EvaluationStrategy evaluationStrategy(exprContainer);
+    detail::EvaluationStrategy evaluationStrategy(exprContainer, outputExpressions);
   }
 
   void execute()
