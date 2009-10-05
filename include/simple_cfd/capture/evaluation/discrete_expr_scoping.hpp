@@ -27,6 +27,7 @@ private:
   std::map<TemporalIndexValue*, DiscreteExprScoping> loops;
   std::set<DiscreteExpr*> exprs;
 
+  // TODO: remove replicated code from operators
   class OrderCalculationHelper : public boost::static_visitor<void>
   {
   private:
@@ -42,6 +43,8 @@ private:
 
     void operator()(DiscreteExpr* const expr) const
     {
+      if (visited.find(expr) != visited.end()) return;
+
       const std::set<DiscreteExpr*> dependencies = expr->getDependencies();
       for(std::set<DiscreteExpr*>::const_iterator depIter(dependencies.begin()); depIter!=dependencies.end(); ++depIter)
       {
@@ -58,12 +61,17 @@ private:
         boost::apply_visitor(*this, evaluatable);
       }
 
-      visited.insert(expr);
       ordered.push_back(expr);
+      const bool inserted = visited.insert(expr).second;
+
+      if (!inserted)
+        CFD_EXCEPTION("Cycle detected in discrete expression DAG.");
     }
 
     void operator()(TemporalIndexValue* loopIndex) const
     {
+      if (visited.find(loopIndex) != visited.end()) return;
+
       const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter = parent.loops.find(loopIndex);
       assert(loopIter != parent.loops.end());
 
@@ -76,8 +84,11 @@ private:
         boost::apply_visitor(*this, evaluatable);
       }
 
-      visited.insert(loopIndex);
       ordered.push_back(loopIndex);
+      const bool inserted = visited.insert(loopIndex).second;
+
+      if (!inserted)
+        CFD_EXCEPTION("Cycle detected in discrete expression DAG.");
     }
   };
 
