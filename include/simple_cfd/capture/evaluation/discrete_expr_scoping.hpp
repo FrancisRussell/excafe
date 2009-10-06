@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 #include <cstddef>
 #include <cassert>
 #include <algorithm>
@@ -10,6 +11,7 @@
 #include <boost/variant.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/capture/fields/temporal_index_value.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include <simple_cfd/capture/fields/discrete_expr.hpp>
 
@@ -22,10 +24,30 @@ namespace detail
 class DiscreteExprScoping
 {
 private:
+  static boost::shared_ptr<TemporalIndexValue> globalScope;
   typedef boost::variant<DiscreteExpr*, TemporalIndexValue*> evaluatable_t;
 
+  TemporalIndexValue* const thisLoopIndex;
   std::map<TemporalIndexValue*, DiscreteExprScoping> loops;
   std::set<DiscreteExpr*> exprs;
+
+  DiscreteExprScoping(TemporalIndexValue& _thisLoopIndex) : thisLoopIndex(&_thisLoopIndex)
+  {
+  }
+
+  DiscreteExprScoping& getLoop(TemporalIndexValue& index)
+  {
+    const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter(loops.find(&index));
+
+    if (loopIter!=loops.end())
+    {
+      return loopIter->second;
+    }
+    else
+    {
+      return loops.insert(std::make_pair(&index, DiscreteExprScoping(index))).first->second;
+    }
+  }
 
   // TODO: remove replicated code from operators
   class OrderCalculationHelper : public boost::static_visitor<void>
@@ -117,6 +139,10 @@ private:
   }
 
 public:
+  DiscreteExprScoping() : thisLoopIndex(globalScope.get())
+  {
+  }
+
   /* This function allows expressions to be added to this scope. To be able to infer the loop nesting
      structure, expressions must be added in order of increasing numbers of indices.
   */
@@ -132,7 +158,7 @@ public:
       // The expression belongs in an inferable immediate sub-scope (which we MAY have to create)
       TemporalIndexValue& index = *indices.begin();
       const TemporalIndexSet empty;
-      loops[&index].addExpressionNode(empty, expr);
+      getLoop(index).addExpressionNode(empty, expr);
     }
     else
     {
@@ -143,7 +169,7 @@ public:
       {
         TemporalIndexValue& index = *intersection.begin();
         const TemporalIndexSet remainingIndices = indices - &index;
-        loops[&index].addExpressionNode(remainingIndices, expr);
+        getLoop(index).addExpressionNode(remainingIndices, expr);
       }
       else
       {
