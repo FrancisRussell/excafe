@@ -14,6 +14,7 @@
 #include "temporal_index.hpp"
 #include "discrete_traits.hpp"
 #include <simple_cfd/exception.hpp>
+#include <boost/utility.hpp>
 
 namespace cfd
 {
@@ -65,7 +66,7 @@ public:
 };
 
 template<typename discrete_object_tag>
-class IndexableValue
+class IndexableValue : public boost::noncopyable
 {
 public:
   typedef boost::shared_ptr<IndexableValue> value_ptr;
@@ -119,6 +120,7 @@ public:
   IndexableValue(const TemporalIndex _indexVariable) : indexVariable(_indexVariable.getIndex()),
     assignedValue(new typename DiscreteTraits<discrete_object_tag>::undefined_t())
   {
+    indexVariable->registerIndexable(*this);
   }
 
   void handleAssignment(const TemporalIndexExpr& indexExpr, const expr_ptr& rhs)
@@ -151,6 +153,11 @@ public:
   TemporalIndexValue::index_ptr getIndexVariable() const
   {
     return indexVariable;
+  }
+
+  ~IndexableValue()
+  {
+    indexVariable->unregisterIndexable(*this);
   }
 };
 

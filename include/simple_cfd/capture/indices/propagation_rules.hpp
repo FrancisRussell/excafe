@@ -11,6 +11,7 @@
 #include "index_propagation_all.hpp"
 #include "index_propagation_except.hpp"
 #include "propagation_rule_visitor.hpp"
+#include <simple_cfd/capture/fields/temporal_index_set.hpp>
 
 namespace cfd
 {

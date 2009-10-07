@@ -12,6 +12,7 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/capture/fields/temporal_index_value.hpp>
+#include <simple_cfd/capture/fields/indexable_value.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include <simple_cfd/capture/fields/discrete_expr.hpp>
 
@@ -138,6 +139,38 @@ private:
     return max;
   }
 
+  bool isGlobalScope() const
+  {
+    return thisLoopIndex == globalScope.get();
+  }
+
+  template<typename discrete_object_tag>
+  void orderIndexable(const std::set<IndexableValue<discrete_object_tag>*>& indexableValues, OrderCalculationHelper& helper)
+  {
+    typedef typename std::set<IndexableValue<discrete_object_tag>*>::const_iterator indexable_set_iter;
+    for(indexable_set_iter indexableIter(indexableValues.begin()); indexableIter!=indexableValues.end(); ++indexableIter)
+    {
+      evaluatable_t evaluatable(&(*(*indexableIter)->getIterationAssignment()));
+      boost::apply_visitor(helper, evaluatable);
+    }
+  }
+
+  
+  template<typename discrete_object_tag>
+  void addInitialisers(const std::set<IndexableValue<discrete_object_tag>*>& indexableValues, std::set<DiscreteExpr*> initialisers) const
+  {
+    typedef typename std::set<IndexableValue<discrete_object_tag>*>::const_iterator indexable_set_iter;
+    typedef typename IndexableValue<discrete_object_tag>::init_iterator indexable_init_iter;
+
+    for(indexable_set_iter indexableIter(indexableValues.begin()); indexableIter!=indexableValues.end(); ++indexableIter)
+    {
+      for(indexable_init_iter initIter((*indexableIter)->begin_inits()); initIter!=(*indexableIter)->end_inits(); ++initIter)
+      {
+        initialisers.insert(&(*initIter));
+      }
+    }
+  }
+
 public:
   DiscreteExprScoping() : thisLoopIndex(globalScope.get())
   {
@@ -201,17 +234,27 @@ public:
   {
     std::set<DiscreteExpr*> dependencies;
 
+    // Get all dependencies of expression nodes in this scope
     for(std::set<DiscreteExpr*>::const_iterator exprIter(exprs.begin()); exprIter!=exprs.end(); ++exprIter)
     {
       const std::set<DiscreteExpr*> exprDependencies((*exprIter)->getDependencies());
       dependencies.insert(exprDependencies.begin(), exprDependencies.end());
     }
 
+    // Get all dependencies of loops in this scope
     for (std::map<TemporalIndexValue*, DiscreteExprScoping>::const_iterator loopIter(loops.begin());
       loopIter!=loops.end(); ++loopIter)
     {
       const std::set<DiscreteExpr*> loopDependencies(loopIter->second.getDependencies());
       dependencies.insert(loopDependencies.begin(), loopDependencies.end());
+    }
+
+    // Get all dependencies of initialisers required by this loop
+    if (!isGlobalScope())
+    {
+      addInitialisers(thisLoopIndex->getIndexableScalars(), dependencies);
+      addInitialisers(thisLoopIndex->getIndexableFields(), dependencies);
+      addInitialisers(thisLoopIndex->getIndexableOperators(), dependencies);
     }
 
     // Now we've found all dependencies of the nodes and loops in this scope, we need to subtract
@@ -230,13 +273,32 @@ public:
     std::vector<evaluatable_t> ordered;
     OrderCalculationHelper helper(*this, visited, ordered);
 
+    // Determine dependencies for wanted values
     for(std::set<DiscreteExpr*>::const_iterator wantedIter(wanted.begin()); wantedIter!=wanted.end(); ++wantedIter)
     {
       evaluatable_t evaluatable(*wantedIter);
       boost::apply_visitor(helper, evaluatable);
     }
 
-    //TODO: We also need to order all nested loops
+    if (!isGlobalScope())
+    {
+      // Determine dependencies for iteration assignment of indexable values
+      orderIndexable(thisLoopIndex->getIndexableScalars(), helper);
+      orderIndexable(thisLoopIndex->getIndexableFields(), helper);
+      orderIndexable(thisLoopIndex->getIndexableOperators(), helper);
+
+      // Determine dependencies for termination condition
+      evaluatable_t evaluatable(&thisLoopIndex->getTermination());
+      boost::apply_visitor(helper, evaluatable);
+    }
+
+    // Now order nested loops
+    const std::set<DiscreteExpr*> empty;
+    for(std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter(loops.begin());
+      loopIter!=loops.end(); ++loopIter)
+    {
+      loopIter->second.order(empty);
+    }
   }
 };
 
