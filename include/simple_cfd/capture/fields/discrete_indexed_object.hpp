@@ -92,6 +92,12 @@ protected:
     return boost::apply_visitor(helper, offsetType);
   }
 
+  signed getOffsetValue() const
+  {
+    const TemporalIndexOffset offset = indexExpr.getOffset();
+    return offset.getValue();
+  }
+
 public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
     parent(_parent), indexExpr(_indexExpr)
@@ -150,7 +156,12 @@ public:
 
   virtual std::set<DiscreteExpr*> getDependencies() const 
   {
-    return std::set<DiscreteExpr*>();
+    std::set<DiscreteExpr*> dependencies;
+
+    if (isInsideLoop() && getOffsetValue() == 0)
+      dependencies.insert(&(*parent->getIterationAssignment()));
+
+    return dependencies;
   }
 };
 
