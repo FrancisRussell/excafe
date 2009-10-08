@@ -112,6 +112,11 @@ public:
     boost::apply_visitor(validator, offsetType);
   }
 
+  TemporalIndexExpr getTemporalIndexExpr() const
+  {
+    return indexExpr;
+  }
+
   parent_t& getParent() const
   {
     return *parent;
@@ -165,17 +170,25 @@ public:
   }
 };
 
+// FIXME: replicating the register and unregister calls in each subclass is dangerous.
+
 class DiscreteIndexedScalar : public AbstractDiscreteObjectIndexed<discrete_scalar_tag>
 {
 public:
   DiscreteIndexedScalar(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_scalar_tag>(_parent, indexExpr)
   {
+    this->parent->registerReference(*this);
   }
 
   virtual void accept(DiscreteExprVisitor& visitor)
   {
     visitor.visit(*this);
+  }
+
+  ~DiscreteIndexedScalar()
+  {
+    this->parent->unregisterReference(*this);
   }
 };
 
@@ -188,6 +201,7 @@ public:
   DiscreteIndexedField(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_field_tag>(_parent, indexExpr)
   {
+    this->parent->registerReference(*this);
   }
 
   virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
@@ -200,6 +214,11 @@ public:
   {
     visitor.visit(*this);
   }
+
+  ~DiscreteIndexedField()
+  {
+    this->parent->unregisterReference(*this);
+  }
 };
 
 class DiscreteIndexedOperator : public AbstractDiscreteObjectIndexed<discrete_operator_tag>
@@ -208,11 +227,17 @@ public:
   DiscreteIndexedOperator(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_operator_tag>(_parent, indexExpr)
   {
+    this->parent->registerReference(*this);
   }
 
   virtual void accept(DiscreteExprVisitor& visitor)
   {
     visitor.visit(*this);
+  }
+
+  ~DiscreteIndexedOperator()
+  {
+    this->parent->unregisterReference(*this);
   }
 };
 

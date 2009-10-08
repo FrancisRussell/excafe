@@ -78,6 +78,9 @@ private:
   std::map<signed, expr_ptr> initialValues;
   expr_ptr assignedValue;
 
+  typedef typename DiscreteTraits<discrete_object_tag>::indexed_expr_t indexed_expr_t;
+  std::map<TemporalIndexExpr, indexed_expr_t*> references; 
+
   class OffsetTypeVisitor : public boost::static_visitor<void>
   {
   private:
@@ -133,6 +136,20 @@ public:
 
     OffsetTypeVisitor visitor(*this, offset.getValue(), rhs);
     boost::apply_visitor(visitor, offsetType);
+  }
+
+  void registerReference(indexed_expr_t& expr)
+  {
+    const bool inserted = references.insert(std::make_pair(expr.getTemporalIndexExpr(), &expr)).second;
+    assert(inserted);
+  }
+
+  void unregisterReference(indexed_expr_t& expr)
+  {
+    const typename std::map<TemporalIndexExpr, indexed_expr_t*>::iterator exprIter =
+      references.find(expr.getTemporalIndexExpr());
+    assert(exprIter != references.end() && exprIter->second == &expr);
+    references.erase(exprIter);
   }
 
   init_iterator begin_inits() const
