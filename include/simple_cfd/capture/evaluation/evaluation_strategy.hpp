@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_CAPTURE_EVALUATION_EVALUATION_STRATEGY_HPP
 
 #include <map>
-#include <iostream>
 #include <simple_cfd/capture/fields/fields_fwd.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_container.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
@@ -72,6 +71,12 @@ public:
     DiscreteExprScoping scoping;
     scoping.addExpressionNodes(exprIndices);
     scoping.order(wantedExprs);
+  }
+
+  template<std::size_t D>
+  void execute()
+  {
+    // FIXME: implement me!
   }
 };
 

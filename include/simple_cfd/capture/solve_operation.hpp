@@ -3,12 +3,16 @@
 
 #include <cassert>
 #include <map>
+#include <cstddef>
+#include <boost/shared_ptr.hpp>
 #include "fields/fields_fwd.hpp"
 #include "fields/named_field.hpp"
 #include "fields/field.hpp"
 #include "fields/discrete_expr_container.hpp"
 #include "fields/discrete_expr_container_builder.hpp"
+#include "dimensionless_scenario.hpp"
 #include "evaluation/evaluation_strategy.hpp"
+#include "exception.hpp"
 
 namespace cfd
 {
@@ -16,10 +20,24 @@ namespace cfd
 class SolveOperation
 {
 private:
+  detail::DimensionlessScenario* scenario;
+  bool finished;
   std::map<NamedField, Field> newValues;
 
+  //NOTE: we want ownership here, but have to support assignment
+  boost::shared_ptr<detail::EvaluationStrategy> evaluationStrategy;
+
+  bool isExecutable() const
+  {
+    return scenario != NULL && finished;
+  }
+
 public:
-  SolveOperation()
+  SolveOperation() : scenario(NULL), finished(false)
+  {
+  }
+
+  SolveOperation(detail::DimensionlessScenario& s) : scenario(&s), finished(false)
   {
   }
 
@@ -30,7 +48,7 @@ public:
 
   void finish()
   {
-    // TODO: Implement me!
+    finished=true;
 
     std::set<detail::DiscreteExpr*> outputExpressions;
     detail::DiscreteExprContainerBuilder containerBuilder;
@@ -43,12 +61,22 @@ public:
 
     assert(!containerBuilder.containsUndefinedNodes());
     detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
-    detail::EvaluationStrategy evaluationStrategy(exprContainer, outputExpressions);
+    boost::shared_ptr<detail::EvaluationStrategy> strategy(new detail::EvaluationStrategy(exprContainer, outputExpressions));
+    evaluationStrategy.swap(strategy);
   }
 
   void execute()
   {
-    // TODO: Implement me!
+    if (!isExecutable())
+      CFD_EXCEPTION("Attempted to execute a solve operation before finishing construction of it.");
+
+    scenario->execute(*this);
+  }
+
+  template<std::size_t D>
+  void executeDimensionTemplated()
+  {
+    evaluationStrategy->execute<D>();
   }
 };
 

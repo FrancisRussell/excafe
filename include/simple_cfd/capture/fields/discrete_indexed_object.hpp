@@ -171,7 +171,7 @@ public:
 };
 
 
-//TODO: don't have contruct function replicate code
+//TODO: don't have construct function replicate code
 
 class DiscreteIndexedScalar : public AbstractDiscreteObjectIndexed<discrete_scalar_tag>
 {

@@ -7,6 +7,7 @@
 #include <simple_cfd/mesh_function.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include "solve_operation.hpp"
+#include "dimensionless_scenario.hpp"
 #include "fields/element.hpp"
 #include "fields/function_space.hpp"
 #include "fields/function_space_mesh_function.hpp"
@@ -16,7 +17,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class Scenario
+class Scenario : public detail::DimensionlessScenario
 {
 private:
   static const std::size_t dimension = D;
@@ -56,6 +57,11 @@ public:
   void outputFieldsToFile(const std::string& filename) const
   {
     // TODO: implement me!
+  }
+
+  void execute(SolveOperation& o)
+  {
+    o.executeDimensionTemplated<dimension>();
   }
 };
 
