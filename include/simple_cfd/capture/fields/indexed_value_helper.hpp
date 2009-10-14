@@ -1,7 +1,6 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_INDEXED_VALUE_HELPER_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_INDEXED_VALUE_HELPER_HPP
 
-#include <iostream>
 #include "indexable_value.hpp"
 #include "temporal_index_expr.hpp"
 #include "discrete_indexed_object.hpp"
@@ -46,12 +45,7 @@ public:
     // TODO: don't use get()
     if (expr.get() == NULL)
     {
-      std::cout << "Contructing new expression!" << std::endl;
       expr = DiscreteTraits<discrete_object_tag>::indexed_expr_t::construct(parent, indexExpr);
-    }
-    else
-    {
-      std::cout << "Using existing expression!" << std::endl;
     }
 
     return holder_t(expr);

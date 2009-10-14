@@ -208,9 +208,10 @@ private:
   }
 
 public:
-  static expr_ptr construct(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr)
+  static expr_ptr construct(const parent_ptr& parent, const TemporalIndexExpr& indexExpr)
   {
-    expr_ptr expr(new DiscreteIndexedField(_parent, indexExpr));
+    expr_ptr expr(new DiscreteIndexedField(parent, indexExpr));
+    parent->registerReference(expr);
     return expr;
   }
 
@@ -237,9 +238,10 @@ private:
   }
 
 public:
-  static expr_ptr construct(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr)
+  static expr_ptr construct(const parent_ptr& parent, const TemporalIndexExpr& indexExpr)
   {
-    expr_ptr expr(new DiscreteIndexedOperator(_parent, indexExpr));
+    expr_ptr expr(new DiscreteIndexedOperator(parent, indexExpr));
+    parent->registerReference(expr);
     return expr;
   }
 
