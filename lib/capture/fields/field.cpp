@@ -21,6 +21,10 @@ Field::Field(detail::DiscreteFieldExpr* const _expr) : expr(_expr)
 {
 }
 
+Field::Field(const expr_ptr _expr) : expr(_expr)
+{
+}
+
 Field& Field::operator+=(const Field& f)
 {
   expr = expr_ptr(new detail::DiscreteFieldElementWise(expr, f.expr, detail::DiscreteFieldElementWise::add_tag()));

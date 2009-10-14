@@ -18,6 +18,10 @@ Scalar::Scalar(detail::ScalarExpr* const _expr) : expr(_expr)
 {
 }
 
+Scalar::Scalar(const expr_ptr _expr) : expr(_expr)
+{
+}
+
 Scalar& Scalar::operator+=(const Scalar& s)
 {
   expr = expr_ptr(new detail::ScalarBinaryOperator(expr, s.getExpr(), detail::ScalarBinaryOperator::add_tag()));

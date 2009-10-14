@@ -22,6 +22,7 @@ public:
   Field();
   Field(const FunctionSpace& functionSpace);
   Field(detail::DiscreteFieldExpr* const _expr);
+  Field(detail::DiscreteFieldExpr::expr_ptr const _expr);
   Field& operator+=(const Field& f);
   Field& operator-=(const Field& f);
   Scalar two_norm() const;

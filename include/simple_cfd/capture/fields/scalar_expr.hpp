@@ -4,6 +4,7 @@
 #include "fields_fwd.hpp"
 #include "discrete_expr.hpp"
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 namespace cfd
 {
@@ -15,6 +16,7 @@ class ScalarExpr : public DiscreteExpr
 {
 public:
   typedef boost::shared_ptr<ScalarExpr> expr_ptr;
+  typedef boost::weak_ptr<ScalarExpr> weak_expr_ptr;
 };
 
 }

@@ -5,6 +5,7 @@
 #include "function_space_expr.hpp"
 #include "discrete_expr.hpp"
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 namespace cfd
 {
@@ -16,6 +17,7 @@ class DiscreteFieldExpr : public DiscreteExpr
 {
 public:
   typedef boost::shared_ptr<DiscreteFieldExpr> expr_ptr;
+  typedef boost::weak_ptr<DiscreteFieldExpr> weak_expr_ptr;
   virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const = 0;
 };
 

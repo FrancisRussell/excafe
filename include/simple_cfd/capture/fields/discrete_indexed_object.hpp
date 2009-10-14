@@ -170,25 +170,30 @@ public:
   }
 };
 
-// FIXME: replicating the register and unregister calls in each subclass is dangerous.
+
+//TODO: don't have contruct function replicate code
 
 class DiscreteIndexedScalar : public AbstractDiscreteObjectIndexed<discrete_scalar_tag>
 {
-public:
+private:
+  typedef DiscreteTraits<discrete_scalar_tag>::expr_ptr expr_ptr;
+
   DiscreteIndexedScalar(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_scalar_tag>(_parent, indexExpr)
   {
-    this->parent->registerReference(*this);
+  }
+
+public:
+  static expr_ptr construct(const parent_ptr& parent, const TemporalIndexExpr& indexExpr)
+  {
+    expr_ptr expr(new DiscreteIndexedScalar(parent, indexExpr));
+    parent->registerReference(expr);
+    return expr;
   }
 
   virtual void accept(DiscreteExprVisitor& visitor)
   {
     visitor.visit(*this);
-  }
-
-  ~DiscreteIndexedScalar()
-  {
-    this->parent->unregisterReference(*this);
   }
 };
 
@@ -197,11 +202,16 @@ class DiscreteIndexedField : public AbstractDiscreteObjectIndexed<discrete_field
 private:
   typedef DiscreteTraits<discrete_field_tag>::expr_ptr expr_ptr;
 
-public:
   DiscreteIndexedField(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_field_tag>(_parent, indexExpr)
   {
-    this->parent->registerReference(*this);
+  }
+
+public:
+  static expr_ptr construct(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr)
+  {
+    expr_ptr expr(new DiscreteIndexedField(_parent, indexExpr));
+    return expr;
   }
 
   virtual FunctionSpaceExpr::expr_ptr getFunctionSpace() const
@@ -214,20 +224,23 @@ public:
   {
     visitor.visit(*this);
   }
-
-  ~DiscreteIndexedField()
-  {
-    this->parent->unregisterReference(*this);
-  }
 };
 
 class DiscreteIndexedOperator : public AbstractDiscreteObjectIndexed<discrete_operator_tag>
 {
-public:
+private:
+  typedef DiscreteTraits<discrete_operator_tag>::expr_ptr expr_ptr;
+
   DiscreteIndexedOperator(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr) :
     AbstractDiscreteObjectIndexed<discrete_operator_tag>(_parent, indexExpr)
   {
-    this->parent->registerReference(*this);
+  }
+
+public:
+  static expr_ptr construct(const parent_ptr& _parent, const TemporalIndexExpr& indexExpr)
+  {
+    expr_ptr expr(new DiscreteIndexedOperator(_parent, indexExpr));
+    return expr;
   }
 
   virtual void accept(DiscreteExprVisitor& visitor)
@@ -235,9 +248,16 @@ public:
     visitor.visit(*this);
   }
 
-  ~DiscreteIndexedOperator()
+  virtual FunctionSpaceExpr::expr_ptr getTrialSpace() const
   {
-    this->parent->unregisterReference(*this);
+    const expr_ptr iterationAssignment = this->parent->getIterationAssignment();
+    return iterationAssignment->getTrialSpace();
+  }
+
+  virtual FunctionSpaceExpr::expr_ptr getTestSpace() const
+  {
+    const expr_ptr iterationAssignment = this->parent->getIterationAssignment();
+    return iterationAssignment->getTestSpace();
   }
 };
 

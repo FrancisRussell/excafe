@@ -6,6 +6,7 @@
 #include <iterator>
 #include <cassert>
 #include <boost/shared_ptr.hpp>
+#include <boost/cast.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -71,6 +72,7 @@ class IndexableValue : public boost::noncopyable
 public:
   typedef boost::shared_ptr<IndexableValue> value_ptr;
   typedef typename DiscreteTraits<discrete_object_tag>::expr_ptr expr_ptr;
+  typedef typename DiscreteTraits<discrete_object_tag>::weak_expr_ptr weak_expr_ptr;
   typedef IndexableValueInitialisationIterator<discrete_object_tag> init_iterator;
 
 private:
@@ -79,7 +81,7 @@ private:
   expr_ptr assignedValue;
 
   typedef typename DiscreteTraits<discrete_object_tag>::indexed_expr_t indexed_expr_t;
-  std::map<TemporalIndexExpr, indexed_expr_t*> references; 
+  std::map<TemporalIndexExpr, weak_expr_ptr> references; 
 
   class OffsetTypeVisitor : public boost::static_visitor<void>
   {
@@ -138,17 +140,31 @@ public:
     boost::apply_visitor(visitor, offsetType);
   }
 
-  void registerReference(indexed_expr_t& expr)
+  expr_ptr getIndexedExpr(const TemporalIndexExpr& i) const
   {
-    const bool inserted = references.insert(std::make_pair(expr.getTemporalIndexExpr(), &expr)).second;
+    const typename std::map<TemporalIndexExpr, weak_expr_ptr>::const_iterator exprIter =
+      references.find(i);
+
+    if (exprIter == references.end())
+      return expr_ptr();
+    else
+      return expr_ptr(exprIter->second);
+  }
+
+  void registerReference(expr_ptr& expr)
+  {
+    // TODO: Don't use downcasts!
+    const TemporalIndexExpr indexExpr = boost::polymorphic_downcast<indexed_expr_t*>(expr.get())->getTemporalIndexExpr();
+    const bool inserted = references.insert(std::make_pair(indexExpr, expr)).second;
     assert(inserted);
   }
 
-  void unregisterReference(indexed_expr_t& expr)
+  void unregisterReference(expr_ptr& expr)
   {
-    const typename std::map<TemporalIndexExpr, indexed_expr_t*>::iterator exprIter =
-      references.find(expr.getTemporalIndexExpr());
-    assert(exprIter != references.end() && exprIter->second == &expr);
+    const TemporalIndexExpr indexExpr = boost::polymorphic_downcast<indexed_expr_t*>(expr.get())->getTemporalIndexExpr();
+    const typename std::map<TemporalIndexExpr, weak_expr_ptr>::iterator exprIter =
+      references.find(indexExpr);
+    assert(exprIter != references.end() && exprIter->second == expr);
     references.erase(exprIter);
   }
 
