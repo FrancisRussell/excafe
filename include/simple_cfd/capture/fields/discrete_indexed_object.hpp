@@ -83,21 +83,6 @@ protected:
       return std::auto_ptr<PropagationRule>(new IndexPropagationExcept(expr, *this, *parent->getIndexVariable()));
   }
 
-  bool isInsideLoop() const
-  {
-    TemporalIndexOffset offset = indexExpr.getOffset();
-    TemporalIndexOffset::offset_t offsetType = offset.getType();
-
-    const InsideLoopHelper helper;
-    return boost::apply_visitor(helper, offsetType);
-  }
-
-  signed getOffsetValue() const
-  {
-    const TemporalIndexOffset offset = indexExpr.getOffset();
-    return offset.getValue();
-  }
-
 public:
   AbstractDiscreteObjectIndexed(const parent_ptr& _parent, const TemporalIndexExpr& _indexExpr) :
     parent(_parent), indexExpr(_indexExpr)
@@ -167,6 +152,21 @@ public:
       dependencies.insert(&(*parent->getIterationAssignment()));
 
     return dependencies;
+  }
+
+  bool isInsideLoop() const
+  {
+    TemporalIndexOffset offset = indexExpr.getOffset();
+    TemporalIndexOffset::offset_t offsetType = offset.getType();
+
+    const InsideLoopHelper helper;
+    return boost::apply_visitor(helper, offsetType);
+  }
+
+  signed getOffsetValue() const
+  {
+    const TemporalIndexOffset offset = indexExpr.getOffset();
+    return offset.getValue();
   }
 };
 
