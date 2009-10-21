@@ -51,7 +51,7 @@ public:
 
   SolveOperation newSolveOperation()
   {
-    return SolveOperation();
+    return SolveOperation(*this);
   }
 
   void outputFieldsToFile(const std::string& filename) const

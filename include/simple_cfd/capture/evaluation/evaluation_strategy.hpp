@@ -6,6 +6,7 @@
 #include <simple_cfd/capture/fields/discrete_expr_container.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include "discrete_expr_scoping.hpp"
+#include "expression_values.hpp"
 
 namespace cfd
 {
@@ -18,6 +19,7 @@ class EvaluationStrategy
 private:
   const std::set<DiscreteExpr*> wantedExprs;
   const DiscreteExprContainer expr;
+  DiscreteExprScoping scoping;
 
   template<typename discrete_object_tag>
   static void sortExpressions(std::map<TemporalIndexSet, DiscreteExprContainer>& indicesToExprMap,
@@ -68,7 +70,6 @@ public:
   void buildExprScoping()
   {
     const std::map<DiscreteExpr*, TemporalIndexSet> exprIndices = findExpressionIndices();
-    DiscreteExprScoping scoping;
     scoping.addExpressionNodes(exprIndices);
     scoping.order(wantedExprs);
   }
@@ -76,7 +77,8 @@ public:
   template<std::size_t D>
   void execute()
   {
-    // FIXME: implement me!
+    ExpressionValues<D> values;
+    scoping.execute(values);
   }
 };
 

@@ -15,6 +15,8 @@
 #include <simple_cfd/capture/fields/indexable_value.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include <simple_cfd/capture/fields/discrete_expr.hpp>
+#include <simple_cfd/capture/evaluation/expression_values.hpp>
+#include <simple_cfd/capture/evaluation/evaluation_visitor.hpp>
 
 namespace cfd
 {
@@ -31,6 +33,7 @@ private:
   TemporalIndexValue* const thisLoopIndex;
   std::map<TemporalIndexValue*, DiscreteExprScoping> loops;
   std::set<DiscreteExpr*> exprs;
+  std::vector<evaluatable_t> ordered;
 
   DiscreteExprScoping(TemporalIndexValue& _thisLoopIndex) : thisLoopIndex(&_thisLoopIndex)
   {
@@ -91,7 +94,7 @@ private:
         CFD_EXCEPTION("Cycle detected in discrete expression DAG.");
     }
 
-    void operator()(TemporalIndexValue* loopIndex) const
+    void operator()(TemporalIndexValue* const loopIndex) const
     {
       if (visited.find(loopIndex) != visited.end()) return;
 
@@ -112,6 +115,11 @@ private:
 
       if (!inserted)
         CFD_EXCEPTION("Cycle detected in discrete expression DAG.");
+    }
+
+    std::vector<evaluatable_t> getOrdered() const
+    {
+      return ordered;
     }
   };
 
@@ -168,6 +176,42 @@ private:
       {
         initialisers.insert(&(*initIter));
       }
+    }
+  }
+
+  template<std::size_t D>
+  class ExecutionHelper : public boost::static_visitor<void>
+  {
+  private:
+    DiscreteExprScoping& parent;
+    EvaluationVisitor<D>& evaluationVisitor;
+
+  public:
+    ExecutionHelper(DiscreteExprScoping& _parent, EvaluationVisitor<D>& v) : parent(_parent), evaluationVisitor(v)
+    {
+    }
+
+    void operator()(DiscreteExpr* const expr) const
+    {
+      expr->accept(evaluationVisitor);
+    }
+
+    void operator()(TemporalIndexValue* const loopIndex) const
+    {
+      const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter = parent.loops.find(loopIndex);
+      assert(loopIter!=parent.loops.end());
+      loopIter->second.execute(evaluationVisitor);
+    }
+  };
+
+  template<std::size_t D>
+  void execute(EvaluationVisitor<D>& evaluationVisitor)
+  {
+    ExecutionHelper<D> helper(*this, evaluationVisitor);
+    for(std::vector<evaluatable_t>::const_iterator evalIter(ordered.begin()); evalIter!=ordered.end(); ++evalIter)
+    {
+      evaluatable_t evaluatable(*evalIter);
+      boost::apply_visitor(helper, evaluatable);
     }
   }
 
@@ -292,6 +336,8 @@ public:
       boost::apply_visitor(helper, evaluatable);
     }
 
+    ordered = helper.getOrdered();
+
     // Now order nested loops
     const std::set<DiscreteExpr*> empty;
     for(std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter(loops.begin());
@@ -299,6 +345,13 @@ public:
     {
       loopIter->second.order(empty);
     }
+  }
+
+  template<std::size_t D>
+  void execute(ExpressionValues<D>& values)
+  {
+    EvaluationVisitor<D> evaluationVisitor;
+    execute(evaluationVisitor);
   }
 };
 
