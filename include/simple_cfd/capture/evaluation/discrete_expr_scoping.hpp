@@ -58,16 +58,15 @@ private:
   {
   private:
     DiscreteExprScoping& parent;
-    std::set<evaluatable_t>& visited;
-    std::vector<evaluatable_t>& ordered;
+    std::set<evaluatable_t> visited;
+    std::vector<evaluatable_t> ordered;
 
   public:
-    OrderCalculationHelper(DiscreteExprScoping& _parent, std::set<evaluatable_t>& _visited,
-      std::vector<evaluatable_t>& _ordered) : parent(_parent), visited(_visited), ordered(_ordered)
+    OrderCalculationHelper(DiscreteExprScoping& _parent) : parent(_parent)
     {
     }
 
-    void operator()(DiscreteExpr* const expr) const
+    void operator()(DiscreteExpr* const expr)
     {
       if (visited.find(expr) != visited.end()) return;
 
@@ -94,7 +93,7 @@ private:
         CFD_EXCEPTION("Cycle detected in discrete expression DAG.");
     }
 
-    void operator()(TemporalIndexValue* const loopIndex) const
+    void operator()(TemporalIndexValue* const loopIndex)
     {
       if (visited.find(loopIndex) != visited.end()) return;
 
@@ -313,9 +312,7 @@ public:
 
   void order(const std::set<DiscreteExpr*>& wanted)
   {
-    std::set<evaluatable_t> visited;
-    std::vector<evaluatable_t> ordered;
-    OrderCalculationHelper helper(*this, visited, ordered);
+    OrderCalculationHelper helper(*this);
 
     // Determine dependencies for wanted values
     for(std::set<DiscreteExpr*>::const_iterator wantedIter(wanted.begin()); wantedIter!=wanted.end(); ++wantedIter)
