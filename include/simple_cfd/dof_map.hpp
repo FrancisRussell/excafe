@@ -8,6 +8,7 @@
 #include <utility>
 #include <cstddef>
 #include "simple_cfd_fwd.hpp"
+#include "exception.hpp"
 #include "dof.hpp"
 #include "numeric/sparsity_pattern.hpp"
 
@@ -81,6 +82,15 @@ public:
   const_iterator end() const
   {
     return mapping.end();
+  }
+
+  bool operator+=(const DofMap& map)
+  {
+    if (m != map.m)
+    {
+      CFD_EXCEPTION("Attempted to add two DofMaps defined on different meshes");
+    }
+    //TODO: implement me!
   }
 
   bool operator==(const DofMap& map) const

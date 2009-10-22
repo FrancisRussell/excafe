@@ -5,7 +5,7 @@
 #include "discrete_traits.hpp"
 #include "discrete_expr_set.hpp"
 #include "temporal_index_value.hpp"
-#include <boost/static_assert.hpp>
+#include "function_space_expr.hpp"
 
 namespace cfd
 {
@@ -70,6 +70,26 @@ public:
   DiscreteExprSet<discrete_operator_tag> getOperatorExpressions() const
   {
     return operatorExpressions;
+  }
+
+  std::set<FunctionSpaceExpr*> getFunctionSpaces() const
+  {
+    std::set<FunctionSpaceExpr*> functionSpaces;
+
+    for(DiscreteExprSet<discrete_field_tag>::expr_iter exprIter(fieldExpressions.begin_expr());
+      exprIter!=fieldExpressions.end_expr(); ++exprIter)
+    {
+      functionSpaces.insert(&(*exprIter->getFunctionSpace()));
+    }
+
+    for(DiscreteExprSet<discrete_operator_tag>::expr_iter exprIter(operatorExpressions.begin_expr());
+      exprIter!=operatorExpressions.end_expr(); ++exprIter)
+    {
+      functionSpaces.insert(&(*exprIter->getTrialSpace()));
+      functionSpaces.insert(&(*exprIter->getTestSpace()));
+    }
+
+    return functionSpaces;
   }
 };
 

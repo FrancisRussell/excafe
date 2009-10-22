@@ -3,15 +3,19 @@
 
 #include <cstddef>
 #include <string>
+#include <cassert>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/mesh_function.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <simple_cfd/dof_map.hpp>
 #include "solve_operation.hpp"
 #include "dimensionless_scenario.hpp"
 #include "fields/element.hpp"
 #include "fields/function_space.hpp"
+#include "fields/function_space_expr.hpp"
 #include "fields/function_space_mesh_function.hpp"
 #include "fields/named_field.hpp"
+#include "evaluation/function_space_resolver.hpp"
 
 namespace cfd
 {
@@ -21,8 +25,11 @@ class Scenario : public detail::DimensionlessScenario
 {
 private:
   static const std::size_t dimension = D;
+  typedef detail::FunctionSpaceExpr* function_space_ptr;
+
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
+  std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::vector<NamedField> persistentFields;
 
 public:
@@ -49,6 +56,13 @@ public:
     return field;
   }
 
+  virtual void resolveFunctionSpaces(const std::set<function_space_ptr> functionSpaces)
+  {
+    // TODO: implement me!
+    detail::FunctionSpaceResolver<dimension> functionSpaceResolver(functionSpaceMap);
+    assert(false);
+  }
+
   SolveOperation newSolveOperation()
   {
     return SolveOperation(*this);
@@ -57,6 +71,7 @@ public:
   void outputFieldsToFile(const std::string& filename) const
   {
     // TODO: implement me!
+    assert(false);
   }
 
   void execute(SolveOperation& o)

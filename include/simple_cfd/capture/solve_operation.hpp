@@ -61,6 +61,8 @@ public:
 
     assert(!containerBuilder.containsUndefinedNodes());
     detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
+
+    scenario->resolveFunctionSpaces(exprContainer.getFunctionSpaces());
     boost::shared_ptr<detail::EvaluationStrategy> strategy(new detail::EvaluationStrategy(exprContainer, outputExpressions));
     evaluationStrategy.swap(strategy);
   }

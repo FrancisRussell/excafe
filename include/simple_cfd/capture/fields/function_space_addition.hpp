@@ -21,10 +21,7 @@ public:
 
   void accept(FunctionSpaceVisitor& v)
   {
-    v.enter(*this);
-    getLeft().accept(v);
-    getRight().accept(v);
-    v.exit(*this);
+    v.visit(*this);
   }
 };
 
