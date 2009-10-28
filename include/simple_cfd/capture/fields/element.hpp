@@ -19,6 +19,11 @@ public:
   Element(const std::size_t index)
   {
   }
+
+  std::size_t getIndex() const
+  {
+    return index;
+  }
 };
 
 }

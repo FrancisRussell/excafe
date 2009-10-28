@@ -13,7 +13,7 @@
 #include "fields/element.hpp"
 #include "fields/function_space.hpp"
 #include "fields/function_space_expr.hpp"
-#include "fields/function_space_mesh_function.hpp"
+#include "fields/function_space_mesh.hpp"
 #include "fields/named_field.hpp"
 #include "evaluation/function_space_resolver.hpp"
 
@@ -37,16 +37,27 @@ public:
   {
   }
 
+  Mesh<dimension>& getMesh()
+  {
+    return mesh;
+  }
+
   Element addElement(FiniteElement<dimension>* const e)
   {
     elements.push_back(e);
     return Element(elements.size() - 1);
   }
+
+  FiniteElement<dimension>& getElement(const Element& e)
+  {
+    assert(e.getIndex() < elements.size());
+    return elements[e.getIndex()];
+  }
   
   FunctionSpace defineFunctionSpace(const Element& element, const Mesh<dimension>& _mesh)
   {
     assert(&mesh == &_mesh);
-    return FunctionSpace(new detail::FunctionSpaceMeshFunction(element, MeshFunction<bool>(dimension, true)));
+    return FunctionSpace(new detail::FunctionSpaceMesh(element));
   }
 
   NamedField defineNamedField(const std::string& name, const FunctionSpace functionSpace)
@@ -58,9 +69,10 @@ public:
 
   virtual void resolveFunctionSpaces(const std::set<function_space_ptr> functionSpaces)
   {
-    // TODO: implement me!
-    detail::FunctionSpaceResolver<dimension> functionSpaceResolver(functionSpaceMap);
-    assert(false);
+    detail::FunctionSpaceResolver<dimension> functionSpaceResolver(*this, functionSpaceMap);
+
+    for(std::set<function_space_ptr>::const_iterator fsIter(functionSpaces.begin()); fsIter!=functionSpaces.end(); ++fsIter)
+      (*fsIter)->accept(functionSpaceResolver);
   }
 
   SolveOperation newSolveOperation()

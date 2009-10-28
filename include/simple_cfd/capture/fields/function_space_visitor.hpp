@@ -13,7 +13,7 @@ class FunctionSpaceVisitor
 {
 public:
   virtual void visit(FunctionSpaceAddition& f) = 0;
-  virtual void visit(FunctionSpaceMeshFunction& f) = 0;
+  virtual void visit(FunctionSpaceMesh& f) = 0;
   virtual void visit(FunctionSpaceUndefined& f) = 0;
   virtual ~FunctionSpaceVisitor() {}
 };

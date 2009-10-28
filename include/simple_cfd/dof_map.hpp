@@ -7,6 +7,7 @@
 #include <iterator>
 #include <utility>
 #include <cstddef>
+#include <boost/operators.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "exception.hpp"
 #include "dof.hpp"
@@ -16,7 +17,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class DofMap
+class DofMap : public boost::addable< DofMap<D> >
 {
 public:
   static const std::size_t dimension = D;
@@ -84,13 +85,22 @@ public:
     return mapping.end();
   }
 
-  bool operator+=(const DofMap& map)
+  DofMap& operator+=(const DofMap& map)
   {
+    // TODO: better error checking or behavour if adding intersecting DofMaps
     if (m != map.m)
     {
       CFD_EXCEPTION("Attempted to add two DofMaps defined on different meshes");
     }
-    //TODO: implement me!
+
+    elements.insert(map.elements.begin(), map.elements.end());
+    const unsigned offset = mapping.size();
+
+    for(typename local2global_map::const_iterator mappingIter=map.mapping.begin(); mappingIter!=map.mapping.end();
+      ++mappingIter)
+      mapping[mappingIter->first] = mappingIter->second + offset;
+
+    return *this;
   }
 
   bool operator==(const DofMap& map) const

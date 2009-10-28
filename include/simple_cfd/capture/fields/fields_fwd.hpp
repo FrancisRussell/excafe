@@ -17,7 +17,7 @@ namespace detail
 // Function Space Related
 class FunctionSpaceExpr;
 class FunctionSpaceVisitor;
-class FunctionSpaceMeshFunction;
+class FunctionSpaceMesh;
 class FunctionSpaceUndefined;
 class FunctionSpaceBinaryOperator;
 class FunctionSpaceAddition;
