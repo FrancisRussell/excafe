@@ -18,7 +18,9 @@
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
 #include <simple_cfd/capture/fields/scalar_binary_operator.hpp>
 #include <simple_cfd/capture/fields/discrete_indexed_object.hpp>
+#include <simple_cfd/capture/fields/linear_solve.hpp>
 #include <simple_cfd/discrete_value_traits.hpp>
+#include <simple_cfd/numeric/solver.hpp>
 
 namespace cfd
 {
@@ -212,7 +214,24 @@ public:
   // Solve related
   virtual void visit(LinearSolve& s)
   {
-    assert(false);
+    PETScKrylovSolver solver;
+    solver.setMaxIterations(25000);
+    solver.setAbsoluteTolerance(1e-4);
+    solver.setRelativeTolerance(0.0);
+    solver.enablePreconditioner(false);
+    
+    const DiscreteOperator<dimension>& stiffnessMatrix = getValue(s.getOperator());
+    const DiscreteField<dimension>& loadVector = getValue(s.getField());
+    DiscreteField<dimension> unknownVector(stiffnessMatrix.getColMappings());
+
+    solver.solve(stiffnessMatrix.getMatrixHandle(), unknownVector.getVectorHandle(), loadVector.getVectorHandle());
+
+    if (!solver.converged())
+    {
+      CFD_EXCEPTION("Convergence failure: " + solver.getConvergedReason());
+    }
+ 
+    setValue(s, unknownVector);
   }
 };
 
