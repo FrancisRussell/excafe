@@ -3,11 +3,15 @@
 
 #include <cstddef>
 #include <string>
+#include <map>
+#include <set>
 #include <cassert>
+#include <utility>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/mesh_function.hpp>
 #include <simple_cfd/dof_map.hpp>
+#include <simple_cfd/exception.hpp>
 #include "solve_operation.hpp"
 #include "dimensionless_scenario.hpp"
 #include "fields/element.hpp"
@@ -30,7 +34,7 @@ private:
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
-  std::vector<NamedField> persistentFields;
+  std::map< std::string, DiscreteField<dimension> > persistentFields;
 
 public:
   Scenario(Mesh<dimension>& _mesh) : mesh(_mesh)
@@ -62,8 +66,19 @@ public:
 
   NamedField defineNamedField(const std::string& name, const FunctionSpace functionSpace)
   {
+    if (persistentFields.find(name) != persistentFields.end())
+    {
+      CFD_EXCEPTION("Attempted to create two named fields with the same name.");
+    }
+
+    // TODO: handle creation of DofMaps for named fields better
+    function_space_ptr const functionSpacePtr = &(*functionSpace.getExpr());
+    std::set<function_space_ptr> functionSpaceSet;
+    functionSpaceSet.insert(functionSpacePtr);
+    resolveFunctionSpaces(functionSpaceSet);
+
     NamedField field(name, functionSpace);
-    persistentFields.push_back(field);
+    persistentFields.insert(std::make_pair(name, DiscreteField<dimension>(getDofMap(*functionSpacePtr))));
     return field;
   }
 
@@ -80,6 +95,13 @@ public:
     const typename std::map< function_space_ptr, DofMap<dimension> >::iterator mapIter = functionSpaceMap.find(&e);
     assert(mapIter != functionSpaceMap.end());
     return mapIter->second;
+  }
+
+  DiscreteField<dimension> getNamedValue(const detail::DiscreteFieldPersistent& p)
+  {
+    const typename std::map< std::string, DiscreteField<dimension> >::iterator fieldIter = persistentFields.find(p.getName());
+    assert(fieldIter != persistentFields.end());
+    return fieldIter->second;
   }
 
   SolveOperation newSolveOperation()

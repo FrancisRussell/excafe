@@ -131,7 +131,7 @@ public:
 
   virtual void visit(DiscreteFieldPersistent& p)
   {
-    assert(false);
+    setValue(p, scenario.getNamedValue(p));
   }
 
 

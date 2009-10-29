@@ -46,6 +46,11 @@ public:
   {
     return std::set<DiscreteExpr*>();
   }
+
+  std::string getName() const
+  {
+    return name;
+  }
 };
 
 }
