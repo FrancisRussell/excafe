@@ -6,10 +6,12 @@
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_visitor.hpp>
 #include <simple_cfd/capture/fields/discrete_traits.hpp>
 #include <simple_cfd/capture/fields/discrete_field_element_wise.hpp>
 #include <simple_cfd/capture/fields/discrete_field_two_norm.hpp>
+#include <simple_cfd/capture/fields/discrete_field_zero.hpp>
 #include <simple_cfd/capture/fields/operator_application.hpp>
 #include <simple_cfd/capture/fields/operator_addition.hpp>
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
@@ -28,6 +30,7 @@ class EvaluationVisitor : public DiscreteExprVisitor
 {
 private:
   static const std::size_t dimension = D;
+  Scenario<dimension>& scenario;
 
   typedef typename DiscreteValueTraits<discrete_scalar_tag, D>::value_t scalar_value_t;
   typedef typename DiscreteValueTraits<discrete_field_tag, D>::value_t field_value_t;
@@ -117,6 +120,7 @@ public:
 
   virtual void visit(DiscreteFieldZero& z)
   {
+    setValue(z, DiscreteField<dimension>(scenario.getDofMap(z.getFunctionSpace())));
     assert(false);
   }
 

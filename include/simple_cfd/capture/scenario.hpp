@@ -75,6 +75,13 @@ public:
       (*fsIter)->accept(functionSpaceResolver);
   }
 
+  DofMap<dimension> getDofMap(const detail::FunctionSpaceExpr& e)
+  {
+    const typename std::map< function_space_ptr, DofMap<dimension> >::iterator mapIter = functionSpaceMap.find(&e);
+    assert(mapIter != functionSpaceMap.end());
+    return mapIter->second;
+  }
+
   SolveOperation newSolveOperation()
   {
     return SolveOperation(*this);

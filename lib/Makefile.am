@@ -8,7 +8,8 @@ numeric/optimised_polynomial.cpp numeric/quadrature.cpp capture/fields/operator.
 capture/fields/field.cpp capture/fields/function_space.cpp \
 capture/fields/discrete_expr_container_builder_form_visitor.cpp capture/fields/discrete_expr.cpp \
 capture/fields/operator_assembly.cpp capture/evaluation/discrete_expr_scoping.cpp \
-capture/fields/temporal_index_set.cpp capture/fields/temporal_index_value.cpp
+capture/fields/temporal_index_set.cpp capture/fields/temporal_index_value.cpp \
+capture/evaluation/evaluation_strategy.cpp capture/solve_operation.hpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \
