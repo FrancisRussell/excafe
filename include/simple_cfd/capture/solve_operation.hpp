@@ -33,9 +33,9 @@ public:
   void execute();
 
   template<std::size_t D>
-  void executeDimensionTemplated()
+  void executeDimensionTemplated(Scenario<D>& scenario)
   {
-    evaluationStrategy->execute<D>();
+    evaluationStrategy->execute<D>(scenario);
   }
 };
 

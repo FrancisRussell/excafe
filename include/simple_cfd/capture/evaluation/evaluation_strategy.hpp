@@ -51,10 +51,9 @@ public:
   void buildExprScoping();
 
   template<std::size_t D>
-  void execute()
+  void execute(Scenario<D>& scenario)
   {
-    ExpressionValues<D> values;
-    scoping.execute(values);
+    scoping.execute(scenario);
   }
 };
 

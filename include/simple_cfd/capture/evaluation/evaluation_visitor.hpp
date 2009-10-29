@@ -6,7 +6,8 @@
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
-#include <simple_cfd/capture/scenario.hpp>
+//#include <simple_cfd/capture/scenario.hpp>
+#include <simple_cfd/capture/capture_fwd.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_visitor.hpp>
 #include <simple_cfd/capture/fields/discrete_traits.hpp>
 #include <simple_cfd/capture/fields/discrete_field_element_wise.hpp>
@@ -95,6 +96,10 @@ private:
   }
 
 public:
+  EvaluationVisitor(Scenario<dimension>& _scenario) : scenario(_scenario)
+  {
+  }
+
   // Discrete field related
   virtual void visit(DiscreteFieldElementWise& p)
   {
@@ -120,7 +125,7 @@ public:
 
   virtual void visit(DiscreteFieldZero& z)
   {
-    setValue(z, DiscreteField<dimension>(scenario.getDofMap(z.getFunctionSpace())));
+    setValue(z, DiscreteField<dimension>(scenario.getDofMap(*z.getFunctionSpace())));
     assert(false);
   }
 

@@ -345,9 +345,9 @@ public:
   }
 
   template<std::size_t D>
-  void execute(ExpressionValues<D>& values)
+  void execute(Scenario<D>& scenario)
   {
-    EvaluationVisitor<D> evaluationVisitor;
+    EvaluationVisitor<D> evaluationVisitor(scenario);
     execute(evaluationVisitor);
   }
 };
