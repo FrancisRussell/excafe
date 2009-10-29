@@ -6,6 +6,7 @@
 #include <set>
 #include <iterator>
 #include <utility>
+#include <algorithm>
 #include <cstddef>
 #include <boost/operators.hpp>
 #include "simple_cfd_fwd.hpp"
@@ -49,6 +50,15 @@ private:
     for(typename local2global_map::iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
       mappingIter->second = remapping[mappingIter->second];
   }
+
+  // This ordering is only used for performing DofMap intersections
+  struct DofMappingComparator
+  {
+    bool operator()(const std::pair<dof_t, unsigned>& a, const std::pair<dof_t, unsigned>& b) const
+    {
+      return a.first < b.first;
+    }
+  };
 
 public:
   DofMap()
@@ -101,6 +111,31 @@ public:
       mapping[mappingIter->first] = mappingIter->second + offset;
 
     return *this;
+  }
+
+  DofMap intersect(const DofMap& d) const
+  {
+    if (m != d.m)
+    {
+      CFD_EXCEPTION("Attempted to intersect two DofMaps defined on different meshes");
+    }
+
+    std::set<const finite_element_t*> commonElements;
+    std::set_intersection(elements.begin(), elements.end(), d.elements.begin(), d.elements.end(),
+      std::inserter(commonElements, commonElements.end()));
+
+    local2global_map commonDofMappings;
+    std::set_intersection(mapping.begin(), mapping.end(), d.mapping.begin(), d.mapping.end(),
+      std::inserter(commonDofMappings, commonDofMappings.end()), DofMappingComparator());
+
+    DofMap intersection(*m, commonElements, commonDofMappings);
+
+    // NOTE: the ability to make the intersection contiguous relies on the property of 
+    // set_intersection that all copies to the output iterator are made from the first 
+    // range. Hence, we still have a sensible *sparse* numbering.
+    intersection.makeContiguous();
+
+    return intersection;
   }
 
   bool operator==(const DofMap& map) const

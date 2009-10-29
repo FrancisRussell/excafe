@@ -193,6 +193,19 @@ public:
   {
     return vector;
   }
+
+  DiscreteField project(const DofMap<dimension>& newDofMap)
+  {
+    const DofMap<dimension> intermediateMap(rowMappings.intersect(newDofMap));
+    
+    DiscreteField result(newDofMap);
+    DiscreteField intermediateField(intermediateMap);
+
+    extractField(intermediateField);
+    result.addField(intermediateField);
+
+    return result;
+  }
 };
 
 }

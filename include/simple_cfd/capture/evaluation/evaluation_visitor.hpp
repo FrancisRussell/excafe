@@ -6,13 +6,13 @@
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
-//#include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/capture_fwd.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_visitor.hpp>
 #include <simple_cfd/capture/fields/discrete_traits.hpp>
 #include <simple_cfd/capture/fields/discrete_field_element_wise.hpp>
 #include <simple_cfd/capture/fields/discrete_field_two_norm.hpp>
 #include <simple_cfd/capture/fields/discrete_field_zero.hpp>
+#include <simple_cfd/capture/fields/discrete_field_projection.hpp>
 #include <simple_cfd/capture/fields/operator_application.hpp>
 #include <simple_cfd/capture/fields/operator_addition.hpp>
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
@@ -115,7 +115,8 @@ public:
 
   virtual void visit(DiscreteFieldProjection& p)
   {
-    assert(false);
+    const DofMap<dimension> newDofMap(scenario.getDofMap(*p.getFunctionSpace()));
+    setValue(p, getValue(p.getField()).project(newDofMap));
   }
 
   virtual void visit(DiscreteFieldUndefined& u)
@@ -126,7 +127,6 @@ public:
   virtual void visit(DiscreteFieldZero& z)
   {
     setValue(z, DiscreteField<dimension>(scenario.getDofMap(*z.getFunctionSpace())));
-    assert(false);
   }
 
   virtual void visit(DiscreteFieldPersistent& p)
@@ -145,8 +145,8 @@ public:
   virtual void visit(OperatorAddition& u)
   {
     assert(false && "We don't know how to add operators!");
-//    const operator_value_t value = getValue(u.getLeft()) + getValue(u.getRight());
-//    setValue(u, value);
+//  const operator_value_t value = getValue(u.getLeft()) + getValue(u.getRight());
+//  setValue(u, value);
   }
 
   virtual void visit(OperatorAssembly& a)
