@@ -16,13 +16,19 @@ public:
   {
   }
 
-  Element(const std::size_t index)
+  Element(const std::size_t _index) : index(_index)
   {
   }
 
   std::size_t getIndex() const
   {
     return index;
+  }
+
+  Element& operator=(const Element& e)
+  {
+    index = e.index;
+    return *this;
   }
 };
 
