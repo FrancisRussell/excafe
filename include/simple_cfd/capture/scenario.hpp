@@ -80,41 +80,42 @@ private:
 
   void renderFields(std::ostream& out) const
   {
-    const std::size_t vtk_dimension = 3;    
+    typedef typename std::map< std::string, DiscreteField<dimension> >::const_iterator named_field_map_iter;
+    static const std::size_t vtk_dimension = 3;    
     assert(dimension <= 3);
 
     std::vector< vertex<dimension> > vertices;
     std::map< std::string, std::vector< boost::tuple<double, double, double> > > values;
 
-    for (typename std::map< std::string, DiscreteField<dimension> >::const_iterator fieldIter(persistentFields.begin());
-      fieldIter != persistentFields.end(); ++fieldIter)
+    for(typename Mesh<dimension>::global_iterator vIter(mesh.global_begin(0)); vIter!=mesh.global_end(0); ++vIter)
     {
-      for(typename Mesh<dimension>::global_iterator vIter(mesh.global_begin(0)); vIter!=mesh.global_end(0); ++vIter)
-      {
-        const vertex<dimension> v(mesh.getVertex(vIter->getIndex()));
-        vertices.push_back(v);
+      const vertex<dimension> v(mesh.getVertex(vIter->getIndex()));
+      vertices.push_back(v);
 
-        const std::size_t cid = mesh.getContainingCell(*vIter);
-        const MeshEntity localVertexEntity = mesh.getLocalEntity(cid, *vIter);
-        const vertex<dimension> localVertex = mesh.getLocalCoordinate(cid, localVertexEntity.getIndex());
+      const std::size_t cid = mesh.getContainingCell(*vIter);
+      const MeshEntity localVertexEntity = mesh.getLocalEntity(cid, *vIter);
+      const vertex<dimension> localVertex = mesh.getLocalCoordinate(cid, localVertexEntity.getIndex());
+
+      for (named_field_map_iter fieldIter(persistentFields.begin()); fieldIter != persistentFields.end(); ++fieldIter)
         values[fieldIter->first].push_back(getValue(cid, localVertex, fieldIter->second));
-      }
+    }
 
-      for(typename Mesh<dimension>::global_iterator eIter(mesh.global_begin(1)); eIter!=mesh.global_end(1); ++eIter)
-      {
-        const std::size_t cid = mesh.getContainingCell(*eIter);
-        const std::vector<std::size_t> vertexIndices(mesh.getIndices(*eIter, 0));
-        assert(vertexIndices.size() == 2);
+    for(typename Mesh<dimension>::global_iterator eIter(mesh.global_begin(1)); eIter!=mesh.global_end(1); ++eIter)
+    {
+      const std::size_t cid = mesh.getContainingCell(*eIter);
+      const std::vector<std::size_t> vertexIndices(mesh.getIndices(*eIter, 0));
+      assert(vertexIndices.size() == 2);
       
-        const MeshEntity v1Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[0]));
-        const MeshEntity v2Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[1]));
+      const MeshEntity v1Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[0]));
+      const MeshEntity v2Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[1]));
 
-        const vertex<dimension> localVertex((mesh.getLocalCoordinate(cid, v1Entity.getIndex()) + 
-          mesh.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
+      const vertex<dimension> localVertex((mesh.getLocalCoordinate(cid, v1Entity.getIndex()) + 
+        mesh.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
 
-        vertices.push_back(mesh.referenceToPhysical(cid, localVertex));
+      vertices.push_back(mesh.referenceToPhysical(cid, localVertex));
+
+      for (named_field_map_iter fieldIter(persistentFields.begin()); fieldIter != persistentFields.end(); ++fieldIter)
         values[fieldIter->first].push_back(getValue(cid, localVertex, fieldIter->second));
-      }
     }
 
     out << "# vtk DataFile Version 2.0" << std::endl;
@@ -155,20 +156,23 @@ private:
       out << std::endl;
     }
 
+    out << "POINT_DATA " << vertices.size() << std::endl;
     for (typename std::map< std::string, DiscreteField<dimension> >::const_iterator fieldIter(persistentFields.begin());
       fieldIter != persistentFields.end(); ++fieldIter)
     {
-      const bool isScalarField = fieldIter->second.getRank() == 0;
+      const bool isScalarField = (fieldIter->second.getRank() == 0);
 
-      out << "POINT_DATA " << vertices.size() << std::endl;
       out << (isScalarField ? "SCALARS" : "VECTORS") << " " << fieldIter->first << " DOUBLE" << std::endl;
+      
+      if (isScalarField)
+        out << "LOOKUP_TABLE default" << std::endl;
 
       for(std::size_t point = 0; point < values[fieldIter->first].size(); ++point)
       {
         out << boost::get<0>(values[fieldIter->first][point]) << " ";
         if (!isScalarField)
         {
-          out << boost::get<1>(values[fieldIter->first][point]);
+          out << boost::get<1>(values[fieldIter->first][point]) << " ";
           out << boost::get<2>(values[fieldIter->first][point]);      
         }
         out << std::endl;

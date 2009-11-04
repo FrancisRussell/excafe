@@ -132,6 +132,8 @@ public:
   BoundaryConditionHack(Mesh<dimension>& _m, FiniteElement<dimension>& _velocity, FiniteElement<dimension>& _pressure) :
    m(_m), velocity(_velocity), pressure(_pressure)
   {
+    assert(pressure.getRank() == 0);
+    assert(velocity.getRank() == 1);
   }
 
   void operator()(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, 
