@@ -84,7 +84,7 @@ public:
   {
     return size;
   }
-
+  
   value_type& operator()(const size_type index)
   {
     assert(rank == 1);

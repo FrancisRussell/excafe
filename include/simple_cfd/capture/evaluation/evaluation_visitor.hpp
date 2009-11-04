@@ -21,9 +21,9 @@
 #include <simple_cfd/capture/fields/linear_solve.hpp>
 #include <simple_cfd/discrete_value_traits.hpp>
 #include <simple_cfd/numeric/solver.hpp>
-#include "expression_values.hpp"
 #include "discrete_expr_scoping.hpp"
 #include "discrete_expr_scoping_visitor.hpp"
+#include "expression_values.hpp"
 
 namespace cfd
 {
@@ -290,10 +290,8 @@ public:
     const DofMap<dimension>& trialDofMap(scenario.getDofMap(*a.getTrialSpace()));
     const DofMap<dimension>& testDofMap(scenario.getDofMap(*a.getTestSpace()));
     DiscreteOperator<dimension> discreteOperator(testDofMap, trialDofMap);
-
-    //FIXME: implement assembly
-    assert(false);
-
+    discreteOperator.assembleForms(scenario, values, a.getBilinearFormIntegralSum());
+    //FIXME: perform boundary conditions hack
     setValue(a, discreteOperator);
   }
 

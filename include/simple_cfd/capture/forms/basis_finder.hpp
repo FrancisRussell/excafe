@@ -2,11 +2,23 @@
 #define SIMPLE_CFD_FORM_BASIS_FUNDER_HPP
 
 #include <cstddef>
+#include <cassert>
 #include <set>
-#include <boost/any.hpp>
 #include "field_visitor.hpp"
+#include "field_addition.hpp"
+#include "field_inner_product.hpp"
+#include "field_outer_product.hpp"
+#include "field_colon_product.hpp"
+#include "field_gradient.hpp"
+#include "field_divergence.hpp"
+#include "facet_normal.hpp"
+#include "field_basis.hpp"
+#include "field_discrete_reference.hpp"
+#include "field_scalar.hpp"
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/discrete_field.hpp>
+#include <simple_cfd/capture/evaluation/evaluation_fwd.hpp>
+#include <simple_cfd/capture/capture_fwd.hpp>
 
 namespace cfd
 {
@@ -15,26 +27,19 @@ namespace forms
 {
 
 template<std::size_t D> 
-class BasisFinder : public FieldVisitor
+class BasisFinder : public detail::FieldVisitor
 {
 private:
   static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
+
+  Scenario<dimension>& scenario;
+  detail::ExpressionValues<dimension>& values;
   const finite_element_t* basis;
 
-  void handle(const FiniteElementHolder& holder)
+  void handle(const DiscreteField<dimension>& field)
   {
-    const finite_element_t* const elementPtr = boost::any_cast<const finite_element_t*>(holder.getElementPtr());
-    assert(elementPtr != NULL);
-    handle(elementPtr);
-  }
-
-  void handle(const DiscreteFieldHolder& holder)
-  {
-    const DiscreteField<dimension>* const vectorPtr = boost::any_cast<const DiscreteField<dimension>*>(holder.getVectorPtr());
-    assert(vectorPtr != NULL);
-
-    const std::set<const finite_element_t*> elements(vectorPtr->getRowMappings().getFiniteElements());
+    const std::set<const finite_element_t*> elements(field.getRowMappings().getFiniteElements());
     assert(elements.size() == 1);
 
     handle(*elements.begin());
@@ -55,7 +60,8 @@ private:
   }
 
 public:
-  BasisFinder() : basis(NULL)
+  BasisFinder(Scenario<dimension>& _scenario, detail::ExpressionValues<dimension>& _values) : scenario(_scenario),
+   values(_values), basis(NULL)
   {
   }
 
@@ -64,73 +70,82 @@ public:
     return basis;
   }
 
-  virtual void enter(FieldAddition& addition)
+  virtual void enter(detail::FieldAddition& addition)
   {
   }
 
-  virtual void exit(FieldAddition& addition)
+  virtual void exit(detail::FieldAddition& addition)
   {
   }
 
-  virtual void enter(InnerProduct& addition)
+  virtual void enter(detail::FieldInnerProduct& addition)
   {
   }
 
-  virtual void exit(InnerProduct& addition)
+  virtual void exit(detail::FieldInnerProduct& addition)
   {
   }
 
-  virtual void enter(OuterProduct& addition)
+  virtual void enter(detail::FieldOuterProduct& addition)
   {
   }
 
-  virtual void exit(OuterProduct& addition)
+  virtual void exit(detail::FieldOuterProduct& addition)
   {
   }
 
-  virtual void enter(ColonProduct& addition)
+  virtual void enter(detail::FieldColonProduct& addition)
   {
   }
 
-  virtual void exit(ColonProduct& addition)
+  virtual void exit(detail::FieldColonProduct& addition)
   {
   }
 
-  virtual void enter(Gradient& gradient)
+  virtual void enter(detail::FieldGradient& gradient)
   {
   }
 
-  virtual void exit(Gradient& gradient)
+  virtual void exit(detail::FieldGradient& gradient)
   {
   }
 
-  virtual void enter(Divergence& gradient)
+  virtual void enter(detail::FieldDivergence& gradient)
   {
   }
 
-  virtual void exit(Divergence& gradient)
+  virtual void exit(detail::FieldDivergence& gradient)
   {
   }
 
   // Terminals
-  virtual void visit(FacetNormal& normal)
+  virtual void visit(detail::FacetNormal& normal)
   {
   }
 
-  virtual void visit(BasisField& basis)
+  virtual void visit(detail::FieldBasis& basis)
   {
-    handle(basis.getElement());
+    handle(&scenario.getElement(basis.getElement()));
   }
 
-  virtual void visit(DiscreteFieldReference& d)
+  virtual void visit(detail::FieldDiscreteReference& d)
   {
-    handle(d.getVector());
+    //FIXME: should we be doing nothing here?
+    handle(values.getValue(*d.getDiscreteField().getExpr()));
   }
+
+  virtual void visit(detail::FieldScalar& s)
+  {
+  }
+
+/*
+  FIXME: where the hell did this go?
 
   virtual void visit(TensorLiteral& tensor)
   {
     // We don't reference any fields
   }
+*/
 };
 
 }

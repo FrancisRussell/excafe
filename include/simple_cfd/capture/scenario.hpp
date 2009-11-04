@@ -19,6 +19,7 @@
 #include "fields/function_space_expr.hpp"
 #include "fields/function_space_mesh.hpp"
 #include "fields/named_field.hpp"
+#include "evaluation/evaluation_fwd.hpp"
 #include "evaluation/function_space_resolver.hpp"
 
 namespace cfd
