@@ -7,10 +7,14 @@
 #include <set>
 #include <cassert>
 #include <utility>
+#include <ostream>
+#include <fstream>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/mesh_function.hpp>
 #include <simple_cfd/dof_map.hpp>
+#include <simple_cfd/discrete_field.hpp>
 #include <simple_cfd/exception.hpp>
 #include "solve_operation.hpp"
 #include "dimensionless_scenario.hpp"
@@ -30,12 +34,147 @@ class Scenario : public detail::DimensionlessScenario
 {
 private:
   static const std::size_t dimension = D;
+  typedef vertex<dimension> vertex_type;
+  typedef typename DofMap<dimension>::dof_t dof_t;
   typedef detail::FunctionSpaceExpr* function_space_ptr;
 
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::map< std::string, DiscreteField<dimension> > persistentFields;
+
+  boost::tuple<double, double, double> getValue(const std::size_t cid, const vertex_type& vertex, 
+    const DiscreteField<dimension>& field) const
+  {
+    assert(dimension <= 3);
+    assert(field.getRank() <= 1);
+
+    const CellVertices<dimension> vertices(mesh.getCoordinates(cid));
+    boost::tuple<double, double, double> value(0.0, 0.0, 0.0);
+
+    for(unsigned dof=0; dof<field.getElement()->spaceDimension(); ++dof)
+    {
+      Tensor<dimension> basis = field.getElement()->evaluateTensor(vertices, dof, vertex);
+      const dof_t fieldDof = dof_t(field.getElement(), cid, dof);
+
+      double valueCoeff;
+      field.getValues(1u, &fieldDof, &valueCoeff);
+
+      if (field.getRank() == 0)
+      {
+        boost::get<0>(value) = basis * valueCoeff;
+      }
+      else
+      {
+        if (dimension >= 1)
+          boost::get<0>(value) += basis(0) * valueCoeff;
+        if (dimension >= 2)
+         boost::get<1>(value) += basis(1) * valueCoeff;
+        if (dimension >= 3)
+         boost::get<2>(value) += basis(2) * valueCoeff;
+      }
+    }
+    return value;
+  }
+
+
+  void renderFields(std::ostream& out) const
+  {
+    const std::size_t vtk_dimension = 3;    
+    assert(dimension <= 3);
+
+    std::vector< vertex<dimension> > vertices;
+    std::map< std::string, std::vector< boost::tuple<double, double, double> > > values;
+
+    for (typename std::map< std::string, DiscreteField<dimension> >::const_iterator fieldIter(persistentFields.begin());
+      fieldIter != persistentFields.end(); ++fieldIter)
+    {
+      for(typename Mesh<dimension>::global_iterator vIter(mesh.global_begin(0)); vIter!=mesh.global_end(0); ++vIter)
+      {
+        const vertex<dimension> v(mesh.getVertex(vIter->getIndex()));
+        vertices.push_back(v);
+
+        const std::size_t cid = mesh.getContainingCell(*vIter);
+        const MeshEntity localVertexEntity = mesh.getLocalEntity(cid, *vIter);
+        const vertex<dimension> localVertex = mesh.getLocalCoordinate(cid, localVertexEntity.getIndex());
+        values[fieldIter->first].push_back(getValue(cid, localVertex, fieldIter->second));
+      }
+
+      for(typename Mesh<dimension>::global_iterator eIter(mesh.global_begin(1)); eIter!=mesh.global_end(1); ++eIter)
+      {
+        const std::size_t cid = mesh.getContainingCell(*eIter);
+        const std::vector<std::size_t> vertexIndices(mesh.getIndices(*eIter, 0));
+        assert(vertexIndices.size() == 2);
+      
+        const MeshEntity v1Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[0]));
+        const MeshEntity v2Entity = mesh.getLocalEntity(cid, MeshEntity(0, vertexIndices[1]));
+
+        const vertex<dimension> localVertex((mesh.getLocalCoordinate(cid, v1Entity.getIndex()) + 
+          mesh.getLocalCoordinate(cid, v2Entity.getIndex()))/2.0);
+
+        vertices.push_back(mesh.referenceToPhysical(cid, localVertex));
+        values[fieldIter->first].push_back(getValue(cid, localVertex, fieldIter->second));
+      }
+    }
+
+    out << "# vtk DataFile Version 2.0" << std::endl;
+    out << "Simple Navier-Stokes Solver" << std::endl;
+    out << "ASCII" << std::endl;
+    out << "DATASET POLYDATA" << std::endl;
+    out << "POINTS " << vertices.size() << " DOUBLE " << std::endl;
+
+    for(std::size_t point = 0; point < vertices.size(); ++point)
+    {
+      const vertex<dimension> v(vertices[point]);
+
+      for(std::size_t index=0; index < vtk_dimension; ++index)
+      {
+        if (index < dimension)
+          out << v[index];
+        else
+          out << "0";
+
+        out << " ";
+      }
+      out << std::endl;
+    }
+
+    out << "POLYGONS ";
+    out << mesh.numEntities(dimension) << " ";
+    out << mesh.numRelations(dimension, 0) + mesh.numEntities(dimension) << std::endl; 
+
+    for(typename Mesh<dimension>::global_iterator cIter(mesh.global_begin(dimension)); cIter!=mesh.global_end(dimension); ++cIter)
+    {
+      const std::vector<std::size_t> vIndices(mesh.getIndices(*cIter, 0));
+      out << vIndices.size();
+
+      for(std::size_t v=0; v<vIndices.size(); ++v)
+      {
+        out << " " << vIndices[v];
+      }
+      out << std::endl;
+    }
+
+    for (typename std::map< std::string, DiscreteField<dimension> >::const_iterator fieldIter(persistentFields.begin());
+      fieldIter != persistentFields.end(); ++fieldIter)
+    {
+      const bool isScalarField = fieldIter->second.getRank() == 0;
+
+      out << "POINT_DATA " << vertices.size() << std::endl;
+      out << (isScalarField ? "SCALARS" : "VECTORS") << " " << fieldIter->first << " DOUBLE" << std::endl;
+
+      for(std::size_t point = 0; point < values[fieldIter->first].size(); ++point)
+      {
+        out << boost::get<0>(values[fieldIter->first][point]) << " ";
+        if (!isScalarField)
+        {
+          out << boost::get<1>(values[fieldIter->first][point]);
+          out << boost::get<2>(values[fieldIter->first][point]);      
+        }
+        out << std::endl;
+      }
+    }
+  }
 
 public:
   Scenario(Mesh<dimension>& _mesh) : mesh(_mesh)
@@ -119,8 +258,9 @@ public:
 
   void outputFieldsToFile(const std::string& filename) const
   {
-    // TODO: implement me!
-    assert(false);
+    std::ofstream outFile(filename.c_str());
+    renderFields(outFile);
+    outFile.close();
   }
 
   void execute(SolveOperation& o)
