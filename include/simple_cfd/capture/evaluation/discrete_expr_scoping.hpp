@@ -11,12 +11,14 @@
 #include <boost/variant.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/capture/capture_fwd.hpp>
 #include <simple_cfd/capture/fields/temporal_index_value.hpp>
 #include <simple_cfd/capture/fields/indexable_value.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include <simple_cfd/capture/fields/discrete_expr.hpp>
+#include <simple_cfd/capture/evaluation/evaluation_fwd.hpp>
 #include <simple_cfd/capture/evaluation/expression_values.hpp>
-#include <simple_cfd/capture/evaluation/evaluation_visitor.hpp>
+#include "discrete_expr_scoping_visitor.hpp"
 
 namespace cfd
 {
@@ -26,9 +28,11 @@ namespace detail
 
 class DiscreteExprScoping
 {
+public:
+  typedef boost::variant<DiscreteExpr*, TemporalIndexValue*> evaluatable_t;
+
 private:
   static boost::shared_ptr<TemporalIndexValue> globalScope;
-  typedef boost::variant<DiscreteExpr*, TemporalIndexValue*> evaluatable_t;
 
   TemporalIndexValue* const thisLoopIndex;
   std::map<TemporalIndexValue*, DiscreteExprScoping> loops;
@@ -39,19 +43,6 @@ private:
   {
   }
 
-  DiscreteExprScoping& getLoop(TemporalIndexValue& index)
-  {
-    const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter(loops.find(&index));
-
-    if (loopIter!=loops.end())
-    {
-      return loopIter->second;
-    }
-    else
-    {
-      return loops.insert(std::make_pair(&index, DiscreteExprScoping(index))).first->second;
-    }
-  }
 
   // TODO: remove replicated code from operators
   class OrderCalculationHelper : public boost::static_visitor<void>
@@ -178,45 +169,46 @@ private:
     }
   }
 
-  template<std::size_t D>
-  class ExecutionHelper : public boost::static_visitor<void>
-  {
-  private:
-    DiscreteExprScoping& parent;
-    EvaluationVisitor<D>& evaluationVisitor;
-
-  public:
-    ExecutionHelper(DiscreteExprScoping& _parent, EvaluationVisitor<D>& v) : parent(_parent), evaluationVisitor(v)
-    {
-    }
-
-    void operator()(DiscreteExpr* const expr) const
-    {
-      expr->accept(evaluationVisitor);
-    }
-
-    void operator()(TemporalIndexValue* const loopIndex) const
-    {
-      const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter = parent.loops.find(loopIndex);
-      assert(loopIter!=parent.loops.end());
-      loopIter->second.execute(evaluationVisitor);
-    }
-  };
-
-  template<std::size_t D>
-  void execute(EvaluationVisitor<D>& evaluationVisitor)
-  {
-    ExecutionHelper<D> helper(*this, evaluationVisitor);
-    for(std::vector<evaluatable_t>::const_iterator evalIter(ordered.begin()); evalIter!=ordered.end(); ++evalIter)
-    {
-      evaluatable_t evaluatable(*evalIter);
-      boost::apply_visitor(helper, evaluatable);
-    }
-  }
-
 public:
+  typedef std::vector<evaluatable_t>::iterator iterator;
+  typedef std::vector<evaluatable_t>::const_iterator const_iterator;
+
   DiscreteExprScoping() : thisLoopIndex(globalScope.get())
   {
+  }
+
+  iterator begin() 
+  {
+    return ordered.begin();
+  }
+
+  iterator end()
+  {
+    return ordered.end();
+  }
+
+  const_iterator begin() const
+  {
+    return ordered.begin();
+  }
+
+  const_iterator end() const
+  {
+    return ordered.end();
+  }
+
+  DiscreteExprScoping& getLoop(TemporalIndexValue& index)
+  {
+    const std::map<TemporalIndexValue*, DiscreteExprScoping>::iterator loopIter(loops.find(&index));
+
+    if (loopIter!=loops.end())
+    {
+      return loopIter->second;
+    }
+    else
+    {
+      return loops.insert(std::make_pair(&index, DiscreteExprScoping(index))).first->second;
+    }
   }
 
   /* This function allows expressions to be added to this scope. To be able to infer the loop nesting
@@ -344,11 +336,16 @@ public:
     }
   }
 
-  template<std::size_t D>
-  void execute(Scenario<D>& scenario)
+  void accept(DiscreteExprScopingVisitor& v)
   {
-    EvaluationVisitor<D> evaluationVisitor(scenario);
-    execute(evaluationVisitor);
+    if (isGlobalScope())
+    {
+      v.visitBlock(*this);
+    }
+    else
+    {
+      v.visitLoop(*this, thisLoopIndex);
+    }
   }
 };
 

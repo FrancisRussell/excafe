@@ -8,6 +8,7 @@
 #include <simple_cfd/capture/fields/discrete_expr_set.hpp>
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
 #include "expression_values.hpp"
+#include "evaluation_visitor.hpp"
 #include "discrete_expr_scoping.hpp"
 
 namespace cfd
@@ -53,7 +54,8 @@ public:
   template<std::size_t D>
   void execute(Scenario<D>& scenario)
   {
-    scoping.execute(scenario);
+    EvaluationVisitor<D> evaluationVisitor(scenario);
+    scoping.accept(evaluationVisitor);
   }
 };
 

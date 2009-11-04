@@ -2,8 +2,10 @@
 #define SIMPLE_CFD_CAPTURE_EVALUATION_EXPRESSION_VALUES_HPP
 
 #include <cstddef>
+#include <cassert>
+#include <boost/shared_ptr.hpp>
 #include <simple_cfd/capture/fields/discrete_traits.hpp>
-#include "expression_values_typed.hpp"
+#include "expression_values_scope.hpp"
 
 namespace cfd
 {
@@ -16,11 +18,98 @@ class ExpressionValues
 {
 private:
   static const std::size_t dimension = D;
+  typedef typename DiscreteValueTraits<discrete_scalar_tag, D>::value_t scalar_value_t;
+  typedef typename DiscreteValueTraits<discrete_field_tag, D>::value_t field_value_t;
+  typedef typename DiscreteValueTraits<discrete_operator_tag, D>::value_t operator_value_t;
 
-  ExpressionValuesTyped<discrete_scalar_tag, dimension> scalars;
-  ExpressionValuesTyped<discrete_field_tag, dimension> fields;
-  ExpressionValuesTyped<discrete_operator_tag, dimension> operators;
+  boost::shared_ptr< ExpressionValuesScope<dimension> > values;
 
+public:
+  ExpressionValues()
+  {
+  }
+
+  void enterScope()
+  {
+    values = boost::shared_ptr< ExpressionValuesScope<dimension> >(new ExpressionValuesScope<dimension>(values));
+  }
+
+  void exitScope()
+  {
+    assert(values.use_count() != 0);
+    values = values->getParent();
+  }
+
+  void calculateFinals()
+  {
+    values->calculateFinals();
+  }
+
+  void completeIteration()
+  {
+    assert(!values.use_count() == 0);
+    values->completeIteration();
+  }
+
+  scalar_value_t& getValue(ScalarExpr& e)
+  {
+    return values->getValue(e);
+  }
+
+  field_value_t& getValue(DiscreteFieldExpr& e)
+  {
+    return values->getValue(e);
+  }
+
+  operator_value_t& getValue(OperatorExpr& e)
+  {
+    return values->getValue(e);
+  }
+
+  scalar_value_t& getValue(IndexableValue<discrete_scalar_tag>& i, const signed offset)
+  {
+    return values->getValue(i, offset);
+  }
+
+  field_value_t& getValue(IndexableValue<discrete_field_tag>& i, const int offset)
+  {
+    return values->getValue(i, offset);
+  }
+
+  operator_value_t& getValue(IndexableValue<discrete_operator_tag>& i, const int offset)
+  {
+    return values->getValue(i, offset);
+  }
+
+  void setValue(ScalarExpr& e, const scalar_value_t& v)
+  {
+    values->setValue(e, v);
+  }
+
+  void setValue(DiscreteFieldExpr& e, const field_value_t& v)
+  {
+    values->setValue(e, v);
+  }
+
+  void setValue(OperatorExpr& e, const operator_value_t& v)
+  {
+    values->setValue(e, v);
+  }
+
+  void  setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& v)
+  {
+    values->setValue(i, v);
+  }
+
+  void  setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& v)
+  {
+    values->setValue(i, v);
+  }
+
+  void  setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& v)
+  {
+    values->setValue(i, v);
+  }
 };
 
 }
