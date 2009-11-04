@@ -12,6 +12,7 @@
 #include <simple_cfd/capture/fields/discrete_field_two_norm.hpp>
 #include <simple_cfd/capture/fields/discrete_field_zero.hpp>
 #include <simple_cfd/capture/fields/discrete_field_projection.hpp>
+#include <simple_cfd/capture/fields/operator_assembly.hpp>
 #include <simple_cfd/capture/fields/operator_application.hpp>
 #include <simple_cfd/capture/fields/operator_addition.hpp>
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
@@ -286,7 +287,14 @@ public:
 
   virtual void visit(OperatorAssembly& a)
   {
+    const DofMap<dimension>& trialDofMap(scenario.getDofMap(*a.getTrialSpace()));
+    const DofMap<dimension>& testDofMap(scenario.getDofMap(*a.getTestSpace()));
+    DiscreteOperator<dimension> discreteOperator(testDofMap, trialDofMap);
+
+    //FIXME: implement assembly
     assert(false);
+
+    setValue(a, discreteOperator);
   }
 
   virtual void visit(OperatorUndefined& u)

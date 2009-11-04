@@ -104,7 +104,7 @@ public:
     }
 
     elements.insert(map.elements.begin(), map.elements.end());
-    const unsigned offset = mapping.size();
+    const unsigned offset = getDegreesOfFreedomCount();
 
     for(typename local2global_map::const_iterator mappingIter=map.mapping.begin(); mappingIter!=map.mapping.end();
       ++mappingIter)

@@ -12,6 +12,7 @@
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
+#include "capture/forms/bilinear_form_integral_sum.hpp"
 
 namespace cfd
 {
@@ -69,7 +70,6 @@ private:
     return pattern;
   }
 
-/*
   void addTermGeneral(const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
     const MeshFunction<bool>& subDomain)
@@ -78,7 +78,7 @@ private:
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
-
+/*
     typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
     typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
 
@@ -165,8 +165,8 @@ private:
         }
       }
     }
-  }
 */
+  }
 
 public:
   DiscreteOperator(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
@@ -219,7 +219,6 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-/*
   DiscreteOperator& operator+=(const forms::BilinearFormIntegralSum& expr)
   {
     const Mesh<dimension> m(rowMappings.getMesh());
@@ -234,7 +233,6 @@ public:
 
     return *this;
   }
-*/
 
   void addToDiagonal(DiscreteField<dimension>& v)
   {
