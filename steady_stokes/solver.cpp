@@ -15,6 +15,133 @@
 
 using namespace cfd;
 
+class BoundaryConditionHack
+{
+private:
+  static const std::size_t dimension = 2;
+  typedef DofMap<dimension>::dof_t dof_t;
+  typedef vertex<dimension> vertex_type;
+
+  Mesh<dimension>& m;
+  FiniteElement<dimension>& velocity;
+  FiniteElement<dimension>& pressure;
+
+  enum Location
+  {
+    TOP_EDGE,
+    BOTTOM_EDGE,
+    LEFT_EDGE,
+    RIGHT_EDGE,
+    BODY
+  };
+
+  Location getLocation(const vertex_type& v) const
+  {
+    // FIXME: make me into a function that doesn't depend on the specifics of the mesh generation
+
+    Location location = BODY;
+
+    if (v[0] == 3.0)
+      location = RIGHT_EDGE;
+
+    if (v[1] == 0.0)
+      location = BOTTOM_EDGE;
+
+    if (v[1] == 1.0)
+      location = TOP_EDGE;
+
+    if (v[0] == 0.0)
+      location = LEFT_EDGE;
+
+    return location;
+  }
+
+  void applyEdgeVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, 
+    DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector) const
+  {
+    const unsigned velocitySpaceDimension = velocity.spaceDimension();
+
+    for(Mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    {
+      for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
+      {
+        const dof_t velocity_globalDof = dof_t(&velocity, cellIter->getIndex(), dof);
+        const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
+        const bool isXDof = velocity.getTensorIndex(m, cellIter->getIndex(), dof) == 0;
+        const Location location = getLocation(dofLocation);
+
+        if (location == LEFT_EDGE)
+        {
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+
+          // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
+          const double rhs = isXDof ? 5.0 : 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
+
+          // To help convergence
+          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
+        else if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
+        {
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+
+          const double rhs = 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
+        
+          // To help convergence
+          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
+      }
+    }
+
+    stiffness_matrix.assemble();
+    load_vector.assemble();
+    unknown_vector.assemble();
+  }
+
+  void applyCylinderVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, 
+    DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector) const
+  {
+    const unsigned velocitySpaceDimension = velocity.spaceDimension();
+    const vertex_type centre(0.5, 0.5);
+    const double radius = 0.15;
+
+    for(Mesh<dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    {
+      for(unsigned dof=0; dof<velocitySpaceDimension; ++dof)
+      {
+        const vertex_type dofLocation = velocity.getDofCoordinateGlobal(m, cellIter->getIndex(), dof);
+        const vertex_type offset = dofLocation - centre;
+
+        if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
+        {
+          const dof_t velocity_globalDof = dof_t(&velocity, cellIter->getIndex(), dof);
+          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          const double rhs = 0.0;
+          load_vector.setValues(1, &velocity_globalDof, &rhs);
+        }
+      }
+    }
+
+    stiffness_matrix.assemble();
+    load_vector.assemble();
+    unknown_vector.assemble();
+  }
+
+public:
+  BoundaryConditionHack(Mesh<dimension>& _m, FiniteElement<dimension>& _velocity, FiniteElement<dimension>& _pressure) :
+   m(_m), velocity(_velocity), pressure(_pressure)
+  {
+  }
+
+  void operator()(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, 
+    DiscreteField<dimension>& load_vector) const
+  {
+    applyEdgeVelocityBoundaryConditions(stiffness_matrix, unknown_vector, load_vector);
+    applyCylinderVelocityBoundaryConditions(stiffness_matrix, unknown_vector, load_vector);
+  }
+};
+
 template<std::size_t D>
 class NavierStokesSolver
 {
@@ -55,6 +182,9 @@ public:
   {
     using namespace forms;
 
+    const BoundaryConditionHack bc(mesh, scenario.getElement(velocity), scenario.getElement(pressure));
+    const detail::LinearSolve::bc_function_t bcFunction(bc);
+
     SolveOperation s = scenario.newSolveOperation();
 
     Scalar theta = 0.5;
@@ -89,7 +219,7 @@ public:
     Scalar residual = ((linearisedSystem * unknownGuess[n-1]) - load).two_norm();
 
     // TODO: Boundary condition magic
-    unknownGuess[n] = linear_solve(linearisedSystem, load);
+    unknownGuess[n] = linear_solve(linearisedSystem, load, bcFunction);
 
     n.setTermination(residual < 1e-3);
 

@@ -32,9 +32,9 @@ struct final_tag
 
 detail::final_tag final;
 
-Field linear_solve(const Operator& A, const Field& b)
+Field linear_solve(const Operator& A, const Field& b, const detail::LinearSolve::bc_function_t& bcFunction)
 {
- return Field(new detail::LinearSolve(A.getExpr(), b.getExpr()));
+ return Field(new detail::LinearSolve(A.getExpr(), b.getExpr(), bcFunction));
 }
 
 detail::TemporalIndexExpr operator-(const TemporalIndex& e, const signed offset)

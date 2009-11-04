@@ -291,7 +291,6 @@ public:
     const DofMap<dimension>& testDofMap(scenario.getDofMap(*a.getTestSpace()));
     DiscreteOperator<dimension> discreteOperator(testDofMap, trialDofMap);
     discreteOperator.assembleForms(scenario, values, a.getBilinearFormIntegralSum());
-    //FIXME: perform boundary conditions hack
     setValue(a, discreteOperator);
   }
 
@@ -359,9 +358,12 @@ public:
     solver.setRelativeTolerance(0.0);
     solver.enablePreconditioner(false);
     
-    const DiscreteOperator<dimension>& stiffnessMatrix = getValue(s.getOperator());
-    const DiscreteField<dimension>& loadVector = getValue(s.getField());
+    DiscreteOperator<dimension>& stiffnessMatrix = getValue(s.getOperator());
+    DiscreteField<dimension>& loadVector = getValue(s.getField());
     DiscreteField<dimension> unknownVector(stiffnessMatrix.getColMappings());
+
+    //FIXME: get rid of boundary condition hack
+    s.getBoundaryConditionFunction()(stiffnessMatrix, unknownVector, loadVector); 
 
     solver.solve(stiffnessMatrix.getMatrixHandle(), unknownVector.getVectorHandle(), loadVector.getVectorHandle());
 
