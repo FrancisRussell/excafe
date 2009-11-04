@@ -73,6 +73,13 @@ public:
           m(&_m), elements(_elements), mapping(_mapping)
   {
   }
+
+  void swap(DofMap& d)
+  {
+    std::swap(m, d.m);
+    elements.swap(d.elements);
+    mapping.swap(d.mapping);
+  }
   
   bool isComposite() const
   {

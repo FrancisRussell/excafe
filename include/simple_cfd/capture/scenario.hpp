@@ -105,6 +105,13 @@ public:
     return fieldIter->second;
   }
 
+  void setNamedValue(const std::string& name, DiscreteField<dimension> v)
+  {
+    const typename std::map< std::string, DiscreteField<dimension> >::iterator fieldIter = persistentFields.find(name);
+    assert(fieldIter != persistentFields.end());
+    fieldIter->second.swap(v);
+  }
+
   SolveOperation newSolveOperation()
   {
     return SolveOperation(*this);

@@ -17,7 +17,7 @@ private:
   static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
   typedef typename DofMap<dimension>::dof_t dof_t;
-  const DofMap<dimension> rowMappings;
+  DofMap<dimension> rowMappings;
   PETScVector vector;
   
   void addOrSetValues(const unsigned rows, const dof_t* rowDofs, const double* values, const bool add)
@@ -45,6 +45,12 @@ public:
 
   DiscreteField(const DiscreteField& v) : rowMappings(v.rowMappings), vector(v.vector)
   {
+  }
+
+  void swap(DiscreteField& f)
+  {
+    rowMappings.swap(f.rowMappings);
+    vector.swap(f.vector);
   }
 
   bool isComposite() const

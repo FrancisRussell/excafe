@@ -51,6 +51,11 @@ public:
     values->completeIteration();
   }
 
+  bool isGlobalScope() const
+  {
+    return values->getParent().use_count() == 0;
+  }
+
   scalar_value_t& getValue(ScalarExpr& e)
   {
     return values->getValue(e);

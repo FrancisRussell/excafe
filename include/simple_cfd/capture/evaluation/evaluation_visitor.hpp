@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cassert>
+#include <set>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <simple_cfd/exception.hpp>
@@ -38,6 +39,7 @@ private:
   static const std::size_t dimension = D;
   Scenario<dimension>& scenario;
   ExpressionValues<dimension> values;
+  ExpressionValues<dimension> kept;
 
   typedef typename DiscreteValueTraits<discrete_scalar_tag, D>::value_t scalar_value_t;
   typedef typename DiscreteValueTraits<discrete_field_tag, D>::value_t field_value_t;
@@ -206,7 +208,8 @@ private:
   }
 
 public:
-  EvaluationVisitor(Scenario<dimension>& _scenario) : scenario(_scenario)
+  EvaluationVisitor(Scenario<dimension>& _scenario) : 
+    scenario(_scenario)
   {
   }
 
@@ -214,6 +217,12 @@ public:
   {
     values.enterScope();
     execute(scope);
+
+    if (values.isGlobalScope())
+    {
+      kept = values;
+    }
+
     values.exitScope();
   }
 
@@ -373,6 +382,11 @@ public:
     }
  
     setValue(s, unknownVector);
+  }
+
+  ExpressionValues<dimension> getWanted() const
+  {
+    return kept;
   }
 };
 

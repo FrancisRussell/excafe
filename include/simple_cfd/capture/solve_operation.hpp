@@ -35,7 +35,12 @@ public:
   template<std::size_t D>
   void executeDimensionTemplated(Scenario<D>& scenario)
   {
-    evaluationStrategy->execute<D>(scenario);
+    detail::ExpressionValues<D> evaluatedValues = evaluationStrategy->execute<D>(scenario);
+
+    for (std::map<NamedField, Field>::const_iterator newIter(newValues.begin()); newIter!=newValues.end(); ++newIter)
+    {
+      scenario.setNamedValue(newIter->first.getName(), evaluatedValues.getValue(*newIter->second.getExpr()));
+    }
   }
 };
 

@@ -27,6 +27,7 @@ public:
   PETScVector operator*(const double s) const;
   PETScVector operator+(const PETScVector& p) const;
   PETScVector operator-(const PETScVector& p) const;
+  void swap(PETScVector& p);
   double two_norm() const;
   std::size_t numRows() const;
   void addValues(const unsigned numValues, const int* indices, const double* values);

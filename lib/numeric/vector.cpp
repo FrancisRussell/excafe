@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <iostream>
+#include <algorithm>
 #include "petsc.h"
 #include "petscvec.h"
 
@@ -21,6 +22,11 @@ PETScVector::PETScVector(const PETScVector& orig)
 void PETScVector::checkError(const PetscErrorCode ierr) const
 {
   assert(ierr == 0);
+}
+
+void PETScVector::swap(PETScVector& p)
+{
+  std::swap(v, p.v);
 }
 
 PETScVector::PETScVector(const unsigned rows)

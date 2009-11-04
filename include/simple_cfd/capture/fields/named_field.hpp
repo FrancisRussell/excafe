@@ -38,6 +38,11 @@ public:
     return name == f.name;
   }
 
+  std::string getName() const
+  {
+    return name;
+  }
+
   Field getField()
   {
     return field;

@@ -52,10 +52,11 @@ public:
   void buildExprScoping();
 
   template<std::size_t D>
-  void execute(Scenario<D>& scenario)
+  ExpressionValues<D> execute(Scenario<D>& scenario)
   {
     EvaluationVisitor<D> evaluationVisitor(scenario);
     scoping.accept(evaluationVisitor);
+    return evaluationVisitor.getWanted();
   }
 };
 
