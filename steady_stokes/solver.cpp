@@ -193,14 +193,6 @@ public:
     Scalar k  = 0.01;
     Scalar kinematic_viscosity = 1.0/250;
 
-    Operator systemMatrix(coupledSpace, coupledSpace);
-    systemMatrix = 
-      B(velocity, velocity)*dx +
-      B(theta * k * kinematic_viscosity * grad(velocity), grad(velocity))*dx +
-      B(theta * k * kinematic_viscosity * -1.0 * inner(grad(velocity), n), velocity)*ds +
-      B(-1.0 * k * pressure, div(velocity))*dx +
-      B(div(velocity), pressure)*dx;
-
     Operator nonLinearRhs(velocitySpace, velocitySpace);
     nonLinearRhs =
       B(velocity, velocity)*dx +
@@ -211,19 +203,25 @@ public:
     Field velocityRhs = nonLinearRhs * velocityField;
     Field load(coupledSpace);
 
-    TemporalIndex n;
-    IndexedField unknownGuess(n);
+    TemporalIndex i;
+    IndexedField unknownGuess(i);
 
     unknownGuess[-1] = project(velocityField, coupledSpace) + project(pressureField, coupledSpace);
-    Operator linearisedSystem = 
-      systemMatrix + B(theta * k * inner(project(unknownGuess[n-1], velocitySpace), grad(velocity)), velocity)*dx;
+    Operator linearisedSystem(coupledSpace, coupledSpace);
+    linearisedSystem =
+      B(velocity, velocity)*dx +
+      B(theta * k * kinematic_viscosity * grad(velocity), grad(velocity))*dx +
+      B(theta * k * kinematic_viscosity * -1.0 * inner(grad(velocity), n), velocity)*ds +
+      B(-1.0 * k * pressure, div(velocity))*dx +
+      B(div(velocity), pressure)*dx +
+      B(theta * k * inner(project(unknownGuess[i-1], velocitySpace), grad(velocity)), velocity)*dx;
 
-    Scalar residual = ((linearisedSystem * unknownGuess[n-1]) - load).two_norm();
+    Scalar residual = ((linearisedSystem * unknownGuess[i-1]) - load).two_norm();
 
     // TODO: Boundary condition magic
-    unknownGuess[n] = linear_solve(linearisedSystem, load, bcFunction);
+    unknownGuess[i] = linear_solve(linearisedSystem, load, bcFunction);
 
-    n.setTermination(residual < 1e-3);
+    i.setTermination(residual < 1e-3);
 
     s.setNewValue(velocityField, project(unknownGuess[final-1], velocitySpace));
     s.setNewValue(pressureField, project(unknownGuess[final-1], pressureSpace));
