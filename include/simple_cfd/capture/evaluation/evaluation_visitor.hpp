@@ -117,39 +117,52 @@ private:
     return values.getValue(e);
   }
 
-  scalar_value_t& getValue(IndexableValue<discrete_scalar_tag>& i, const signed offset)
+  scalar_value_t getValue(IndexableValue<discrete_scalar_tag>& i, const signed offset)
   {
     if (offset == 0)
     {
       return getValue(*i.getIterationAssignment());
     }
-    else
+    else if (values.hasValue(i, offset))
     {
       return values.getValue(i, offset);
+    }
+    else
+    {
+      return 0;
     }
   }
 
-  field_value_t& getValue(IndexableValue<discrete_field_tag>& i, const int offset)
+  field_value_t getValue(IndexableValue<discrete_field_tag>& i, const int offset)
   {
     if (offset == 0)
     {
       return getValue(*i.getIterationAssignment());
     }
-    else
+    else if (values.hasValue(i, offset))
     {
       return values.getValue(i, offset);
+    }
+    else
+    {
+      return DiscreteField<dimension>(scenario.getDofMap(*i.getIterationAssignment()->getFunctionSpace()));
     }
   }
 
-  operator_value_t& getValue(IndexableValue<discrete_operator_tag>& i, const int offset)
+  operator_value_t getValue(IndexableValue<discrete_operator_tag>& i, const int offset)
   {
     if (offset == 0)
     {
       return getValue(*i.getIterationAssignment());
     }
-    else
+    else if (values.hasValue(i, offset))
     {
       return values.getValue(i, offset);
+    }
+    else
+    {
+      return DiscreteOperator<dimension>(scenario.getDofMap(*i.getIterationAssignment()->getTestSpace()),
+        scenario.getDofMap(*i.getIterationAssignment()->getTrialSpace()));
     }
   }
 

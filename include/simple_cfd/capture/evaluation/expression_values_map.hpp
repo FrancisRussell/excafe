@@ -49,12 +49,12 @@ public:
     nonIndexed.insert(newValues.begin(), newValues.end());
   }
 
-  bool hasValue(expr_t& e)
+  bool hasValue(expr_t& e) const
   {
     return nonIndexed.find(&e) != nonIndexed.end();
   }
 
-  bool hasValue(indexable_t& e, const signed offset)
+  bool hasValue(indexable_t& e, const signed offset) const
   {
     return indexed.find(std::make_pair(&e, offset)) != indexed.end();
   }

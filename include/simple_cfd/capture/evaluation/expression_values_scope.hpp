@@ -91,6 +91,69 @@ public:
     }
   }
 
+  bool hasValue(ScalarExpr& e) const
+  {
+    if (scalars.hasValue(e))
+    {
+      return true;
+    }
+    else if (parent.use_count() > 0)
+    {
+      return parent->hasValue(e);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool hasValue(FieldExpr& e) const
+  {
+    if (fields.hasValue(e))
+    {
+      return true;
+    }
+    else if (parent.use_count() > 0)
+    {
+      return parent->hasValue(e);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool hasValue(OperatorExpr& e) const
+  {
+    if (operators.hasValue(e))
+    {
+      return true;
+    }
+    else if (parent.use_count() > 0)
+    {
+      return parent->hasValue(e);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool hasValue(IndexableValue<discrete_scalar_tag>& i, const signed offset) const
+  {
+    return scalars.hasValue(i, offset);
+  }
+
+  bool hasValue(IndexableValue<discrete_field_tag>& i, const signed offset) const
+  {
+    return fields.hasValue(i, offset);
+  }
+
+  bool hasValue(IndexableValue<discrete_operator_tag>& i, const signed offset) const
+  {
+    return operators.hasValue(i, offset);
+  }
+
   scalar_value_t& getValue(IndexableValue<discrete_scalar_tag>& i, const signed offset)
   {
     return scalars.getValue(i, offset);

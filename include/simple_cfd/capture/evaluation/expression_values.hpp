@@ -71,6 +71,36 @@ public:
     return values->getValue(e);
   }
 
+  bool hasValue(ScalarExpr& e) const
+  {
+    return values->hasValue(e);
+  }
+
+  bool hasValue(DiscreteFieldExpr& e) const
+  {
+    return values->hasValue(e);
+  }
+
+  bool getValue(OperatorExpr& e) const
+  {
+    return values->hasValue(e);
+  }
+
+  bool hasValue(IndexableValue<discrete_scalar_tag>& i, const signed offset) const
+  {
+    return values->hasValue(i, offset);
+  }
+
+  bool hasValue(IndexableValue<discrete_field_tag>& i, const signed offset) const
+  {
+    return values->hasValue(i, offset);
+  }
+
+  bool hasValue(IndexableValue<discrete_operator_tag>& i, const signed offset) const
+  {
+    return values->hasValue(i, offset);
+  }
+
   scalar_value_t& getValue(IndexableValue<discrete_scalar_tag>& i, const signed offset)
   {
     return values->getValue(i, offset);
