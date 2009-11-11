@@ -2,6 +2,8 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_OPERATOR_ADDITION_HPP
 
 #include <cassert>
+#include <set>
+#include <memory>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include <simple_cfd/capture/indices/propagation_rule.hpp>

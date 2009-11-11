@@ -292,6 +292,12 @@ public:
     setValue(p, scenario.getNamedValue(p));
   }
 
+  virtual void visit(DiscreteFieldApplyBC& a)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
+
 
   // Discrete operator related
   virtual void visit(OperatorApplication& a)
@@ -314,6 +320,12 @@ public:
     DiscreteOperator<dimension> discreteOperator(testDofMap, trialDofMap);
     discreteOperator.assembleForms(scenario, values, a.getBilinearFormIntegralSum());
     setValue(a, discreteOperator);
+  }
+
+  virtual void visit(OperatorApplyBC& a)
+  {
+    //FIXME: implement me!
+    assert(false);
   }
 
   virtual void visit(OperatorUndefined& u)
@@ -383,9 +395,6 @@ public:
     DiscreteOperator<dimension>& stiffnessMatrix = getValue(s.getOperator());
     DiscreteField<dimension>& loadVector = getValue(s.getField());
     DiscreteField<dimension> unknownVector(stiffnessMatrix.getColMappings());
-
-    //FIXME: get rid of boundary condition hack
-    s.getBoundaryConditionFunction()(stiffnessMatrix, unknownVector, loadVector); 
 
     solver.solve(stiffnessMatrix.getMatrixHandle(), unknownVector.getVectorHandle(), loadVector.getVectorHandle());
 

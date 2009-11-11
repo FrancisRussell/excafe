@@ -56,8 +56,8 @@ private:
     return location;
   }
 
-  void applyEdgeVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, 
-    DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector) const
+  void applyEdgeVelocityBoundaryConditions(DiscreteOperator<dimension>* const stiffness_matrix, 
+    DiscreteField<dimension>* const load_vector) const
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
 
@@ -72,35 +72,35 @@ private:
 
         if (location == LEFT_EDGE)
         {
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          if (stiffness_matrix != NULL)
+            stiffness_matrix->zeroRow(velocity_globalDof, 1.0);
 
           // Set x velocity to same value on inflow and outflow boundary, and y velocity to 0
           const double rhs = isXDof ? 5.0 : 0.0;
-          load_vector.setValues(1, &velocity_globalDof, &rhs);
 
-          // To help convergence
-          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+          if (load_vector != NULL)
+            load_vector->setValues(1, &velocity_globalDof, &rhs);
+
         }
         else if ((location == TOP_EDGE || location == BOTTOM_EDGE) && !isXDof)
         {
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+          if (stiffness_matrix != NULL)
+            stiffness_matrix->zeroRow(velocity_globalDof, 1.0);
 
           const double rhs = 0.0;
-          load_vector.setValues(1, &velocity_globalDof, &rhs);
-        
-          // To help convergence
-          unknown_vector.setValues(1, &velocity_globalDof, &rhs);
+
+          if (load_vector != NULL)
+            load_vector->setValues(1, &velocity_globalDof, &rhs);
         }
       }
     }
 
-    stiffness_matrix.assemble();
-    load_vector.assemble();
-    unknown_vector.assemble();
+    stiffness_matrix->assemble();
+    load_vector->assemble();
   }
 
-  void applyCylinderVelocityBoundaryConditions(DiscreteOperator<dimension>& stiffness_matrix, 
-    DiscreteField<dimension>& unknown_vector, DiscreteField<dimension>& load_vector) const
+  void applyCylinderVelocityBoundaryConditions(DiscreteOperator<dimension>* const stiffness_matrix, 
+    DiscreteField<dimension>* const load_vector) const
   {
     const unsigned velocitySpaceDimension = velocity.spaceDimension();
     const vertex_type centre(0.5, 0.5);
@@ -116,16 +116,20 @@ private:
         if((offset[0] * offset[0] + offset[1] * offset[1]) < radius * radius)
         {
           const dof_t velocity_globalDof = dof_t(&velocity, cellIter->getIndex(), dof);
-          stiffness_matrix.zeroRow(velocity_globalDof, 1.0);
+
+          if (stiffness_matrix != NULL)
+            stiffness_matrix->zeroRow(velocity_globalDof, 1.0);
+
           const double rhs = 0.0;
-          load_vector.setValues(1, &velocity_globalDof, &rhs);
+
+          if (load_vector != NULL)
+            load_vector->setValues(1, &velocity_globalDof, &rhs);
         }
       }
     }
 
-    stiffness_matrix.assemble();
-    load_vector.assemble();
-    unknown_vector.assemble();
+    stiffness_matrix->assemble();
+    load_vector->assemble();
   }
 
 public:
@@ -136,11 +140,16 @@ public:
     assert(velocity.getRank() == 1);
   }
 
-  void operator()(DiscreteOperator<dimension>& stiffness_matrix, DiscreteField<dimension>& unknown_vector, 
-    DiscreteField<dimension>& load_vector) const
+  void operator()(DiscreteOperator<dimension>& stiffness_matrix) const
   {
-    applyEdgeVelocityBoundaryConditions(stiffness_matrix, unknown_vector, load_vector);
-    applyCylinderVelocityBoundaryConditions(stiffness_matrix, unknown_vector, load_vector);
+    applyEdgeVelocityBoundaryConditions(&stiffness_matrix, NULL);
+    applyCylinderVelocityBoundaryConditions(&stiffness_matrix, NULL);
+  }
+
+  void operator()(DiscreteField<dimension>& load_vector) const
+  {
+    applyEdgeVelocityBoundaryConditions(NULL, &load_vector);
+    applyCylinderVelocityBoundaryConditions(NULL, &load_vector);
   }
 };
 
@@ -185,7 +194,6 @@ public:
     using namespace forms;
 
     const BoundaryConditionHack bc(mesh, scenario.getElement(velocity), scenario.getElement(pressure));
-    const detail::LinearSolve::bc_function_t bcFunction(bc);
 
     SolveOperation s = scenario.newSolveOperation();
 
@@ -201,14 +209,13 @@ public:
       B(-(1.0-theta)*k * inner(velocityField, grad(velocity)), velocity)*dx;
 
     Field velocityRhs = nonLinearRhs * velocityField;
-    Field load(coupledSpace);
+    Field load(project(velocityRhs, coupledSpace));
 
     TemporalIndex i;
     IndexedField unknownGuess(i);
 
     unknownGuess[-1] = project(velocityField, coupledSpace) + project(pressureField, coupledSpace);
-    Operator linearisedSystem(coupledSpace, coupledSpace);
-    linearisedSystem =
+    const forms::BilinearFormIntegralSum lhsForm = 
       B(velocity, velocity)*dx +
       B(theta * k * kinematic_viscosity * grad(velocity), grad(velocity))*dx +
       B(theta * k * kinematic_viscosity * -1.0 * inner(grad(velocity), n), velocity)*ds +
@@ -216,10 +223,11 @@ public:
       B(div(velocity), pressure)*dx +
       B(theta * k * inner(project(unknownGuess[i-1], velocitySpace), grad(velocity)), velocity)*dx;
 
-    Scalar residual = ((linearisedSystem * unknownGuess[i-1]) - load).two_norm();
+    LinearSystem system = assembleGalerkinSystem(coupledSpace, lhsForm, load, bc);
+    Operator linearisedSystem = system.getConstrainedSystem();
+    unknownGuess[i] = system.getSolution();
 
-    // TODO: Boundary condition magic
-    unknownGuess[i] = linear_solve(linearisedSystem, load, bcFunction);
+    Scalar residual = ((linearisedSystem * unknownGuess[i-1]) - system.getConstrainedLoad()).two_norm();
 
     i.setTermination(residual < 1e-3);
 

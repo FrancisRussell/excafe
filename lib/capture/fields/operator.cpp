@@ -22,6 +22,14 @@ Operator::Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace,
 {
 }
 
+Operator::Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace, 
+                   const detail::FunctionSpaceExpr::expr_ptr& _testSpace, 
+                   const detail::OperatorExpr::expr_ptr _expr) : 
+  trialSpace(_trialSpace), testSpace(_testSpace), expr(_expr)
+{
+}
+
+
 Operator& Operator::operator=(const forms::BilinearFormIntegralSum& sum)
 {
   expr = expr_ptr(new detail::OperatorAssembly(trialSpace, testSpace, sum));

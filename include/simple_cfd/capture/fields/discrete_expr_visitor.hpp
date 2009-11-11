@@ -19,12 +19,14 @@ public:
   virtual void visit(DiscreteFieldUndefined& u) = 0;
   virtual void visit(DiscreteFieldZero& z) = 0;
   virtual void visit(DiscreteFieldPersistent& p) = 0;
+  virtual void visit(DiscreteFieldApplyBC& a) = 0;
 
   // Discrete operator related
   virtual void visit(OperatorApplication& a) = 0;
   virtual void visit(OperatorAddition& u) = 0;
   virtual void visit(OperatorAssembly& a) = 0;
   virtual void visit(OperatorUndefined& u) = 0;
+  virtual void visit(OperatorApplyBC& a) = 0;
 
   // Scalar related
   virtual void visit(ScalarBinaryOperator& o) = 0;

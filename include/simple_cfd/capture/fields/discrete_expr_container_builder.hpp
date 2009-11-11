@@ -11,9 +11,11 @@
 #include "discrete_field_undefined.hpp"
 #include "discrete_field_zero.hpp"
 #include "discrete_field_persistent.hpp"
+#include "discrete_field_apply_bc.hpp"
 #include "operator_application.hpp"
 #include "operator_addition.hpp"
 #include "operator_assembly.hpp"
+#include "operator_apply_bc.hpp"
 #include "operator_undefined.hpp"
 #include "scalar_binary_operator.hpp"
 #include "scalar_literal.hpp"
@@ -135,6 +137,14 @@ public:
     container.insert(p);
   }
 
+  virtual void visit(DiscreteFieldApplyBC& a)
+  {
+    if (container.insert(a))
+    {
+      a.getField().accept(*this);
+    }
+  }
+
   // Discrete operator related
   virtual void visit(OperatorApplication& a)
   {
@@ -162,6 +172,14 @@ public:
     handleForms(sum.begin_dx(), sum.end_dx());
     handleForms(sum.begin_ds(), sum.end_ds());
     handleForms(sum.begin_dS(), sum.end_dS());
+  }
+
+  virtual void visit(OperatorApplyBC& a)
+  {
+    if (container.insert(a))
+    {
+      a.getOperator().accept(*this);
+    }
   }
 
   virtual void visit(OperatorUndefined& u)

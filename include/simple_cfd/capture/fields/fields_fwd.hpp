@@ -33,6 +33,7 @@ class DiscreteFieldZero;
 class DiscreteFieldElementWise;
 class DiscreteFieldTwoNorm;
 class DiscreteFieldProjection;
+class DiscreteFieldApplyBC;
 
 // Scalar related
 class ScalarExpr;
@@ -46,6 +47,7 @@ class OperatorAssembly;
 class OperatorApplication;
 class OperatorUndefined;
 class OperatorAddition;
+class OperatorApplyBC;
 
 // Index related
 class TemporalIndexExpr;

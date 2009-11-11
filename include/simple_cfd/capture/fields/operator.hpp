@@ -24,6 +24,9 @@ public:
   Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace, 
            const detail::FunctionSpaceExpr::expr_ptr& _testSpace, 
            detail::OperatorExpr* const _expr);
+  Operator(const detail::FunctionSpaceExpr::expr_ptr& _trialSpace, 
+           const detail::FunctionSpaceExpr::expr_ptr& _testSpace, 
+           const detail::OperatorExpr::expr_ptr _expr);
   Operator& operator=(const forms::BilinearFormIntegralSum& sum);
   Operator operator+(const Operator& o) const;
   Operator operator+(const forms::BilinearFormIntegralSum& sum) const;

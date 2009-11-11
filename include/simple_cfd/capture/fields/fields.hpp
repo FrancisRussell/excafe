@@ -13,6 +13,7 @@
 #include "linear_solve.hpp"
 #include "temporal_index_offset.hpp"
 #include "discrete_field_projection.hpp"
+#include "linear_system.hpp"
 
 namespace cfd
 {
@@ -32,9 +33,9 @@ struct final_tag
 
 detail::final_tag final;
 
-Field linear_solve(const Operator& A, const Field& b, const detail::LinearSolve::bc_function_t& bcFunction)
+Field linear_solve(const Operator& A, const Field& b)
 {
- return Field(new detail::LinearSolve(A.getExpr(), b.getExpr(), bcFunction));
+ return Field(new detail::LinearSolve(A.getExpr(), b.getExpr()));
 }
 
 detail::TemporalIndexExpr operator-(const TemporalIndex& e, const signed offset)
@@ -52,6 +53,12 @@ Field project(const Field& field, const FunctionSpace& functionSpace)
   return Field(new detail::DiscreteFieldProjection(field.getExpr(), functionSpace.getExpr()));
 }
 
+template<typename bc_t>
+LinearSystem assembleGalerkinSystem(const FunctionSpace& functionSpace, const forms::BilinearFormIntegralSum& lhs,
+                                    const Field& rhs, const bc_t& bc)
+{
+  return LinearSystem(functionSpace.getExpr(), functionSpace.getExpr(), lhs, rhs.getExpr(), bc);
+}
 
 }
 

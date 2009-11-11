@@ -1,6 +1,8 @@
 #ifndef SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_ELEMENT_WISE_HPP
 #define SIMPLE_CFD_CAPTURE_FIELDS_DISCRETE_FIELD_ELEMENT_WISE_HPP
 
+#include <set>
+#include <memory>
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
