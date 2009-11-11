@@ -47,7 +47,7 @@ public:
     return *right;
   }
 
-  operator_t getOperator() const
+  operator_t getOperation() const
   {
     return operation;
   }

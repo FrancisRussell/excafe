@@ -95,8 +95,11 @@ private:
       }
     }
 
-    stiffness_matrix->assemble();
-    load_vector->assemble();
+    if (stiffness_matrix != NULL)
+      stiffness_matrix->assemble();
+
+    if (load_vector != NULL)
+      load_vector->assemble();
   }
 
   void applyCylinderVelocityBoundaryConditions(DiscreteOperator<dimension>* const stiffness_matrix, 
@@ -128,8 +131,11 @@ private:
       }
     }
 
-    stiffness_matrix->assemble();
-    load_vector->assemble();
+    if (stiffness_matrix != NULL)
+      stiffness_matrix->assemble();
+
+    if (load_vector != NULL)
+      load_vector->assemble();
   }
 
 public:

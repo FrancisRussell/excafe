@@ -2,6 +2,8 @@
 #define SIMPLE_CFD_CAPTURE_FIELDS_LINEAR_SYSTEM_HPP
 
 #include <boost/function.hpp>
+#include "operator.hpp"
+#include "field.hpp"
 #include "discrete_field_expr.hpp"
 #include "discrete_field_apply_bc.hpp"
 #include "operator_apply_bc.hpp"
@@ -34,10 +36,12 @@ public:
     trialSpace(_trialSpace), testSpace(_testSpace), lhs(_lhs), rhs(_rhs), systemMatrixBC(bc), loadVectorBC(bc)
   {
     constrainedSystem = detail::OperatorExpr::expr_ptr(new detail::OperatorAssembly(trialSpace, testSpace, lhs));
-    constrainedSystem = detail::OperatorExpr::expr_ptr(new detail::OperatorApplyBC(constrainedSystem));
+    constrainedSystem = detail::OperatorExpr::expr_ptr(new detail::OperatorApplyBC(constrainedSystem,
+      systemMatrixBC));
 
     constrainedLoad = rhs;
-    constrainedLoad = detail::DiscreteFieldExpr::expr_ptr(new detail::DiscreteFieldApplyBC(constrainedLoad));
+    constrainedLoad = detail::DiscreteFieldExpr::expr_ptr(new detail::DiscreteFieldApplyBC(constrainedLoad,
+      loadVectorBC));
 
     unknown = detail::DiscreteFieldExpr::expr_ptr(new detail::LinearSolve(constrainedSystem, constrainedLoad));
   }

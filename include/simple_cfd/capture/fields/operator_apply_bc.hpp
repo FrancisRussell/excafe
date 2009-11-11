@@ -19,9 +19,10 @@ class OperatorApplyBC : public OperatorExpr
 {
 private:
   OperatorExpr::expr_ptr op;
+  boost::any bc;
 
 public:
-  OperatorApplyBC(const OperatorExpr::expr_ptr& _op) : op(_op)
+  OperatorApplyBC(const OperatorExpr::expr_ptr& _op, const boost::any& _bc) : op(_op), bc(_bc)
   {
   }
 
@@ -57,6 +58,11 @@ public:
     std::set<DiscreteExpr*> dependencies;
     dependencies.insert(&(*op));
     return dependencies;
+  }
+
+  boost::any getBoundaryCondition() const
+  {
+    return bc;
   }
 };
 

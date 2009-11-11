@@ -13,9 +13,11 @@
 #include <simple_cfd/capture/fields/discrete_field_two_norm.hpp>
 #include <simple_cfd/capture/fields/discrete_field_zero.hpp>
 #include <simple_cfd/capture/fields/discrete_field_projection.hpp>
+#include <simple_cfd/capture/fields/discrete_field_apply_bc.hpp>
 #include <simple_cfd/capture/fields/operator_assembly.hpp>
 #include <simple_cfd/capture/fields/operator_application.hpp>
 #include <simple_cfd/capture/fields/operator_addition.hpp>
+#include <simple_cfd/capture/fields/operator_apply_bc.hpp>
 #include <simple_cfd/capture/fields/scalar_literal.hpp>
 #include <simple_cfd/capture/fields/scalar_binary_operator.hpp>
 #include <simple_cfd/capture/fields/discrete_indexed_object.hpp>
@@ -25,6 +27,10 @@
 #include "discrete_expr_scoping.hpp"
 #include "discrete_expr_scoping_visitor.hpp"
 #include "expression_values.hpp"
+
+//FIXME: remove me when evil boundary condition hack is over
+#include <boost/any.hpp>
+#include <simple_cfd/capture/fields/linear_system.hpp>
 
 namespace cfd
 {
@@ -65,6 +71,28 @@ private:
     scalar_value_t operator()(const ScalarBinaryOperator::lte_tag&) const { return left<=right ? 1.0 : 0.0; }
     scalar_value_t operator()(const ScalarBinaryOperator::gte_tag&) const { return left>=right ? 1.0 : 0.0; }
     scalar_value_t operator()(const ScalarBinaryOperator::eq_tag&) const  { return left==right ? 1.0 : 0.0; }
+  };
+
+  class DiscreteFieldElementWiseEvaluator : public boost::static_visitor<field_value_t>
+  {
+  private:
+    EvaluationVisitor& v;
+    DiscreteFieldElementWise& e;
+
+  public:
+    DiscreteFieldElementWiseEvaluator(EvaluationVisitor& _v, DiscreteFieldElementWise& _e) : v(_v), e(_e)
+    {
+    }
+
+    field_value_t operator()(const DiscreteFieldElementWise::add_tag&) const
+    {
+      return v.getValue(e.getLeft()) + v.getValue(e.getRight());
+    }
+
+    field_value_t operator()(const DiscreteFieldElementWise::sub_tag&) const
+    {
+      return v.getValue(e.getLeft()) - v.getValue(e.getRight());
+    }
   };
 
   class ExecutionHelper : public boost::static_visitor<void>
@@ -261,8 +289,9 @@ public:
   // Discrete field related
   virtual void visit(DiscreteFieldElementWise& p)
   {
-    const field_value_t value = getValue(p.getLeft()) + getValue(p.getRight());
-    setValue(p, value);
+    const DiscreteFieldElementWiseEvaluator evaluator(*this, p);
+    const DiscreteFieldElementWise::operator_t operation = p.getOperation();
+    setValue(p, boost::apply_visitor(evaluator, operation));
   }
 
   virtual void visit(DiscreteFieldTwoNorm& p)
@@ -294,8 +323,10 @@ public:
 
   virtual void visit(DiscreteFieldApplyBC& a)
   {
-    //FIXME: implement me!
-    assert(false);
+    DiscreteField<dimension> newField(getValue(a.getField()));
+    const LinearSystem::load_vector_bc_t bc = boost::any_cast<LinearSystem::load_vector_bc_t>(a.getBoundaryCondition());
+    bc(newField);
+    setValue(a, newField);
   }
 
 
@@ -324,8 +355,10 @@ public:
 
   virtual void visit(OperatorApplyBC& a)
   {
-    //FIXME: implement me!
-    assert(false);
+    DiscreteOperator<dimension> newOperator(getValue(a.getOperator()));
+    const LinearSystem::system_matrix_bc_t bc = boost::any_cast<LinearSystem::system_matrix_bc_t>(a.getBoundaryCondition());
+    bc(newOperator);
+    setValue(a, newOperator);
   }
 
   virtual void visit(OperatorUndefined& u)
