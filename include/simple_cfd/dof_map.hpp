@@ -144,6 +144,7 @@ public:
     }
 
     newMapping.swap(mapping);
+    makeContiguous();
     return *this;
   }
 
