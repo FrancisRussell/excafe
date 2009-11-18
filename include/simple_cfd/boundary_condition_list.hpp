@@ -21,16 +21,16 @@ private:
 
   std::vector< boost::shared_ptr<condition_t> > conditions;
 
-  typedef typename std::vector< boost::shared_ptr<condition_t> >::const_reverse_iterator const_iterator;
+  typedef typename std::vector< boost::shared_ptr<condition_t> >::const_iterator const_iterator;
 
   const_iterator begin() const
   {
-    return conditions.rbegin();
+    return conditions.begin();
   }
 
   const_iterator end() const
   {
-    return conditions.rend();
+    return conditions.end();
   }
 
 public:
