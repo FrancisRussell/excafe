@@ -20,8 +20,6 @@
 #include "discrete_field.hpp"
 #include "subdomain.hpp"
 #include "function.hpp"
-//#include "boundary_condition.hpp"
-//#include "boundary_condition_handler.hpp"
 #include "cell_vertices.hpp"
 #include "dof.hpp"
 
@@ -131,10 +129,6 @@ private:
   EdgeConditions edgeConditions;
   Zero zero;
 
-  // Boundary Conditions
-  //BoundaryCondition<2,1> edgeVelocities;
-  //BoundaryCondition<2,1> cylinderVelocities;
-
   enum Location
   {
     TOP_EDGE,
@@ -170,8 +164,6 @@ public:
                                              velocity_vector(velocityDofMap),
                                              pressure_vector(pressureDofMap),
                                              k(0.01), theta(0.5), kinematic_viscosity(1.0/250)
-                                             //edgeVelocities(edges, edgeConditions), 
-                                             //cylinderVelocities(cylinder, zero)
   {  
     std::cout << "Size of dof map: " << systemDofMap.getMappingSize() << std::endl;
     std::cout << "Degrees of freedom: " << systemDofMap.getDegreesOfFreedomCount() << std::endl;

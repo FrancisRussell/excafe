@@ -339,7 +339,6 @@ public:
     setValue(a, newField);
   }
 
-
   // Discrete operator related
   virtual void visit(OperatorApplication& a)
   {
