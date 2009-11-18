@@ -19,11 +19,13 @@ class LinearSolve : public DiscreteFieldExpr
 {
 private:
   OperatorExpr::expr_ptr operation;
+  DiscreteFieldExpr::expr_ptr initialGuess;
   DiscreteFieldExpr::expr_ptr operand;
 
 public:
-  LinearSolve(const OperatorExpr::expr_ptr& _operation, const DiscreteFieldExpr::expr_ptr& _operand) :
-    operation(_operation), operand(_operand)
+  LinearSolve(const OperatorExpr::expr_ptr& _operation, const DiscreteFieldExpr::expr_ptr& _initialGuess,
+    const DiscreteFieldExpr::expr_ptr& _operand) :
+    operation(_operation), initialGuess(_initialGuess), operand(_operand)
   {
   }
 
@@ -48,10 +50,16 @@ public:
     return *operand;
   }
 
+  DiscreteFieldExpr& getInitialGuess() const
+  {
+    return *initialGuess;
+  }
+
   virtual PropagationRules getPropagationRules()
   {
     PropagationRules rules;
     rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*operation, *this)));
+    rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*initialGuess, *this)));
     rules.insert(std::auto_ptr<PropagationRule>(new IndexPropagationAll(*operand, *this)));
     return rules;
   }
@@ -60,6 +68,7 @@ public:
   {
     std::set<DiscreteExpr*> dependencies;
     dependencies.insert(&(*operation));
+    dependencies.insert(&(*initialGuess));
     dependencies.insert(&(*operand));
     return dependencies;
   }

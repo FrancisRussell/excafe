@@ -234,6 +234,7 @@ public:
     if (container.insert(s))
     {
       s.getOperator().accept(*this);
+      s.getInitialGuess().accept(*this);
       s.getField().accept(*this);
     }
   }

@@ -19,6 +19,7 @@ private:
   function_space_ptr trialSpace;
   function_space_ptr testSpace;
   forms::BilinearFormIntegralSum lhs;
+  detail::DiscreteFieldExpr::expr_ptr initialGuess;
   detail::DiscreteFieldExpr::expr_ptr rhs;
   BoundaryCondition bc;
 
@@ -28,9 +29,9 @@ private:
 
 public:
   LinearSystem(const function_space_ptr& _trialSpace, const function_space_ptr& _testSpace, 
-               const forms::BilinearFormIntegralSum& _lhs, const detail::DiscreteFieldExpr::expr_ptr& _rhs,
-               const BoundaryCondition& _bc) :
-    trialSpace(_trialSpace), testSpace(_testSpace), lhs(_lhs), rhs(_rhs), bc(_bc)
+               const forms::BilinearFormIntegralSum& _lhs, const detail::DiscreteFieldExpr::expr_ptr& _initialGuess,
+               const detail::DiscreteFieldExpr::expr_ptr& _rhs, const BoundaryCondition& _bc) :
+    trialSpace(_trialSpace), testSpace(_testSpace), lhs(_lhs), initialGuess(_initialGuess), rhs(_rhs), bc(_bc)
   {
     constrainedSystem = detail::OperatorExpr::expr_ptr(new detail::OperatorAssembly(trialSpace, testSpace, lhs));
     constrainedSystem = detail::OperatorExpr::expr_ptr(new detail::OperatorApplyBC(constrainedSystem, bc));
@@ -38,7 +39,7 @@ public:
     constrainedLoad = rhs;
     constrainedLoad = detail::DiscreteFieldExpr::expr_ptr(new detail::DiscreteFieldApplyBC(constrainedLoad, bc));
 
-    unknown = detail::DiscreteFieldExpr::expr_ptr(new detail::LinearSolve(constrainedSystem, constrainedLoad));
+    unknown = detail::DiscreteFieldExpr::expr_ptr(new detail::LinearSolve(constrainedSystem, initialGuess, constrainedLoad));
   }
 
   Operator getConstrainedSystem() const

@@ -36,7 +36,9 @@ detail::final_tag final;
 
 Field linear_solve(const Operator& A, const Field& b)
 {
- return Field(new detail::LinearSolve(A.getExpr(), b.getExpr()));
+  const FunctionSpace trialSpace(A.getExpr()->getTrialSpace());
+  const Field guess(new detail::DiscreteFieldZero(trialSpace));
+  return Field(new detail::LinearSolve(A.getExpr(), guess.getExpr(), b.getExpr()));
 }
 
 detail::TemporalIndexExpr operator-(const TemporalIndex& e, const signed offset)
@@ -55,9 +57,16 @@ Field project(const Field& field, const FunctionSpace& functionSpace)
 }
 
 LinearSystem assembleGalerkinSystem(const FunctionSpace& functionSpace, const forms::BilinearFormIntegralSum& lhs,
+                                    const Field& rhs, const BoundaryCondition& bc, const Field& initialGuess)
+{
+  return LinearSystem(functionSpace.getExpr(), functionSpace.getExpr(), lhs, initialGuess.getExpr(), rhs.getExpr(), bc);
+}
+
+LinearSystem assembleGalerkinSystem(const FunctionSpace& functionSpace, const forms::BilinearFormIntegralSum& lhs,
                                     const Field& rhs, const BoundaryCondition& bc)
 {
-  return LinearSystem(functionSpace.getExpr(), functionSpace.getExpr(), lhs, rhs.getExpr(), bc);
+  const Field initialGuess(new detail::DiscreteFieldZero(functionSpace));
+  return assembleGalerkinSystem(functionSpace, lhs, rhs, bc, initialGuess);
 }
 
 }

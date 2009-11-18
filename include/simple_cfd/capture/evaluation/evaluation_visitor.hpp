@@ -28,10 +28,6 @@
 #include "discrete_expr_scoping_visitor.hpp"
 #include "expression_values.hpp"
 
-//FIXME: remove me when evil boundary condition hack is over
-#include <boost/any.hpp>
-#include <simple_cfd/capture/fields/linear_system.hpp>
-
 namespace cfd
 {
 
@@ -436,7 +432,7 @@ public:
     
     DiscreteOperator<dimension>& stiffnessMatrix = getValue(s.getOperator());
     DiscreteField<dimension>& loadVector = getValue(s.getField());
-    DiscreteField<dimension> unknownVector(stiffnessMatrix.getColMappings());
+    DiscreteField<dimension> unknownVector = getValue(s.getInitialGuess());
 
     solver.solve(stiffnessMatrix.getMatrixHandle(), unknownVector.getVectorHandle(), loadVector.getVectorHandle());
 

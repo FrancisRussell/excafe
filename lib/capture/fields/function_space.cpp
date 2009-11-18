@@ -14,6 +14,10 @@ FunctionSpace::FunctionSpace(detail::FunctionSpaceExpr* const _expr) : expr(_exp
 {
 }
 
+FunctionSpace::FunctionSpace(const detail::FunctionSpaceExpr::expr_ptr _expr) : expr(_expr)
+{
+}
+
 FunctionSpace::FunctionSpace& FunctionSpace::operator+=(const FunctionSpace& f)
 {
   expr = expr_ptr(new detail::FunctionSpaceAddition(expr, f.expr));

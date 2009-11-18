@@ -19,6 +19,7 @@ private:
 public:
   FunctionSpace();
   FunctionSpace(detail::FunctionSpaceExpr* const _expr);
+  FunctionSpace(const detail::FunctionSpaceExpr::expr_ptr _expr);
   FunctionSpace& operator+=(const FunctionSpace& f);
   expr_ptr getExpr() const;
 };
