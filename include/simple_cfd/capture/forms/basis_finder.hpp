@@ -130,8 +130,6 @@ public:
 
   virtual void visit(detail::FieldDiscreteReference& d)
   {
-    //FIXME: should we be doing nothing here?
-    handle(values.getValue(*d.getDiscreteField().getExpr()));
   }
 
   virtual void visit(detail::FieldScalar& s)
