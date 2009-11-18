@@ -323,11 +323,19 @@ public:
 
   virtual void visit(DiscreteFieldApplyBC& a)
   {
-    //FIXME: implement me!
-    assert(false);
-    DiscreteField<dimension> newField(getValue(a.getField()));
-    //const LinearSystem::load_vector_bc_t bc = boost::any_cast<LinearSystem::load_vector_bc_t>(a.getBoundaryCondition());
-    //bc(newField);
+    const DiscreteField<dimension> field(getValue(a.getField()));
+    const DiscreteField<dimension> boundaryField(scenario.getBoundaryField(a.getBoundaryCondition()));
+    const DofMap<dimension> allDofs = field.getRowMappings();
+    const DofMap<dimension> dirichletDofs = boundaryField.getRowMappings();
+    const DofMap<dimension> homogeneousDofs = allDofs - dirichletDofs;
+
+    DiscreteField<dimension> homogenousField(homogeneousDofs);
+    field.extractField(homogenousField);
+
+    DiscreteField<dimension> newField(allDofs);
+    newField.addField(homogenousField);
+    newField.addField(boundaryField);
+
     setValue(a, newField);
   }
 
@@ -357,11 +365,9 @@ public:
 
   virtual void visit(OperatorApplyBC& a)
   {
-    //FIXME: implement me!
-    assert(false);
     DiscreteOperator<dimension> newOperator(getValue(a.getOperator()));
-    //const LinearSystem::system_matrix_bc_t bc = boost::any_cast<LinearSystem::system_matrix_bc_t>(a.getBoundaryCondition());
-    //bc(newOperator);
+    const DofMap<dimension> dirichletDofs = scenario.getBoundaryField(a.getBoundaryCondition()).getRowMappings();
+    newOperator.zeroRows(dirichletDofs, 1.0);
     setValue(a, newOperator);
   }
 

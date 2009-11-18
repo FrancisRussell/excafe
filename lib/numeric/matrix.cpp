@@ -124,19 +124,12 @@ void PETScMatrix::getValues(const unsigned rows, const unsigned cols, const int*
 
 void PETScMatrix::zeroRow(const int row, const double diagonal)
 {
-  zeroRows(&row, 1, diagonal);
+  zeroRows(1, &row, diagonal);
 }
 
-void PETScMatrix::zeroRows(const int* rows, const unsigned rowCount, const double diagonal)
+void PETScMatrix::zeroRows(const unsigned rowCount, const int* rows, const double diagonal)
 {
-  IS indexSet;
-  PetscErrorCode ierr = ISCreateGeneral(PETSC_COMM_SELF, rowCount, rows, &indexSet);
-  checkError(ierr);
-    
-  ierr = MatZeroRowsIS(m, indexSet, diagonal);
-  checkError(ierr);
-
-  ierr = ISDestroy(indexSet);
+  const PetscErrorCode ierr = MatZeroRows(m, rowCount, rows, diagonal);
   checkError(ierr);
 }
 

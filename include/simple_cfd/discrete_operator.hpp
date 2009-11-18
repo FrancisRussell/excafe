@@ -249,6 +249,12 @@ public:
     const int rowIndex = rowMappings.getGlobalIndex(dof);
     matrix.zeroRow(rowIndex, diagonal);
   }
+
+  void zeroRows(const DofMap<dimension>& dofs, const double diagonal)
+  { 
+    std::vector<int> rowIndices = dofs.getIndices(rowMappings);
+    matrix.zeroRows(rowIndices.size(), &rowIndices[0], diagonal);
+  }
   
   void zero()
   {

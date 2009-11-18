@@ -256,6 +256,11 @@ public:
     return fieldIter->second;
   }
 
+  DiscreteField<dimension> getBoundaryField(const BoundaryCondition& b)
+  {
+    return boundaryValues[b.getIndex()];
+  }
+
   void setNamedValue(const std::string& name, DiscreteField<dimension> v)
   {
     const typename std::map< std::string, DiscreteField<dimension> >::iterator fieldIter = persistentFields.find(name);

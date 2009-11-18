@@ -18,7 +18,9 @@ namespace cfd
 {
 
 template<std::size_t D>
-class DofMap : public boost::addable< DofMap<D> >
+class DofMap : public boost::addable< DofMap<D>,
+                      boost::subtractable< DofMap<D> 
+                      > >
 {
 public:
   static const std::size_t dimension = D;
@@ -117,6 +119,31 @@ public:
       ++mappingIter)
       mapping[mappingIter->first] = mappingIter->second + offset;
 
+    return *this;
+  }
+
+  DofMap& operator-=(const DofMap& map)
+  {
+    std::set<int> removedDofs;
+
+    for(typename local2global_map::const_iterator mappingIter=map.mapping.begin(); mappingIter!=map.mapping.end();
+      ++mappingIter)
+    {
+      const typename local2global_map::const_iterator removeIter = mapping.find(mappingIter->first);
+
+      if (removeIter != mapping.end())
+        removedDofs.insert(removeIter->second);
+    }
+    
+    local2global_map newMapping;
+
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    {
+      if (removedDofs.find(mappingIter->second) == removedDofs.end())
+        newMapping.insert(*mappingIter);
+    }
+
+    newMapping.swap(mapping);
     return *this;
   }
 
