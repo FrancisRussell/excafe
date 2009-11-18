@@ -62,7 +62,15 @@ public:
 
   virtual int getPriority(const int label) const
   {
-    return 0;
+    std::size_t index = 0;
+
+    for(const_iterator condIter(begin()); condIter!=end(); ++condIter)
+    {
+      --index;
+      if ((*condIter)->applies(label))
+        return index;
+    }
+    assert(false && "Tried to get priority of boundary condition with a label we don't have");
   }
 
   virtual Tensor<dimension> getValue(const vertex<dimension>& location, const int label) const
