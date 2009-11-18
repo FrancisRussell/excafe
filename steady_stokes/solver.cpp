@@ -13,6 +13,7 @@
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/boundary_condition_list.hpp>
+#include <simple_cfd/boundary_condition_trivial.hpp>
 
 using namespace cfd;
 
@@ -182,6 +183,22 @@ private:
 
   SolveOperation coupledSolve;
 
+  BoundaryCondition buildBoundaryConditions()
+  {
+    const Tensor<dimension> zero(1);
+
+    Tensor<dimension> inflow(1);
+    inflow(0) = 5.0;
+
+    BoundaryConditionList<dimension> velocityConditionList(1);
+    velocityConditionList.add(BoundaryConditionTrivial<dimension>(1, zero));
+    velocityConditionList.add(BoundaryConditionTrivial<dimension>(3, zero));
+    velocityConditionList.add(BoundaryConditionTrivial<dimension>(4, inflow));
+    velocityConditionList.add(BoundaryConditionTrivial<dimension>(5, zero));
+
+    return scenario.addBoundaryCondition(velocitySpace, velocityConditionList);
+  }
+
 public:
   NavierStokesSolver(Mesh<dimension>& _mesh) : mesh(_mesh), scenario(mesh)
   {
@@ -196,7 +213,7 @@ public:
     pressureField = scenario.defineNamedField("pressure", pressureSpace);
 
     BoundaryConditionList<dimension> velocityConditionList(1);
-    velocityConditions = scenario.addBoundaryCondition(velocitySpace, velocityConditionList);
+    velocityConditions = buildBoundaryConditions();
 
     coupledSolve = constructCoupledSolver();
   }

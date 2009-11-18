@@ -38,10 +38,11 @@ public:
   {
   }
 
-  template<typename T>
-  void add(const T& condition)
+  template<typename real_condition_t>
+  void add(const real_condition_t& condition)
   {
-    conditions.push_back(boost::shared_ptr<condition_t>(new T(condition)));
+    assert(condition.getRank() == rank);
+    conditions.push_back(boost::shared_ptr<condition_t>(new real_condition_t(condition)));
   }
 
   virtual std::size_t getRank() const
