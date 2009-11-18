@@ -24,6 +24,24 @@ private:
   
   Mesh<dimension>& mesh;
 
+  std::set<dof_t> getEntityDofs(MeshTopology& topology, const FiniteElement<dimension>& element,
+    const std::size_t cellIndex, const MeshEntity& entity) const
+  {
+    std::set<dof_t> entityDofs = element.getDofsOnEntity(topology, cellIndex, entity);
+
+    if (entity.getDimension() > 0)
+    {
+      const std::size_t subDimension = entity.getDimension() - 1;
+      for(typename Mesh<dimension>::local_iterator eIter(mesh.local_begin(entity, subDimension));
+      eIter!=mesh.local_end(entity, subDimension); ++eIter)
+      {
+        const std::set<dof_t> lowerDofs = element.getDofsOnEntity(topology, cellIndex, *eIter);
+        entityDofs.insert(lowerDofs.begin(), lowerDofs.end());
+      }
+    }
+    return entityDofs;
+  }
+
   std::set<dof_t> getDofs(const FiniteElement<dimension>& element, const BoundaryConditionList<dimension>& condition) const
   {
     std::set<dof_t> dofs;
@@ -37,7 +55,7 @@ private:
       {
         if (condition.applies(mesh.getFacetLabel(*fIter)))
         {
-          const std::set<dof_t> dofsOnFacet = element.getDofsOnEntity(mesh.getTopology(), cIter->getIndex(), *fIter);
+          const std::set<dof_t> dofsOnFacet = getEntityDofs(mesh.getTopology(), element, cIter->getIndex(), *fIter);
           dofs.insert(dofsOnFacet.begin(), dofsOnFacet.end());
         }
       }
@@ -60,7 +78,7 @@ private:
         const int label= mesh.getFacetLabel(*fIter);
         if (condition.applies(label))
         {
-          const std::set<dof_t> dofsOnFacet = element.getDofsOnEntity(mesh.getTopology(), cIter->getIndex(), *fIter);
+          const std::set<dof_t> dofsOnFacet = getEntityDofs(mesh.getTopology(), element, cIter->getIndex(), *fIter);
 
           for(typename std::set<dof_t>::const_iterator dofIter(dofsOnFacet.begin()); dofIter!=dofsOnFacet.end(); ++dofIter)
           {
