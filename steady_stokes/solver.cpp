@@ -106,7 +106,7 @@ public:
       B(div(velocity), pressure)*dx +
       B(theta * k * inner(project(unknownGuess[i-1], velocitySpace), grad(velocity)), velocity)*dx;
 
-    LinearSystem system = assembleGalerkinSystem(coupledSpace, lhsForm, load, velocityConditions);
+    LinearSystem system = assembleGalerkinSystem(coupledSpace, lhsForm, load, velocityConditions, unknownGuess[i-1]);
     Operator linearisedSystem = system.getConstrainedSystem();
     unknownGuess[i] = system.getSolution();
 
