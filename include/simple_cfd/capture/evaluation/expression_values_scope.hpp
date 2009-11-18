@@ -2,9 +2,10 @@
 #define SIMPLE_CFD_CAPTURE_EVALUATION_EXPRESSION_VALUES_SCOPE_HPP
 
 #include <cstddef>
+#include <set>
+#include <boost/shared_ptr.hpp>
 #include <simple_cfd/capture/fields/discrete_traits.hpp>
 #include "expression_values_map.hpp"
-#include <boost/shared_ptr.hpp>
 
 namespace cfd
 {
@@ -25,6 +26,41 @@ private:
   ExpressionValuesMap<discrete_scalar_tag, dimension> scalars;
   ExpressionValuesMap<discrete_field_tag, dimension> fields;
   ExpressionValuesMap<discrete_operator_tag, dimension> operators;
+
+  void calculateInitialScalars(const TemporalIndexValue& loopIndex)
+  {
+    const std::set<IndexableValue<discrete_scalar_tag>*> indexableScalars = loopIndex.getIndexableScalars();
+    calculateInitialsTyped(scalars, indexableScalars);
+  }
+
+  void calculateInitialFields(const TemporalIndexValue& loopIndex)
+  {
+    const std::set<IndexableValue<discrete_field_tag>*> indexableFields = loopIndex.getIndexableFields();
+    calculateInitialsTyped(fields, indexableFields);
+  }
+
+  void calculateInitialOperators(const TemporalIndexValue& loopIndex)
+  {
+    const std::set<IndexableValue<discrete_operator_tag>*> indexableOperators = loopIndex.getIndexableOperators();
+    calculateInitialsTyped(operators, indexableOperators);
+  }
+
+  template<typename discrete_object_tag>
+  void calculateInitialsTyped(ExpressionValuesMap<discrete_object_tag, dimension>& values,
+    const std::set<IndexableValue<discrete_object_tag>*>& indexableVariables)
+  {
+    for(typename std::set<IndexableValue<discrete_object_tag>*>::const_iterator
+      indexableIter(indexableVariables.begin()); indexableIter!=indexableVariables.end(); ++indexableIter)
+    {
+      typedef typename IndexableValue<discrete_object_tag>::init_iterator init_iter;
+      IndexableValue<discrete_object_tag>& variable = **indexableIter;
+
+      for(init_iter initIter(variable.begin_inits()); initIter!=variable.end_inits(); ++initIter)
+      {
+        values.setValue(variable, parent->getValue(*initIter), initIter.getOffset());
+      }
+    }
+  }
 
 public:
   ExpressionValuesScope(const boost::shared_ptr<ExpressionValuesScope>& _parent) : parent(_parent)
@@ -184,19 +220,28 @@ public:
     operators.setValue(e, v);
   }
 
-  void setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& v)
+  void setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& v, const signed offset)
   {
-    scalars.setValue(i, v);
+    scalars.setValue(i, v, offset);
   }
 
-  void setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& v)
+  void setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& v, const signed offset)
   {
-    fields.setValue(i, v);
+    fields.setValue(i, v, offset);
   }
 
-  void setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& v)
+  void setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& v, const signed offset)
   {
-    operators.setValue(i, v);
+    operators.setValue(i, v, offset);
+  }
+
+  void calculateInitials(const TemporalIndexValue& loopIndex)
+  {
+    assert(parent.use_count() != 0);
+
+    calculateInitialScalars(loopIndex);
+    calculateInitialFields(loopIndex);
+    calculateInitialOperators(loopIndex);
   }
 
   void calculateFinals()

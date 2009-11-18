@@ -205,19 +205,19 @@ private:
     values.setValue(e, v);
   }
 
-  void setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& value)
+  void setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& value, const signed offset = 0)
   {
-    values.setValue(i, value);
+    values.setValue(i, value, offset);
   }
 
-  void setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& value)
+  void setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& value, const signed offset = 0)
   {
-    values.setValue(i, value);
+    values.setValue(i, value, offset);
   }
 
-  void setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& value)
+  void setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& value, const signed offset = 0)
   {
-    values.setValue(i, value);
+    values.setValue(i, value, offset);
   }
 
   template<typename discrete_object_tag>
@@ -268,6 +268,7 @@ public:
     bool looping = true;
 
     values.enterScope();
+    values.calculateInitials(*loopIndex);
     while(looping)
     {
       execute(scope);
@@ -345,8 +346,8 @@ public:
   virtual void visit(OperatorAddition& u)
   {
     assert(false && "We don't know how to add operators!");
-//  const operator_value_t value = getValue(u.getLeft()) + getValue(u.getRight());
-//  setValue(u, value);
+    //const operator_value_t value = getValue(u.getLeft()) + getValue(u.getRight());
+    //setValue(u, value);
   }
 
   virtual void visit(OperatorAssembly& a)
@@ -371,7 +372,6 @@ public:
     CFD_EXCEPTION("Tried to evaluate an undefined operator!");
   }
 
-
   // Scalar related
   virtual void visit(ScalarBinaryOperator& o)
   {
@@ -393,7 +393,6 @@ public:
   {
     CFD_EXCEPTION("Tried to evaluate an undefined scalar!");
   }
-
 
   // Temporal related
   virtual void visit(DiscreteIndexedScalar& s)
@@ -419,7 +418,6 @@ public:
       setValue(s, getValue(s.getParent(), s.getOffsetValue()));
     }
   }
-
 
   // Solve related
   virtual void visit(LinearSolve& s)

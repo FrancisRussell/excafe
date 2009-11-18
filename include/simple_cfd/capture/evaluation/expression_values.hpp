@@ -40,6 +40,11 @@ public:
     values = values->getParent();
   }
 
+  void calculateInitials(const TemporalIndexValue& loopIndex)
+  {
+    values->calculateInitials(loopIndex);
+  }
+
   void calculateFinals()
   {
     values->calculateFinals();
@@ -131,19 +136,19 @@ public:
     values->setValue(e, v);
   }
 
-  void  setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& v)
+  void  setValue(IndexableValue<discrete_scalar_tag>& i, const scalar_value_t& v, const signed offset)
   {
-    values->setValue(i, v);
+    values->setValue(i, v, offset);
   }
 
-  void  setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& v)
+  void  setValue(IndexableValue<discrete_field_tag>& i, const field_value_t& v, const signed offset)
   {
-    values->setValue(i, v);
+    values->setValue(i, v, offset);
   }
 
-  void  setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& v)
+  void  setValue(IndexableValue<discrete_operator_tag>& i, const operator_value_t& v, const signed offset)
   {
-    values->setValue(i, v);
+    values->setValue(i, v, offset);
   }
 };
 

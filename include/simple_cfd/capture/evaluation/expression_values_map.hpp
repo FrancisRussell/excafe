@@ -81,10 +81,10 @@ public:
     nonIndexed.insert(std::make_pair(&e, v));
   }
   
-  void setValue(indexable_t& e, const value_t& v)
+  void setValue(indexable_t& e, const value_t& v, const signed offset)
   {
-    assert(!hasValue(e, 0));
-    const std::pair<indexable_t*, int> key(&e, 0);
+    assert(!hasValue(e, offset));
+    const std::pair<indexable_t*, int> key(&e, offset);
     indexed.insert(std::make_pair(key, v));
   }
 

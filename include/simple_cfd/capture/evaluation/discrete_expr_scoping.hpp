@@ -43,7 +43,6 @@ private:
   {
   }
 
-
   // TODO: remove replicated code from operators
   class OrderCalculationHelper : public boost::static_visitor<void>
   {
@@ -155,7 +154,7 @@ private:
 
   
   template<typename discrete_object_tag>
-  void addInitialisers(const std::set<IndexableValue<discrete_object_tag>*>& indexableValues, std::set<DiscreteExpr*> initialisers) const
+  void addInitialisers(const std::set<IndexableValue<discrete_object_tag>*>& indexableValues, std::set<DiscreteExpr*>& initialisers) const
   {
     typedef typename std::set<IndexableValue<discrete_object_tag>*>::const_iterator indexable_set_iter;
     typedef typename IndexableValue<discrete_object_tag>::init_iterator indexable_init_iter;
