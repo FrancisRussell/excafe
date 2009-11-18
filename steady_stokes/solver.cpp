@@ -12,6 +12,7 @@
 #include <simple_cfd/capture/forms/forms.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/boundary_condition_list.hpp>
 
 using namespace cfd;
 
@@ -177,6 +178,8 @@ private:
   NamedField velocityField;
   NamedField pressureField;
 
+  BoundaryCondition velocityConditions;
+
   SolveOperation coupledSolve;
 
 public:
@@ -191,6 +194,9 @@ public:
 
     velocityField = scenario.defineNamedField("velocity", velocitySpace);
     pressureField = scenario.defineNamedField("pressure", pressureSpace);
+
+    BoundaryConditionList<dimension> velocityConditionList(1);
+    velocityConditions = scenario.addBoundaryCondition(velocitySpace, velocityConditionList);
 
     coupledSolve = constructCoupledSolver();
   }
@@ -229,7 +235,7 @@ public:
       B(div(velocity), pressure)*dx +
       B(theta * k * inner(project(unknownGuess[i-1], velocitySpace), grad(velocity)), velocity)*dx;
 
-    LinearSystem system = assembleGalerkinSystem(coupledSpace, lhsForm, load, bc);
+    LinearSystem system = assembleGalerkinSystem(coupledSpace, lhsForm, load, velocityConditions);
     Operator linearisedSystem = system.getConstrainedSystem();
     unknownGuess[i] = system.getSolution();
 

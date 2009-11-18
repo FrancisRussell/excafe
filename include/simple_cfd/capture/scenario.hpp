@@ -16,6 +16,7 @@
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/discrete_field.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/boundary_condition_list.hpp>
 #include "solve_operation.hpp"
 #include "dimensionless_scenario.hpp"
 #include "fields/element.hpp"
@@ -23,8 +24,10 @@
 #include "fields/function_space_expr.hpp"
 #include "fields/function_space_mesh.hpp"
 #include "fields/named_field.hpp"
+#include "fields/boundary_condition.hpp"
 #include "evaluation/evaluation_fwd.hpp"
 #include "evaluation/function_space_resolver.hpp"
+#include "evaluation/boundary_condition_builder.hpp"
 
 namespace cfd
 {
@@ -42,6 +45,7 @@ private:
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::map< std::string, DiscreteField<dimension> > persistentFields;
+  std::vector< DiscreteField<dimension> > boundaryValues;
 
   boost::tuple<double, double, double> getValue(const std::size_t cid, const vertex_type& vertex, 
     const DiscreteField<dimension>& field) const
@@ -180,6 +184,15 @@ private:
     }
   }
 
+  void resolveFunctionSpace(detail::FunctionSpaceExpr& f)
+  {
+    // TODO: make me efficent
+    std::set<function_space_ptr> functionSpaceSet;
+    functionSpaceSet.insert(&f);
+    resolveFunctionSpaces(functionSpaceSet);
+  }
+
+
 public:
   Scenario(Mesh<dimension>& _mesh) : mesh(_mesh)
   {
@@ -215,14 +228,9 @@ public:
       CFD_EXCEPTION("Attempted to create two named fields with the same name.");
     }
 
-    // TODO: handle creation of DofMaps for named fields better
-    function_space_ptr const functionSpacePtr = &(*functionSpace.getExpr());
-    std::set<function_space_ptr> functionSpaceSet;
-    functionSpaceSet.insert(functionSpacePtr);
-    resolveFunctionSpaces(functionSpaceSet);
-
+    resolveFunctionSpace(*functionSpace.getExpr());
     NamedField field(name, functionSpace);
-    persistentFields.insert(std::make_pair(name, DiscreteField<dimension>(getDofMap(*functionSpacePtr))));
+    persistentFields.insert(std::make_pair(name, DiscreteField<dimension>(getDofMap(*functionSpace.getExpr()))));
     return field;
   }
 
@@ -253,6 +261,15 @@ public:
     const typename std::map< std::string, DiscreteField<dimension> >::iterator fieldIter = persistentFields.find(name);
     assert(fieldIter != persistentFields.end());
     fieldIter->second.swap(v);
+  }
+
+  BoundaryCondition addBoundaryCondition(const FunctionSpace& f, const BoundaryConditionList<dimension>& condition)
+  {
+    resolveFunctionSpace(*f.getExpr());
+
+    detail::BoundaryConditionBuilder<dimension> builder(mesh);
+    boundaryValues.push_back(builder.getBoundaryValues(getDofMap(*f.getExpr()), condition));
+    return BoundaryCondition(boundaryValues.size() - 1);
   }
 
   SolveOperation newSolveOperation()

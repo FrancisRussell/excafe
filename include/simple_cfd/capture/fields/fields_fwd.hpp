@@ -10,6 +10,7 @@ class NamedField;
 class FunctionSpace;
 class Operator;
 class TemporalIndex;
+class BoundaryCondition;
 
 namespace detail
 {

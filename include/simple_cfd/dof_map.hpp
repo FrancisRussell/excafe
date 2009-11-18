@@ -145,6 +145,23 @@ public:
     return intersection;
   }
 
+  DofMap intersect(const std::set<dof_t>& dofs) const
+  {
+    local2global_map commonDofMappings;
+
+    for(typename std::set<dof_t>::const_iterator dofIter(dofs.begin()); dofIter!=dofs.end(); ++dofIter)
+    {
+      const typename local2global_map::const_iterator mappingIter(mapping.find(*dofIter));
+
+      if (mappingIter != mapping.end())
+        commonDofMappings.insert(*mappingIter);
+    }
+
+    DofMap intersection(*m, elements, commonDofMappings);
+    intersection.makeContiguous();
+    return intersection;
+  }
+
   bool operator==(const DofMap& map) const
   {
     return m == map.m &&

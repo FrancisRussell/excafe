@@ -6,6 +6,7 @@
 #include "scalar.hpp"
 #include "field.hpp"
 #include "named_field.hpp"
+#include "boundary_condition.hpp"
 #include "operator.hpp"
 #include "temporal_index.hpp"
 #include "temporal_index_expr.hpp"
@@ -53,9 +54,8 @@ Field project(const Field& field, const FunctionSpace& functionSpace)
   return Field(new detail::DiscreteFieldProjection(field.getExpr(), functionSpace.getExpr()));
 }
 
-template<typename bc_t>
 LinearSystem assembleGalerkinSystem(const FunctionSpace& functionSpace, const forms::BilinearFormIntegralSum& lhs,
-                                    const Field& rhs, const bc_t& bc)
+                                    const Field& rhs, const BoundaryCondition& bc)
 {
   return LinearSystem(functionSpace.getExpr(), functionSpace.getExpr(), lhs, rhs.getExpr(), bc);
 }

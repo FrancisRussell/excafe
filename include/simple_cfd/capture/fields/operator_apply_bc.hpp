@@ -5,6 +5,7 @@
 #include <memory>
 #include "operator_expr.hpp"
 #include "discrete_expr_visitor.hpp"
+#include "boundary_condition.hpp"
 #include <simple_cfd/capture/indices/propagation_rule.hpp>
 #include <simple_cfd/capture/indices/propagation_rules.hpp>
 #include <simple_cfd/capture/indices/index_propagation_all.hpp>
@@ -19,10 +20,10 @@ class OperatorApplyBC : public OperatorExpr
 {
 private:
   OperatorExpr::expr_ptr op;
-  boost::any bc;
+  BoundaryCondition bc;
 
 public:
-  OperatorApplyBC(const OperatorExpr::expr_ptr& _op, const boost::any& _bc) : op(_op), bc(_bc)
+  OperatorApplyBC(const OperatorExpr::expr_ptr& _op, const BoundaryCondition& _bc) : op(_op), bc(_bc)
   {
   }
 
@@ -60,7 +61,7 @@ public:
     return dependencies;
   }
 
-  boost::any getBoundaryCondition() const
+  BoundaryCondition getBoundaryCondition() const
   {
     return bc;
   }

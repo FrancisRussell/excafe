@@ -323,9 +323,11 @@ public:
 
   virtual void visit(DiscreteFieldApplyBC& a)
   {
+    //FIXME: implement me!
+    assert(false);
     DiscreteField<dimension> newField(getValue(a.getField()));
-    const LinearSystem::load_vector_bc_t bc = boost::any_cast<LinearSystem::load_vector_bc_t>(a.getBoundaryCondition());
-    bc(newField);
+    //const LinearSystem::load_vector_bc_t bc = boost::any_cast<LinearSystem::load_vector_bc_t>(a.getBoundaryCondition());
+    //bc(newField);
     setValue(a, newField);
   }
 
@@ -355,9 +357,11 @@ public:
 
   virtual void visit(OperatorApplyBC& a)
   {
+    //FIXME: implement me!
+    assert(false);
     DiscreteOperator<dimension> newOperator(getValue(a.getOperator()));
-    const LinearSystem::system_matrix_bc_t bc = boost::any_cast<LinearSystem::system_matrix_bc_t>(a.getBoundaryCondition());
-    bc(newOperator);
+    //const LinearSystem::system_matrix_bc_t bc = boost::any_cast<LinearSystem::system_matrix_bc_t>(a.getBoundaryCondition());
+    //bc(newOperator);
     setValue(a, newOperator);
   }
 

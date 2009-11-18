@@ -51,6 +51,10 @@ template<std::size_t D> class DiscreteField;
 class Polynomial;
 class Monomial;
 class OptimisedPolynomial;
+
+// Boundary Conditions
+template<std::size_t D> class BoundaryCondition3;
+template<std::size_t D> class BoundaryConditionList;
 }
 
 #endif

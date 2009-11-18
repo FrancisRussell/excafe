@@ -1,0 +1,82 @@
+#ifndef SIMPLE_CFD_BOUNDARY_CONDITION_LIST_HPP
+#define SIMPLE_CFD_BOUNDARY_CONDITION_LIST_HPP
+
+#include <cstddef>
+#include <cassert>
+#include <vector>
+#include <boost/shared_ptr.hpp>
+#include "boundary_condition3.hpp"
+#include "vertex.hpp"
+
+namespace cfd
+{
+
+template<std::size_t D>
+class BoundaryConditionList : public BoundaryCondition3<D>
+{
+private:
+  static const std::size_t dimension = D;
+  const std::size_t rank;
+  typedef BoundaryCondition3<dimension> condition_t;
+
+  std::vector< boost::shared_ptr<condition_t> > conditions;
+
+  typedef typename std::vector< boost::shared_ptr<condition_t> >::const_reverse_iterator const_iterator;
+
+  const_iterator begin() const
+  {
+    return conditions.rbegin();
+  }
+
+  const_iterator end() const
+  {
+    return conditions.rend();
+  }
+
+public:
+  BoundaryConditionList(const std::size_t _rank) : rank(_rank)
+  {
+  }
+
+  template<typename T>
+  void add(const T& condition)
+  {
+    conditions.push_back(boost::shared_ptr<condition_t>(new T(condition)));
+  }
+
+  virtual std::size_t getRank() const
+  {
+    return rank;
+  }
+
+  virtual bool applies(const int label) const
+  {
+    for(const_iterator condIter(begin()); condIter!=end(); ++condIter)
+    {
+      if ((*condIter)->applies(label))
+        return true;
+    }
+    return false;
+  }
+
+  virtual int getPriority(const int label) const
+  {
+    return 0;
+  }
+
+  virtual Tensor<dimension> getValue(const vertex<dimension>& location, const int label) const
+  {
+    for(const_iterator condIter(begin()); condIter!=end(); ++condIter)
+    {
+      if ((*condIter)->applies(label))
+        return (*condIter)->getValue(location, label);
+    }
+
+    assert(false && "Tried to get value for a boundary condition where it doesn't apply.");
+    return Tensor<dimension>(rank);
+  }
+};
+
+}
+
+#endif

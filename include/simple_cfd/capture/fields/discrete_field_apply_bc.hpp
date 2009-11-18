@@ -3,10 +3,10 @@
 
 #include <set>
 #include <memory>
-#include <boost/any.hpp>
 #include "discrete_field_expr.hpp"
 #include "discrete_expr_visitor.hpp"
 #include "function_space_expr.hpp"
+#include "boundary_condition.hpp"
 #include <simple_cfd/capture/indices/propagation_rules.hpp>
 #include <simple_cfd/capture/indices/propagation_rule.hpp>
 #include <simple_cfd/capture/indices/index_propagation_all.hpp>
@@ -21,10 +21,10 @@ class DiscreteFieldApplyBC : public DiscreteFieldExpr
 {
 private:
   DiscreteFieldExpr::expr_ptr field;
-  boost::any bc;
+  BoundaryCondition bc;
 
 public:
-  DiscreteFieldApplyBC(const DiscreteFieldExpr::expr_ptr& f, const boost::any& _bc) : field(f), bc(_bc)
+  DiscreteFieldApplyBC(const DiscreteFieldExpr::expr_ptr& f, const BoundaryCondition& _bc) : field(f), bc(_bc)
   {
   }
 
@@ -57,7 +57,7 @@ public:
     return dependencies;
   }
 
-  boost::any getBoundaryCondition() const
+  BoundaryCondition getBoundaryCondition() const
   {
     return bc;
   }
