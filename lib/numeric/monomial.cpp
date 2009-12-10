@@ -123,3 +123,12 @@ std::ostream& operator<<(std::ostream& out, const Monomial& m)
 }
 
 }
+
+namespace std
+{
+  template<>
+  void swap(cfd::Monomial& a, cfd::Monomial& b)
+  {
+    a.swap(b);
+  }
+}

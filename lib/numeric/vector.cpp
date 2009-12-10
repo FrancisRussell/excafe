@@ -24,11 +24,6 @@ void PETScVector::checkError(const PetscErrorCode ierr) const
   assert(ierr == 0);
 }
 
-void PETScVector::swap(PETScVector& p)
-{
-  std::swap(v, p.v);
-}
-
 PETScVector::PETScVector(const unsigned rows)
 {
   const PetscErrorCode ierr = VecCreateSeq(PETSC_COMM_SELF, rows, &v);

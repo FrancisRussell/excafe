@@ -79,8 +79,8 @@ public:
   void swap(DofMap& d)
   {
     std::swap(m, d.m);
-    elements.swap(d.elements);
-    mapping.swap(d.mapping);
+    std::swap(elements, d.elements);
+    std::swap(mapping, d.mapping);
   }
   
   bool isComposite() const
@@ -143,7 +143,7 @@ public:
         newMapping.insert(*mappingIter);
     }
 
-    newMapping.swap(mapping);
+    std::swap(newMapping, mapping);
     makeContiguous();
     return *this;
   }
@@ -325,6 +325,15 @@ public:
   }
 };
 
+}
+
+namespace std
+{
+  template<std::size_t D>
+  void swap(cfd::DofMap<D>& a, cfd::DofMap<D>& b)
+  {
+    a.swap(b);
+  }
 }
 
 #endif

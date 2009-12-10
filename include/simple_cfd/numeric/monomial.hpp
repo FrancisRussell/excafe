@@ -38,4 +38,10 @@ std::ostream& operator<<(std::ostream& o, const Monomial& p);
 
 }
 
+namespace std
+{
+  template<>
+  void swap(cfd::Monomial& a, cfd::Monomial& b);
+}
+
 #endif

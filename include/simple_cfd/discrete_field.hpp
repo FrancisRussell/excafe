@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_FE_VECTOR_HPP
 #define SIMPLE_CFD_FE_VECTOR_HPP
 
+#include <cstddef>
 #include <vector>
 #include <ostream>
 #include <iostream>
@@ -49,8 +50,8 @@ public:
 
   void swap(DiscreteField& f)
   {
-    rowMappings.swap(f.rowMappings);
-    vector.swap(f.vector);
+    std::swap(rowMappings, f.rowMappings);
+    std::swap(vector, f.vector);
   }
 
   bool isComposite() const
@@ -216,4 +217,12 @@ public:
 
 }
 
+namespace std
+{
+  template<std::size_t D> 
+  void swap(cfd::DiscreteField<D>& a, cfd::DiscreteField<D>& b)
+  {
+    a.swap(b);
+  }
+}
 #endif

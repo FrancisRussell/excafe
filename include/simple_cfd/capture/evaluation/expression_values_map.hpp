@@ -41,7 +41,7 @@ public:
       newIndexed.insert(std::make_pair(newKey, indexedIter->second));
     }
 
-    indexed.swap(newIndexed);
+    std::swap(indexed, newIndexed);
   }
 
   void addMappings(const std::map<expr_t*, value_t> newValues)

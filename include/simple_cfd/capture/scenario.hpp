@@ -261,11 +261,12 @@ public:
     return boundaryValues[b.getIndex()];
   }
 
-  void setNamedValue(const std::string& name, DiscreteField<dimension> v)
+  void setNamedValue(const std::string& name, const DiscreteField<dimension>& v)
   {
+    DiscreteField<dimension> newValue(v);
     const typename std::map< std::string, DiscreteField<dimension> >::iterator fieldIter = persistentFields.find(name);
     assert(fieldIter != persistentFields.end());
-    fieldIter->second.swap(v);
+    std::swap(fieldIter->second, newValue);
   }
 
   BoundaryCondition addBoundaryCondition(const FunctionSpace& f, const BoundaryConditionList<dimension>& condition)
