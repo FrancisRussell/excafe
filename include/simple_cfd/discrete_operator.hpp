@@ -16,6 +16,10 @@
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
 
+// Currently here just to test that the array classes actually parse
+#include "capture/array/array_expression.hpp"
+#include "capture/array/tensor_function.hpp"
+
 namespace cfd
 {
 
