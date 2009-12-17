@@ -16,8 +16,8 @@ class ArrayExpression
 public:
   typedef boost::shared_ptr<ArrayExpression> expr_ptr;
 
-  virtual std::size_t tensorRank() const = 0;
-  virtual std::size_t tensorDimension() const = 0;
+  virtual std::size_t getTensorRank() const = 0;
+  virtual std::size_t getTensorDimension() const = 0;
   virtual std::size_t numArrayIndices() const = 0;
   virtual std::size_t getArrayDimension(const std::size_t index) const = 0;
   virtual std::set<ArrayExpression*> getDependencies() const = 0;

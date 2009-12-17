@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cassert>
 #include <simple_cfd/numeric/polynomial.hpp>
+#include <simple_cfd/exception.hpp>
 #include "array_expression.hpp"
 #include "tensor_index.hpp"
 
@@ -35,18 +36,27 @@ public:
     rank(_rank), dimension(_dimension), functions(findTensorExtent(rank, dimension))
   {
   }
+  
+  std::size_t getTensorRank() const
+  {
+    return rank;
+  }
 
-/*
+  std::size_t getTensorDimension() const
+  {
+    return dimension;
+  }
+
   std::size_t getDimension(const std::size_t index) const
   {
-    return dimensions[index];
+    CFD_EXCEPTION("TensorFunctions have no array dimensions");
+    return 0;
   }
 
   std::size_t numIndices() const
   {
-    return dimensions.size();
+    return 0;
   }
-*/
 
   Polynomial& operator[](const TensorIndex& index)
   {
@@ -61,11 +71,9 @@ public:
     assert(dimension == index.getDimension());
     return functions[index.flatten()]; 
   }
-
 };
 
 }
 
 }
-
 #endif
