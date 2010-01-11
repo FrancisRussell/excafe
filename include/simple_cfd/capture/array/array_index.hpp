@@ -19,13 +19,12 @@ private:
   std::vector<std::size_t> indices;
 
 public:
-  TensorIndex(const std::size_t _numIndices) : rank(_rank), dimension(_dimension),
-    indices(rank)
+  ArrayIndex(const std::size_t _numIndices) : numIndices(_numIndices)
   {
   }
 
-  TensorIndex(const std::size_t _numIndices, const std::size_t* const _indices) :
-    numIndices(_numIndices) : indices(numIndices)
+  ArrayIndex(const std::size_t _numIndices, const std::size_t* const _indices) :
+    numIndices(_numIndices), indices(numIndices)
   {
     std::copy(_indices, _indices+numIndices, indices.begin());
   }
