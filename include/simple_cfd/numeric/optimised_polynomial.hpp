@@ -23,7 +23,7 @@ private:
   double evaluate(const std::vector<double>& params) const;
 
 public:
-  OptimisedPolynomial(const Polynomial& p);
+  OptimisedPolynomial(const Polynomial<std::string>& p);
 
   double operator()() const;
   double operator()(const double a) const;

@@ -48,7 +48,7 @@ template<std::size_t D> class DiscreteOperator;
 template<std::size_t D> class DiscreteField;
 
 // Polynomial types
-class Polynomial;
+template<typename V> class Polynomial;
 template<typename V> class Monomial;
 class OptimisedPolynomial;
 

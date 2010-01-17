@@ -3,6 +3,7 @@
 
 #include <set>
 #include <cstddef>
+#include <string>
 #include <simple_cfd/simple_cfd_fwd.hpp>
 
 namespace cfd
@@ -17,7 +18,7 @@ private:
   static double jacobi_a_4_n(const double alpha, const double beta, const std::size_t n);
 
 public:
-  static Polynomial jacobi(const double alpha, const double beta, const std::size_t n);
+  static Polynomial<std::string> jacobi(const double alpha, const double beta, const std::size_t n);
   static std::set<double> jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon = 1e-8);
 };
 

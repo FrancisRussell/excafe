@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_NUMERIC_MONOMIAL_HPP
 
 #include <map>
-#include <string>
 #include <cstddef>
 #include <set>
 #include <iosfwd>
@@ -121,7 +120,7 @@ public:
     exponents.swap(m.exponents); 
   }
 
-  std::ostream& stream_out(std::ostream& out) const
+  std::ostream& write(std::ostream& out) const
   {
     for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
     {
@@ -141,7 +140,7 @@ public:
 template<typename V>
 std::ostream& operator<<(std::ostream& o, const Monomial<V>& p)
 {
-  return p.stream_out(o);
+  return p.write(o);
 }
 
 }

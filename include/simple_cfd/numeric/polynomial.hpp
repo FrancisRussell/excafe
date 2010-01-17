@@ -2,105 +2,332 @@
 #define SIMPLE_CFD_NUMERIC_POLYNOMIAL_HPP
 
 #include <vector>
-#include <string>
 #include <map>
 #include <set>
 #include <cstddef>
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <iosfwd>
 #include <boost/operators.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <numeric/monomial.hpp>
+#include <numeric/optimised_polynomial.hpp>
 
 namespace cfd
 {
 
-class Polynomial : boost::addable2<Polynomial, double,
-                   boost::subtractable2<Polynomial, double,
-                   boost::dividable2<Polynomial, double,
-                   boost::multipliable2<Polynomial, double, 
-                   boost::addable< Polynomial,
-                   boost::subtractable< Polynomial,
-                   boost::multipliable< Polynomial
+template<typename V>
+class Polynomial : boost::addable2<Polynomial<V>, double,
+                   boost::subtractable2<Polynomial<V>, double,
+                   boost::dividable2<Polynomial<V>, double,
+                   boost::multipliable2<Polynomial<V>, double, 
+                   boost::addable< Polynomial<V>,
+                   boost::subtractable< Polynomial<V>,
+                   boost::multipliable< Polynomial<V>
                    > > > > > > >
 {
 public:
-  typedef std::string variable_t;
+  typedef V variable_t;
 
 private:
-  friend std::ostream& operator<<(std::ostream& o, const Polynomial& p);
-
   typedef std::map<Monomial<variable_t>, double> coefficient_map_t;
-  std::set<std::string> independentVariables;
+  std::set<variable_t> independentVariables;
   coefficient_map_t coefficients;
 
-  void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
-  void addConstant(const double constant);
-  void addIndependentVariables(const Polynomial& p);
-  void addIndependentVariables(const Monomial<variable_t>& m);
-  void cleanZeros();
+  void addTerm(const double coefficient, const variable_t& variable, const std::size_t exponent)
+  {
+    addIndependentVariable(variable);
+    coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
+    cleanZeros();
+  }
 
-  void addMonomial(const double coefficient, const Monomial<variable_t>& m);
-  Polynomial operator*(const Monomial<variable_t>& m) const;
-  Polynomial& operator*=(const Monomial<variable_t>& m);
+  void addConstant(const double constant)
+  {
+    coefficients[Monomial<variable_t>()] += constant;
+    cleanZeros();
+  }
+
+  void addIndependentVariables(const Polynomial& p)
+  {
+    independentVariables.insert(p.independentVariables.begin(), p.independentVariables.end());
+  }
+
+  void addIndependentVariables(const Monomial<variable_t>& m)
+  {
+    const std::set<variable_t> mVariables(m.getVariables()); 
+    independentVariables.insert(mVariables.begin(), mVariables.end());
+  }
+
+  void cleanZeros()
+  {
+    std::set< Monomial<variable_t> > zeroMonomials;
+  
+    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    {
+      if (cIter->second == 0.0)
+        zeroMonomials.insert(cIter->first);
+    }
+  
+    for(typename std::set< Monomial<variable_t> >::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
+      coefficients.erase(*mIter);
+  }
+
+
+  void addMonomial(const double coefficient, const Monomial<variable_t>& m)
+  {
+    coefficients[m] += coefficient;
+  }
+
+  Polynomial operator*(const Monomial<variable_t>& m) const
+  {
+    Polynomial result(*this);
+    result *= m;
+    return result;
+  }
+
+  Polynomial& operator*=(const Monomial<variable_t>& m)
+  {
+    addIndependentVariables(m);
+    std::map<Monomial<variable_t>, double> newCoefficients;
+  
+    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+      newCoefficients.insert(std::make_pair(cIter->first * m, cIter->second));
+  
+    coefficients.swap(newCoefficients);
+    return *this;
+  }
+
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
   {
-    for(coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
       cIter->second = f(cIter->second);
 
     cleanZeros();
   }
 
 public:
-  typedef coefficient_map_t::iterator iterator;
-  typedef coefficient_map_t::const_iterator const_iterator;
+  typedef typename coefficient_map_t::iterator iterator;
+  typedef typename coefficient_map_t::const_iterator const_iterator;
 
-  Polynomial();
-  Polynomial(const Polynomial& p);
+  Polynomial()
+  {
+  }
 
-  explicit Polynomial(const double constant);
-  explicit Polynomial(const std::string& variable);
-  explicit Polynomial(const double coefficient, const std::string& variable);
-  explicit Polynomial(const std::string& variable, const std::size_t exponent);
-  explicit Polynomial(const double coefficient, const std::string& variable, const std::size_t exponent);
+  Polynomial(const Polynomial& p) : independentVariables(p.independentVariables), coefficients(p.coefficients)
+  {
+  }
 
-  iterator begin();
-  iterator end();
-  const_iterator begin() const;
-  const_iterator end() const;
+  explicit Polynomial(const double constant)
+  {
+    addConstant(constant);
+  }
 
-  void addIndependentVariable(const std::string& s);
-  std::set<std::string> getIndependentVariables() const;
-  void checkConsistent() const;
+  explicit Polynomial(const variable_t& variable)
+  {
+    addTerm(1.0, variable, 1);
+  }
 
-  Polynomial& operator*=(const double x);
-  Polynomial& operator/=(const double x);
-  Polynomial& operator+=(const double x);
-  Polynomial& operator-=(const double x);
+  explicit Polynomial(const double coefficient, const variable_t& variable)
+  {
+    addTerm(coefficient, variable, 1);
+  }
 
-  Polynomial& operator*=(const Polynomial& p);
-  Polynomial& operator+=(const Polynomial& p);
-  Polynomial& operator-=(const Polynomial& p);
+  explicit Polynomial(const variable_t& variable, const std::size_t exponent)
+  {
+    addTerm(1.0, variable, exponent);
+  }
 
-  Polynomial operator-() const;
+  explicit Polynomial(const double coefficient, const variable_t& variable, const std::size_t exponent)
+  {
+    addTerm(coefficient, variable, exponent);
+  }
 
-  Polynomial derivative(const std::string& variable) const;
-  OptimisedPolynomial optimise() const;
-  std::size_t numTerms() const;
-  void swap(Polynomial& p);
+  iterator begin()
+  {
+    return coefficients.begin();
+  }
+
+  iterator end()
+  {
+    return coefficients.end();
+  }
+
+  const_iterator begin() const
+  {
+    return coefficients.begin();
+  }
+
+  const_iterator end() const
+  {
+    return coefficients.end();
+  }
+
+  void addIndependentVariable(const variable_t& variable)
+  {
+    independentVariables.insert(variable);
+  }
+
+  std::set<variable_t> getIndependentVariables() const
+  {
+    return independentVariables;
+  }
+
+  void checkConsistent() const
+  {
+    // Checks that independentVariables is a superset of all variables referenced
+    // in monomials.
+    std::set<variable_t> referencedVariables;
+  
+    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    {
+      const std::set<variable_t> monomialVars(cIter->first.getVariables());
+      referencedVariables.insert(monomialVars.begin(), monomialVars.end()); 
+    }
+  
+    assert(std::includes(independentVariables.begin(), independentVariables.end(),
+           referencedVariables.begin(), referencedVariables.end()));
+  }
+
+  Polynomial& operator*=(const double x)
+  {
+    transformCoefficients(boost::lambda::_1 * x);
+    return *this;
+  }
+
+  Polynomial& operator/=(const double x)
+  {
+    transformCoefficients(boost::lambda::_1 / x);
+    return *this;
+  }
+
+  Polynomial& operator+=(const double x)
+  {
+    addConstant(x);
+    return *this;
+  }
+
+  Polynomial& operator-=(const double x)
+  {
+    addConstant(-x);
+    return *this;
+  }
+
+  Polynomial& operator*=(const Polynomial& p)
+  {
+    Polynomial result;
+  
+    for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
+    {
+      result += (*this) * cIter->first * cIter->second;
+    }
+  
+    result.swap(*this);
+    return *this;
+  }
+
+  Polynomial& operator+=(const Polynomial& p)
+  {
+    addIndependentVariables(p);
+  
+    for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
+      coefficients[cIter->first] += cIter->second;
+  
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator-=(const Polynomial& p)
+  {
+    *this += -p;
+    return *this;
+  }
+
+  Polynomial operator-() const
+  {
+    Polynomial result(*this);
+    result.transformCoefficients(-boost::lambda::_1);
+    return result;
+  }
+
+
+  Polynomial derivative(const variable_t& variable) const
+  {
+    Polynomial result;
+    result.addIndependentVariables(*this);
+  
+    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    {
+      const std::pair< double, Monomial<variable_t> > mDerivative(cIter->first.derivative(variable));
+      result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
+    }
+  
+    result.cleanZeros();
+    return result;
+  }
+
+  OptimisedPolynomial optimise() const
+  {
+    return OptimisedPolynomial(*this);
+  }
+
+  std::size_t numTerms() const
+  {
+    return coefficients.size();
+  }
+
+  std::ostream& write(std::ostream& out) const
+  {
+    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    {
+      if (cIter != coefficients.begin())
+        out << " + ";
+  
+      const bool renderCoefficient = cIter->second != 1.0 || cIter->first.isOne();
+      const bool renderMonomial = !cIter->first.isOne();
+  
+      if (renderCoefficient)
+        out << cIter->second; 
+        
+      if (renderCoefficient && renderMonomial)
+        out << "*";
+        
+      if (renderMonomial) 
+        out << cIter->first;
+    }
+    
+    if (coefficients.empty())
+      out << 0.0;
+  
+    return out;
+  }
+
+  void swap(Polynomial& p)
+  {
+    coefficients.swap(p.coefficients);
+    independentVariables.swap(p.independentVariables);
+  }
 };
 
-std::ostream& operator<<(std::ostream& o, const Polynomial& p);
+template<typename V>
+std::ostream& operator<<(std::ostream& out, const Polynomial<V>& p)
+{
+  return p.write(out);
+}
 
 }
 
 namespace std
 {
-  template<>
-  void swap(cfd::Polynomial& a, cfd::Polynomial& b);
+  template<typename V>
+  void swap(cfd::Polynomial<V>& a, cfd::Polynomial<V>& b)
+  {
+    a.swap(b);
+  }
 }
 
 #endif
