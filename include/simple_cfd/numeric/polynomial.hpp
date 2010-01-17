@@ -25,22 +25,25 @@ class Polynomial : boost::addable2<Polynomial, double,
                    boost::multipliable< Polynomial
                    > > > > > > >
 {
+public:
+  typedef std::string variable_t;
+
 private:
   friend std::ostream& operator<<(std::ostream& o, const Polynomial& p);
 
-  typedef std::map<Monomial, double> coefficient_map_t;
+  typedef std::map<Monomial<variable_t>, double> coefficient_map_t;
   std::set<std::string> independentVariables;
   coefficient_map_t coefficients;
 
   void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
   void addConstant(const double constant);
   void addIndependentVariables(const Polynomial& p);
-  void addIndependentVariables(const Monomial& m);
+  void addIndependentVariables(const Monomial<variable_t>& m);
   void cleanZeros();
 
-  void addMonomial(const double coefficient, const Monomial& m);
-  Polynomial operator*(const Monomial& m) const;
-  Polynomial& operator*=(const Monomial& m);
+  void addMonomial(const double coefficient, const Monomial<variable_t>& m);
+  Polynomial operator*(const Monomial<variable_t>& m) const;
+  Polynomial& operator*=(const Monomial<variable_t>& m);
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)

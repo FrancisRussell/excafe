@@ -19,7 +19,7 @@ private:
   coefficient_vec_t coefficients;
   mutable std::vector<double> paramData;
 
-  std::vector<std::size_t> buildExponentVector(const Monomial& m) const;
+  std::vector<std::size_t> buildExponentVector(const Monomial<std::string>& m) const;
   double evaluate(const std::vector<double>& params) const;
 
 public:

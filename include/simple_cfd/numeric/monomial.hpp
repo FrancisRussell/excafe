@@ -7,41 +7,152 @@
 #include <set>
 #include <iosfwd>
 #include <utility>
+#include <ostream>
 
 namespace cfd
 {
 
+template<typename V>
 class Monomial
 {
+public:
+  typedef V variable_t;
+
 private:
-  friend std::ostream& operator<<(std::ostream& o, const Monomial& m);
-  std::map<std::string, std::size_t> exponents;
+  std::map<variable_t, std::size_t> exponents;
 
 public:
-  Monomial();
-  Monomial(const Monomial& m);
-  Monomial(const std::string& variable, const std::size_t exponent);
-  Monomial& operator*=(const Monomial& m);
-  Monomial operator*(const Monomial& m) const;
-  bool operator==(const Monomial& m) const;
-  bool operator<(const Monomial& m) const;
-  Monomial& operator=(const Monomial& m);
+  Monomial()
+  {
+  }
 
-  bool isOne() const;
-  std::set<std::string> getVariables() const;
-  std::size_t getExponent(const std::string& variable) const;
-  std::pair<double, Monomial> derivative(const std::string& variable) const;
-  void swap(Monomial& m);
+  Monomial(const Monomial& m) : exponents(m.exponents)
+  {
+  }
+
+  Monomial(const variable_t& variable, const std::size_t exponent)
+  {
+    exponents.insert(std::make_pair(variable, exponent));
+  }
+
+  Monomial& operator*=(const Monomial& m)
+  {
+    for (typename std::map<variable_t, std::size_t>::const_iterator expIter(m.exponents.begin()); expIter!=m.exponents.end(); ++expIter)
+      exponents[expIter->first] += expIter->second;
+
+    return *this;
+  }
+
+  Monomial operator*(const Monomial& m) const
+  {
+    Monomial result(*this);
+    result *= m;
+    return result;
+  }
+
+  bool operator==(const Monomial& m) const
+  {
+    return exponents == m.exponents;
+  }
+
+  bool operator<(const Monomial& m) const
+  {
+    return exponents < m.exponents;
+  }
+
+  Monomial& operator=(const Monomial& m)
+  {
+    exponents = m.exponents;
+    return *this;
+  }
+
+  bool isOne() const
+  {
+    return exponents.empty();
+  }
+
+  std::set<variable_t> getVariables() const
+  {
+    std::set<variable_t> variables;
+
+    for (typename std::map<variable_t, std::size_t>::const_iterator expIter(exponents.begin()); expIter!=exponents.end(); ++expIter)
+      variables.insert(expIter->first);
+
+    return variables;
+  }
+
+  std::size_t getExponent(const variable_t& variable) const
+  {
+    const typename std::map<variable_t, std::size_t>::const_iterator varIter(exponents.find(variable));
+  
+    if (varIter == exponents.end())
+    {
+      return 0;
+    }
+    else
+    {
+      return varIter->second;
+    }
+  }
+
+  std::pair<double, Monomial> derivative(const variable_t& variable) const
+  {
+    const double coefficient = getExponent(variable);
+    Monomial result;
+
+    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
+    {
+      if (eIter->first != variable)
+      {
+        result.exponents.insert(*eIter);
+      }
+      else if (eIter->second > 1)
+      {
+        result.exponents.insert(std::make_pair(eIter->first, eIter->second - 1));
+      }
+    }
+
+    return std::make_pair(coefficient, result);
+  }
+
+
+  void swap(Monomial& m)
+  {
+    exponents.swap(m.exponents); 
+  }
+
+  std::ostream& stream_out(std::ostream& out) const
+  {
+    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
+    {
+      out << eIter->first;
+
+      if (eIter->second != 1)
+        out << "^{" << eIter->second << "}";
+    }
+  
+    if (exponents.empty())
+      out << "1.0";
+
+    return out;
+  }
 };
 
-std::ostream& operator<<(std::ostream& o, const Monomial& p);
+template<typename V>
+std::ostream& operator<<(std::ostream& o, const Monomial<V>& p)
+{
+  return p.stream_out(o);
+}
 
 }
 
 namespace std
 {
-  template<>
-  void swap(cfd::Monomial& a, cfd::Monomial& b);
+  template<typename V>
+  void swap(cfd::Monomial<V>& a, cfd::Monomial<V>& b)
+  {
+    a.swap(b);
+  }
 }
 
 #endif

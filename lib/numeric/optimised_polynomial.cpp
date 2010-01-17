@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cassert>
 #include <numeric>
+#include <string>
 
 namespace cfd
 {
@@ -29,7 +30,7 @@ struct Pow
 
 }
 
-std::vector<std::size_t> OptimisedPolynomial::buildExponentVector(const Monomial& m) const
+std::vector<std::size_t> OptimisedPolynomial::buildExponentVector(const Monomial<std::string>& m) const
 {
   std::vector<std::size_t> exponents;
 

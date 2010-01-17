@@ -46,13 +46,13 @@ Polynomial::Polynomial(const double coefficient, const std::string& variable, co
 void Polynomial::addTerm(const double coefficient, const std::string& variable, const std::size_t exponent)
 {
   addIndependentVariable(variable);
-  coefficients[Monomial(variable, exponent)] += coefficient;
+  coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
   cleanZeros();
 }
 
 void Polynomial::addConstant(const double constant)
 {
-  coefficients[Monomial()] += constant;
+  coefficients[Monomial<variable_t>()] += constant;
   cleanZeros();
 }
 
@@ -66,7 +66,7 @@ void Polynomial::addIndependentVariables(const Polynomial& p)
   independentVariables.insert(p.independentVariables.begin(), p.independentVariables.end());
 }
 
-void Polynomial::addIndependentVariables(const Monomial& m)
+void Polynomial::addIndependentVariables(const Monomial<variable_t>& m)
 {
   const std::set<std::string> mVariables(m.getVariables()); 
   independentVariables.insert(mVariables.begin(), mVariables.end());
@@ -103,10 +103,10 @@ Polynomial Polynomial::operator-() const
   return result;
 }
 
-Polynomial& Polynomial::operator*=(const Monomial& m)
+Polynomial& Polynomial::operator*=(const Monomial<variable_t>& m)
 {
   addIndependentVariables(m);
-  std::map<Monomial, double> newCoefficients;
+  std::map<Monomial<variable_t>, double> newCoefficients;
 
   for(coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
     newCoefficients.insert(std::make_pair(cIter->first * m, cIter->second));
@@ -115,7 +115,7 @@ Polynomial& Polynomial::operator*=(const Monomial& m)
   return *this;
 }
 
-Polynomial Polynomial::operator*(const Monomial& m) const
+Polynomial Polynomial::operator*(const Monomial<variable_t>& m) const
 {
   Polynomial result(*this);
   result *= m;
@@ -135,7 +135,7 @@ Polynomial& Polynomial::operator*=(const Polynomial& p)
   return *this;
 }
 
-void Polynomial::addMonomial(const double coefficient, const Monomial& m)
+void Polynomial::addMonomial(const double coefficient, const Monomial<variable_t>& m)
 {
   coefficients[m] += coefficient;
 }
@@ -175,7 +175,7 @@ void Polynomial::swap(Polynomial& p)
 
 void Polynomial::cleanZeros()
 {
-  std::set<Monomial> zeroMonomials;
+  std::set< Monomial<variable_t> > zeroMonomials;
 
   for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
   {
@@ -183,7 +183,7 @@ void Polynomial::cleanZeros()
       zeroMonomials.insert(cIter->first);
   }
 
-  for(std::set<Monomial>::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
+  for(std::set< Monomial<variable_t> >::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
     coefficients.erase(*mIter);
 }
 
@@ -214,7 +214,7 @@ Polynomial Polynomial::derivative(const std::string& variable) const
 
   for(Polynomial::coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
   {
-    const std::pair<double, Monomial> mDerivative(cIter->first.derivative(variable));
+    const std::pair< double, Monomial<variable_t> > mDerivative(cIter->first.derivative(variable));
     result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
   }
 
