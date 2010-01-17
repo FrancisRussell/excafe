@@ -270,9 +270,9 @@ public:
     return result;
   }
 
-  OptimisedPolynomial optimise() const
+  OptimisedPolynomial<variable_t> optimise() const
   {
-    return OptimisedPolynomial(*this);
+    return OptimisedPolynomial<variable_t>(*this);
   }
 
   std::size_t numTerms() const

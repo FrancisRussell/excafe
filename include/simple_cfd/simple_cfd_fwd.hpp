@@ -50,7 +50,7 @@ template<std::size_t D> class DiscreteField;
 // Polynomial types
 template<typename V> class Polynomial;
 template<typename V> class Monomial;
-class OptimisedPolynomial;
+template<typename V> class OptimisedPolynomial;
 
 // Boundary Conditions
 template<std::size_t D> class BoundaryCondition3;

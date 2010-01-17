@@ -49,8 +49,8 @@ Polynomial<std::string> MathUtilities::jacobi(const double alpha, const double b
 
 std::set<double> MathUtilities::jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon)
 {
-  const OptimisedPolynomial j = jacobi(alpha, beta, n).optimise();
-  const OptimisedPolynomial jPrime = jacobi(alpha, beta, n).derivative("x").optimise();
+  const OptimisedPolynomial<std::string> j = jacobi(alpha, beta, n).optimise();
+  const OptimisedPolynomial<std::string> jPrime = jacobi(alpha, beta, n).derivative("x").optimise();
 
   std::vector<double> roots(n);
 
