@@ -49,27 +49,6 @@ public:
   }
 };
 
-class ScalarID
-{
-private:
-  std::size_t offset;
-
-public:
-  ScalarID(const std::size_t _offset) : offset(_offset)
-  {
-  }
-
-  std::size_t getOffset() const
-  {
-    return offset;
-  }
-
-  bool operator<(const ScalarID& i) const
-  {
-    return offset < i.offset;
-  }
-};
-
 }
 
 }

@@ -5,6 +5,8 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_convertible.hpp> 
 
 namespace cfd
 {
@@ -12,15 +14,21 @@ namespace cfd
 namespace detail
 {
 
+template<typename I>
 class ArrayIndex
 {
+public:
+  typedef I index_t;
+
 private:
+  BOOST_STATIC_ASSERT((boost::is_convertible<std::size_t, index_t>::value));
   std::size_t numIndices;
-  std::vector<std::size_t> indices;
+  std::vector<index_t> indices;
 
 public:
-  ArrayIndex(const std::size_t _numIndices) : numIndices(_numIndices)
+  ArrayIndex(const std::size_t _numIndices) : numIndices(_numIndices), indices(numIndices)
   {
+    std::fill(0, indices.begin(), indices.end());
   }
 
   ArrayIndex(const std::size_t _numIndices, const std::size_t* const _indices) :
@@ -29,13 +37,19 @@ public:
     std::copy(_indices, _indices+numIndices, indices.begin());
   }
 
-  std::size_t& operator[](const std::size_t index)
+  ArrayIndex(const std::size_t _numIndices, const index_t* const _indices) :
+    numIndices(_numIndices), indices(numIndices)
+  {
+    std::copy(_indices, _indices+numIndices, indices.begin());
+  }
+
+  index_t& operator[](const std::size_t index)
   {
     assert(index < indices.size());
     return indices[index];
   }
 
-  std::size_t operator[](const std::size_t index) const
+  index_t operator[](const std::size_t index) const
   {
     assert(index < indices.size());
     return indices[index];
@@ -44,12 +58,6 @@ public:
   std::size_t getNumIndices() const
   {
     return numIndices;
-  }
-
-  std::size_t getDimension(const std::size_t i) const
-  {
-    assert(i<indices.size());
-    return indices[i];
   }
 
   bool operator==(const ArrayIndex& i) const

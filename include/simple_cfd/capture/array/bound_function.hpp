@@ -15,7 +15,6 @@ class BoundFunction
 private:
   std::map< ArrayIndexID, boost::variant<std::size_t, ArrayIndexID> > arrayIndexBindings;
   std::map< TensorIndexID, boost::variant<std::size_t, TensorIndexID> > tensorIndexBindings;
-  std::map< ScalarID, BoundFunction> scalarBindings;
 
 public:
   BoundFunction()
