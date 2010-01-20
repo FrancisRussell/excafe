@@ -3,8 +3,8 @@ main_SOURCES = main.cpp
 main_CXXFLAGS = -I.
 main_LDFLAGS = -ldolfin
 
-STEADY_STOKES_GENERATED = SteadyStokes.h SteadyStokes.py
+STEADY_STOKES_GENERATED = SteadyStokes.h
 BUILT_SOURCES = ${STEADY_STOKES_GENERATED}
 CLEANFILES = ${STEADY_STOKES_GENERATED}
-${STEADY_STOKES_GENERATED}: SteadyStokes.form
-	ffc -l dolfin -r quadrature SteadyStokes.form
+${STEADY_STOKES_GENERATED}: SteadyStokes.ufl
+	ffc -l dolfin -r quadrature SteadyStokes.ufl
