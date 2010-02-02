@@ -21,6 +21,11 @@ public:
   {
     return offset;
   }
+
+  bool operator==(const ArrayIndexID& i) const
+  {
+    return offset == i.offset;
+  }
   
   bool operator<(const ArrayIndexID& i) const
   {
@@ -41,6 +46,11 @@ public:
   std::size_t getOffset() const
   {
     return offset;
+  }
+
+  bool operator==(const TensorIndexID& i) const
+  {
+    return offset == i.offset;
   }
 
   bool operator<(const TensorIndexID& i) const

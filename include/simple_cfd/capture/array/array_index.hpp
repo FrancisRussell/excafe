@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_convertible.hpp> 
+#include "single_index.hpp"
 
 namespace cfd
 {
@@ -14,30 +15,28 @@ namespace cfd
 namespace detail
 {
 
-template<typename I>
 class ArrayIndex
 {
 public:
-  typedef I index_t;
+  typedef ArraySingleIndex index_t;
 
 private:
-  BOOST_STATIC_ASSERT((boost::is_convertible<std::size_t, index_t>::value));
   std::size_t numIndices;
   std::vector<index_t> indices;
 
 public:
   ArrayIndex(const std::size_t _numIndices) : numIndices(_numIndices), indices(numIndices)
   {
-    std::fill(0, indices.begin(), indices.end());
+    std::fill(indices.begin(), indices.end(), 0);
   }
 
-  ArrayIndex(const std::size_t _numIndices, const std::size_t* const _indices) :
+  ArrayIndex(const std::size_t _numIndices, const index_t::constant_t* const _indices) :
     numIndices(_numIndices), indices(numIndices)
   {
     std::copy(_indices, _indices+numIndices, indices.begin());
   }
 
-  ArrayIndex(const std::size_t _numIndices, const index_t* const _indices) :
+  ArrayIndex(const std::size_t _numIndices, const index_t::parameter_t* const _indices) :
     numIndices(_numIndices), indices(numIndices)
   {
     std::copy(_indices, _indices+numIndices, indices.begin());

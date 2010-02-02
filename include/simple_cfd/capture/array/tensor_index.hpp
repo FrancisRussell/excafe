@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_convertible.hpp> 
+#include "parameter_identifiers.hpp"
 
 namespace cfd
 {
@@ -14,14 +15,12 @@ namespace cfd
 namespace detail
 {
 
-template<typename I>
 class TensorIndex
 {
 public:
-  typedef I index_t;
+  typedef TensorSingleIndex index_t;
 
 private:
-  BOOST_STATIC_ASSERT((boost::is_convertible<std::size_t, index_t>::value));
   std::size_t rank;
   std::size_t dimension;
   std::vector<index_t> indices;
@@ -30,10 +29,10 @@ public:
   TensorIndex(const std::size_t _rank, const std::size_t _dimension) : rank(_rank), dimension(_dimension),
     indices(rank)
   {
-    std::fill(0, indices.begin(), indices.end());
+    std::fill(indices.begin(), indices.end(), 0);
   }
 
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const std::size_t* const _indices) :
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const index_t::constant_t* const _indices) :
     rank(_rank), dimension(_dimension), indices(rank)
   {
     std::copy(_indices, _indices+rank, indices.begin());
@@ -44,7 +43,7 @@ public:
     }
   }
 
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const index_t* const _indices) :
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const index_t::parameter_t* const _indices) :
     rank(_rank), dimension(_dimension), indices(rank)
   {
     std::copy(_indices, _indices+rank, indices.begin());
@@ -71,21 +70,6 @@ public:
   {
     return dimension;
   }
-
-/*
-  std::size_t flatten() const
-  {
-    std::size_t index = 0;
-
-    for(std::size_t i=0; i<indices.size(); ++i)
-    {
-      index *= dimension;
-      index += indices[i];
-    }
-
-    return index;
-  }
-*/
 
   bool operator==(const TensorIndex& i) const
   {
