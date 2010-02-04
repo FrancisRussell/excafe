@@ -5,9 +5,12 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_convertible.hpp> 
+#include <boost/mpl/map.hpp>
+#include <boost/mpl/pair.hpp>
+#include <boost/mpl/at.hpp>
 #include "single_index.hpp"
+#include "parameter_identifiers.hpp"
+#include "array_traits.hpp"
 
 namespace cfd
 {
@@ -15,31 +18,58 @@ namespace cfd
 namespace detail
 {
 
+template<typename I>
 class ArrayIndex
 {
 public:
-  typedef ArraySingleIndex index_t;
+  typedef std::size_t constant_t;
+  typedef SingleIndex<ArrayIndexID> parameter_t;
 
 private:
-  std::size_t numIndices;
+  typedef boost::mpl::map<
+      boost::mpl::pair<fixed_tag, constant_t>,
+      boost::mpl::pair<param_tag, parameter_t>
+    > index_t_map;
+
+public:
+  typedef I index_tag;
+  typedef typename boost::mpl::at<index_t_map, index_tag>::type index_t;
+  typedef typename std::vector<index_t>::iterator iterator;
+  typedef typename std::vector<index_t>::const_iterator const_iterator;
+
+private:
   std::vector<index_t> indices;
 
 public:
-  ArrayIndex(const std::size_t _numIndices) : numIndices(_numIndices), indices(numIndices)
+  ArrayIndex(const std::size_t _numIndices) : indices(_numIndices)
   {
     std::fill(indices.begin(), indices.end(), 0);
   }
 
-  ArrayIndex(const std::size_t _numIndices, const index_t::constant_t* const _indices) :
-    numIndices(_numIndices), indices(numIndices)
+  ArrayIndex(const std::size_t _numIndices, const constant_t* const _indices) :
+    indices(_numIndices)
   {
-    std::copy(_indices, _indices+numIndices, indices.begin());
+    std::copy(_indices, _indices+_numIndices, indices.begin());
   }
 
-  ArrayIndex(const std::size_t _numIndices, const index_t::parameter_t* const _indices) :
-    numIndices(_numIndices), indices(numIndices)
+  iterator begin()
   {
-    std::copy(_indices, _indices+numIndices, indices.begin());
+    return indices.begin();
+  }
+
+  const_iterator begin() const
+  {
+    return indices.begin();
+  }
+
+  iterator end()
+  {
+    return indices.end();
+  }
+
+  const_iterator end() const
+  {
+    return indices.end();
   }
 
   index_t& operator[](const std::size_t index)
@@ -56,25 +86,21 @@ public:
 
   std::size_t getNumIndices() const
   {
-    return numIndices;
+    return indices.size();
   }
 
   bool operator==(const ArrayIndex& i) const
   {
-    return numIndices == i.numIndices &&
-           indices == i.indices;
+    return indices == i.indices;
   }
 
   bool operator<(const ArrayIndex& i) const
   {
-    if (numIndices < i.numIndices) return true;
-    if (numIndices  == i.numIndices && indices < i.indices) return true;
-    return false;
+    return indices < i.indices;
   }
 
   void swap(ArrayIndex& i)
   {
-    std::swap(numIndices, i.numIndices);
     std::swap(indices, i.indices);
   }
 };

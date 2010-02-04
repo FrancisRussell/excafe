@@ -65,9 +65,6 @@ public:
   }
 };
 
-typedef SingleIndex<ArrayIndexID> ArraySingleIndex;
-typedef SingleIndex<TensorIndexID> TensorSingleIndex;
-
 }
 
 }

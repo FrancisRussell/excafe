@@ -13,6 +13,7 @@
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
 #include "dof_numbering_basic.hpp"
+#include "capture/array/tensor_array_function_polynomial.hpp"
 
 namespace cfd
 {

@@ -1,7 +1,7 @@
-#ifndef SIMPL_CFD_CAPTURE_ARRAY_TENSOR_FUNCTION_CONSTANT_HPP
-#define SIMPL_CFD_CAPTURE_ARRAY_TENSOR_FUNCTION_CONSTANT_HPP
+#ifndef SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_FUNCTION_CONSTANT_HPP
+#define SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_FUNCTION_CONSTANT_HPP
 
-#include "tensor_function.hpp"
+#include <boost/shared_ptr.hpp>
 
 namespace cfd
 {
@@ -9,10 +9,10 @@ namespace cfd
 namespace detail
 {
 
-class TensorFunctionConstant : public TensorFunction
+class TensorFunctionConstant
 {
-private:
 public:
+  typedef boost::shared_ptr<TensorFunctionConstant> value_ptr;
 };
 
 }

@@ -5,9 +5,13 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_convertible.hpp> 
+#include <boost/mpl/map.hpp>
+#include <boost/mpl/pair.hpp>
+#include <boost/mpl/at.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include "parameter_identifiers.hpp"
+#include "array_traits.hpp"
 
 namespace cfd
 {
@@ -15,10 +19,24 @@ namespace cfd
 namespace detail
 {
 
+template<typename I>
 class TensorIndex
 {
 public:
-  typedef TensorSingleIndex index_t;
+  typedef std::size_t constant_t;
+  typedef SingleIndex<TensorIndexID> parameter_t;
+
+private:
+  typedef boost::mpl::map<
+      boost::mpl::pair<fixed_tag, constant_t>, 
+      boost::mpl::pair<param_tag, parameter_t> 
+    > index_t_map;
+
+public:
+  typedef I index_tag;
+  typedef typename boost::mpl::at<index_t_map, index_tag>::type index_t;
+  typedef typename std::vector<index_t>::iterator iterator;
+  typedef typename std::vector<index_t>::const_iterator const_iterator;
 
 private:
   std::size_t rank;
@@ -32,7 +50,7 @@ public:
     std::fill(indices.begin(), indices.end(), 0);
   }
 
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const index_t::constant_t* const _indices) :
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const constant_t* const _indices) :
     rank(_rank), dimension(_dimension), indices(rank)
   {
     std::copy(_indices, _indices+rank, indices.begin());
@@ -43,10 +61,30 @@ public:
     }
   }
 
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const index_t::parameter_t* const _indices) :
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const parameter_t* const _indices) :
     rank(_rank), dimension(_dimension), indices(rank)
   {
     std::copy(_indices, _indices+rank, indices.begin());
+  }
+
+  iterator begin()
+  {
+    return indices.begin();
+  }
+
+  const_iterator begin() const
+  {
+    return indices.begin();
+  }
+
+  iterator end()
+  {
+    return indices.end();
+  }
+
+  const_iterator end() const
+  {
+    return indices.end();
   }
 
   index_t& operator[](const std::size_t index)
@@ -80,10 +118,7 @@ public:
 
   bool operator<(const TensorIndex& i) const
   {
-    if (rank < i.rank) return true;
-    if (rank == i.rank && dimension < i.dimension) return true;
-    if (rank == i.rank && dimension == i.dimension && indices < i.indices) return true;
-    return false;
+    return boost::make_tuple(rank, dimension, indices) < boost::make_tuple(i.rank, i.dimension, i.indices);
   }
 
   void swap(TensorIndex& i)

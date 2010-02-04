@@ -23,6 +23,16 @@ public:
   {
     return id;
   }
+
+  bool operator==(const FreeTensorArray& a) const
+  {
+    return id == a.id;
+  }
+
+  bool operator<(const FreeTensorArray& a) const
+  {
+    return id < a.id;
+  }
 };
 
 }
