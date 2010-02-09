@@ -7,6 +7,7 @@
 #include <vector>
 #include "tensor_function.hpp"
 #include "array_index.hpp"
+#include "tensor_index.hpp"
 #include "array_traits.hpp"
 
 namespace cfd
@@ -46,11 +47,55 @@ private:
     return extent(arrayExtents) * extent(rank, dimension);
   }
 
+  std::size_t flatten(const ArrayIndex<fixed_tag>& arrayIndex) const
+  {
+    assert(arrayIndex.numIndices() ==  arrayExtents.numIndices());
+    
+    std::size_t offset = 0;
+    std::size_t multiplier = 1;
+
+    for(int i=arrayIndex.numIndices()-1; i>=0; --i)
+    {
+      offset += arrayIndex[i] * multiplier;
+      multiplier *= arrayExtents[i];
+    }
+
+    return offset;
+  }
+
+  std::size_t flatten(const TensorIndex<fixed_tag>& tensorIndex) const
+  {
+    assert(tensorIndex.getRank() == rank);
+    assert(tensorIndex.getDimension() == dimension);
+
+    std::size_t offset = 0;
+    std::size_t multiplier = 1;
+
+    for(int i=rank-1; i>=0; --i)
+    {
+      offset += tensorIndex[i] * multiplier;
+      multiplier *= dimension;
+    }
+
+    return offset;
+  }
+
+  std::size_t flatten(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
+  {
+    return flatten(arrayIndex) * extent(rank, dimension) + flatten(tensorIndex);
+  }
+
 public:
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension) :
     arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extent())
   {
+  }
+
+  polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
+  {
+    const std::size_t offset = flatten(arrayIndex, tensorIndex);
+    return values[offset];
   }
 };
 

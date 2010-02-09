@@ -84,7 +84,7 @@ public:
     return indices[index];
   }
 
-  std::size_t getNumIndices() const
+  std::size_t numIndices() const
   {
     return indices.size();
   }
