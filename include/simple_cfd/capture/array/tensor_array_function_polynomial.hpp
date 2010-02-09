@@ -92,6 +92,26 @@ public:
   {
   }
 
+  virtual std::size_t getTensorRank() const
+  {
+    return rank;
+  }
+
+  virtual std::size_t getTensorDimension() const
+  {
+    return dimension;
+  }
+
+  virtual std::size_t numArrayIndices() const
+  {
+    return arrayExtents.numIndices();
+  }
+
+  virtual std::size_t getArrayDimension(const std::size_t index) const
+  {
+    return arrayExtents[index];
+  }
+
   polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
   {
     const std::size_t offset = flatten(arrayIndex, tensorIndex);

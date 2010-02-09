@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <map>
 #include "simple_cfd_fwd.hpp"
+#include "capture/array/tensor_array_function_polynomial.hpp"
+#include "capture/array/free_tensor_array.hpp"
 
 namespace cfd
 {
@@ -26,6 +28,7 @@ public:
   virtual vertex_type getDofCoordinateLocal(const std::size_t dof) const = 0;
   virtual vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const = 0;
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const = 0;
+  virtual detail::TensorArrayFunctionPolynomial getBasisFunctions(const detail::FreeTensorArray& position) const = 0;
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;

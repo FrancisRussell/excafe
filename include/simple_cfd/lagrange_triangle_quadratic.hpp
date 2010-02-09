@@ -13,6 +13,10 @@
 #include "dof_numbering_basic.hpp"
 #include "dof_association.hpp"
 #include "dof.hpp"
+#include "capture/array/array_index.hpp"
+#include "capture/array/tensor_index.hpp"
+#include "capture/array/free_tensor_array.hpp"
+#include "capture/array/scalar_reference.hpp"
 
 namespace cfd
 {
@@ -25,6 +29,7 @@ public:
   typedef Tensor<dimension> value_type;
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
+  typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
 
   static const std::size_t dimension = cell_type::dimension;
   static const std::size_t rank = R;
@@ -52,6 +57,26 @@ private:
     assert(remainder == 0);
   }
 
+  static detail::TensorIndex<detail::fixed_tag> convert_to_tensor_index(const unsigned index)
+  {
+    using namespace detail;
+
+    TensorIndex<fixed_tag> indices(rank, dimension);
+    unsigned remainder = index;
+
+    for(std::size_t i=0; i<rank; ++i)
+    {
+      indices[rank-i-1] = remainder % dimension;
+      remainder /= dimension;
+    }
+
+    // A fail here means the index was too large
+    assert(remainder == 0);
+
+    return indices;
+  }
+
+
   DofNumberingBasic<dimension> buildDofNumberingHelper() const
   {
     boost::array<std::size_t, dimension+1> dofsPerEntity;
@@ -61,9 +86,30 @@ private:
     return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
   }
 
+  std::vector<polynomial_t> buildVertexReferences(const detail::FreeTensorArray& position) const
+  {
+    using namespace detail;
+
+    const ArrayIndex<param_tag> arrayIndex(0);
+    const std::size_t numVertices = referenceCell.numEntities(0);
+    TensorIndex<param_tag> tensorIndex(1, dimension);
+    std::vector<polynomial_t> references(numVertices);
+    
+    for(std::size_t i=0; i<references.size(); ++i)
+    {
+      tensorIndex[0] = i;
+      references[i] = polynomial_t(ScalarReference(arrayIndex, tensorIndex, position));
+    }
+
+    return references;
+  }
+
 public:
   LagrangeTriangleQuadratic() : dofNumbering(buildDofNumberingHelper())
   {
+    //FIXME: Delete me when no longer need to check if getBasisFunctions compiles
+    detail::FreeTensorArray pos(5);
+    getBasisFunctions(pos);
   }
 
   std::size_t getRank() const
@@ -143,6 +189,72 @@ public:
     result[tensorIndex.data()] = (gf/gn) * (hf/hn);
 
     return result;
+  }
+
+  detail::TensorArrayFunctionPolynomial getBasisFunctions(const detail::FreeTensorArray& position) const
+  {
+    using namespace detail;
+
+    const std::vector<polynomial_t> v(buildVertexReferences(position));
+    ArrayIndex<fixed_tag> basisExtents(1);
+    basisExtents[0] = spaceDimension();
+    TensorArrayFunctionPolynomial bases(basisExtents, rank, dimension);
+
+    boost::array<vertex_type, 6> vertices;
+
+    for(std::size_t i=0; i<3; ++i)
+    {
+      vertices[i] = referenceCell.getLocalVertex(i);
+    }
+
+    // Create interpolated vertices
+    vertices[3] = (vertices[0] + vertices[1])/2;
+    vertices[4] = (vertices[1] + vertices[2])/2;
+    vertices[5] = (vertices[2] + vertices[0])/2;
+
+    for(std::size_t i=0; i<spaceDimension(); ++i)
+    {
+      ArrayIndex<fixed_tag> basisIndex(1);
+      basisIndex[0] = i;
+
+      const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+      const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+      const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
+        dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
+  
+      int j1, j2, k1, k2;
+      if (node_on_cell < 3)
+      {
+        j1 = (node_on_cell+1)%3;
+        j2 = (node_on_cell+2)%3;
+        k1 = 3 + node_on_cell;
+        k2 = 3 + (node_on_cell + 5)%3;
+      }
+      else
+      {
+        j1 = node_on_cell-3;
+        j2 = (node_on_cell-3+2)%3;
+        k1 = (node_on_cell-3+1)%3;
+        k2 = (node_on_cell-3+2)%3;
+      }
+  
+      const polynomial_t gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                        (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
+  
+      const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                        (vertices[j2][0] - vertices[j1][0]) * (vertices[node_on_cell][1] - vertices[j1][1]);
+  
+      const polynomial_t hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                        (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
+  
+      const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                        (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
+  
+      const TensorIndex<fixed_tag> tensorIndex = convert_to_tensor_index(index_into_tensor);
+      bases(basisIndex, tensorIndex) = (gf/gn) * (hf/hn);
+    }
+
+    return bases;
   }
 
   gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const

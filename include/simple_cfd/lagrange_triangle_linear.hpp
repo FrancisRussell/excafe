@@ -14,6 +14,10 @@
 #include "numeric/tensor.hpp"
 #include "dof_numbering_basic.hpp"
 #include "capture/array/tensor_array_function_polynomial.hpp"
+#include "capture/array/array_index.hpp"
+#include "capture/array/tensor_index.hpp"
+#include "capture/array/free_tensor_array.hpp"
+#include "capture/array/scalar_reference.hpp"
 
 namespace cfd
 {
@@ -29,6 +33,7 @@ public:
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
   typedef vertex<dimension> vertex_type;
+  typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
 
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
@@ -53,6 +58,25 @@ private:
     assert(remainder == 0);
   }
 
+  static detail::TensorIndex<detail::fixed_tag> convert_to_tensor_index(const unsigned index)
+  {
+    using namespace detail;
+
+    TensorIndex<fixed_tag> indices(rank, dimension);
+    unsigned remainder = index;
+
+    for(std::size_t i=0; i<rank; ++i)
+    {
+      indices[rank-i-1] = remainder % dimension;
+      remainder /= dimension;
+    }
+
+    // A fail here means the index was too large
+    assert(remainder == 0);
+
+    return indices;
+  }
+
   DofNumberingBasic<dimension> buildDofNumberingHelper() const
   {
     boost::array<std::size_t, dimension+1> dofsPerEntity;
@@ -62,12 +86,33 @@ private:
     return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
   }
 
+  std::vector<polynomial_t> buildVertexReferences(const detail::FreeTensorArray& position) const
+  {
+    using namespace detail;
+
+    const ArrayIndex<param_tag> arrayIndex(0);
+    const std::size_t numVertices = referenceCell.numEntities(0);
+    TensorIndex<param_tag> tensorIndex(1, dimension);
+    std::vector<polynomial_t> references(numVertices);
+    
+    for(std::size_t i=0; i<references.size(); ++i)
+    {
+      tensorIndex[0] = i;
+      references[i] = polynomial_t(ScalarReference(arrayIndex, tensorIndex, position));
+    }
+
+    return references;
+  }
+
 public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
   LagrangeTriangleLinear() : dofNumbering(buildDofNumberingHelper())
   {
+    //FIXME: Delete me when no longer need to check if getBasisFunctions compiles
+    detail::FreeTensorArray pos(5);
+    getBasisFunctions(pos);
   }
 
   std::size_t getRank() const
@@ -78,6 +123,39 @@ public:
   std::size_t getDimension() const
   {
     return dimension;
+  }
+
+  detail::TensorArrayFunctionPolynomial getBasisFunctions(const detail::FreeTensorArray& position) const
+  {
+    using namespace detail;
+
+    const std::vector<polynomial_t> v(buildVertexReferences(position));
+    ArrayIndex<fixed_tag> basisExtents(1);
+    basisExtents[0] = spaceDimension();
+    TensorArrayFunctionPolynomial bases(basisExtents, rank, dimension);
+
+    for(std::size_t i=0; i<spaceDimension(); ++i)
+    {
+      ArrayIndex<fixed_tag> basisIndex(1);
+      basisIndex[0] = i;
+
+      const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+  
+      assert(dofAssociation.getEntityDimension() == 0);
+      const unsigned node_on_cell = dofAssociation.getEntityIndex();
+      const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+  
+      const int ip1 = (node_on_cell+1) % 3;
+      const int ip2 = (node_on_cell+2) % 3;
+  
+      const TensorIndex<fixed_tag> tensorIndex = convert_to_tensor_index(index_into_tensor);
+      bases(basisIndex, tensorIndex) = (referenceCell.getLocalVertex(ip2)[0] - referenceCell.getLocalVertex(ip1)[0]) * 
+        (v[1] - referenceCell.getLocalVertex(ip1)[1]) - 
+        (referenceCell.getLocalVertex(ip2)[1] - referenceCell.getLocalVertex(ip1)[1]) * 
+        (v[0] - referenceCell.getLocalVertex(ip1)[0]);
+    }
+
+    return bases;
   }
 
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
