@@ -5,6 +5,7 @@
 #include <numeric>
 #include <functional>
 #include <vector>
+#include <simple_cfd/exception.hpp>
 #include "tensor_function.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
@@ -110,6 +111,17 @@ public:
   virtual std::size_t getArrayDimension(const std::size_t index) const
   {
     return arrayExtents[index];
+  }
+
+  virtual TensorFunction::ref differentiate(const ScalarReference& reference) const
+  {
+    if (reference.isBound()) 
+        CFD_EXCEPTION("Cannot differentiate with respect to bound reference.");
+
+    if (reference.isParameterised()) 
+      CFD_EXCEPTION("Cannot differentiate with respect to parameterised reference.");
+
+    // FIXME: implement me!
   }
 
   polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)

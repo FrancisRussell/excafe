@@ -13,6 +13,7 @@
 #include "dof_numbering_basic.hpp"
 #include "dof_association.hpp"
 #include "dof.hpp"
+#include "capture/array/tensor_array_function_polynomial.hpp"
 #include "capture/array/array_index.hpp"
 #include "capture/array/tensor_index.hpp"
 #include "capture/array/free_tensor_array.hpp"

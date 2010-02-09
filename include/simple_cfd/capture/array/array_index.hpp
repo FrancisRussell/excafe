@@ -8,6 +8,7 @@
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/mpl/at.hpp>
+#include <boost/foreach.hpp>
 #include "single_index.hpp"
 #include "parameter_identifiers.hpp"
 #include "array_traits.hpp"
@@ -50,6 +51,18 @@ public:
     indices(_numIndices)
   {
     std::copy(_indices, _indices+_numIndices, indices.begin());
+  }
+
+  bool isParameterised() const
+  {
+    bool parameterised = false;
+
+    BOOST_FOREACH(const index_t& index, indices)
+    {
+      parameterised |= index.isParameter();
+    }
+    
+    return parameterised;
   }
 
   iterator begin()

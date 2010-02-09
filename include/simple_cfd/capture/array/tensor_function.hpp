@@ -17,12 +17,14 @@ namespace detail
 class TensorFunction
 {
 public:
+  typedef boost::shared_ptr<TensorFunction> ref;
   typedef Polynomial<ScalarReference> polynomial_t;
 
   virtual std::size_t getTensorRank() const = 0;
   virtual std::size_t getTensorDimension() const = 0;
   virtual std::size_t numArrayIndices() const = 0;
   virtual std::size_t getArrayDimension(const std::size_t index) const = 0;
+  virtual ref differentiate(const ScalarReference& reference) const = 0;
   virtual ~TensorFunction() {}
 };
 

@@ -10,6 +10,7 @@
 #include <boost/mpl/at.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/foreach.hpp>
 #include "parameter_identifiers.hpp"
 #include "array_traits.hpp"
 
@@ -65,6 +66,18 @@ public:
     rank(_rank), dimension(_dimension), indices(rank)
   {
     std::copy(_indices, _indices+rank, indices.begin());
+  }
+
+  bool isParameterised() const
+  {
+    bool parameterised = false;
+
+    BOOST_FOREACH(const index_t& index, indices)
+    {
+      parameterised |= index.isParameter();
+    }
+    
+    return parameterised;
   }
 
   iterator begin()

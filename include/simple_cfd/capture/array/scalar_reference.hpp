@@ -47,6 +47,16 @@ public:
   {
     return boost::make_tuple(arrayIndex, tensorIndex, ref) < boost::make_tuple(arrayIndex, tensorIndex, ref);
   }
+
+  bool isBound() const
+  {
+    return boost::get<bound_ref_t>(&ref) != NULL;
+  }
+
+  bool isParameterised() const
+  {
+    return arrayIndex.isParameterised() || tensorIndex.isParameterised(); 
+  }
 };
 
 }
