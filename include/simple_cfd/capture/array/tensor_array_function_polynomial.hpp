@@ -32,27 +32,73 @@ private:
   std::set<TensorIndexID> tensorVirtualParameters;
   std::vector<polynomial_t> values;
 
-  static std::size_t extent(const ArrayIndex<fixed_tag>& extents)
+  std::size_t getInternalRank() const
   {
-    return std::accumulate(extents.begin(), extents.end(), 1, std::multiplies<ArrayIndex<fixed_tag>::constant_t>());
+    return rank - tensorVirtualParameters.size();
   }
 
-  static std::size_t extent(const std::size_t rank, const std::size_t dimension)
+  std::size_t getNumInternalArrayIndices() const
   {
-    std::size_t result=1;
+    return arrayExtents.numIndices() - arrayVirtualParameters.size();
+  }
+
+  std::size_t tensorExtent(const bool real) const
+  {
+    std::size_t result = 1;
 
     for(std::size_t i=0; i<rank; ++i)
-      result *= dimension;
+    {
+      if (!real || tensorVirtualParameters.find(tensorIndexParameters[i]) != tensorVirtualParameters.end())
+        result *= dimension;
+    }
 
     return result;
   }
 
-  std::size_t extent() const
+  std::size_t tensorExtentVirtual() const
   {
-    return extent(arrayExtents) * extent(rank, dimension);
+    return tensorExtent(false);
   }
 
-  std::size_t flatten(const ArrayIndex<fixed_tag>& arrayIndex) const
+  std::size_t tensorExtentReal() const
+  {
+    return tensorExtent(true);
+  }
+
+  std::size_t arrayExtent(const bool real) const
+  {
+    std::size_t result = 1;
+
+    for(std::size_t i=0; i<arrayExtents.numIndices(); ++i)
+    {
+      if (!real || arrayVirtualParameters.find(arrayIndexParameters[i]) != arrayVirtualParameters.end())
+        result *= arrayExtents[i];
+    }
+
+    return result;
+  }
+
+  std::size_t arrayExtentVirtual() const
+  {
+    return arrayExtent(false);
+  }
+
+  std::size_t arrayExtentReal() const
+  {
+    return arrayExtent(true);
+  }
+
+  std::size_t extentVirtual() const
+  {
+    return arrayExtentVirtual() * tensorExtentVirtual();
+  }
+
+  std::size_t extentReal() const
+  {
+    return arrayExtentReal() * tensorExtentReal();
+  }
+
+  std::size_t flattenVirtual(const ArrayIndex<fixed_tag>& arrayIndex) const
   {
     assert(arrayIndex.numIndices() ==  arrayExtents.numIndices());
     
@@ -68,7 +114,7 @@ private:
     return offset;
   }
 
-  std::size_t flatten(const TensorIndex<fixed_tag>& tensorIndex) const
+  std::size_t flattenVirtual(const TensorIndex<fixed_tag>& tensorIndex) const
   {
     assert(tensorIndex.getRank() == rank);
     assert(tensorIndex.getDimension() == dimension);
@@ -85,27 +131,39 @@ private:
     return offset;
   }
 
-  std::size_t flatten(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
+  std::size_t flattenVirtual(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
   {
-    return flatten(arrayIndex) * extent(rank, dimension) + flatten(tensorIndex);
+    return flattenVirtual(arrayIndex) * tensorExtentVirtual() + flattenVirtual(tensorIndex);
+  }
+
+  std::size_t flattenReal(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
+  {
+    //FIXME: implement me!
   }
 
   TensorFunction::ref expand(const std::set<ArrayIndexID>& arrayIndicesToExpand, const
     std::set<TensorIndexID>& tensorIndicesToExpand) const
   {
+    //FIXME: implement me!
   }
 
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, 
     const std::size_t _rank, const std::size_t _dimension, 
     const std::vector<ArrayIndexID>& _arrayIndices, const std::vector<TensorIndexID>& _tensorIndices,
-    const std::set<ArrayIndexID>& _virtualarrayIndices, const std::set<TensorIndexID>& _virtualtensorIndices) :
-    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extent())
+    const std::set<ArrayIndexID>& _virtualArrayIndices, const std::set<TensorIndexID>& _virtualTensorIndices) :
+    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), 
+    arrayIndexParameters(_arrayIndices), tensorIndexParameters(_tensorIndices), 
+    arrayVirtualParameters(_virtualArrayIndices), tensorVirtualParameters(_virtualTensorIndices), 
+    values(extentReal())
+    {
+    }
 
 public:
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension) :
-    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extent())
+    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extentReal())
   {
+    // FIXME: create indices
   }
 
   virtual std::size_t getTensorRank() const
@@ -144,7 +202,7 @@ public:
 
   polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
   {
-    const std::size_t offset = flatten(arrayIndex, tensorIndex);
+    const std::size_t offset = flattenReal(arrayIndex, tensorIndex);
     return values[offset];
   }
 };
