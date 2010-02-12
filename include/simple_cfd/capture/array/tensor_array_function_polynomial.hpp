@@ -26,6 +26,10 @@ private:
   const std::size_t rank;
   const std::size_t dimension;
 
+  std::vector<ArrayIndexID> arrayIndexParameters;
+  std::vector<TensorIndexID> tensorIndexParameters;
+  std::set<ArrayIndexID> arrayVirtualParameters;
+  std::set<TensorIndexID> tensorVirtualParameters;
   std::vector<polynomial_t> values;
 
   static std::size_t extent(const ArrayIndex<fixed_tag>& extents)
@@ -86,6 +90,17 @@ private:
     return flatten(arrayIndex) * extent(rank, dimension) + flatten(tensorIndex);
   }
 
+  TensorFunction::ref expand(const std::set<ArrayIndexID>& arrayIndicesToExpand, const
+    std::set<TensorIndexID>& tensorIndicesToExpand) const
+  {
+  }
+
+  TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, 
+    const std::size_t _rank, const std::size_t _dimension, 
+    const std::vector<ArrayIndexID>& _arrayIndices, const std::vector<TensorIndexID>& _tensorIndices,
+    const std::set<ArrayIndexID>& _virtualarrayIndices, const std::set<TensorIndexID>& _virtualtensorIndices) :
+    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extent())
+
 public:
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension) :
@@ -122,6 +137,9 @@ public:
       CFD_EXCEPTION("Cannot differentiate with respect to parameterised reference.");
 
     // FIXME: implement me!
+    // 1. Check for polynomials with unbound references, that are parameterised
+    // 2. If the parameter is known, substitute it, else expand out the parameter
+    // 3. Conventional differentiation step on the entire tensor function
   }
 
   polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
