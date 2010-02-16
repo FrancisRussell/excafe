@@ -122,6 +122,35 @@ private:
     }
   };
 
+  class ReferringIndicesCollector : public TensorArrayFunctionPolynomialVisitor
+  {
+  private:
+    const FreeTensorArray freeTensorArray;
+    std::set<ArrayIndexID> arrayIndices;
+    std::set<TensorIndexID> tensorIndices;
+
+  public:
+   ReferringIndicesCollector(const FreeTensorArray& _freeTensorArray) : freeTensorArray(_freeTensorArray)
+   {
+   }
+
+   void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndex,
+     const std::map<TensorIndexID, std::size_t>& tensorIndex,
+     TensorFunction::polynomial_t& value)
+   {
+     const std::set<ScalarReference> references = value.getIndependentVariables();
+     BOOST_FOREACH(const ScalarReference& reference, references)
+     {
+       if (!reference.isBound() && reference.getFreeTensorArray() == freeTensorArray && reference.isParameterised())
+       {
+         const ArrayIndex arrayIndex = reference.getArrayIndex();
+         const TensorIndex tensorIndex = reference.getTensorIndex();
+         //FIXME: implement me!
+       }
+     }
+   }
+  };
+
   std::size_t getInternalRank() const
   {
     return rank - tensorVirtualParameters.size();
@@ -302,10 +331,27 @@ private:
     return flattenReal(arrayIndex) * tensorExtentReal() + flattenReal(tensorIndex);
   }
 
+  std::set<ArrayIndexID> getReferringArrayIndices(const FreeTensorArray& a) const
+  {
+    //FIXME: implement me!
+  }
+
+  std::set<TensorIndexID> getReferringTensorIndices(const FreeTensorArray& a) const
+  {
+    //FIXME: implement me!
+  }
+
   TensorFunction::ref expand(const std::set<ArrayIndexID>& arrayIndicesToExpand, const
     std::set<TensorIndexID>& tensorIndicesToExpand) const
   {
     //FIXME: implement me!
+  }
+
+  polynomial_t& operator()(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
+    const std::map<TensorIndexID, std::size_t>& tensorIndex)
+  {
+    const std::size_t offset = flattenReal(arrayIndex, tensorIndex);
+    return values[offset];
   }
 
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, 
@@ -387,12 +433,6 @@ public:
     return values[offset];
   }
 
-  polynomial_t& operator()(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
-    const std::map<TensorIndexID, std::size_t>& tensorIndex)
-  {
-    const std::size_t offset = flattenReal(arrayIndex, tensorIndex);
-    return values[offset];
-  }
 };
 
 }

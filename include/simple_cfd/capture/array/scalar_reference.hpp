@@ -53,6 +53,22 @@ public:
     return boost::get<bound_ref_t>(&ref) != NULL;
   }
 
+  unbound_ref_t getFreeTensorArray() const
+  {
+    assert(!isBound());
+    return boost::get<unbound_ref_t>(ref);
+  }
+
+  ArrayIndex<param_tag> getArrayIndex() const
+  {
+    return arrayIndex;
+  }
+
+  TensorIndex<param_tag> getTensorIndex() const
+  {
+    return tensorIndex;
+  }
+
   bool isParameterised() const
   {
     return arrayIndex.isParameterised() || tensorIndex.isParameterised(); 
