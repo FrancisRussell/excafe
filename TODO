@@ -1,0 +1,8 @@
+- Detect which indices need expanding in order to differentiate by a particular reference.
+- Implement expanding of arrays of tensors.
+- Implement differentiating arrays of tensors.
+- Implement element-wise binary operators.
+- Implement inner, outer and colon products.
+- Implement grad and div.
+- Implement inverse jacobian.
+- Implement grad-to-div restriction operator.
