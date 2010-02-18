@@ -17,6 +17,7 @@
 #include "tensor_index.hpp"
 #include "array_traits.hpp"
 #include "tensor_array_function_polynomial_visitor.hpp"
+#include "tensor_array_function_helper.hpp"
 
 namespace cfd
 {
@@ -500,6 +501,20 @@ public:
       visitor.visit(arrayIndex, tensorIndex, (*this)(arrayIndex, tensorIndex));
     }
     while(!incrementer.increment(arrayIndex, tensorIndex));
+  }
+
+  virtual polynomial_t getPolynomial(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
+  {
+    const std::map<ArrayIndexID, std::size_t> arrayIndexMap =
+      TensorArrayFunctionHelper::indexToMap(arrayIndexParameters, arrayIndex);
+
+    const std::map<TensorIndexID, std::size_t> tensorIndexMap =
+      TensorArrayFunctionHelper::indexToMap(tensorIndexParameters, tensorIndex);
+
+    polynomial_t poly = (*this)(arrayIndex, tensorIndex);
+    IndexSpecialiser specialiser;
+    specialiser.visit(arrayIndexMap, tensorIndexMap, poly);
+    return poly;
   }
 
   virtual TensorFunction::ref differentiate(const ScalarReference& reference)
