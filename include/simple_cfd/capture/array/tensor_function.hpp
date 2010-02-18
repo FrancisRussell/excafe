@@ -7,6 +7,8 @@
 #include <simple_cfd/numeric/polynomial.hpp>
 #include "array_fwd.hpp"
 #include "scalar_reference.hpp"
+#include "array_index.hpp"
+#include "tensor_index.hpp"
 
 namespace cfd
 {
@@ -24,6 +26,8 @@ public:
   virtual std::size_t getTensorDimension() const = 0;
   virtual std::size_t numArrayIndices() const = 0;
   virtual std::size_t getArrayDimension(const std::size_t index) const = 0;
+  virtual polynomial_t getPolynomial(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
+    const std::map<TensorIndexID, std::size_t>& tensorIndex) = 0;
   virtual ref differentiate(const ScalarReference& reference) = 0;
   virtual ~TensorFunction() {}
 };
