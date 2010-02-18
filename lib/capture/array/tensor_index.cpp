@@ -1,6 +1,7 @@
 #include <set>
 #include <map>
 #include <cstddef>
+#include <algorithm>
 #include <boost/foreach.hpp>
 #include <simple_cfd/capture/array/tensor_index.hpp>
 
@@ -57,6 +58,13 @@ TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map
   }
 
   return specialised;
+}
+
+template<>
+TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t _dimension, 
+  const TensorIndexID* const _indices) : rank(_rank), dimension(_dimension), indices(rank)
+{
+  std::copy(_indices, _indices+rank, indices.begin());
 }
 
 }

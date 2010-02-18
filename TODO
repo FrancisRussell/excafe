@@ -1,4 +1,3 @@
-- Implement element-wise binary operators.
 - Implement inner, outer and colon products.
 - Implement grad and div.
 - Implement inverse jacobian.

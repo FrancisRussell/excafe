@@ -14,6 +14,7 @@
 #include "single_index.hpp"
 #include "parameter_identifiers.hpp"
 #include "array_traits.hpp"
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -53,6 +54,11 @@ public:
     indices(_numIndices)
   {
     std::copy(_indices, _indices+_numIndices, indices.begin());
+  }
+
+  ArrayIndex(const std::size_t _numIndices, const ArrayIndexID* const _indices)
+  {
+    CFD_EXCEPTION("Cannot construct a constant array index from parameters.");
   }
 
   bool isParameterised() const
@@ -131,6 +137,9 @@ std::set<ArrayIndexID> ArrayIndex<param_tag>::getReferencedParameters() const;
 
 template<>
 ArrayIndex<param_tag> ArrayIndex<param_tag>::substituteLiterals(const std::map<ArrayIndexID, std::size_t>& mapping) const;
+
+template<>
+ArrayIndex<param_tag>::ArrayIndex(const std::size_t _numIndices, const ArrayIndexID* const _indices);
 
 }
 

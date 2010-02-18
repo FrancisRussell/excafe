@@ -1,6 +1,7 @@
 #include <set>
 #include <map>
 #include <cstddef>
+#include <algorithm>
 #include <boost/foreach.hpp>
 #include <simple_cfd/capture/array/array_index.hpp>
 
@@ -57,6 +58,12 @@ ArrayIndex<param_tag> ArrayIndex<param_tag>::substituteLiterals(const std::map<A
   }
 
   return specialised;
+}
+
+template<>
+ArrayIndex<param_tag>::ArrayIndex(const std::size_t _numIndices, const ArrayIndexID* const _indices) : indices(_numIndices)
+{
+  std::copy(_indices, _indices+_numIndices, indices.begin());
 }
 
 }

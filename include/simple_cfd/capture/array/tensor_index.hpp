@@ -17,6 +17,7 @@
 #include "parameter_identifiers.hpp"
 #include "array_traits.hpp"
 #include "single_index.hpp"
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -66,10 +67,9 @@ public:
     }
   }
 
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const parameter_t* const _indices) :
-    rank(_rank), dimension(_dimension), indices(rank)
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const TensorIndexID* const _indices)
   {
-    std::copy(_indices, _indices+rank, indices.begin());
+    CFD_EXCEPTION("Cannot construct a constant array index from parameters.");
   }
 
   bool isParameterised() const
@@ -159,6 +159,9 @@ std::set<TensorIndexID> TensorIndex<param_tag>::getReferencedParameters() const;
 
 template<>
 TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map<TensorIndexID, std::size_t>& mapping) const;
+
+template<>
+TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t dimension, const TensorIndexID* const _indices);
 
 }
 

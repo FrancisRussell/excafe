@@ -16,10 +16,12 @@
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
 
-// Currently here just to test that the array classes actually parse
+
+// FIXME: remove these headers when they're actually included in appropriate places
+// Currently, these are here to check they're parsed correctly
 #include "capture/array/tensor_function.hpp"
-#include "capture/array/array_index.hpp"
-#include "capture/array/tensor_index.hpp"
+#include "capture/array/tensor_array_function_polynomial.hpp"
+#include "capture/array/tensor_array_function_summation.hpp"
 
 namespace cfd
 {
