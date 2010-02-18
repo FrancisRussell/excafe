@@ -4,10 +4,12 @@
 #include <cstddef>
 #include <numeric>
 #include <functional>
+#include <algorithm>
 #include <vector>
 #include <utility>
 #include <map>
 #include <cassert>
+#include <iterator>
 #include <simple_cfd/exception.hpp>
 #include <boost/foreach.hpp>
 #include "tensor_function.hpp"
@@ -130,25 +132,82 @@ private:
     std::set<TensorIndexID> tensorIndices;
 
   public:
-   ReferringIndicesCollector(const FreeTensorArray& _freeTensorArray) : freeTensorArray(_freeTensorArray)
-   {
-   }
+    ReferringIndicesCollector(const FreeTensorArray& _freeTensorArray) : freeTensorArray(_freeTensorArray)
+    {
+    }
+ 
+    void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
+      const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
+      TensorFunction::polynomial_t& value)
+    {
+      const std::set<ScalarReference> references = value.getIndependentVariables();
+      BOOST_FOREACH(const ScalarReference& reference, references)
+      {
+        if (!reference.isBound() && reference.getFreeTensorArray() == freeTensorArray && reference.isParameterised())
+        {
+          const ArrayIndex<param_tag> arrayIndex = reference.getArrayIndex();
+          const std::set<ArrayIndexID> arrayParameters = arrayIndex.getReferencedParameters();
+          arrayIndices.insert(arrayParameters.begin(), arrayParameters.end());
+ 
+          const TensorIndex<param_tag> tensorIndex = reference.getTensorIndex();
+          const std::set<TensorIndexID> tensorParameters = tensorIndex.getReferencedParameters();
+          tensorIndices.insert(tensorIndices.begin(), tensorIndices.end());
+        }
+      }
+    }
+ 
+    std::set<ArrayIndexID> getArrayIndices() const
+    {
+      return arrayIndices;
+    }
+ 
+    std::set<TensorIndexID> getTensorIndices() const
+    {
+      return tensorIndices;
+    }
+  };
 
-   void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndex,
-     const std::map<TensorIndexID, std::size_t>& tensorIndex,
-     TensorFunction::polynomial_t& value)
-   {
-     const std::set<ScalarReference> references = value.getIndependentVariables();
-     BOOST_FOREACH(const ScalarReference& reference, references)
-     {
-       if (!reference.isBound() && reference.getFreeTensorArray() == freeTensorArray && reference.isParameterised())
-       {
-         const ArrayIndex arrayIndex = reference.getArrayIndex();
-         const TensorIndex tensorIndex = reference.getTensorIndex();
-         //FIXME: implement me!
-       }
-     }
-   }
+  class PolynomialCopier : public TensorArrayFunctionPolynomialVisitor
+  {
+  private:
+    const TensorArrayFunctionPolynomial& source;
+
+  public:
+    PolynomialCopier(const TensorArrayFunctionPolynomial& _source) : source(_source)
+    {
+    }
+
+    void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndex,
+      const std::map<TensorIndexID, std::size_t>& tensorIndex,
+      TensorFunction::polynomial_t& value)
+    {
+      value = source(arrayIndex, tensorIndex);
+    }
+  };
+
+  class IndexSpecialiser : public TensorArrayFunctionPolynomialVisitor
+  {
+  public:
+    void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
+      const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
+      TensorFunction::polynomial_t& value)
+    {
+      const std::set<ScalarReference> references = value.getIndependentVariables();
+      BOOST_FOREACH(const ScalarReference& reference, references)
+      {
+        if (reference.isParameterised())
+        {
+          const ArrayIndex<param_tag> arrayIndex = reference.getArrayIndex();
+          const ArrayIndex<param_tag> newArrayIndex = arrayIndex.substituteLiterals(arrayIndexMap);
+ 
+          const TensorIndex<param_tag> tensorIndex = reference.getTensorIndex();
+          const TensorIndex<param_tag> newTensorIndex = tensorIndex.substituteLiterals(tensorIndexMap);
+          
+          const ScalarReference newReference(arrayIndex, tensorIndex, reference);
+          value.replaceIndependentVariable(reference, newReference);
+        }
+      }
+    }
   };
 
   std::size_t getInternalRank() const
@@ -331,20 +390,11 @@ private:
     return flattenReal(arrayIndex) * tensorExtentReal() + flattenReal(tensorIndex);
   }
 
-  std::set<ArrayIndexID> getReferringArrayIndices(const FreeTensorArray& a) const
-  {
-    //FIXME: implement me!
-  }
-
-  std::set<TensorIndexID> getReferringTensorIndices(const FreeTensorArray& a) const
-  {
-    //FIXME: implement me!
-  }
-
   TensorFunction::ref expand(const std::set<ArrayIndexID>& arrayIndicesToExpand, const
     std::set<TensorIndexID>& tensorIndicesToExpand) const
   {
-    //FIXME: implement me!
+    return TensorFunction::ref(new TensorArrayFunctionPolynomial(*this, arrayIndicesToExpand,
+      tensorIndicesToExpand));
   }
 
   polynomial_t& operator()(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
@@ -354,16 +404,43 @@ private:
     return values[offset];
   }
 
-  TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, 
-    const std::size_t _rank, const std::size_t _dimension, 
-    const std::vector<ArrayIndexID>& _arrayIndices, const std::vector<TensorIndexID>& _tensorIndices,
-    const std::set<ArrayIndexID>& _virtualArrayIndices, const std::set<TensorIndexID>& _virtualTensorIndices) :
-    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), 
-    arrayIndexParameters(_arrayIndices), tensorIndexParameters(_tensorIndices), 
-    arrayVirtualParameters(_virtualArrayIndices), tensorVirtualParameters(_virtualTensorIndices), 
-    values(extentReal())
-    {
-    }
+  const polynomial_t operator()(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
+    const std::map<TensorIndexID, std::size_t>& tensorIndex) const
+  {
+    const std::size_t offset = flattenReal(arrayIndex, tensorIndex);
+    return values[offset];
+  }
+
+  TensorArrayFunctionPolynomial(const TensorArrayFunctionPolynomial& original,
+    const std::set<ArrayIndexID>& expandArrayIndices, const std::set<TensorIndexID>& expandTensorIndices) :
+    arrayExtents(original.arrayExtents), rank(original.rank), dimension(original.dimension),
+    arrayIndexParameters(original.arrayIndexParameters), tensorIndexParameters(original.tensorIndexParameters)
+  {
+    // Calculate virtual parameters
+    std::set_difference(original.arrayVirtualParameters.begin(), original.arrayVirtualParameters.end(),
+      expandArrayIndices.begin(), expandArrayIndices.end(),
+      std::inserter(arrayVirtualParameters, arrayVirtualParameters.begin()));
+
+    std::set_difference(original.tensorVirtualParameters.begin(), original.tensorVirtualParameters.end(),
+      expandTensorIndices.begin(), expandTensorIndices.end(),
+      std::inserter(tensorVirtualParameters, tensorVirtualParameters.begin()));
+
+    // Resize values vector to correct extent
+    values.resize(extentReal());
+
+    // Use visitor to perform polynomial assignments
+    PolynomialCopier copier(original);
+    accept(copier);
+
+    // Specialise known indices
+    specialiseKnownIndices();
+  }
+
+  void specialiseKnownIndices() 
+  {
+    IndexSpecialiser specialiser;
+    accept(specialiser);
+  }
 
 public:
   TensorArrayFunctionPolynomial(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
@@ -413,13 +490,16 @@ public:
     while(!incrementer.increment(arrayIndex, tensorIndex));
   }
 
-  virtual TensorFunction::ref differentiate(const ScalarReference& reference) const
+  virtual TensorFunction::ref differentiate(const ScalarReference& reference)
   {
     if (reference.isBound()) 
         CFD_EXCEPTION("Cannot differentiate with respect to bound reference.");
 
     if (reference.isParameterised()) 
       CFD_EXCEPTION("Cannot differentiate with respect to parameterised reference.");
+
+    ReferringIndicesCollector indexCollector(reference.getFreeTensorArray());
+    accept(indexCollector);
 
     // FIXME: implement me!
     // 1. Check for polynomials with unbound references, that are parameterised
@@ -433,6 +513,11 @@ public:
     return values[offset];
   }
 
+  const polynomial_t operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
+  {
+    const std::size_t offset = flattenReal(arrayIndex, tensorIndex);
+    return values[offset];
+  }
 };
 
 }

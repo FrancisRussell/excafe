@@ -18,6 +18,8 @@ public:
   virtual void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
     const std::map<TensorIndexID, std::size_t>& tensorIndex,
     TensorFunction::polynomial_t& value) = 0;
+  
+  virtual ~TensorArrayFunctionPolynomialVisitor() {}
 };
 
 }

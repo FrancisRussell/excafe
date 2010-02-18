@@ -5,6 +5,8 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <set>
+#include <map>
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/mpl/at.hpp>
@@ -55,14 +57,17 @@ public:
 
   bool isParameterised() const
   {
-    bool parameterised = false;
+    return false;
+  }
 
-    BOOST_FOREACH(const index_t& index, indices)
-    {
-      parameterised |= index.isParameter();
-    }
-    
-    return parameterised;
+  std::set<ArrayIndexID> getReferencedParameters() const
+  {
+    return std::set<ArrayIndexID>();
+  }
+
+  ArrayIndex substituteLiterals(const std::map<ArrayIndexID, std::size_t>& mapping) const
+  {
+    return *this;
   }
 
   iterator begin()
@@ -117,6 +122,15 @@ public:
     std::swap(indices, i.indices);
   }
 };
+
+template<>
+bool ArrayIndex<param_tag>::isParameterised() const;
+
+template<> 
+std::set<ArrayIndexID> ArrayIndex<param_tag>::getReferencedParameters() const;
+
+template<>
+ArrayIndex<param_tag> ArrayIndex<param_tag>::substituteLiterals(const std::map<ArrayIndexID, std::size_t>& mapping) const;
 
 }
 

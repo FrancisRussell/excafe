@@ -24,7 +24,7 @@ public:
   virtual std::size_t getTensorDimension() const = 0;
   virtual std::size_t numArrayIndices() const = 0;
   virtual std::size_t getArrayDimension(const std::size_t index) const = 0;
-  virtual ref differentiate(const ScalarReference& reference) const = 0;
+  virtual ref differentiate(const ScalarReference& reference) = 0;
   virtual ~TensorFunction() {}
 };
 

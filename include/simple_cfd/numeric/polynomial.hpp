@@ -12,6 +12,7 @@
 #include <boost/operators.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/foreach.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <numeric/monomial.hpp>
 #include <numeric/optimised_polynomial.hpp>
@@ -42,6 +43,12 @@ private:
     addIndependentVariable(variable);
     coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
     cleanZeros();
+  }
+
+  void addTerm(const Monomial<variable_t>& m, const double coefficient)
+  {
+    addIndependentVariables(m);
+    coefficients[m] += coefficient;
   }
 
   void addConstant(const double constant)
@@ -170,6 +177,27 @@ public:
   void addIndependentVariable(const variable_t& variable)
   {
     independentVariables.insert(variable);
+  }
+
+  void replaceIndependentVariable(const variable_t& from, const variable_t& to)
+  {
+    const typename std::set<variable_t>::const_iterator fromIter = independentVariables.find(from);
+
+    if (fromIter != independentVariables.end())
+    {
+      independentVariables.erase(fromIter);
+      independentVariables.insert(to);
+
+      coefficient_map_t oldCoefficients;
+      std::swap(coefficients, oldCoefficients);
+
+      BOOST_FOREACH(typename coefficient_map_t::value_type monomialMapping, oldCoefficients)
+      {
+        // We specifically use addTerm here, to avoid issues when previously distinct monomials
+        // become identical after variable substitution
+        addTerm(monomialMapping.first.substitute(from, to), monomialMapping.second);
+      }
+    }
   }
 
   std::set<variable_t> getIndependentVariables() const

@@ -5,14 +5,18 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <set>
+#include <map>
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/foreach.hpp>
+#include <boost/assert.hpp>
 #include "parameter_identifiers.hpp"
 #include "array_traits.hpp"
+#include "single_index.hpp"
 
 namespace cfd
 {
@@ -70,14 +74,19 @@ public:
 
   bool isParameterised() const
   {
-    bool parameterised = false;
+    BOOST_STATIC_ASSERT(sizeof(index_tag) == 0);
+    return false;
+  }
 
-    BOOST_FOREACH(const index_t& index, indices)
-    {
-      parameterised |= index.isParameter();
-    }
-    
-    return parameterised;
+  std::set<TensorIndexID> getReferencedParameters() const
+  {
+    BOOST_STATIC_ASSERT(sizeof(index_tag) == 0);
+    return std::set<TensorIndexID>();
+  }
+
+  TensorIndex substituteLiterals(const std::map<TensorIndexID, std::size_t>& mapping) const
+  {
+    return *this;
   }
 
   iterator begin()
@@ -141,6 +150,15 @@ public:
     std::swap(indices, i.indices);
   }
 };
+
+template<>
+bool TensorIndex<param_tag>::isParameterised() const;
+
+template<>
+std::set<TensorIndexID> TensorIndex<param_tag>::getReferencedParameters() const;
+
+template<>
+TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map<TensorIndexID, std::size_t>& mapping) const;
 
 }
 

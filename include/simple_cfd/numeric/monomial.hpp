@@ -7,6 +7,7 @@
 #include <iosfwd>
 #include <utility>
 #include <ostream>
+#include <boost/foreach.hpp>
 
 namespace cfd
 {
@@ -18,7 +19,8 @@ public:
   typedef V variable_t;
 
 private:
-  std::map<variable_t, std::size_t> exponents;
+  typedef std::map<variable_t, std::size_t> exponent_map_t;
+  exponent_map_t exponents;
 
 public:
   Monomial()
@@ -134,6 +136,21 @@ public:
       out << "1.0";
 
     return out;
+  }
+
+  Monomial substitute(const variable_t& from, const variable_t& to) const
+  {
+    Monomial result;
+
+    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, exponents)
+    {
+      if (exponentMapping.first == from)
+        result.exponents.insert(std::make_pair(to, exponentMapping.second));
+      else
+        result.exponents.insert(exponentMapping);
+    }
+
+    return result;
   }
 };
 

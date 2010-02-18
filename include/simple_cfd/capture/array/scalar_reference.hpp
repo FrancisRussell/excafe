@@ -36,6 +36,12 @@ public:
   {
   }
 
+  ScalarReference(const ArrayIndex<param_tag>& _arrayIndex, const TensorIndex<param_tag>& _tensorIndex, 
+    const ScalarReference& _ref) :
+    arrayIndex(_arrayIndex), tensorIndex(_tensorIndex), ref(_ref.ref)
+  {
+  }
+
   bool operator==(const ScalarReference& s) const
   {
     return arrayIndex == s.arrayIndex && 
