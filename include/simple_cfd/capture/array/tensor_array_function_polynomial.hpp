@@ -306,6 +306,8 @@ private:
     return arrayExtentReal() * tensorExtentReal();
   }
 
+  //TODO: too much code redundancy here
+
   std::size_t flattenReal(const ArrayIndex<fixed_tag>& arrayIndex) const
   {
     assert(arrayIndex.numIndices() == getNumInternalArrayIndices());
@@ -338,8 +340,11 @@ private:
 
     for(int i=getInternalRank()-1; i>=0; --i)
     {
+      if (tensorVirtualParameters.find(tensorIndexParameters[i]) == tensorVirtualParameters.end())
+      {
         offset += tensorIndex[i] * multiplier;
         multiplier *= dimension;
+      }
     }
 
     return offset;
