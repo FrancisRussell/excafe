@@ -4,6 +4,7 @@
 #include <boost/variant.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/operators.hpp>
 #include "array_traits.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
@@ -16,7 +17,7 @@ namespace cfd
 namespace detail
 {
 
-class ScalarReference
+class ScalarReference : boost::equality_comparable<ScalarReference>
 {
 public:
   typedef FreeTensorArray unbound_ref_t;

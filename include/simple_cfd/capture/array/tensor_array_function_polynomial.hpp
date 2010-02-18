@@ -210,6 +210,25 @@ private:
     }
   };
 
+  class Differentiator : public TensorArrayFunctionPolynomialVisitor
+  {
+  private:
+    const ScalarReference variable;
+
+  public:
+    Differentiator(const ScalarReference& _variable) : variable(_variable)
+    {
+      assert(!variable.isBound() && !variable.isParameterised());
+    }
+
+    void visit(const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
+      const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
+      TensorFunction::polynomial_t& value)
+    {
+      value = value.derivative(variable);
+    }
+  };
+
   std::size_t getInternalRank() const
   {
     return rank - tensorVirtualParameters.size();
@@ -390,13 +409,6 @@ private:
     return flattenReal(arrayIndex) * tensorExtentReal() + flattenReal(tensorIndex);
   }
 
-  TensorFunction::ref expand(const std::set<ArrayIndexID>& arrayIndicesToExpand, const
-    std::set<TensorIndexID>& tensorIndicesToExpand) const
-  {
-    return TensorFunction::ref(new TensorArrayFunctionPolynomial(*this, arrayIndicesToExpand,
-      tensorIndicesToExpand));
-  }
-
   polynomial_t& operator()(const std::map<ArrayIndexID, std::size_t>& arrayIndex, 
     const std::map<TensorIndexID, std::size_t>& tensorIndex)
   {
@@ -501,10 +513,13 @@ public:
     ReferringIndicesCollector indexCollector(reference.getFreeTensorArray());
     accept(indexCollector);
 
-    // FIXME: implement me!
-    // 1. Check for polynomials with unbound references, that are parameterised
-    // 2. If the parameter is known, substitute it, else expand out the parameter
-    // 3. Conventional differentiation step on the entire tensor function
+    TensorArrayFunctionPolynomial result(*this, indexCollector.getArrayIndices(),
+      indexCollector.getTensorIndices());
+
+    Differentiator differentiator(reference);
+    result.accept(differentiator);
+
+    return TensorFunction::ref(new TensorArrayFunctionPolynomial(result));
   }
 
   polynomial_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
