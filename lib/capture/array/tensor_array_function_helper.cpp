@@ -3,9 +3,11 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <boost/foreach.hpp>
 #include <simple_cfd/capture/array/array_index.hpp>
 #include <simple_cfd/capture/array/tensor_index.hpp>
 #include <simple_cfd/capture/array/tensor_array_function_helper.hpp>
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -39,6 +41,39 @@ std::map<TensorIndexID, std::size_t> TensorArrayFunctionHelper::indexToMap(const
   return mapping;
 }
 
+ArrayIndex<fixed_tag> TensorArrayFunctionHelper::getIndex(const std::map<ArrayIndexID, std::size_t>& parentIndices,
+  const ArrayIndex<param_tag>& bindings)
+{
+  const ArrayIndex<param_tag> fullyBound = bindings.substituteLiterals(parentIndices);
+
+  if (fullyBound.isParameterised())
+    CFD_EXCEPTION("Attempted to create a concrete ArrayIndex without bindings for each parameter.");
+
+  ArrayIndex<fixed_tag> result(fullyBound.numIndices());
+
+  for(std::size_t i=0; i<fullyBound.numIndices(); ++i)
+    result[i] = fullyBound[i].getConstant();
+
+  return result;
+}
+
+TensorIndex<fixed_tag> TensorArrayFunctionHelper::getIndex(const std::map<TensorIndexID, std::size_t>& parentIndices,
+  const TensorIndex<param_tag>& bindings)
+{
+  const TensorIndex<param_tag> fullyBound = bindings.substituteLiterals(parentIndices);
+
+  if (fullyBound.isParameterised())
+    CFD_EXCEPTION("Attempted to create a concrete ArrayIndex without bindings for each parameter.");
+
+  TensorIndex<fixed_tag> result(fullyBound.getRank(), fullyBound.getDimension());
+
+  for(std::size_t i=0; i<fullyBound.getRank(); ++i)
+    result[i] = fullyBound[i].getConstant();
+
+  return result;
+}
+
+ 
 
 }
 

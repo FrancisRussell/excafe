@@ -8,6 +8,8 @@ namespace detail
 {
 
 class TensorFunction;
+class TensorArrayFunctionPolynomial;
+class TensorArrayFunctionVisitor;
 class TensorFunctionConstant;
 class ScalarReference;
 

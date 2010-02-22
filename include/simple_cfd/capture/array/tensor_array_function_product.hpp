@@ -24,7 +24,8 @@ public:
 
   virtual TensorFunction::ref differentiate(const ScalarReference& reference)
   {
-    //FIXME: implement me!
+    TensorArrayFunctionPolynomial flattened(*this);
+    return flattened.differentiate(reference);
   }
 
   virtual polynomial_t getPolynomial(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const

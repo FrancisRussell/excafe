@@ -59,6 +59,11 @@ public:
     return arrayExtents[index];
   }
 
+  virtual ArrayIndex<fixed_tag> getArrayExtent() const
+  {
+    return arrayExtents;
+  }
+
   void addTerm(const ArrayIndex<param_tag>& arrayIndex, const TensorIndex<param_tag>& tensorIndex,
     const TensorFunction::ref function)
   {
