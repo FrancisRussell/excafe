@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_ARRAY_FUNCTION_POLYNOMIAL_HPP
 
 #include <cstddef>
-#include <numeric>
 #include <functional>
 #include <algorithm>
 #include <vector>
@@ -110,12 +109,11 @@ private:
       const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
       TensorFunction::polynomial_t& value)
     {
-      const ArrayIndex<param_tag> identityArrayIndex(parent.numArrayIndices(), &parent.arrayIndexParameters[0]);
-      const TensorIndex<param_tag> identityTensorIndex(parent.getTensorRank(), parent.getTensorDimension(),
-        &parent.tensorIndexParameters[0]);
+      const ArrayIndex<fixed_tag> arrayIndex = 
+        TensorArrayFunctionHelper::getIndex(arrayIndexMap, parent.getIdentityArrayIndex());
+      const TensorIndex<fixed_tag> tensorIndex = 
+        TensorArrayFunctionHelper::getIndex(tensorIndexMap, parent.getIdentityTensorIndex());
 
-      const ArrayIndex<fixed_tag> arrayIndex = TensorArrayFunctionHelper::getIndex(arrayIndexMap, identityArrayIndex);
-      const TensorIndex<fixed_tag> tensorIndex = TensorArrayFunctionHelper::getIndex(tensorIndexMap, identityTensorIndex);
       value = source.getPolynomial(arrayIndex, tensorIndex);
     }
   };

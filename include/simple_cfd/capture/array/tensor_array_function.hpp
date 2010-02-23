@@ -2,14 +2,11 @@
 #define SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_ARRAY_FUNCTION_HPP
 
 #include <cstddef>
-#include <numeric>
 #include <functional>
-#include <algorithm>
 #include <vector>
 #include <utility>
 #include <map>
 #include <cassert>
-#include <iterator>
 #include <simple_cfd/exception.hpp>
 #include <boost/foreach.hpp>
 #include "tensor_function.hpp"
@@ -368,6 +365,18 @@ public:
   virtual ArrayIndex<fixed_tag> getArrayExtent() const
   {
     return arrayExtents;
+  }
+
+  ArrayIndex<param_tag> getIdentityArrayIndex() const
+  {
+    assert(arrayExtents.numIndices() == arrayIndexParameters.size());
+    return ArrayIndex<param_tag>(arrayIndexParameters.size(), &arrayIndexParameters[0]);
+  }
+
+  TensorIndex<param_tag> getIdentityTensorIndex() const
+  {
+    assert(rank == tensorIndexParameters.size());
+    return TensorIndex<param_tag>(rank, dimension, &tensorIndexParameters[0]);
   }
 
   element_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)
