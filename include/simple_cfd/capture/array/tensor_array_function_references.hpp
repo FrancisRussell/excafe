@@ -9,8 +9,8 @@
 #include <map>
 #include <cassert>
 #include <iterator>
-#include <simple_cfd/exception.hpp>
 #include <boost/foreach.hpp>
+#include <simple_cfd/exception.hpp>
 #include "tensor_function.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
@@ -69,11 +69,11 @@ public:
 
     const element_t call = (*this)(arrayIndexMap, tensorIndexMap);
 
+    //TODO: assert that this polynomial isn't parameterised
+
     return call.getFunction()->getPolynomial(
       TensorArrayFunctionHelper::getIndex(arrayIndexMap, call.getArrayIndex()),
       TensorArrayFunctionHelper::getIndex(tensorIndexMap, call.getTensorIndex()));
-
-    //TODO: assert that this polynomial isn't parameterised
   }
 
   virtual TensorFunction::ref differentiate(const ScalarReference& reference)

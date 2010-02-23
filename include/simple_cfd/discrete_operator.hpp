@@ -16,7 +16,6 @@
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
 
-
 // FIXME: remove these headers when they're actually included in appropriate places
 // Currently, these are here to check they're parsed correctly
 #include "capture/array/tensor_function.hpp"
@@ -24,6 +23,7 @@
 #include "capture/array/tensor_array_function_references.hpp"
 #include "capture/array/tensor_array_function_summation.hpp"
 #include "capture/array/tensor_array_function_product.hpp"
+#include "capture/array/tensor_array_function_builder.hpp"
 
 namespace cfd
 {
