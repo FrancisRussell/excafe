@@ -16,7 +16,7 @@
 #include "tensor_index.hpp"
 #include "array_traits.hpp"
 #include "tensor_array_function.hpp"
-#include "tensor_array_function_polynomial_visitor.hpp"
+#include "tensor_array_function_visitor.hpp"
 #include "tensor_array_function_helper.hpp"
 
 namespace cfd
@@ -28,10 +28,11 @@ namespace detail
 class TensorArrayFunctionPolynomial : public TensorArrayFunction<TensorFunction::polynomial_t>
 {
 private:
-  typedef TensorFunction::polynomial_t polynomial_t;
+  typedef element_t polynomial_t;
   typedef TensorArrayFunction<polynomial_t> parent_t;
+  typedef TensorArrayFunctionVisitor<polynomial_t> visitor_t;
 
-  class ReferringIndicesCollector : public TensorArrayFunctionPolynomialVisitor
+  class ReferringIndicesCollector : public visitor_t
   {
   private:
     const FreeTensorArray freeTensorArray;
@@ -43,7 +44,7 @@ private:
     {
     }
  
-    void visit(const TensorArrayFunctionPolynomial& parent,
+    void visit(const TensorArrayFunction<element_t>& parent,
       const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
       const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
       TensorFunction::polynomial_t& value)
@@ -75,7 +76,7 @@ private:
     }
   };
 
-  class PolynomialCopierInternal : public TensorArrayFunctionPolynomialVisitor
+  class PolynomialCopierInternal : public visitor_t
   {
   private:
     const TensorArrayFunctionPolynomial& source;
@@ -85,16 +86,16 @@ private:
     {
     }
 
-    void visit(const TensorArrayFunctionPolynomial& parent,
+    void visit(const TensorArrayFunction<element_t>& parent,
       const std::map<ArrayIndexID, std::size_t>& arrayIndex,
       const std::map<TensorIndexID, std::size_t>& tensorIndex,
-      TensorFunction::polynomial_t& value)
+      polynomial_t& value)
     {
       value = source(arrayIndex, tensorIndex);
     }
   };
 
-  class PolynomialCopierGeneral : public TensorArrayFunctionPolynomialVisitor
+  class PolynomialCopierGeneral : public visitor_t
   {
   private:
     const TensorFunction& source;
@@ -104,10 +105,10 @@ private:
     {
     }
 
-    void visit(const TensorArrayFunctionPolynomial& parent,
+    void visit(const TensorArrayFunction<element_t>& parent,
       const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
       const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
-      TensorFunction::polynomial_t& value)
+      polynomial_t& value)
     {
       const ArrayIndex<fixed_tag> arrayIndex = 
         TensorArrayFunctionHelper::getIndex(arrayIndexMap, parent.getIdentityArrayIndex());
@@ -119,13 +120,13 @@ private:
   };
 
 
-  class IndexSpecialiser : public TensorArrayFunctionPolynomialVisitor
+  class IndexSpecialiser : public visitor_t
   {
   public:
-    void visit(const TensorArrayFunctionPolynomial& parent,
+    void visit(const TensorArrayFunction<element_t>& parent,
       const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
       const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
-      TensorFunction::polynomial_t& value)
+      polynomial_t& value)
     {
       const std::set<ScalarReference> references = value.getIndependentVariables();
       BOOST_FOREACH(const ScalarReference& reference, references)
@@ -145,7 +146,7 @@ private:
     }
   };
 
-  class Differentiator : public TensorArrayFunctionPolynomialVisitor
+  class Differentiator : public visitor_t
   {
   private:
     const ScalarReference variable;
@@ -156,10 +157,10 @@ private:
       assert(!variable.isBound() && !variable.isParameterised());
     }
 
-    void visit(const TensorArrayFunctionPolynomial& parent,
+    void visit(const TensorArrayFunction<element_t>& parent,
       const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
       const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
-      TensorFunction::polynomial_t& value)
+      polynomial_t& value)
     {
       value = value.derivative(variable);
     }
@@ -213,22 +214,6 @@ public:
     specialiseKnownIndices();
   }
 
-  void accept(TensorArrayFunctionPolynomialVisitor& visitor)
-  {
-    parent_t::IndexIncrementer incrementer(*this);
-    std::map<ArrayIndexID, std::size_t> arrayIndex; 
-    std::map<TensorIndexID, std::size_t> tensorIndex;
-
-    incrementer.zero(arrayIndex);
-    incrementer.zero(tensorIndex);
-
-    do
-    {
-      visitor.visit(*this, arrayIndex, tensorIndex, (*this)(arrayIndex, tensorIndex));
-    }
-    while(!incrementer.increment(arrayIndex, tensorIndex));
-  }
-
   virtual polynomial_t getPolynomial(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex) const
   {
     const std::map<ArrayIndexID, std::size_t> arrayIndexMap =
@@ -237,7 +222,7 @@ public:
     const std::map<TensorIndexID, std::size_t> tensorIndexMap =
       TensorArrayFunctionHelper::indexToMap(tensorIndexParameters, tensorIndex);
 
-    polynomial_t poly = (*this)(arrayIndex, tensorIndex);
+    polynomial_t poly = (*this)(arrayIndexMap, tensorIndexMap);
     IndexSpecialiser specialiser;
     specialiser.visit(*this, arrayIndexMap, tensorIndexMap, poly);
 

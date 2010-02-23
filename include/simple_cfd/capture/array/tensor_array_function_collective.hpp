@@ -9,6 +9,7 @@
 #include "tensor_function.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
+#include "tensor_array_function_call.hpp"
 
 namespace cfd
 {
@@ -19,7 +20,7 @@ namespace detail
 class TensorArrayFunctionCollective : public TensorFunction
 {
 protected:
-  typedef boost::tuple< ArrayIndex<param_tag>, TensorIndex<param_tag>, TensorFunction::ref > call_t;
+  typedef TensorArrayFunctionCall call_t;
   const ArrayIndex<fixed_tag> arrayExtents;
   const std::size_t rank;
   const std::size_t dimension;
@@ -67,15 +68,15 @@ public:
   void addTerm(const ArrayIndex<param_tag>& arrayIndex, const TensorIndex<param_tag>& tensorIndex,
     const TensorFunction::ref function)
   {
-    operands.push_back(boost::make_tuple(arrayIndex, tensorIndex, function));
+    operands.push_back(call_t(arrayIndex, tensorIndex, function));
   }
 
-  ArrayIndex<param_tag> getDefaultArrayIndex() const
+  ArrayIndex<param_tag> getIdentityArrayIndex() const
   {
     return ArrayIndex<param_tag>(arrayIndexParameters.size(), &arrayIndexParameters[0]);
   }
 
-  TensorIndex<param_tag> getDefaultTensorIndex() const
+  TensorIndex<param_tag> getIdentityTensorIndex() const
   {
     return TensorIndex<param_tag>(tensorIndexParameters.size(), dimension, &tensorIndexParameters[0]);
   }

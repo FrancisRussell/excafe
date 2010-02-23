@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_ARRAY_FUNCTION_PRODUCT_HPP
 
 #include <cstddef>
-#include <boost/tuple/tuple.hpp>
 #include "tensor_function.hpp"
 #include "tensor_array_function_collective.hpp"
 #include "array_index.hpp"
@@ -38,11 +37,11 @@ public:
 
     polynomial_t poly(1.0);
 
-    BOOST_FOREACH(const TensorArrayFunctionCollective::call_t& call, this->operands)
+    BOOST_FOREACH(const call_t& call, this->operands)
     {
-      poly *= boost::get<2>(call)->getPolynomial(
-        TensorArrayFunctionHelper::getIndex(arrayIndexMap, boost::get<0>(call)),
-        TensorArrayFunctionHelper::getIndex(tensorIndexMap, boost::get<1>(call)));
+      poly *= call.getFunction()->getPolynomial(
+        TensorArrayFunctionHelper::getIndex(arrayIndexMap, call.getArrayIndex()),
+        TensorArrayFunctionHelper::getIndex(tensorIndexMap, call.getTensorIndex()));
     }
 
     return poly;

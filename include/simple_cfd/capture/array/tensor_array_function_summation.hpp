@@ -31,7 +31,7 @@ public:
     TensorArrayFunctionSummation result(*this);
     BOOST_FOREACH(call_t& summand, result.operands)
     {
-      boost::get<2>(summand) = boost::get<2>(summand)->differentiate(reference);
+      summand.setFunction(summand.getFunction()->differentiate(reference));
     }
 
     return TensorFunction::ref(new TensorArrayFunctionSummation(result)); 
@@ -47,11 +47,11 @@ public:
 
     polynomial_t poly(0.0);
 
-    BOOST_FOREACH(const TensorArrayFunctionCollective::call_t& call, this->operands)
+    BOOST_FOREACH(const call_t& call, this->operands)
     {
-      poly += boost::get<2>(call)->getPolynomial(
-        TensorArrayFunctionHelper::getIndex(arrayIndexMap, boost::get<0>(call)),
-        TensorArrayFunctionHelper::getIndex(tensorIndexMap, boost::get<1>(call)));
+      poly += call.getFunction()->getPolynomial(
+        TensorArrayFunctionHelper::getIndex(arrayIndexMap, call.getArrayIndex()),
+        TensorArrayFunctionHelper::getIndex(tensorIndexMap, call.getTensorIndex()));
     }
 
     return poly;

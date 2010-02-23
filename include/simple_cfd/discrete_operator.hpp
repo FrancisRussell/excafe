@@ -21,6 +21,7 @@
 // Currently, these are here to check they're parsed correctly
 #include "capture/array/tensor_function.hpp"
 #include "capture/array/tensor_array_function_polynomial.hpp"
+#include "capture/array/tensor_array_function_references.hpp"
 #include "capture/array/tensor_array_function_summation.hpp"
 #include "capture/array/tensor_array_function_product.hpp"
 

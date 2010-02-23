@@ -321,6 +321,22 @@ protected:
     return values[offset];
   }
 
+  void accept(TensorArrayFunctionVisitor<element_t>& visitor)
+  {
+    IndexIncrementer incrementer(*this);
+    std::map<ArrayIndexID, std::size_t> arrayIndex; 
+    std::map<TensorIndexID, std::size_t> tensorIndex;
+
+    incrementer.zero(arrayIndex);
+    incrementer.zero(tensorIndex);
+
+    do
+    {
+      visitor.visit(*this, arrayIndex, tensorIndex, (*this)(arrayIndex, tensorIndex));
+    }
+    while(!incrementer.increment(arrayIndex, tensorIndex));
+  }
+
   TensorArrayFunction(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension) :
     arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extentReal())

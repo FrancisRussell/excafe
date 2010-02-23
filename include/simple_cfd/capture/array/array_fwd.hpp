@@ -8,8 +8,9 @@ namespace detail
 {
 
 class TensorFunction;
+template<typename E> class TensorArrayFunction;
+template<typename E> class TensorArrayFunctionVisitor;
 class TensorArrayFunctionPolynomial;
-class TensorArrayFunctionVisitor;
 class TensorFunctionConstant;
 class ScalarReference;
 
