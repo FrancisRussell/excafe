@@ -27,6 +27,11 @@ protected:
 
   std::vector<ArrayIndexID> arrayIndexParameters;
   std::vector<TensorIndexID> tensorIndexParameters;
+
+  std::vector<ArrayIndexID> unseenArrayIndexParameters;
+  std::vector<TensorIndexID> unseenTensorIndexParameters;
+  ArrayIndex<fixed_tag> unseenArrayExtents;
+
   std::vector<call_t> operands;
 
 public:

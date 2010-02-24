@@ -45,6 +45,10 @@ private:
   std::vector<index_t> indices;
 
 public:
+  ArrayIndex() : indices(0)
+  {
+  }
+
   ArrayIndex(const std::size_t _numIndices) : indices(_numIndices)
   {
     std::fill(indices.begin(), indices.end(), 0);
