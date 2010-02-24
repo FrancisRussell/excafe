@@ -8,12 +8,12 @@
 #include <map>
 #include <cassert>
 #include <simple_cfd/exception.hpp>
-#include <boost/foreach.hpp>
 #include "tensor_function.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
 #include "array_traits.hpp"
 #include "tensor_array_function_helper.hpp"
+#include "index_incrementer.hpp"
 
 namespace cfd
 {
@@ -36,91 +36,6 @@ protected:
   std::set<ArrayIndexID> arrayVirtualParameters;
   std::set<TensorIndexID> tensorVirtualParameters;
   std::vector<element_t> values;
-
-  class IndexIncrementer
-  {
-  private:
-    std::vector< std::pair<ArrayIndexID, std::size_t> > realArrayIndexExtents;
-    std::vector<TensorIndexID> realTensorIndices;
-    const std::size_t dimension;
-
-    bool increment(std::map<ArrayIndexID, std::size_t>& arrayIndex) const
-    {
-      assert(arrayIndex.size() == realArrayIndexExtents.size());
-      // Returns whether or not there was a wrap-around
-      typedef std::pair<ArrayIndexID, std::size_t> extent_t;
-      BOOST_REVERSE_FOREACH(const extent_t& extent, realArrayIndexExtents)
-      {
-        arrayIndex[extent.first] = (arrayIndex[extent.first] + 1) % extent.second;
-
-        if (arrayIndex[extent.first] != 0)
-          return false;
-      }
-      
-      return true;
-    }
-
-    bool increment(std::map<TensorIndexID, std::size_t>& tensorIndex) const
-    {
-      assert(tensorIndex.size() == realTensorIndices.size());
-      // Returns whether or not there was a wrap-around
-      BOOST_REVERSE_FOREACH(const TensorIndexID& id, realTensorIndices)
-      {
-        tensorIndex[id] = (tensorIndex[id] + 1) % dimension;
-
-        if (tensorIndex[id] != 0)
-          return false;
-      }
-
-      return true;
-    }
-
-  public:
-    IndexIncrementer(const TensorArrayFunction& parent) : dimension(parent.dimension)
-    {
-      for(std::size_t i=0; i<parent.arrayExtents.numIndices(); ++i)
-      {
-        if (!parent.isVirtual(parent.arrayIndexParameters[i]))
-          realArrayIndexExtents.push_back(std::make_pair(parent.arrayIndexParameters[i], parent.arrayExtents[i]));
-      }
-
-      for(std::size_t i=0; i<parent.rank; ++i)
-      {
-        if (!parent.isVirtual(parent.tensorIndexParameters[i]))
-          realTensorIndices.push_back(parent.tensorIndexParameters[i]);
-      }
-    }
-
-    void zero(std::map<ArrayIndexID, std::size_t>& arrayIndex) const
-    {
-      arrayIndex.clear();
-
-      typedef std::pair<ArrayIndexID, std::size_t> extent_t;
-      BOOST_FOREACH(const extent_t& extent, realArrayIndexExtents)
-      {
-        arrayIndex.insert(std::make_pair(extent.first, 0));
-      }
-    }
-
-    void zero(std::map<TensorIndexID, std::size_t>& tensorIndex) const
-    {
-      tensorIndex.clear();
-
-      BOOST_FOREACH(const TensorIndexID& id, realTensorIndices)
-      {
-        tensorIndex.insert(std::make_pair(id, 0));
-      }
-    }
-
-    bool increment(std::map<ArrayIndexID, std::size_t>& arrayIndex, 
-      std::map<TensorIndexID, std::size_t>& tensorIndex) const
-    {
-      if (increment(tensorIndex))
-        return increment(arrayIndex);
-      else
-        return false;
-    }
-  };
 
   std::size_t getInternalRank() const
   {
@@ -323,7 +238,27 @@ protected:
 
   void accept(TensorArrayFunctionVisitor<element_t>& visitor)
   {
-    IndexIncrementer incrementer(*this);
+    std::vector<ArrayIndexID> realArrayIndices;
+    std::vector<std::size_t> realArrayExtents;
+
+    for(std::size_t i=0; i<arrayExtents.numIndices(); ++i)
+    {
+      if (!isVirtual(arrayIndexParameters[i]))
+      {
+        realArrayIndices.push_back(arrayIndexParameters[i]);
+        realArrayExtents.push_back(arrayExtents[i]);
+      }
+    }
+
+    std::vector<TensorIndexID> realTensorIndices;
+
+    for(std::size_t i=0; i<rank; ++i)
+    {
+      if (!isVirtual(tensorIndexParameters[i]))
+        realTensorIndices.push_back(tensorIndexParameters[i]);
+    }
+
+    IndexIncrementer incrementer(realArrayIndices, realTensorIndices, realArrayExtents, dimension);
     std::map<ArrayIndexID, std::size_t> arrayIndex; 
     std::map<TensorIndexID, std::size_t> tensorIndex;
 
