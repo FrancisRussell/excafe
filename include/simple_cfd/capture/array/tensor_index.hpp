@@ -99,6 +99,26 @@ public:
     return TensorIndex(n, dimension, &indices[indices.size() - n]);
   }
 
+  void prepend(const constant_t c)
+  {
+    indices.insert(indices.begin(), c);
+  }
+
+  void prepend(const TensorIndexID& id)
+  {
+    CFD_EXCEPTION("Cannot prepend a parameter to a constant array index.");
+  }
+
+  void append(const constant_t c)
+  {
+    indices.push_back(c);
+  }
+
+  void append(const TensorIndexID& id)
+  {
+    CFD_EXCEPTION("Cannot append a parameter to a constant array index.");
+  }
+
   iterator begin()
   {
     return indices.begin();
@@ -170,6 +190,12 @@ TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map
 
 template<>
 TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t dimension, const TensorIndexID* const _indices);
+
+template<>
+void TensorIndex<param_tag>::prepend(const TensorIndexID& id);
+
+template<>
+void TensorIndex<param_tag>::append(const TensorIndexID& id);
 
 }
 

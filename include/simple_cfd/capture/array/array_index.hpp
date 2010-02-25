@@ -92,6 +92,16 @@ public:
     return ArrayIndex(n, &indices[indices.size() - n]);
   }
 
+  void append(const constant_t value)
+  {
+    indices.push_back(value);
+  }
+
+  void prepend(const constant_t value)
+  {
+    indices.insert(indices.begin(), value);
+  }
+
   iterator begin()
   {
     return indices.begin();

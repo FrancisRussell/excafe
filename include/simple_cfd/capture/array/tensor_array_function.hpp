@@ -27,8 +27,7 @@ class TensorArrayFunction : public TensorFunction
 protected:
   typedef E element_t;
 
-  const ArrayIndex<fixed_tag> arrayExtents;
-  const std::size_t rank;
+  ArrayIndex<fixed_tag> arrayExtents;
   const std::size_t dimension;
 
   std::vector<ArrayIndexID> arrayIndexParameters;
@@ -39,7 +38,7 @@ protected:
 
   std::size_t getInternalRank() const
   {
-    return rank - tensorVirtualParameters.size();
+    return getTensorRank() - tensorVirtualParameters.size();
   }
 
   std::size_t getNumInternalArrayIndices() const
@@ -51,7 +50,7 @@ protected:
   {
     std::size_t result = 1;
 
-    for(std::size_t i=0; i<rank; ++i)
+    for(std::size_t i=0; i<tensorIndexParameters.size(); ++i)
     {
       if (!real || tensorVirtualParameters.find(tensorIndexParameters[i]) == tensorVirtualParameters.end())
         result *= dimension;
@@ -191,7 +190,7 @@ protected:
     std::size_t offset = 0;
     std::size_t multiplier = 1;
 
-    for(int i=rank-1; i>=0; --i)
+    for(int i=tensorIndexParameters.size()-1; i>=0; --i)
     {
       if (tensorVirtualParameters.find(tensorIndexParameters[i]) == tensorVirtualParameters.end())
       {
@@ -252,7 +251,7 @@ protected:
 
     std::vector<TensorIndexID> realTensorIndices;
 
-    for(std::size_t i=0; i<rank; ++i)
+    for(std::size_t i=0; i<tensorIndexParameters.size(); ++i)
     {
       if (!isVirtual(tensorIndexParameters[i]))
         realTensorIndices.push_back(tensorIndexParameters[i]);
@@ -274,19 +273,21 @@ protected:
 
   TensorArrayFunction(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension) :
-    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), values(extentReal())
+    arrayExtents(_arrayExtents), dimension(_dimension)
   {
     for(std::size_t i=0; i<arrayExtents.numIndices(); ++i)
        arrayIndexParameters.push_back(ArrayIndexID(i));
 
-    for(std::size_t i=0; i<rank; ++i)
+    for(std::size_t i=0; i<_rank; ++i)
        tensorIndexParameters.push_back(TensorIndexID(i));
+
+    values.resize(extentReal());
   }
 
   TensorArrayFunction(const ArrayIndex<fixed_tag>& _arrayExtents, const std::size_t _rank, 
     const std::size_t _dimension, const std::vector<ArrayIndexID>& _arrayIndexParameters,
     const std::vector<TensorIndexID>& _tensorIndexParameters) :
-    arrayExtents(_arrayExtents), rank(_rank), dimension(_dimension), 
+    arrayExtents(_arrayExtents), dimension(_dimension), 
     arrayIndexParameters(_arrayIndexParameters), tensorIndexParameters(_tensorIndexParameters),
     values(extentReal())
   {
@@ -295,7 +296,7 @@ protected:
 public:
   virtual std::size_t getTensorRank() const
   {
-    return rank;
+    return tensorIndexParameters.size();
   }
 
   virtual std::size_t getTensorDimension() const
@@ -318,6 +319,43 @@ public:
     return arrayExtents;
   }
 
+  TensorIndexID appendVirtualTensorIndex()
+  {
+    const TensorIndexID id(tensorIndexParameters.size());
+    tensorIndexParameters.push_back(id);
+    tensorVirtualParameters.insert(id);
+    return id;
+  }
+
+  std::vector<TensorIndexID> appendVirtualTensorIndices(const std::size_t count)
+  {
+    std::vector<TensorIndexID> indices;
+
+    for(std::size_t i=0; i<count; ++i)
+      indices.push_back(appendVirtualTensorIndex());
+
+    return indices;
+  }
+
+  ArrayIndexID appendVirtualArrayIndex(const std::size_t extent)
+  {
+    const ArrayIndexID id(arrayIndexParameters.size());
+    arrayIndexParameters.push_back(id);
+    arrayExtents.append(extent);
+    arrayVirtualParameters.insert(id);
+    return id;
+  }
+
+  std::vector<ArrayIndexID> appendVirtualArrayIndices(const ArrayIndex<fixed_tag>& extents)
+  {
+    std::vector<ArrayIndexID> indices;
+
+    for(std::size_t i=0; i<extents.numIndices(); ++i)
+      indices.push_back(appendVirtualArrayIndex(extents[i]));
+
+    return indices;
+  }
+  
   ArrayIndex<param_tag> getIdentityArrayIndex() const
   {
     assert(arrayExtents.numIndices() == arrayIndexParameters.size());
@@ -326,8 +364,7 @@ public:
 
   TensorIndex<param_tag> getIdentityTensorIndex() const
   {
-    assert(rank == tensorIndexParameters.size());
-    return TensorIndex<param_tag>(rank, dimension, &tensorIndexParameters[0]);
+    return TensorIndex<param_tag>(tensorIndexParameters.size(), dimension, &tensorIndexParameters[0]);
   }
 
   element_t& operator()(const ArrayIndex<fixed_tag>& arrayIndex, const TensorIndex<fixed_tag>& tensorIndex)

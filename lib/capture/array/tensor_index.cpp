@@ -67,6 +67,18 @@ TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t _
   std::copy(_indices, _indices+_rank, indices.begin());
 }
 
+template<>
+void TensorIndex<param_tag>::prepend(const TensorIndexID& id)
+{
+  indices.insert(indices.begin(), id);
+}
+
+template<>
+void TensorIndex<param_tag>::append(const TensorIndexID& id)
+{
+  indices.push_back(id);
+}
+
 }
 
 }

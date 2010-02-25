@@ -70,6 +70,23 @@ public:
     return arrayExtents;
   }
 
+  TensorIndexID newTensorIndex()
+  {
+    const TensorIndexID index(tensorIndexParameters.size() + unseenTensorIndexParameters.size());
+    unseenTensorIndexParameters.push_back(index);
+    return index;
+  }
+
+  std::vector<TensorIndexID> newTensorIndices(const std::size_t count)
+  {
+    std::vector<TensorIndexID> paramVector;
+
+    for(std::size_t i=0; i<count; ++i);
+      paramVector.push_back(newTensorIndex());
+
+    return paramVector;
+  }
+
   void addTerm(const ArrayIndex<param_tag>& arrayIndex, const TensorIndex<param_tag>& tensorIndex,
     const TensorFunction::ref function)
   {
