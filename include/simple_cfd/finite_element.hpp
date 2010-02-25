@@ -8,6 +8,7 @@
 #include "simple_cfd_fwd.hpp"
 #include "capture/array/tensor_array_function_polynomial.hpp"
 #include "capture/array/free_tensor_array.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
@@ -19,6 +20,7 @@ public:
   static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
   typedef Dof<dimension> dof_t;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
 
   virtual std::size_t getRank() const = 0;
   virtual std::size_t getDimension() const = 0;
@@ -32,7 +34,7 @@ public:
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
-  virtual const GeneralCell<dimension>& getCell() const = 0;
+  virtual cell_ref_t getCell() const = 0;
   virtual ~FiniteElement() {}
 };
 

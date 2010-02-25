@@ -4,12 +4,12 @@
 #include <cstddef>
 #include <stack>
 #include <cassert>
-#include <memory>
 #include <boost/any.hpp>
 #include <simple_cfd/numeric/tensor.hpp>
 #include <simple_cfd/cell_vertices.hpp>
 #include <simple_cfd/vertex.hpp>
 #include <simple_cfd/general_cell.hpp>
+#include <simple_cfd/cell_manager.hpp>
 #include <simple_cfd/mesh_entity.hpp>
 #include <simple_cfd/capture/capture_fwd.hpp>
 #include <simple_cfd/capture/evaluation/evaluation_fwd.hpp>
@@ -47,8 +47,9 @@ private:
   };
 
   static const std::size_t dimension = D;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
   const LinearForm form;
-  const std::auto_ptr< GeneralCell<dimension> > cell;
+  const cell_ref_t cell;
   const CellVertices<dimension> vertices;
   const MeshEntity localEntity;
   const vertex<dimension> localVertex;
@@ -77,11 +78,11 @@ private:
   }
 
 public:
-  FormEvaluatorVisitor(const GeneralCell<dimension>& _cell, Scenario<dimension>& _scenario,
+  FormEvaluatorVisitor(const cell_ref_t _cell, Scenario<dimension>& _scenario,
     detail::ExpressionValues<dimension>& _values, const LinearForm& _form, 
     const CellVertices<dimension>& _cellVertices, const MeshEntity& _localEntity, 
     const vertex<dimension>& v, const Dof<dimension>& _dof) : 
-    form(_form), cell(_cell.cloneGeneralCell()), vertices(_cellVertices), localEntity(_localEntity), localVertex(v), 
+    form(_form), cell(_cell), vertices(_cellVertices), localEntity(_localEntity), localVertex(v), 
     dof(_dof), scenario(_scenario), values(_values), evaluationState(VALUE)
   {
   }
@@ -239,19 +240,20 @@ class FormEvaluator
 {
 private:
   static const std::size_t dimension = D;
-  std::auto_ptr< GeneralCell<dimension> > cell;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
+  cell_ref_t cell;
   Scenario<dimension>* scenario;
   detail::ExpressionValues<dimension>* values;
   LinearForm form;
 
 public:
-  FormEvaluator(const GeneralCell<dimension>& _cell, Scenario<dimension>& _scenario, 
+  FormEvaluator(const cell_ref_t _cell, Scenario<dimension>& _scenario, 
     detail::ExpressionValues<dimension>& _values, const LinearForm& _form) :
-    cell(_cell.cloneGeneralCell()), scenario(&_scenario), values(&_values), form(_form)
+    cell(_cell), scenario(&_scenario), values(&_values), form(_form)
   {
   }
 
-  FormEvaluator(const FormEvaluator& f) : cell(f.cell->cloneGeneralCell()), scenario(f.scenario),
+  FormEvaluator(const FormEvaluator& f) : cell(f.cell), scenario(f.scenario),
     values(f.values), form(f.form)
   {
   }
@@ -259,7 +261,7 @@ public:
   Tensor<dimension> evaluate(const CellVertices<dimension>& vertices, 
     const MeshEntity& localEntity, const vertex<dimension>& v, const Dof<dimension>& dof) const
   {
-    FormEvaluatorVisitor<dimension> visitor(*cell, *scenario, *values, form, vertices, localEntity, v, dof);
+    FormEvaluatorVisitor<dimension> visitor(cell, *scenario, *values, form, vertices, localEntity, v, dof);
     form.accept(visitor);
     return visitor.getResult();
   }

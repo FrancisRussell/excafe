@@ -1,19 +1,20 @@
-#include <mesh_topology.hpp>
-#include <mesh_cell.hpp>
 #include <iterator>
 #include <set>
 #include <vector>
 #include <algorithm>
+#include "mesh_topology.hpp"
+#include "mesh_cell.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
 
-MeshTopology::MeshTopology(const MeshCell& _cell) : cell(_cell.cloneMeshCell()), dimension(cell->getDimension()), 
+MeshTopology::MeshTopology(const CellManager::mesh_cell_ref _cell) : cell(_cell), dimension(cell->getDimension()), 
   relations(numConnectivityRelations(dimension))
 {
 }
 
-MeshTopology::MeshTopology(const MeshTopology& t) : cell(t.cell->cloneMeshCell()), dimension(t.dimension), 
+MeshTopology::MeshTopology(const MeshTopology& t) : cell(t.cell), dimension(t.dimension), 
  relations(t.relations)
 {
 }

@@ -21,6 +21,7 @@ template<unsigned int D> class Function;
 template<typename T> class MeshFunction;
 class MeshCell;
 template<std::size_t> class GeneralCell;
+class CellManager;
 class TriangularCell;
 class MeshTopology;
 class MeshConnectivity;

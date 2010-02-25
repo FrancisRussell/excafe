@@ -17,6 +17,7 @@
 #include "general_cell.hpp"
 #include "dof_map.hpp"
 #include "cell_vertices.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
@@ -31,7 +32,7 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  boost::scoped_ptr< GeneralCell<dimension> > referenceCell;
+  typename CellManager::ref<dimension>::general referenceCell;
   mutable MeshTopology topology;
   MeshGeometry<dimension> geometry;
   MeshFunction<int> facetLabels;
@@ -55,12 +56,12 @@ private:
   }
 
 public:
-  Mesh(const GeneralCell<dimension>& cell) : referenceCell(cell.cloneGeneralCell()), topology(*referenceCell), facetLabels(getDimension()-1), 
+  Mesh(const typename CellManager::ref<dimension>::general cell) : referenceCell(cell), topology(referenceCell), facetLabels(getDimension()-1), 
     boundaryFacets(getDimension()-1)
   {
   }
 
-  Mesh(const Mesh& m) : referenceCell(m.referenceCell->cloneGeneralCell()), topology(m.topology), geometry(m.geometry),
+  Mesh(const Mesh& m) : referenceCell(m.referenceCell), topology(m.topology), geometry(m.geometry),
     facetLabels(m.facetLabels), boundaryFacets(m.boundaryFacets), baseConnectivity(m.baseConnectivity)
   {
   }

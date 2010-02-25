@@ -18,12 +18,13 @@
 #include "capture/array/tensor_index.hpp"
 #include "capture/array/free_tensor_array.hpp"
 #include "capture/array/scalar_reference.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
 
 template<unsigned int R>
-class LagrangeTriangleQuadratic : public FiniteElement<TriangularCell::dimension>
+class LagrangeTriangleQuadratic : public FiniteElement<2>
 {
 public:
   typedef TriangularCell cell_type;
@@ -38,7 +39,7 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 6;
-  const cell_type referenceCell;
+  const cell_ref_t referenceCell;
   DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -92,7 +93,7 @@ private:
     using namespace detail;
 
     const ArrayIndex<param_tag> arrayIndex(0);
-    const std::size_t numVertices = referenceCell.numEntities(0);
+    const std::size_t numVertices = referenceCell->numEntities(0);
     TensorIndex<param_tag> tensorIndex(1, dimension);
     std::vector<polynomial_t> references(numVertices);
     
@@ -106,7 +107,7 @@ private:
   }
 
 public:
-  LagrangeTriangleQuadratic() : dofNumbering(buildDofNumberingHelper())
+  LagrangeTriangleQuadratic() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
   {
     //FIXME: Delete me when no longer need to check if getBasisFunctions compiles
     detail::FreeTensorArray pos(5);
@@ -145,7 +146,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -205,7 +206,7 @@ public:
 
     for(std::size_t i=0; i<3; ++i)
     {
-      vertices[i] = referenceCell.getLocalVertex(i);
+      vertices[i] = referenceCell->getLocalVertex(i);
     }
 
     // Create interpolated vertices
@@ -266,7 +267,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -328,7 +329,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -394,7 +395,7 @@ public:
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell->referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const std::size_t dof) const
@@ -404,13 +405,13 @@ public:
 
     if (association.getEntityDimension() == 0)
     {
-      return referenceCell.getLocalVertex(association.getEntityIndex());
+      return referenceCell->getLocalVertex(association.getEntityIndex());
     }
     else
     {
       const int vid1 = (association.getEntityIndex())%3;
       const int vid2 = (association.getEntityIndex()+1)%3;
-      return (referenceCell.getLocalVertex(vid1) + referenceCell.getLocalVertex(vid2))/2.0;
+      return (referenceCell->getLocalVertex(vid1) + referenceCell->getLocalVertex(vid2))/2.0;
     }
   }
 
@@ -444,7 +445,7 @@ public:
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t space_dimension = spaceDimension();
-    const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, entity);
     const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
 
     std::set< Dof<dimension> > result;
@@ -460,7 +461,7 @@ public:
     return result;
   }
 
-  virtual const GeneralCell<dimension>& getCell() const
+  virtual cell_ref_t getCell() const
   {
     return referenceCell;
   }

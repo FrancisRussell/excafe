@@ -15,7 +15,6 @@ class MeshCell
 public:
   virtual std::size_t getDimension() const = 0;
   virtual std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, const std::size_t d) const = 0;
-  virtual std::auto_ptr<MeshCell> cloneMeshCell() const = 0;
   virtual ~MeshCell() {}
 };
 

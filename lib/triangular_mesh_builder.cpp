@@ -12,6 +12,7 @@
 #include <simple_cfd_fwd.hpp>
 #include <triangular_mesh_builder.hpp>
 #include <triangular_cell.hpp>
+#include <cell_manager.hpp>
 #include <mesh.hpp>
 
 namespace cfd
@@ -128,7 +129,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
 
   triangulate(options.get(), &in, &out, NULL);
 
-  const TriangularCell cell;
+  const CellManager::ref<2>::general cell = CellManager::getInstance<cell_type>();
   Mesh<dimension> m(cell);
 
   for(vertex_id vid = 0; vid < static_cast<unsigned>(out.numberofpoints); ++vid)
@@ -226,7 +227,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() con
   const int x_size = static_cast<int>(std::ceil(width / sideLength)) + 1;
   const int y_size = static_cast<int>(std::ceil(height / sideLength)) + 1;
 
-  const TriangularCell cell;
+  const CellManager::ref<2>::general cell = CellManager::getInstance<cell_type>();
   Mesh<dimension> m(cell);
 
   assert(x_size > 1);

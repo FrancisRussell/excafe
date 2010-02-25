@@ -18,17 +18,19 @@
 #include "capture/array/tensor_index.hpp"
 #include "capture/array/free_tensor_array.hpp"
 #include "capture/array/scalar_reference.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
 
 template<unsigned R>
-class LagrangeTriangleLinear : public FiniteElement<TriangularCell::dimension>
+class LagrangeTriangleLinear : public FiniteElement<2>
 {
 public:
   typedef TriangularCell cell_type;
   static const std::size_t rank = R;
   static const std::size_t dimension = cell_type::dimension;
+
   typedef Tensor<dimension> value_type;
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
@@ -38,7 +40,7 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 3;
-  const cell_type referenceCell;
+  const cell_ref_t referenceCell;
   DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -91,7 +93,7 @@ private:
     using namespace detail;
 
     const ArrayIndex<param_tag> arrayIndex(0);
-    const std::size_t numVertices = referenceCell.numEntities(0);
+    const std::size_t numVertices = referenceCell->numEntities(0);
     TensorIndex<param_tag> tensorIndex(1, dimension);
     std::vector<polynomial_t> references(numVertices);
     
@@ -108,7 +110,7 @@ public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
-  LagrangeTriangleLinear() : dofNumbering(buildDofNumberingHelper())
+  LagrangeTriangleLinear() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
   {
     //FIXME: Delete me when no longer need to check if getBasisFunctions compiles
     detail::FreeTensorArray pos(5);
@@ -149,10 +151,10 @@ public:
       const int ip2 = (node_on_cell+2) % 3;
   
       const TensorIndex<fixed_tag> tensorIndex = convert_to_tensor_index(index_into_tensor);
-      bases(basisIndex, tensorIndex) = (referenceCell.getLocalVertex(ip2)[0] - referenceCell.getLocalVertex(ip1)[0]) * 
-        (v[1] - referenceCell.getLocalVertex(ip1)[1]) - 
-        (referenceCell.getLocalVertex(ip2)[1] - referenceCell.getLocalVertex(ip1)[1]) * 
-        (v[0] - referenceCell.getLocalVertex(ip1)[0]);
+      bases(basisIndex, tensorIndex) = (referenceCell->getLocalVertex(ip2)[0] - referenceCell->getLocalVertex(ip1)[0]) * 
+        (v[1] - referenceCell->getLocalVertex(ip1)[1]) - 
+        (referenceCell->getLocalVertex(ip2)[1] - referenceCell->getLocalVertex(ip1)[1]) * 
+        (v[0] - referenceCell->getLocalVertex(ip1)[0]);
     }
 
     return bases;
@@ -162,9 +164,9 @@ public:
   {
     assert(i < spaceDimension());
 
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -187,9 +189,9 @@ public:
   gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -216,9 +218,9 @@ public:
   {
     assert(i < spaceDimension());
 
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -254,14 +256,14 @@ public:
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell->referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const std::size_t dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const DofAssociation association = dofNumbering.getLocalAssociation(dof);
-    return referenceCell.getLocalVertex(association.getEntityIndex());
+    return referenceCell->getLocalVertex(association.getEntityIndex());
   }
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
@@ -295,7 +297,7 @@ public:
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t space_dimension = spaceDimension();
-    const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, entity);
     const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
 
     std::set< Dof<dimension> > result;
@@ -311,7 +313,7 @@ public:
     return result;
   }
 
-  virtual const GeneralCell<dimension>& getCell() const
+  virtual cell_ref_t getCell() const
   {
     return referenceCell;
   }

@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
-#include <memory>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <numeric/tensor.hpp>
@@ -260,16 +259,6 @@ std::size_t TriangularCell::numEntities(const std::size_t d) const
   assert(d <= dimension);
   std::size_t numEntitiesArray[dimension+1] = {3, 3, 1};
   return numEntitiesArray[d];
-}
-
-std::auto_ptr< GeneralCell<TriangularCell::dimension> > TriangularCell::cloneGeneralCell() const
-{
-  return std::auto_ptr< GeneralCell<dimension> >(new TriangularCell(*this));
-}
-
-std::auto_ptr<MeshCell> TriangularCell::cloneMeshCell() const
-{
-  return std::auto_ptr<MeshCell>(new TriangularCell(*this));
 }
 
 }
