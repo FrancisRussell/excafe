@@ -19,6 +19,7 @@
 // FIXME: remove these headers when they're actually included in appropriate places
 // Currently, these are here to check they're parsed correctly
 #include "capture/array/tensor_function.hpp"
+#include "capture/array/free_tensor_array.hpp"
 #include "capture/array/tensor_array_function_polynomial.hpp"
 #include "capture/array/tensor_array_function_references.hpp"
 #include "capture/array/tensor_array_function_summation.hpp"
@@ -88,6 +89,13 @@ private:
   {
     using namespace cfd::forms;
 
+    //FIXME: only here to test instantiation
+    detail::TensorArrayFunctionBuilderVisitor<dimension>(
+      rowMappings.getMesh().getReferenceCell(),
+      detail::FreeTensorArray(0), 
+      detail::FreeTensorArray(1), 
+      std::map<Field, detail::FreeTensorArray>());
+
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
@@ -121,7 +129,7 @@ private:
 
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t degree = 5;
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell()->getQuadrature(degree);
 
     const std::size_t entityDimension = subDomain.getDimension();
 
@@ -133,7 +141,7 @@ private:
         const std::size_t cid = m.getContainingCell(*eIter);
         const CellVertices<dimension> vertices(m.getCoordinates(cid));
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-        const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+        const double jacobian = m.getReferenceCell()->getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
   
         for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
         {

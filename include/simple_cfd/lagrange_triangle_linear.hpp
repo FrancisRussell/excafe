@@ -112,9 +112,6 @@ public:
 
   LagrangeTriangleLinear() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
   {
-    //FIXME: Delete me when no longer need to check if getBasisFunctions compiles
-    detail::FreeTensorArray pos(5);
-    getBasisFunctions(pos);
   }
 
   std::size_t getRank() const

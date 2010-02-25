@@ -32,7 +32,8 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  typename CellManager::ref<dimension>::general referenceCell;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
+  cell_ref_t referenceCell;
   mutable MeshTopology topology;
   MeshGeometry<dimension> geometry;
   MeshFunction<int> facetLabels;
@@ -56,7 +57,7 @@ private:
   }
 
 public:
-  Mesh(const typename CellManager::ref<dimension>::general cell) : referenceCell(cell), topology(referenceCell), facetLabels(getDimension()-1), 
+  Mesh(const cell_ref_t cell) : referenceCell(cell), topology(referenceCell), facetLabels(getDimension()-1), 
     boundaryFacets(getDimension()-1)
   {
   }
@@ -83,9 +84,9 @@ public:
     return cid;
   }
 
-  const GeneralCell<dimension>& getReferenceCell() const
+  const cell_ref_t getReferenceCell() const
   {
-    return *referenceCell;
+    return referenceCell;
   }
 
   std::size_t getContainingCell(const MeshEntity& entity) const

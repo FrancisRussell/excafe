@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <map>
-#include <memory>
 #include <stack>
 #include <cassert>
 #include "free_tensor_array.hpp"
@@ -14,6 +13,7 @@
 #include "tensor_index.hpp"
 #include <simple_cfd/capture/fields/field.hpp>
 #include <simple_cfd/capture/forms/field_visitor.hpp>
+#include <simple_cfd/cell_manager.hpp>
 
 namespace cfd
 {
@@ -26,12 +26,29 @@ class TensorArrayFunctionBuilderVisitor : public FieldVisitor
 {
 private:
   static const std::size_t dimension = D;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
 
-  const std::auto_ptr< GeneralCell<dimension> > cell;
+  cell_ref_t cell;
   FreeTensorArray position;
   FreeTensorArray cellVertices;  
   std::map<Field, FreeTensorArray> discreteFieldCoefficients;
   std::stack<TensorFunction::ref> valueStack;
+
+  TensorArrayFunctionPolynomial getVerticesAsTensorFunction() const
+  {
+    const ArrayIndex<fixed_tag> noArrayIndices(0);
+    const TensorIndex<fixed_tag> noTensorIndices(0, dimension);
+
+    TensorArrayFunctionPolynomial result(noArrayIndices, 0, dimension);
+    result.appendVirtualTensorIndex();
+    result.appendVirtualArrayIndex(cell->getCoordinateMapping().getSpaceDimension());
+
+    const TensorFunction::polynomial_t poly = 
+      ScalarReference(result.getIdentityArrayIndex(), result.getIdentityTensorIndex(), cellVertices);
+    result(noArrayIndices, noTensorIndices) = poly;
+
+    return result;
+  }
 
   TensorFunction::ref buildGradient(const TensorFunction::ref function) const
   {
@@ -59,11 +76,47 @@ private:
     return TensorFunction::ref(new TensorArrayFunctionReferences(gradientTensor));
   }
   
-  TensorArrayFunctionPolynomial buildJacobian() const
+  TensorArrayFunctionPolynomial buildCoordinateFunction() const
   {
+    const FiniteElement<dimension>& coordinateMapping = cell->getCoordinateMapping();
+    assert(coordinateMapping.getRank() == 0 && "Coordinate interpolation function must be rank 0");
+
+    const TensorFunction::ref coordinateMappingBases(new TensorArrayFunctionPolynomial(coordinateMapping.getBasisFunctions(position)));
+    const TensorFunction::ref coordinates(new TensorArrayFunctionPolynomial(getVerticesAsTensorFunction()));
+
+    const std::size_t dimension = coordinateMappingBases->getTensorDimension();
+    const std::size_t spaceDimension = coordinateMapping.getSpaceDimension();
+
+    const ArrayIndex<fixed_tag> noArrayIndices(0);
+    const TensorIndex<fixed_tag> noTensorIndices(0, dimension);
+
+    TensorArrayFunctionProduct coordinateFunction(noArrayIndices, 0, dimension);
+    const ArrayIndexID basisIndexID = coordinateFunction.newArrayIndex(spaceDimension);
+    const TensorIndexID coordinateIndexID = coordinateFunction.newTensorIndex();
+
+    const ArrayIndex<param_tag> basisIndex(1, &basisIndexID);
+    const TensorIndex<param_tag> tensorIndex(1, &coordinateIndexID);
+    coordinateFunction.addTerm(basisIndex, noTensorIndices, coordinateMappingBases);
+    coordinateFunction.addTerm(basisIndex, tensorIndex, getVerticesAsTensorFunction());
+
+    return coordinateFunction;
+  }
+
+  TensorFunction::ref buildInverseJacobian() const
+  {
+    TensorArrayFunctionPolynomial mapping(buildCoordinateFunction());
+    //FIXME: implement me!
   }
 
 public:
+  TensorArrayFunctionBuilderVisitor(const cell_ref_t _cell, const FreeTensorArray& _position, 
+    const FreeTensorArray& _cellVertices, 
+    const std::map<Field, FreeTensorArray> _discreteFieldCoefficients) : 
+    cell(_cell), position(_position), cellVertices(_cellVertices),
+    discreteFieldCoefficients(_discreteFieldCoefficients)
+  {
+  }
+
   virtual void enter(FieldAddition& addition)
   {
   }
@@ -80,7 +133,7 @@ public:
     const std::size_t rank = first->getTensorRank();
     const std::size_t dimension = first->getTensorRank();
 
-    assert(arrayExtent = second->getArrayExtent());
+    assert(arrayExtent == second->getArrayExtent());
     assert(rank == second->getTensorRank());
     assert(dimension == second->getTensorDimension());
 
@@ -91,7 +144,7 @@ public:
     summation.addTerm(arrayIndex, tensorIndex, first);
     summation.addTerm(arrayIndex, tensorIndex, second);
 
-    return TensorFunction::ref(new TensorArrayFunctionSummation(summation));
+    valueStack.push(TensorFunction::ref(new TensorArrayFunctionSummation(summation)));
   }
 
   virtual void enter(FieldInnerProduct& inner)
@@ -111,7 +164,7 @@ public:
     const std::size_t resultRank = first->getTensorRank() + second->getTensorRank() - 2;
 
     assert(arrayExtent.numIndices() == 1);
-    assert(arrayExtent = second->getArrayExtent());
+    assert(arrayExtent == second->getArrayExtent());
     assert(dimension == second->getTensorDimension());
 
     TensorArrayFunctionProduct product(arrayExtent, resultRank, dimension);
@@ -126,7 +179,7 @@ public:
     product.addTerm(product.getIdentityArrayIndex(), firstTensorIndex, first);
     product.addTerm(product.getIdentityArrayIndex(), secondTensorIndex, second);
 
-    return TensorFunction::ref(new TensorArrayFunctionProduct(product));
+    valueStack.push(TensorFunction::ref(new TensorArrayFunctionProduct(product)));
   }
 
   virtual void enter(FieldOuterProduct& outer)
@@ -146,7 +199,7 @@ public:
     const std::size_t resultRank = first->getTensorRank() + second->getTensorRank();
 
     assert(arrayExtent.numIndices() == 1);
-    assert(arrayExtent = second->getArrayExtent());
+    assert(arrayExtent == second->getArrayExtent());
     assert(dimension == second->getTensorDimension());
 
     TensorArrayFunctionProduct product(arrayExtent, resultRank, dimension);
@@ -157,7 +210,7 @@ public:
     product.addTerm(product.getIdentityArrayIndex(), firstTensorIndex, first);
     product.addTerm(product.getIdentityArrayIndex(), secondTensorIndex, second);
 
-    return TensorFunction::ref(new TensorArrayFunctionProduct(product));
+    valueStack.push(TensorFunction::ref(new TensorArrayFunctionProduct(product)));
   }
 
   virtual void enter(FieldColonProduct& colon)
@@ -177,7 +230,7 @@ public:
     const std::size_t resultRank = 0;
 
     assert(arrayExtent.numIndices() == 1);
-    assert(arrayExtent = second->getArrayExtent());
+    assert(arrayExtent == second->getArrayExtent());
     assert(first->getTensorRank() == second->getTensorRank());
     assert(dimension == second->getTensorDimension());
 
@@ -195,7 +248,7 @@ public:
     product.addTerm(product.getIdentityArrayIndex(), firstTensorIndex, first);
     product.addTerm(product.getIdentityArrayIndex(), secondTensorIndex, second);
 
-    return TensorFunction::ref(new TensorArrayFunctionProduct(product));
+    valueStack.push(TensorFunction::ref(new TensorArrayFunctionProduct(product)));
   }
 
   virtual void enter(FieldGradient& gradient)
@@ -216,13 +269,31 @@ public:
   {
   }
 
-  virtual void exit(FieldDivergence& divergence) = 0;
+  virtual void exit(FieldDivergence& divergence)
+  {
+    //FIXME: implement me!
+  }
 
   // Terminals
-  virtual void visit(FacetNormal& normal) = 0;
-  virtual void visit(FieldBasis& basis) = 0;
-  virtual void visit(FieldDiscreteReference& field) = 0;
-  virtual void visit(FieldScalar& s) = 0;
+  virtual void visit(FacetNormal& normal)
+  {
+    //FIXME: implement me!
+  }
+
+  virtual void visit(FieldBasis& basis)
+  {
+    //FIXME: implement me!
+  }
+
+  virtual void visit(FieldDiscreteReference& field)
+  {
+    //FIXME: implement me!
+  }
+
+  virtual void visit(FieldScalar& s)
+  {
+    //FIXME: implement me!
+  }
 };
 
 }

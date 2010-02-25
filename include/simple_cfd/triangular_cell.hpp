@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <cstddef>
+#include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "vertex.hpp"
 #include "mesh_topology.hpp"
@@ -24,6 +25,7 @@ public:
 private:
   friend class CellManager;
   const std::vector<vertex_type> localVertices;
+  mutable boost::scoped_ptr< FiniteElement<dimension> > coordinateMapping;
 
   static std::vector<vertex_type> buildLocalVertices();
   static std::map<vertex_type, double> buildCellQuadrature(const std::size_t degree);
@@ -42,6 +44,7 @@ public:
   vertex_type referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
   Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
+  virtual const FiniteElement<dimension>& getCoordinateMapping() const;
 };
 
 }

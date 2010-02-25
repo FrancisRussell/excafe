@@ -48,6 +48,11 @@ private:
   std::size_t dimension;
   std::vector<index_t> indices;
 
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension, const parameter_t* const _indices)
+  {
+    CFD_EXCEPTION("Cannot construct a constant array index from parameters.");
+  }
+
 public:
   TensorIndex(const std::size_t _rank, const std::size_t _dimension) : dimension(_dimension),
     indices(_rank)
@@ -67,7 +72,11 @@ public:
 
   TensorIndex(const std::size_t _rank, const std::size_t _dimension, const TensorIndexID* const _indices)
   {
-    CFD_EXCEPTION("Cannot construct a constant array index from parameters.");
+    CFD_EXCEPTION("Cannot construct a constant array index from tensor indices.");
+  }
+
+  TensorIndex(const TensorIndex<fixed_tag>& i) : dimension(i.getDimension()), indices(i.begin(), i.end())
+  {
   }
 
   bool isParameterised() const
@@ -190,6 +199,9 @@ TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map
 
 template<>
 TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t dimension, const TensorIndexID* const _indices);
+
+template<>
+TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t _dimension, const parameter_t* const _indices);
 
 template<>
 void TensorIndex<param_tag>::prepend(const TensorIndexID& id);

@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
+#include <boost/scoped_ptr.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
+#include <lagrange_triangle_linear.hpp>
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
@@ -259,6 +261,18 @@ std::size_t TriangularCell::numEntities(const std::size_t d) const
   assert(d <= dimension);
   std::size_t numEntitiesArray[dimension+1] = {3, 3, 1};
   return numEntitiesArray[d];
+}
+
+const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMapping() const
+{
+  //IMPORTANT: we need this to be lazily constructed to avoid an initialisation dependence loop
+
+  if (coordinateMapping == false)
+  {
+    boost::scoped_ptr< FiniteElement<dimension> > constructed(new LagrangeTriangleLinear<0>());
+    coordinateMapping.swap(constructed);
+  }
+  return *coordinateMapping;
 }
 
 }

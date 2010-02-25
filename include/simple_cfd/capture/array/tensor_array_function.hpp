@@ -120,7 +120,7 @@ protected:
     
     std::size_t offset = 0;
     std::size_t multiplier = 1;
-    std::size_t realIndex = arrayIndex.numIndices() - 1;
+    int realIndex = arrayIndex.numIndices() - 1;
 
     for(int i=arrayExtents.numIndices()-1; i>=0; --i)
     {
@@ -132,7 +132,8 @@ protected:
       }
     }
 
-    assert(realIndex = 0);
+    //TODO: fix me so realIndex can be unsigned
+    assert(realIndex == -1);
     return offset;
   }
 

@@ -64,6 +64,10 @@ public:
   {
     CFD_EXCEPTION("Cannot construct a constant array index from parameters.");
   }
+  
+  ArrayIndex(const ArrayIndex<fixed_tag>& i) : indices(i.begin(), i.end())
+  {
+  }
 
   bool isParameterised() const
   {

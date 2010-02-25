@@ -27,7 +27,7 @@ private:
   {
     assert(arrayIndex.size() == arrayIndices.size());
     // Returns whether or not there was a wrap-around
-    for(std::size_t i=arrayIndices.size()-1; i>=0; --i)
+    for(int i=arrayIndices.size()-1; i>=0; --i)
     {
       arrayIndex[arrayIndices[i]] = (arrayIndex[arrayIndices[i]] + 1) % arrayExtents[i];
 

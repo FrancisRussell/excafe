@@ -87,6 +87,14 @@ public:
     return paramVector;
   }
 
+  ArrayIndexID newArrayIndex(const std::size_t extent)
+  {
+    const ArrayIndexID index(arrayIndexParameters.size() + unseenArrayIndexParameters.size());
+    unseenArrayIndexParameters.push_back(index);
+    unseenArrayExtents.append(extent);
+    return index;
+  }
+
   void addTerm(const ArrayIndex<param_tag>& arrayIndex, const TensorIndex<param_tag>& tensorIndex,
     const TensorFunction::ref function)
   {
