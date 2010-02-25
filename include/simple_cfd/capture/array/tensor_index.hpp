@@ -45,23 +45,21 @@ public:
   typedef typename std::vector<index_t>::const_iterator const_iterator;
 
 private:
-  std::size_t rank;
   std::size_t dimension;
   std::vector<index_t> indices;
 
 public:
-  TensorIndex(const std::size_t _rank, const std::size_t _dimension) : rank(_rank), dimension(_dimension),
-    indices(rank)
+  TensorIndex(const std::size_t _rank, const std::size_t _dimension) : dimension(_dimension),
+    indices(_rank)
   {
-    std::fill(indices.begin(), indices.end(), 0);
   }
 
   TensorIndex(const std::size_t _rank, const std::size_t _dimension, const constant_t* const _indices) :
-    rank(_rank), dimension(_dimension), indices(rank)
+    dimension(_dimension), indices(_rank)
   {
-    std::copy(_indices, _indices+rank, indices.begin());
+    std::copy(_indices, _indices+_rank, indices.begin());
 
-    for(std::size_t i=0; i<rank; ++i)
+    for(std::size_t i=0; i<_rank; ++i)
     {
       assert(_indices[i] < dimension);
     }
@@ -87,6 +85,18 @@ public:
   TensorIndex substituteLiterals(const std::map<TensorIndexID, std::size_t>& mapping) const
   {
     return *this;
+  }
+
+  TensorIndex head(const std::size_t n) const
+  {
+    assert(n <= indices.size());
+    return TensorIndex(n, dimension, &indices[0]);
+  }
+
+  TensorIndex tail(const std::size_t n) const
+  {
+    assert(n <= indices.size());
+    return TensorIndex(n, dimension, &indices[indices.size() - n]);
   }
 
   iterator begin()
@@ -123,7 +133,7 @@ public:
 
   std::size_t getRank() const
   {
-    return rank;
+    return indices.size();
   }
 
   std::size_t getDimension() const
@@ -133,19 +143,17 @@ public:
 
   bool operator==(const TensorIndex& i) const
   {
-    return rank == i.rank &&
-           dimension == i.dimension &&
+    return dimension == i.dimension &&
            indices == i.indices;
   }
 
   bool operator<(const TensorIndex& i) const
   {
-    return boost::make_tuple(rank, dimension, indices) < boost::make_tuple(i.rank, i.dimension, i.indices);
+    return boost::make_tuple(dimension, indices) < boost::make_tuple(i.dimension, i.indices);
   }
 
   void swap(TensorIndex& i)
   {
-    std::swap(rank, i.rank);
     std::swap(dimension, i.dimension);
     std::swap(indices, i.indices);
   }

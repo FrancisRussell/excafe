@@ -62,9 +62,9 @@ TensorIndex<param_tag> TensorIndex<param_tag>::substituteLiterals(const std::map
 
 template<>
 TensorIndex<param_tag>::TensorIndex(const std::size_t _rank, const std::size_t _dimension, 
-  const TensorIndexID* const _indices) : rank(_rank), dimension(_dimension), indices(rank)
+  const TensorIndexID* const _indices) : dimension(_dimension), indices(_rank)
 {
-  std::copy(_indices, _indices+rank, indices.begin());
+  std::copy(_indices, _indices+_rank, indices.begin());
 }
 
 }

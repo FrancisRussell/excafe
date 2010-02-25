@@ -80,6 +80,18 @@ public:
     return *this;
   }
 
+  ArrayIndex head(const std::size_t n) const
+  {
+    assert(n <= indices.size());
+    return ArrayIndex(n, &indices[0]);
+  }
+
+  ArrayIndex tail(const std::size_t n) const
+  {
+    assert(n <= indices.size());
+    return ArrayIndex(n, &indices[indices.size() - n]);
+  }
+
   iterator begin()
   {
     return indices.begin();
