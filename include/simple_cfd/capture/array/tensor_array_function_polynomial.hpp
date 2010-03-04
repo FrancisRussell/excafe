@@ -11,6 +11,7 @@
 #include <iterator>
 #include <simple_cfd/exception.hpp>
 #include <boost/foreach.hpp>
+#include <boost/operators.hpp>
 #include "tensor_function.hpp"
 #include "array_index.hpp"
 #include "tensor_index.hpp"
@@ -25,7 +26,11 @@ namespace cfd
 namespace detail
 {
 
-class TensorArrayFunctionPolynomial : public TensorArrayFunction<TensorFunction::polynomial_t>
+class TensorArrayFunctionPolynomial : public TensorArrayFunction<TensorFunction::polynomial_t>, 
+                                      boost::multipliable<TensorArrayFunctionPolynomial,
+                                      boost::multipliable<TensorArrayFunctionPolynomial, double,
+                                      boost::addable<TensorArrayFunctionPolynomial
+                                      > > >
 {
 private:
   typedef element_t polynomial_t;
@@ -119,6 +124,29 @@ private:
     }
   };
 
+  class SingleTensorEntryCopier: public visitor_t
+  {
+  private:
+    const TensorFunction& source;
+    const TensorIndex<fixed_tag> sourceIndex;
+
+  public:
+    SingleTensorEntryCopier(const TensorFunction& _source, const TensorIndex<fixed_tag>& _sourceIndex) : 
+    source(_source), sourceIndex(_sourceIndex)
+    {
+    }
+
+    void visit(const TensorArrayFunction<element_t>& parent,
+      const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
+      const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
+      polynomial_t& value)
+    {
+      const ArrayIndex<fixed_tag> arrayIndex = 
+        TensorArrayFunctionHelper::getIndex(arrayIndexMap, parent.getIdentityArrayIndex());
+
+      value = source.getPolynomial(arrayIndex, sourceIndex);
+    }
+  };
 
   class IndexSpecialiser : public visitor_t
   {
@@ -163,6 +191,38 @@ private:
       polynomial_t& value)
     {
       value = value.derivative(variable);
+    }
+  };
+
+  class SubMatrixFiller : public visitor_t
+  {
+  private:
+    const TensorFunction& source;
+    const std::size_t ignoredRow;
+    const std::size_t ignoredCol;
+
+  public:
+    SubMatrixFiller(const TensorFunction& _source, const std::size_t row, const std::size_t col) : 
+      source(_source), ignoredRow(row), ignoredCol(col)
+    {
+      assert(source.getTensorRank() == 2);
+    }
+
+    void visit(const TensorArrayFunction<element_t>& parent,
+      const std::map<ArrayIndexID, std::size_t>& arrayIndexMap,
+      const std::map<TensorIndexID, std::size_t>& tensorIndexMap,
+      polynomial_t& value)
+    {
+      const ArrayIndex<fixed_tag> arrayIndex = 
+        TensorArrayFunctionHelper::getIndex(arrayIndexMap, parent.getIdentityArrayIndex());
+      const TensorIndex<fixed_tag> tensorIndex = 
+        TensorArrayFunctionHelper::getIndex(tensorIndexMap, parent.getIdentityTensorIndex());
+
+      TensorIndex<fixed_tag> modifiedTensorIndex(tensorIndex);
+      if (modifiedTensorIndex[0] >= ignoredRow) ++modifiedTensorIndex[0];
+      if (modifiedTensorIndex[1] >= ignoredCol) ++modifiedTensorIndex[1];
+
+      value = source.getPolynomial(arrayIndex, modifiedTensorIndex);
     }
   };
 
@@ -248,6 +308,162 @@ public:
     result.accept(differentiator);
 
     return TensorFunction::ref(new TensorArrayFunctionPolynomial(result));
+  }
+  
+  TensorArrayFunctionPolynomial& operator*=(const double s)
+  {
+    BOOST_FOREACH(polynomial_t& p, values)
+    {
+      p *= s;
+    }
+    return *this;
+  }
+
+  TensorArrayFunctionPolynomial& operator+=(const TensorFunction& f)
+  {
+    assert(f.getArrayExtent() == getArrayExtent());
+    assert(f.getTensorRank() == getTensorRank());
+    assert(f.getTensorDimension() == getTensorDimension());
+
+    // Double check that this is really doing an expansion
+    TensorArrayFunctionPolynomial expandedThis(*this);
+    const TensorArrayFunctionPolynomial expandedF(f);
+
+    std::transform(expandedThis.values.begin(), expandedThis.values.end(), expandedF.values.begin(),
+      expandedThis.values.begin(), std::plus<polynomial_t>());
+
+    std::swap(*this, expandedThis);
+    return *this;
+  }
+
+  TensorArrayFunctionPolynomial& operator*=(const TensorFunction& f)
+  {
+    assert(f.getArrayExtent() == getArrayExtent());
+    assert(f.getTensorRank() == getTensorRank());
+    assert(f.getTensorDimension() == getTensorDimension());
+
+    // Double check that this is really doing an expansion
+    TensorArrayFunctionPolynomial expandedThis(*this);
+    const TensorArrayFunctionPolynomial expandedF(f);
+
+    std::transform(expandedThis.values.begin(), expandedThis.values.end(), expandedF.values.begin(),
+      expandedThis.values.begin(), std::multiplies<polynomial_t>());
+
+    std::swap(*this, expandedThis);
+    return *this;
+  }
+
+  TensorArrayFunctionPolynomial getSubMatrices(const std::size_t row, const std::size_t col) const
+  {
+    assert(getTensorDimension() >= 2);
+    assert(getTensorRank() == 2);
+    assert(row < dimension);
+    assert(col < dimension);
+
+    const ArrayIndex<fixed_tag> arrayExtents = getArrayExtent();
+
+    TensorArrayFunctionPolynomial result(arrayExtents, getTensorRank(), getTensorDimension()-1);
+    SubMatrixFiller subMatrixFiller(*this, row, col);
+    result.accept(subMatrixFiller);
+
+    return result;
+  }
+
+  TensorArrayFunctionPolynomial getTensorEntry(const TensorIndex<fixed_tag>& index) const
+  {
+    assert(index.getRank() == getTensorRank());
+    assert(index.getDimension() == getTensorDimension());
+
+    TensorArrayFunctionPolynomial result(getArrayExtent(), 0, dimension);
+    SingleTensorEntryCopier copier(*this, index);
+    result.accept(copier);
+    return result;
+  }
+
+  TensorArrayFunctionPolynomial getDeterminants() const
+  {
+    assert(getTensorRank() == 2);
+
+    const std::size_t dimension = getTensorDimension();
+    const ArrayIndex<fixed_tag> arrayExtents = getArrayExtent();
+
+    if (dimension == 1)
+    {
+      return *this;
+    }
+    else
+    {
+      TensorArrayFunctionPolynomial result(arrayExtents, 0, dimension);
+
+      for(std::size_t i=0; i<dimension; ++i)
+      {
+        for(std::size_t j=0; j<dimension; ++i)
+        {
+          TensorIndex<fixed_tag> tensorIndex(2, dimension);
+          tensorIndex[0] = i;
+          tensorIndex[1] = j;
+
+          const double sign = (i+j)%2 == 0 ? 1.0 : -1.0;
+          result += sign * getTensorEntry(tensorIndex) * getMinors(i, j);
+        }
+      }
+
+      return result;
+    }
+  }
+
+  TensorArrayFunctionPolynomial getAdjugateMatrix() const
+  {
+    assert(getTensorRank() == 2);
+
+    const std::size_t dimension = getTensorDimension();
+    const ArrayIndex<fixed_tag> arrayExtents = getArrayExtent();
+    const std::vector<std::size_t> arrayExtentsVector(arrayExtents.begin(), arrayExtents.end());
+
+    const TensorIndex<fixed_tag> noTensorIndex(0, dimension);
+    const std::vector<TensorIndexID> noTensorIndices;
+
+    TensorArrayFunctionPolynomial result(arrayExtents, 2, dimension);
+
+    for(std::size_t i=0; i<dimension; ++i)
+    {
+      for(std::size_t j=0; j<dimension; ++i)
+      {
+        TensorIndex<fixed_tag> currentTensorIndex(2, dimension);
+        // Transpose of adjugate
+        currentTensorIndex[0]= j;
+        currentTensorIndex[1]= i;
+
+        const double sign = (i+j)%2 == 0 ? 1.0 : -1.0;
+        const TensorArrayFunctionPolynomial minors = getMinors(i, j);
+
+        IndexIncrementer incrementer(arrayIndexParameters, noTensorIndices, arrayExtentsVector, dimension);
+
+        std::map<ArrayIndexID, std::size_t> arrayIndexMap;
+        std::map<TensorIndexID, std::size_t> tensorIndexMap;
+
+        incrementer.zero(arrayIndexMap);
+        incrementer.zero(tensorIndexMap);
+
+        do
+        {
+          const ArrayIndex<fixed_tag> arrayIndex = TensorArrayFunctionHelper::getIndex(arrayIndexMap,
+            getIdentityArrayIndex());
+          result(arrayIndex, currentTensorIndex) += sign * minors(arrayIndex, noTensorIndex);
+        }
+        while(!incrementer.increment(arrayIndexMap, tensorIndexMap));
+      }
+    }
+
+    return result;
+  }
+ 
+
+  TensorArrayFunctionPolynomial getMinors(const std::size_t row, const std::size_t col) const
+  {
+     const TensorArrayFunctionPolynomial subMatrices = getSubMatrices(row, col);
+     const TensorArrayFunctionPolynomial determinants = subMatrices.getDeterminants();
+     return determinants;
   }
 };
 

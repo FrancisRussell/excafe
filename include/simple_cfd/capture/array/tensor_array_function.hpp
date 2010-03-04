@@ -28,7 +28,7 @@ protected:
   typedef E element_t;
 
   ArrayIndex<fixed_tag> arrayExtents;
-  const std::size_t dimension;
+  std::size_t dimension;
 
   std::vector<ArrayIndexID> arrayIndexParameters;
   std::vector<TensorIndexID> tensorIndexParameters;
