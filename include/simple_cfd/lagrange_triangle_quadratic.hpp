@@ -13,11 +13,11 @@
 #include "dof_numbering_basic.hpp"
 #include "dof_association.hpp"
 #include "dof.hpp"
-#include "capture/array/tensor_array_function_polynomial.hpp"
-#include "capture/array/array_index.hpp"
-#include "capture/array/tensor_index.hpp"
-#include "capture/array/free_tensor_array.hpp"
-#include "capture/array/scalar_reference.hpp"
+//#include "capture/array/tensor_array_function_polynomial.hpp"
+//#include "capture/array/array_index.hpp"
+//#include "capture/array/tensor_index.hpp"
+//#include "capture/array/free_tensor_array.hpp"
+//#include "capture/array/scalar_reference.hpp"
 #include "cell_manager.hpp"
 
 namespace cfd
@@ -31,7 +31,7 @@ public:
   typedef Tensor<dimension> value_type;
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
-  typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
+  //typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
 
   static const std::size_t dimension = cell_type::dimension;
   static const std::size_t rank = R;
@@ -59,6 +59,7 @@ private:
     assert(remainder == 0);
   }
 
+/*
   static detail::TensorIndex<detail::fixed_tag> convert_to_tensor_index(const unsigned index)
   {
     using namespace detail;
@@ -77,7 +78,7 @@ private:
 
     return indices;
   }
-
+*/
 
   DofNumberingBasic<dimension> buildDofNumberingHelper() const
   {
@@ -88,6 +89,7 @@ private:
     return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
   }
 
+/*
   std::vector<polynomial_t> buildVertexReferences(const detail::FreeTensorArray& position) const
   {
     using namespace detail;
@@ -105,6 +107,7 @@ private:
 
     return references;
   }
+*/
 
 public:
   LagrangeTriangleQuadratic() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
@@ -190,6 +193,7 @@ public:
     return result;
   }
 
+/*
   detail::TensorArrayFunctionPolynomial getBasisFunctions(const detail::FreeTensorArray& position) const
   {
     using namespace detail;
@@ -255,6 +259,7 @@ public:
 
     return bases;
   }
+*/
 
   gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
   {

@@ -13,11 +13,11 @@
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
 #include "dof_numbering_basic.hpp"
-#include "capture/array/tensor_array_function_polynomial.hpp"
-#include "capture/array/array_index.hpp"
-#include "capture/array/tensor_index.hpp"
-#include "capture/array/free_tensor_array.hpp"
-#include "capture/array/scalar_reference.hpp"
+//#include "capture/array/tensor_array_function_polynomial.hpp"
+//#include "capture/array/array_index.hpp"
+//#include "capture/array/tensor_index.hpp"
+//#include "capture/array/free_tensor_array.hpp"
+//#include "capture/array/scalar_reference.hpp"
 #include "cell_manager.hpp"
 
 namespace cfd
@@ -35,7 +35,7 @@ public:
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
   typedef vertex<dimension> vertex_type;
-  typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
+  //typedef detail::TensorArrayFunctionPolynomial::polynomial_t polynomial_t;
 
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
@@ -60,6 +60,7 @@ private:
     assert(remainder == 0);
   }
 
+/*
   static detail::TensorIndex<detail::fixed_tag> convert_to_tensor_index(const unsigned index)
   {
     using namespace detail;
@@ -78,6 +79,7 @@ private:
 
     return indices;
   }
+*/
 
   DofNumberingBasic<dimension> buildDofNumberingHelper() const
   {
@@ -88,6 +90,7 @@ private:
     return DofNumberingBasic<dimension>(referenceCell, dofsPerEntity, tensor_size);
   }
 
+/*
   std::vector<polynomial_t> buildVertexReferences(const detail::FreeTensorArray& position) const
   {
     using namespace detail;
@@ -105,6 +108,7 @@ private:
 
     return references;
   }
+*/
 
 public:
   // We define the numbering of bases on a cell in the following fashion
@@ -124,6 +128,7 @@ public:
     return dimension;
   }
 
+/*
   detail::TensorArrayFunctionPolynomial getBasisFunctions(const detail::FreeTensorArray& position) const
   {
     using namespace detail;
@@ -156,6 +161,7 @@ public:
 
     return bases;
   }
+*/
 
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
