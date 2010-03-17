@@ -13,12 +13,8 @@
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
 #include "dof_numbering_basic.hpp"
-//#include "capture/array/tensor_array_function_polynomial.hpp"
-//#include "capture/array/array_index.hpp"
-//#include "capture/array/tensor_index.hpp"
-//#include "capture/array/free_tensor_array.hpp"
-//#include "capture/array/scalar_reference.hpp"
 #include "cell_manager.hpp"
+#include "capture/tensor/tensor_array_table.hpp"
 
 namespace cfd
 {

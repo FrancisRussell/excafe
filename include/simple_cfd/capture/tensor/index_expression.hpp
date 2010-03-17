@@ -10,6 +10,7 @@ namespace cfd
 {
 
 namespace detail
+{
 
 template<typename T>
 class IndexExpression

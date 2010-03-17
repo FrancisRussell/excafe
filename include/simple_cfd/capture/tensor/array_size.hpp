@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cassert>
 #include <vector>
+#include <numeric>
 
 namespace cfd
 {
@@ -25,7 +26,7 @@ public:
   {
   }
 
-  ArraySize(const std::size_t _indexCount) : limits(indexCount)
+  ArraySize(const std::size_t _indexCount) : limits(_indexCount)
   {
   }
 
@@ -38,6 +39,17 @@ public:
   {
     return limits.size();
   }
+  
+  std::size_t getExtent() const
+  {
+    std::accumulate(begin(), end(), 1, std::multiplies<std::size_t>());
+    std::size_t extent = 1;
+
+    for(std::size_t i=0; i<limits.size(); ++i)
+      extent *= limits[i];
+
+    return extent;
+  }
 
   value_type& operator[](const std::size_t i)
   {
@@ -49,6 +61,11 @@ public:
   {
     assert(i<limits.size());
     return limits[i];
+  }
+
+  std::size_t getLimit(const std::size_t index) const
+  {
+    return (*this)[index];
   }
 
   iterator begin()

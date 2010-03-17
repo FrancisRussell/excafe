@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_SIZE_HPP
 
 #include <cstddef>
+#include <cassert>
 
 namespace cfd
 {
@@ -34,6 +35,22 @@ public:
   std::size_t numIndices() const
   {
     return getRank();
+  }
+
+  std::size_t getLimit(const std::size_t index) const
+  {
+    assert(index < getRank());
+    return getDimension();
+  }
+
+  std::size_t getExtent() const
+  {
+    std::size_t extent = 1;
+
+    for(std::size_t r=0; r<rank; ++r)
+      extent *= dimension;
+
+    return extent;
   }
 };
 

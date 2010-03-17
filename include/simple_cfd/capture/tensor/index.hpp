@@ -5,6 +5,9 @@
 #include <vector>
 #include "tensor_fwd.hpp"
 #include "traits.hpp"
+#include "array_size.hpp"
+#include "tensor_size.hpp"
+#include "index_expression.hpp"
 
 namespace cfd
 {
@@ -39,6 +42,20 @@ public:
   const index_expression_t& operator[](const std::size_t index) const
   {
     return indices[index];
+  }
+
+  std::size_t flatten(const row_major_tag) const
+  {
+    std::size_t index = 0;
+    std::size_t multiplier = 1;
+
+    for(int i=size.numIndices()-1; i>=0; --i)
+    {
+      index += multiplier * indices[i].toConstant();
+      multiplier *= size.getLimit(i);
+    }
+
+    return index;
   }
 };
 
