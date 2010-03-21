@@ -20,8 +20,8 @@ class vertex :  private boost::less_than_comparable< vertex<D> >,
                 private boost::equality_comparable< vertex<D> >,
                 private boost::addable< vertex<D> >,
                 private boost::subtractable< vertex<D> >,
-                private boost::dividable2<vertex<D>, double>,
-                private boost::multipliable2<vertex<D>, double>
+                private boost::dividable<vertex<D>, double>,
+                private boost::multipliable<vertex<D>, double>
 {
 public:
   static const unsigned int dimension = D;

@@ -21,11 +21,11 @@ namespace cfd
 {
 
 template<typename V>
-class Polynomial : boost::addable2<Polynomial<V>, double,
-                   boost::subtractable2<Polynomial<V>, double,
-                   boost::dividable2<Polynomial<V>, double,
-                   boost::multipliable2<Polynomial<V>, double, 
-                   boost::addable< Polynomial<V>,
+class Polynomial : boost::addable<Polynomial<V>, double,
+                   boost::subtractable<Polynomial<V>, double,
+                   boost::dividable<Polynomial<V>, double,
+                   boost::multipliable<Polynomial<V>, double, 
+                   boost::addable<Polynomial<V>,
                    boost::subtractable< Polynomial<V>,
                    boost::multipliable< Polynomial<V>
                    > > > > > > >
