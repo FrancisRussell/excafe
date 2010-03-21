@@ -23,7 +23,7 @@ public:
     assert(numSides > 2);
   }
 
-  Polygon(const Polygon& p) : origin(p.origin), numSides(p.numSides), radius(p.radius)
+  Polygon(const Polygon& p) : origin(p.origin), numSides(p.numSides), radius(p.radius), rotation(p.rotation)
   {
   }
 
@@ -32,6 +32,7 @@ public:
     origin = p.origin;
     numSides = p.numSides;
     radius = p.radius;
+    rotation = p.rotation;
     return *this;
   }
 
