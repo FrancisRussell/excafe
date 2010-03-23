@@ -64,6 +64,16 @@ public:
 
     return boost::get<index_variable_t>(value);
   }
+
+  bool operator==(const IndexExpression& e) const
+  {
+    return value == e.value;
+  }
+
+  bool operator<(const IndexExpression& e) const
+  {
+    return value < e.value;
+  }
 };
 
 }

@@ -20,7 +20,7 @@ private:
   TensorSize tensorSize;
 
 public:
-  TensorPlaceHolder(const long _id, const ArraySize& _arraySize, const TensorSize& _tensorSize) :
+  TensorArrayPlaceholder(const long _id, const ArraySize& _arraySize, const TensorSize& _tensorSize) :
     id(_id), arraySize(_arraySize), tensorSize(_tensorSize)
   {
   }
@@ -40,7 +40,7 @@ public:
     }
   }
 
-  bool operator==(const TensorArrayPlaceHolder& p) const
+  bool operator==(const TensorArrayPlaceholder& p) const
   {
     if (id != p.id)
     {

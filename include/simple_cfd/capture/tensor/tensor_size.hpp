@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <cassert>
+#include <utility>
+#include <boost/operators.hpp>
 
 namespace cfd
 {
@@ -10,7 +12,7 @@ namespace cfd
 namespace detail
 {
 
-class TensorSize
+class TensorSize : boost::equality_comparable<TensorSize>
 {
 private:
   std::size_t rank;
@@ -51,6 +53,16 @@ public:
       extent *= dimension;
 
     return extent;
+  }
+
+  bool operator==(const TensorSize& s) const
+  {
+    return rank == s.rank && dimension == s.dimension;
+  }
+
+  bool operator<(const TensorSize& s) const
+  {
+    return std::make_pair(rank,dimension) < std::make_pair(s.rank, s.dimension);
   }
 };
 

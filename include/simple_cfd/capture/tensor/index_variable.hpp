@@ -60,6 +60,11 @@ public:
       return true;
     }
   }
+
+  std::size_t getLimit() const
+  {
+    return limit;
+  }
 };
 
 }

@@ -13,6 +13,10 @@ template<typename T> class Index;
 
 class ArraySize;
 class TensorSize;
+class TensorArrayTablePolynomial;
+class IndexGenerator;
+class TensorPlaceholder;
+class TensorArrayPlaceholder;
 
 // Tag classes
 struct array_tag {};

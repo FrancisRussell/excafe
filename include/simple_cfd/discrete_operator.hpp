@@ -16,15 +16,9 @@
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
 
-// FIXME: remove these headers when they're actually included in appropriate places
-// Currently, these are here to check they're parsed correctly
-//#include "capture/array/tensor_function.hpp"
-//#include "capture/array/free_tensor_array.hpp"
-//#include "capture/array/tensor_array_function_polynomial.hpp"
-//#include "capture/array/tensor_array_function_references.hpp"
-//#include "capture/array/tensor_array_function_summation.hpp"
-//#include "capture/array/tensor_array_function_product.hpp"
-//#include "capture/array/tensor_array_function_builder.hpp"
+#include "capture/tensor/index_generator.hpp"
+#include "capture/tensor/tensor_array_placeholder.hpp"
+#include "capture/tensor/tensor_placeholder.hpp"
 
 namespace cfd
 {
@@ -91,6 +85,23 @@ private:
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+
+
+    // These are only here to force compilation of local tensor capture
+    {
+      const finite_element_t* const element = *trialElements.begin();
+      detail::IndexGenerator generator;
+      const std::size_t spaceDimension = element->spaceDimension();
+      detail::ArrayIndexVariable basisIndex(generator.newArrayIndexVariable(spaceDimension));
+
+      detail::ArraySize nullArray(0);
+      detail::TensorSize pointSize(1, element->getDimension());
+      detail::TensorArrayPlaceholder coordArrayPlaceholder(0, nullArray, pointSize);
+      detail::TensorPlaceholder coordPlaceholder(generator, coordArrayPlaceholder);
+
+      element->getBasisFunctions(generator, basisIndex, coordPlaceholder);
+    }
+
 
     typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
     typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <numeric>
+#include <boost/operators.hpp>
 
 namespace cfd
 {
@@ -12,7 +13,7 @@ namespace cfd
 namespace detail
 {
 
-class ArraySize
+class ArraySize : boost::equality_comparable<ArraySize>
 {
 private:
   typedef std::size_t value_type;
@@ -86,6 +87,16 @@ public:
   const_iterator end() const
   {
     return limits.end();
+  }
+
+  bool operator==(const ArraySize& s) const
+  {
+    return limits == s.limits;
+  }
+
+  bool operator<(const ArraySize& s) const
+  {
+    return limits < s.limits;
   }
 };
 
