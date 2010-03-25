@@ -3,8 +3,7 @@
 
 #include <vector>
 #include <cassert>
-#include "tensor_array_placeholder.hpp"
-#include "scalar_placeholder.hpp"
+#include "tensor_fwd.hpp"
 #include "index_generator.hpp"
 #include "index.hpp"
 
@@ -17,31 +16,31 @@ namespace detail
 class TensorPlaceholder
 {
 private:
-  TensorArrayPlaceholder tensorArray;
-  ArrayIndex arrayIndex;
+  long id;
+  ArrayIndex arrayIndices;
+  TensorSize tensorSize;
+
+  void generateNewArrayIndices(IndexGenerator& g)
+  {
+    const ArraySize arraySize = arrayIndices.getSize();
+    for(std::size_t i=0; i<arraySize.numIndices(); ++i)
+    {
+      arrayIndices[i] = g.newArrayIndexVariable(arraySize.getLimit(i)); 
+    }
+  }
 
 public:
-  TensorPlaceholder(IndexGenerator& g, const TensorArrayPlaceholder& _tensorArray) :
-    tensorArray(_tensorArray), arrayIndex(tensorArray.getArraySize())
+  TensorPlaceholder(IndexGenerator& g, const long _id, const ArraySize& _arraySize,
+    const TensorSize& _tensorSize) : id(_id), arrayIndices(_arraySize), tensorSize(_tensorSize)
   {
+    generateNewArrayIndices(g);
+    assert(arrayIndices.allVariable());
   }
 
-  ScalarPlaceholder operator()(const TensorIndex::constant_t i) const
-  {
-    const TensorSize tensorSize = tensorArray.getTensorSize();
-    const std::size_t rank = tensorSize.getRank();
-    assert(rank == 1);
-
-    TensorIndex tensorIndex(tensorSize);
-    tensorIndex[0] = i;
-
-    return ScalarPlaceholder(tensorArray, arrayIndex, tensorIndex);
-  }
-
-  ScalarPlaceholder operator[](const TensorIndex::constant_t i) const
-  {
-    return (*this)(i);
-  }
+  ScalarPlaceholder operator()(const TensorIndex::constant_t i) const;
+  ScalarPlaceholder operator[](const TensorIndex::constant_t i) const;
+  bool operator==(const TensorPlaceholder& t) const;
+  bool operator<(const TensorPlaceholder& t) const;
 };
 
 }

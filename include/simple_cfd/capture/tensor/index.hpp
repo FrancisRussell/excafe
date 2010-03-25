@@ -2,9 +2,11 @@
 #define SIMPLE_CFD_CAPTURE_TENSOR_INDEX_HPP
 
 #include <cstddef>
-#include <vector>
+#include <deque>
+#include <cassert>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/foreach.hpp>
 #include "tensor_fwd.hpp"
 #include "traits.hpp"
 #include "array_size.hpp"
@@ -27,7 +29,14 @@ private:
   typedef typename IndexProperties<object_tag>::index_expression_t index_expression_t; 
 
   size_type size;
-  std::vector<index_expression_t> indices;
+  std::deque<index_expression_t> indices;
+
+  template<typename InputIterator>
+  Index(const size_type& _size, const InputIterator begin, const InputIterator end) :
+    size(_size), indices(begin, end)
+  {
+    assert(size.numIndices() == indices.size());
+  }
 
 public:
   typedef typename index_expression_t::constant_t constant_t;
@@ -69,11 +78,13 @@ public:
 
   index_expression_t& operator[](const std::size_t index)
   {
+    assert(index < indices.size());
     return indices[index];
   }
 
   const index_expression_t& operator[](const std::size_t index) const
   {
+    assert(index < indices.size());
     return indices[index];
   }
 
@@ -91,6 +102,54 @@ public:
   bool operator<(const Index& i) const
   {
     return boost::make_tuple(size, indices) < boost::make_tuple(i.size, i.indices);
+  }
+
+  bool allConstant() const
+  {
+    bool allConstant = true;
+    BOOST_FOREACH(const index_expression_t& e, indices)
+    {
+      allConstant = allConstant && e.isConstant();
+    }
+    return allConstant;
+  }
+
+  bool allVariable() const
+  {
+    bool allVariable = true;
+    BOOST_FOREACH(const index_expression_t& e, indices)
+    {
+      allVariable = allVariable && e.isVariable();
+    }
+    return allVariable;
+  }
+
+  Index prepend(const index_variable_t& v) const
+  {
+    Index result(*this);
+    result.size = result.size.prepend(v.getLimit());
+    result.indices.push_front(v);
+    return result;
+  }
+
+  Index append(const index_variable_t& v)
+  {
+    Index result(*this);
+    result.size = result.size.append(v.getLimit());
+    result.indices.push_back(v);
+    return result;
+  }
+
+  Index head(const std::size_t n) const
+  {
+    assert(n <= size.numIndices());
+    return Index(size.head(n), indices.begin(), indices.begin()+n);
+  }
+
+  Index tail(const std::size_t n) const
+  {
+    assert(n <= size.numIndices());
+    return Index(size.tail(n), indices.end()-n, indices.end());
   }
 };
 

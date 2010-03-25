@@ -31,7 +31,7 @@ public:
   virtual vertex_type getDofCoordinateLocal(const std::size_t dof) const = 0;
   virtual vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const = 0;
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const = 0;
-  virtual detail::TensorArrayTablePolynomial getBasisFunctions(detail::IndexGenerator& generator, 
+  virtual detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
     const detail::ArrayIndexVariable& basisIndex, 
     const detail::TensorPlaceholder& position) const = 0;
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;

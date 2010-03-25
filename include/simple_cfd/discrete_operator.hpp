@@ -17,8 +17,9 @@
 #include "capture/forms/form_evaluator.hpp"
 
 #include "capture/tensor/index_generator.hpp"
-#include "capture/tensor/tensor_array_placeholder.hpp"
 #include "capture/tensor/tensor_placeholder.hpp"
+#include "capture/tensor/tensor_array_collective.hpp"
+#include "capture/tensor/tensor_array_builder.hpp"
 
 namespace cfd
 {
@@ -96,10 +97,9 @@ private:
 
       detail::ArraySize nullArray(0);
       detail::TensorSize pointSize(1, element->getDimension());
-      detail::TensorArrayPlaceholder coordArrayPlaceholder(0, nullArray, pointSize);
-      detail::TensorPlaceholder coordPlaceholder(generator, coordArrayPlaceholder);
+      detail::TensorPlaceholder coord(generator, 0, nullArray, pointSize);
 
-      element->getBasisFunctions(generator, basisIndex, coordPlaceholder);
+      element->getBasisFunctions(generator, basisIndex, coord);
     }
 
 

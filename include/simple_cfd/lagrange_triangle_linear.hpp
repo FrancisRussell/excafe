@@ -17,6 +17,7 @@
 #include "cell_manager.hpp"
 #include "exception.hpp"
 #include "capture/tensor/tensor_placeholder.hpp"
+#include "capture/tensor/tensor_array_ref.hpp"
 #include "capture/tensor/tensor_array_table_polynomial.hpp"
 #include "capture/tensor/index_generator.hpp"
 
@@ -86,7 +87,7 @@ public:
     return dimension;
   }
 
-  detail::TensorArrayTablePolynomial getBasisFunctions(detail::IndexGenerator& generator, 
+  detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
     const detail::ArrayIndexVariable& basisIndex, 
     const detail::TensorPlaceholder& v) const
   {

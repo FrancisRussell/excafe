@@ -17,8 +17,8 @@ class TensorArray
 public:
   typedef Polynomial<ScalarPlaceholder> polynomial_t;
 
-  virtual ArraySize getArraySize() const = 0;
   virtual TensorSize getTensorSize() const = 0;
+  virtual TensorArrayRef derivative(const ScalarPlaceholder& x) const = 0;
   virtual ~TensorArray() {}
 };
 

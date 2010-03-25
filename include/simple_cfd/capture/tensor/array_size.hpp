@@ -3,9 +3,10 @@
 
 #include <cstddef>
 #include <cassert>
-#include <vector>
+#include <deque>
 #include <numeric>
 #include <boost/operators.hpp>
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -17,10 +18,15 @@ class ArraySize : boost::equality_comparable<ArraySize>
 {
 private:
   typedef std::size_t value_type;
-  typedef std::vector<value_type>::iterator iterator;
-  typedef std::vector<value_type>::const_iterator const_iterator;
+  typedef std::deque<value_type>::iterator iterator;
+  typedef std::deque<value_type>::const_iterator const_iterator;
 
-  std::vector<value_type> limits;
+  std::deque<value_type> limits;
+
+  template<typename InputIterator>
+  ArraySize(const InputIterator begin, const InputIterator end) : limits(begin, end)
+  {
+  }
 
 public:
   ArraySize() : limits(0)
@@ -43,12 +49,7 @@ public:
   
   std::size_t getExtent() const
   {
-    std::accumulate(begin(), end(), 1, std::multiplies<std::size_t>());
-    std::size_t extent = 1;
-
-    for(std::size_t i=0; i<limits.size(); ++i)
-      extent *= limits[i];
-
+    const std::size_t extent = std::accumulate(begin(), end(), 1, std::multiplies<std::size_t>());
     return extent;
   }
 
@@ -98,6 +99,33 @@ public:
   {
     return limits < s.limits;
   }
+
+  ArraySize prepend(const std::size_t d) const
+  {
+    ArraySize result(*this);
+    result.limits.push_front(d);
+    return result;
+  }
+
+  ArraySize append(const std::size_t d) const
+  {
+    ArraySize result(*this);
+    result.limits.push_back(d);
+    return result;
+  }
+
+  ArraySize head(const std::size_t n) const
+  {
+    assert(n <= limits.size());
+    return ArraySize(limits.begin(), limits.begin()+n);
+  }
+
+  ArraySize tail(const std::size_t n) const
+  {
+    assert(n <= limits.size());
+    return ArraySize(limits.end()-n, limits.end());
+  }
+
 };
 
 }

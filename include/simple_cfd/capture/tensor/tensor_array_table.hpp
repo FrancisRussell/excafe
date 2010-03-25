@@ -52,6 +52,9 @@ private:
   }
 
 protected:
+   typedef typename std::vector<element_t>::iterator iterator;
+   typedef typename std::vector<element_t>::const_iterator const_iterator;
+
    ArraySize getTableArraySize() const
    {
      return arraySize;

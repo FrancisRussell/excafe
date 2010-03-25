@@ -5,6 +5,8 @@
 #include <cassert>
 #include <utility>
 #include <boost/operators.hpp>
+#include <simple_cfd/exception.hpp>
+
 
 namespace cfd
 {
@@ -17,6 +19,14 @@ class TensorSize : boost::equality_comparable<TensorSize>
 private:
   std::size_t rank;
   std::size_t dimension;
+
+  TensorSize push(const std::size_t d) const
+  {
+    if (d != dimension) CFD_EXCEPTION("Can only increase tensor sizes by values of dimension."); 
+    TensorSize result(*this);
+    ++result.rank;
+    return result;
+  }
 
 public:
   TensorSize(const std::size_t _rank, const std::size_t _dimension) :
@@ -63,6 +73,28 @@ public:
   bool operator<(const TensorSize& s) const
   {
     return std::make_pair(rank,dimension) < std::make_pair(s.rank, s.dimension);
+  }
+
+  TensorSize prepend(const std::size_t d) const
+  {
+    return push(d);
+  }
+
+  TensorSize append(const std::size_t d) const
+  {
+    return push(d);
+  }
+
+  TensorSize head(const std::size_t n) const
+  {
+    assert(n <= rank);
+    return TensorSize(rank-n, dimension);
+  }
+
+  TensorSize tail(const std::size_t n) const
+  {
+    assert(n <= rank);
+    return TensorSize(rank-n, dimension);
   }
 };
 
