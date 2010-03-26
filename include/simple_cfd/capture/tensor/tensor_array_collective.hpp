@@ -38,12 +38,57 @@ private:
     }
   }
 
+protected:
+  std::size_t numOperands() const
+  {
+    return operands.size();
+  }
+
+  IndexedTensor& operand(const std::size_t n)
+  {
+    return operands[n];
+  }
+
+  const IndexedTensor& operand(const std::size_t n) const
+  {
+    return operands[n];
+  }
+
 public:
+  typedef std::vector<IndexedTensor>::iterator iterator;
+  typedef std::vector<IndexedTensor>::const_iterator const_iterator;
+
   TensorArrayCollective(const TensorSize& tensorSize) :
     visibleIndices(tensorSize), hiddenIndices(TensorSize(0, getDimension()))
   {
     generateVisibleTensorIndices(generator);
     assert(visibleIndices.allVariable());
+  }
+
+  TensorArrayCollective(const TensorArrayCollective& t) : generator(t.generator),
+    visibleIndices(t.visibleIndices), hiddenIndices(t.hiddenIndices), 
+    operands(t.operands)
+  {
+  }
+
+  iterator begin()
+  {
+    return operands.begin();
+  }
+
+  const_iterator begin() const
+  {
+    return operands.begin();
+  }
+
+  iterator end()
+  {
+    return operands.end();
+  }
+
+  const_iterator end() const
+  {
+    return operands.end();
   }
 
   TensorSize getTensorSize() const

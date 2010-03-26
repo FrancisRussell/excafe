@@ -15,7 +15,7 @@ namespace cfd
 namespace detail
 {
 
-class ScalarPlaceholder
+class ScalarPlaceholder : boost::equality_comparable<ScalarPlaceholder>
 {
 private:
   TensorPlaceholder tensor;

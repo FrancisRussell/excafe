@@ -52,20 +52,20 @@ private:
   }
 
 protected:
+  ArraySize getTableArraySize() const
+  {
+    return arraySize;
+  }
+
+  TensorSize getTableTensorSize() const
+  {
+    return tensorSize;
+  }
+
+public:
    typedef typename std::vector<element_t>::iterator iterator;
    typedef typename std::vector<element_t>::const_iterator const_iterator;
 
-   ArraySize getTableArraySize() const
-   {
-     return arraySize;
-   }
-
-   TensorSize getTableTensorSize() const
-   {
-     return tensorSize;
-   }
-
-public:
   TensorArrayTable(IndexGenerator& g, const ArraySize& _arraySize, const TensorSize& _tensorSize) :
     arraySize(_arraySize), tensorSize(_tensorSize), 
     arrayIndices(arraySize), tensorIndices(tensorSize), 
@@ -81,6 +81,26 @@ public:
     table(arraySize.getExtent()*tensorSize.getExtent())
   {
     generateNewTensorIndices(g);
+  }
+
+  iterator begin()
+  {
+    return table.begin();
+  }
+
+  iterator end()
+  {
+    return table.end();
+  }
+
+  const_iterator begin() const
+  {
+    return table.begin();
+  }
+
+  const_iterator end() const
+  {
+    return table.end();
   }
 
   element_t& operator()(const ArrayIndex& arrayIndex, const TensorIndex& tensorIndex)

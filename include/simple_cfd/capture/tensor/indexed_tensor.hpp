@@ -37,6 +37,16 @@ public:
     return std::make_pair(tensor, tensorIndex) <
       std::make_pair(s.tensor, s.tensorIndex);
   }
+
+  TensorArrayRef getTensorRef() const
+  {
+    return tensor;
+  }
+
+  TensorIndex getIndex() const
+  {
+    return tensorIndex;
+  }
 };
 
 }

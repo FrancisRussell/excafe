@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_ARRAY_TABLE_POLYNOMIAL_HPP
 #define SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_ARRAY_TABLE_POLYNOMIAL_HPP
 
+#include <boost/foreach.hpp>
 #include "tensor_array.hpp"
 #include "tensor_array_table.hpp"
 #include "scalar_placeholder.hpp"
@@ -30,8 +31,13 @@ public:
   {
     if (x.isBound()) CFD_EXCEPTION("Cannot differentiate w.r.t. bound value.");
 
-    TensorArrayRef result(*this);
+    TensorArrayTablePolynomial result(*this);
+    BOOST_FOREACH(TensorArray::polynomial_t& element, result)
+    {
+      element = element.derivative(x);
+    }
 
+    return result;
   }
 };
 
