@@ -1,9 +1,9 @@
 #ifndef SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_ARRAY_HPP
 #define SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_ARRAY_HPP
 
+#include "tensor_fwd.hpp"
 #include "array_size.hpp"
 #include "tensor_size.hpp"
-#include "scalar_placeholder.hpp"
 #include <simple_cfd/numeric/polynomial.hpp>
 
 namespace cfd

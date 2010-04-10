@@ -9,6 +9,11 @@ namespace cfd
 namespace detail
 {
 
+TensorSize TensorPlaceholder::getTensorSize() const
+{
+  return tensorSize;
+}
+
 ScalarPlaceholder TensorPlaceholder::operator()(const TensorIndex::constant_t i) const
 {
   const std::size_t rank = tensorSize.getRank();

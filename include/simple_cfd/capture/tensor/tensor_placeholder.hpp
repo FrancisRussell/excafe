@@ -37,6 +37,7 @@ public:
     assert(arrayIndices.allVariable());
   }
 
+  TensorSize getTensorSize() const;
   ScalarPlaceholder operator()(const TensorIndex::constant_t i) const;
   ScalarPlaceholder operator[](const TensorIndex::constant_t i) const;
   bool operator==(const TensorPlaceholder& t) const;

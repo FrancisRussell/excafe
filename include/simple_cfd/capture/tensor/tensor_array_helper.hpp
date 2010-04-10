@@ -92,6 +92,12 @@ public:
     product.addOperand(index, b);
     return product;
   }
+
+  TensorArrayRef gradient(const TensorArrayRef& v, const TensorPlaceholder& pos) const
+  {
+    if (pos.getTensorSize().getRank() !=1) CFD_EXCEPTION("Can only take gradient w.r.t tensor of rank 1");
+    //FIXME: implement me!
+  }
 };
 
 }

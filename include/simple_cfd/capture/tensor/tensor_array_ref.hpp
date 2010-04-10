@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_ARRAY_TENSOR_TENSOR_ARRAY_REF_HPP
 
 #include "tensor_fwd.hpp"
+#include "tensor_array.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/assert.hpp>
@@ -19,7 +20,7 @@ private:
   boost::shared_ptr<element_t> value;
 
 public:
-  TensorArrayRef(element_t* const _value) : value(_value)
+  explicit TensorArrayRef(element_t* const _value) : value(_value)
   {
   }
 

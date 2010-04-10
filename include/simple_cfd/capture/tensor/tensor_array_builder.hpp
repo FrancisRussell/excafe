@@ -101,8 +101,6 @@ public:
   virtual void visit(FieldBasis& basis) = 0;
   virtual void visit(FieldDiscreteReference& field) = 0;
   virtual void visit(FieldScalar& s) = 0;
-
-
 };
 
 }
