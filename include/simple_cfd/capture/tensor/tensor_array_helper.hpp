@@ -2,9 +2,11 @@
 #define SIMPLE_CFD_CAPTURE_TENSOR_TENSOR_ARRAY_HELPER_HPP
 
 #include "index.hpp"
+#include "index_generator.hpp"
 #include "tensor_array_ref.hpp"
 #include "tensor_array_collective_sum.hpp"
 #include "tensor_array_collective_product.hpp"
+#include "tensor_array_table_polynomial.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -93,10 +95,30 @@ public:
     return product;
   }
 
-  TensorArrayRef gradient(const TensorArrayRef& v, const TensorPlaceholder& pos) const
+  TensorArrayRef localGradient(const TensorArrayRef& v, const TensorPlaceholder& pos) const
   {
     if (pos.getTensorSize().getRank() !=1) CFD_EXCEPTION("Can only take gradient w.r.t tensor of rank 1");
-    //FIXME: implement me!
+
+    const std::size_t rank = v->getTensorSize().getRank();
+    const std::size_t dimension = v->getTensorSize().getDimension();
+    const ArraySize tableArraySize(0);
+    const TensorSize tableTensorSize(1, dimension);
+
+    IndexGenerator g;
+    TensorArrayTablePolynomial result(g, tableArraySize, tableTensorSize);
+    result.appendAdditionalTensorIndices(g, rank);
+
+    for(std::size_t d=0; d<rank; ++d)
+    {
+      const ArrayIndex arrayIndex(tableArraySize);
+      TensorIndex tensorIndex(tableTensorSize);
+      tensorIndex[0] = d;
+
+      const ScalarPlaceholder derivative(v->derivative(pos[d]), result.getAdditionalIndices());
+      result(arrayIndex, tensorIndex) = TensorArray::polynomial_t(derivative); 
+    }
+
+    return result;
   }
 };
 

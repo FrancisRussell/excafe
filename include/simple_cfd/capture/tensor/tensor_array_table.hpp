@@ -8,6 +8,7 @@
 #include "tensor_array.hpp"
 #include "index.hpp"
 #include <cassert>
+#include <vector>
 
 namespace cfd
 {
@@ -21,45 +22,47 @@ class TensorArrayTable : public TensorArray
 private:
   typedef T element_t;
 
-  ArraySize arraySize;
-  TensorSize tensorSize;
-  ArrayIndex arrayIndices;
-  TensorIndex tensorIndices;
+  ArrayIndex tableArrayIndices;
+  TensorIndex tableTensorIndices;
+  TensorIndex additionalTensorIndices;
   std::vector<element_t> table;
 
   std::size_t flatten(const ArrayIndex& a, const TensorIndex& t) const
   {
-    return ArrayIndex::flatten(a, row_major_tag()) * tensorSize.getExtent() + 
+    return ArrayIndex::flatten(a, row_major_tag()) * tableTensorSize().getExtent() + 
       TensorIndex::flatten(t, row_major_tag());
   }
 
   void generateNewArrayIndices(IndexGenerator& g)
   {
-    assert(arrayIndices.getSize() == arraySize);
-    for(std::size_t i=0; i<arraySize.numIndices(); ++i)
+    for(std::size_t i=0; i<tableArrayIndices.numIndices(); ++i)
     {
-      arrayIndices[i] = g.newArrayIndexVariable(arraySize.getLimit(i)); 
+      tableArrayIndices[i] = g.newArrayIndexVariable(tableArraySize().getLimit(i)); 
     }
   }
 
   void generateNewTensorIndices(IndexGenerator& g)
   {
-    assert(tensorIndices.getSize() == tensorSize);
-    for(std::size_t i=0; i<tensorSize.numIndices(); ++i)
+    for(std::size_t i=0; i<tableTensorIndices.numIndices(); ++i)
     {
-      tensorIndices[i] = g.newTensorIndexVariable(tensorSize.getLimit(i)); 
+      tableTensorIndices[i] = g.newTensorIndexVariable(tableTensorSize().getLimit(i)); 
     }
   }
 
-protected:
-  ArraySize getTableArraySize() const
+  std::size_t tableSize() const
   {
-    return arraySize;
+    return tableArraySize().getExtent() * tableTensorSize().getExtent(); 
   }
 
-  TensorSize getTableTensorSize() const
+protected:
+  ArraySize tableArraySize() const
   {
-    return tensorSize;
+    return tableArrayIndices.getSize();
+  }
+
+  TensorSize tableTensorSize() const
+  {
+    return tableTensorIndices.getSize();
   }
 
 public:
@@ -67,20 +70,36 @@ public:
    typedef typename std::vector<element_t>::const_iterator const_iterator;
 
   TensorArrayTable(IndexGenerator& g, const ArraySize& _arraySize, const TensorSize& _tensorSize) :
-    arraySize(_arraySize), tensorSize(_tensorSize), 
-    arrayIndices(arraySize), tensorIndices(tensorSize), 
-    table(arraySize.getExtent()*tensorSize.getExtent())
+    tableArrayIndices(_arraySize), tableTensorIndices(_tensorSize), 
+    additionalTensorIndices(TensorSize(0, _tensorSize.getDimension())),
+    table(tableSize())
   {
     generateNewArrayIndices(g);
     generateNewTensorIndices(g);
   }
 
   TensorArrayTable(IndexGenerator& g, const ArrayIndex _arrayIndices, const TensorSize& _tensorSize) :
-    arraySize(_arrayIndices.getSize()), tensorSize(_tensorSize), 
-    arrayIndices(_arrayIndices),
-    table(arraySize.getExtent()*tensorSize.getExtent())
+    tableArrayIndices(_arrayIndices), tableTensorIndices(_tensorSize),
+    additionalTensorIndices(TensorSize(0, _tensorSize.getDimension())),
+    table(tableSize())
   {
     generateNewTensorIndices(g);
+  }
+
+  virtual TensorSize getTensorSize() const
+  {
+    return TensorSize(tableTensorSize().getRank() + additionalTensorIndices.getSize().getRank(), tableTensorSize().getDimension()); 
+  }  
+
+  void appendAdditionalTensorIndices(IndexGenerator& g, const std::size_t count)
+  {
+    for(std::size_t i=0; i<count; ++i)
+      additionalTensorIndices = additionalTensorIndices.append(g.newTensorIndexVariable(tableTensorSize().getDimension()));
+  }
+
+  TensorIndex getAdditionalIndices() const
+  {
+    return additionalTensorIndices;
   }
 
   iterator begin()

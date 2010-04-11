@@ -22,11 +22,12 @@ public:
   {
   }
 
-  virtual TensorSize getTensorSize() const
+  TensorArrayTablePolynomial(IndexGenerator& generator, const ArrayIndex& _arrayIndices, 
+    const TensorSize& _tensorSize) :
+    TensorArrayTable<polynomial_t>(generator, _arrayIndices, _tensorSize)
   {
-    return this->getTableTensorSize();
   }
-  
+
   virtual TensorArrayRef derivative(const ScalarPlaceholder& x) const
   {
     if (x.isBound()) CFD_EXCEPTION("Cannot differentiate w.r.t. bound value.");

@@ -88,18 +88,18 @@ public:
   }
 
   detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
-    const detail::ArrayIndexVariable& basisIndex, 
+    const detail::ArrayIndexVariable& basisIndexVariable, 
     const detail::TensorPlaceholder& v) const
   {
     using namespace detail;
 
-    if (basisIndex.getLimit() != spaceDimension())
+    if (basisIndexVariable.getLimit() != spaceDimension())
       CFD_EXCEPTION("Limit of passed ArrayIndex must have same value as space dimension.");
 
-    const std::size_t spaceDimensionValue = spaceDimension();
-    ArraySize arraySize(1, &spaceDimensionValue);
-    TensorSize tensorSize(rank, dimension);
-    detail::TensorArrayTablePolynomial bases(generator, arraySize, tensorSize);
+    ArrayIndex basisIndex(1);
+    basisIndex[0] = basisIndexVariable;
+    const TensorSize tensorSize(rank, dimension);
+    detail::TensorArrayTablePolynomial bases(generator, basisIndex, tensorSize);
 
 
     for(std::size_t i=0; i<spaceDimension(); ++i)

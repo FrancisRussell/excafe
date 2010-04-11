@@ -93,6 +93,12 @@ public:
     return size;
   }
 
+  std::size_t numIndices() const
+  {
+    assert(size.numIndices() == indices.size());
+    return size.numIndices();
+  }
+
   bool operator==(const Index& i) const
   {
     return size == i.size &&
