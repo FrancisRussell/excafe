@@ -7,7 +7,7 @@
 #include "tensor_fwd.hpp"
 #include "tensor_array_ref.hpp"
 #include "index.hpp"
-#include <simple_cfd/numeric/polynomial.hpp>
+#include <simple_cfd/numeric/polynomial_fraction.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -19,7 +19,7 @@ namespace detail
 class ScalarPlaceholder : boost::equality_comparable<ScalarPlaceholder>
 {
 private:
-  typedef Polynomial<ScalarPlaceholder> polynomial_t;
+  typedef PolynomialFraction<ScalarPlaceholder> polynomial_t;
   TensorArrayRef tensor;
   TensorIndex tensorIndex;
 

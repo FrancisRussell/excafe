@@ -278,10 +278,9 @@ public:
   Polynomial operator-() const
   {
     Polynomial result(*this);
-    result.transformCoefficients(-boost::lambda::_1);
+    result *= -1.0;
     return result;
   }
-
 
   Polynomial derivative(const variable_t& variable) const
   {
