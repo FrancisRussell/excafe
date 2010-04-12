@@ -26,6 +26,8 @@ class TensorArrayHelper
 {
 public:
   static const std::size_t dimension = D;
+
+private:
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
   cell_ref_t cell;
   IndexGenerator generator;
@@ -34,8 +36,8 @@ public:
   TensorArrayRef cellVertices;
 
   TensorArrayRef jacobian;
+  TensorArrayRef jacobianDeterminant;
 
-private:
   bool equalSize(const TensorArrayRef& a, const TensorArrayRef& b) const
   {
     return a->getTensorSize() == b->getTensorSize();
@@ -67,12 +69,25 @@ private:
     return localGradient(TensorArrayRef::cloneFrom(interpolatedVertex));
   }
 
+  TensorArrayRef asRankZeroTensor(const TensorArray::polynomial_t& s)
+  {
+    const ArraySize nullArraySize(0);
+    const TensorSize tensorSize(0, dimension);
+    TensorArrayTablePolynomial scalarTable(generator, nullArraySize, tensorSize);
+
+    const ArrayIndex arrayIndex(nullArraySize);
+    const TensorIndex tensorIndex(tensorSize);
+    scalarTable(arrayIndex, tensorIndex) = s;
+
+    return TensorArrayRef::cloneFrom(scalarTable);
+  }
+
 public:
   TensorArrayHelper(const cell_ref_t _cell) : 
     cell(_cell), position(new TensorArrayPlaceholderPosition(dimension)), 
     cellVertexIndex(generator.newArrayIndexVariable(cell->numEntities(dimension))), 
     cellVertices(new TensorArrayPlaceholderVertices(cellVertexIndex, dimension)),
-    jacobian(buildJacobian())
+    jacobian(buildJacobian()), jacobianDeterminant(determinant(jacobian))
   {
   }
 
@@ -151,7 +166,22 @@ public:
     if (t->getTensorSize().getRank() != 2) CFD_EXCEPTION("Can only take determinant of a rank 2 tensor.");
 
     TensorArrayMatrixRight matrix(t);
-    //FIXME: implement me!
+    TensorArray::polynomial_t det(0.0);
+
+    if (matrix.getDimension() == 1)
+    {
+      det = matrix(0,0);
+    }
+    else if (matrix.getDimension() == 2)
+    {
+      det = matrix(0,0) * matrix (1,1) - matrix(0,1) * matrix(1,0);
+    }
+    else
+    {
+      CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
+    }
+
+    return asRankZeroTensor(det);
   }
 
   TensorArrayRef localGradient(const TensorArrayRef& v)

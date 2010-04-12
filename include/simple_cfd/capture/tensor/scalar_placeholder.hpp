@@ -19,6 +19,7 @@ namespace detail
 class ScalarPlaceholder : boost::equality_comparable<ScalarPlaceholder>
 {
 private:
+  typedef Polynomial<ScalarPlaceholder> polynomial_t;
   TensorArrayRef tensor;
   TensorIndex tensorIndex;
 
@@ -28,24 +29,39 @@ public:
   {
   }
 
-  Polynomial<ScalarPlaceholder> operator-(const double d) const
+  polynomial_t operator-(const double d) const
   {
-    return Polynomial<ScalarPlaceholder>(*this) - d;
+    return polynomial_t(*this) - d;
   }
 
-  Polynomial<ScalarPlaceholder> operator+(const double d) const
+  polynomial_t operator+(const double d) const
   {
-    return Polynomial<ScalarPlaceholder>(*this) + d;
+    return polynomial_t(*this) + d;
   }
 
-  Polynomial<ScalarPlaceholder> operator*(const double d) const
+  polynomial_t operator*(const double d) const
   {
-    return Polynomial<ScalarPlaceholder>(*this) * d;
+    return polynomial_t(*this) * d;
   }
 
-  Polynomial<ScalarPlaceholder> operator/(const double d) const
+  polynomial_t operator/(const double d) const
   {
-    return Polynomial<ScalarPlaceholder>(*this) / d;
+    return polynomial_t(*this) / d;
+  }
+
+  polynomial_t operator-(const polynomial_t& p) const
+  {
+    return polynomial_t(*this) - p;
+  }
+
+  polynomial_t operator+(const polynomial_t& p) const
+  {
+    return polynomial_t(*this) + p;
+  }
+
+  polynomial_t operator*(const polynomial_t& p) const
+  {
+    return polynomial_t(*this) * p;
   }
 
   bool operator==(const ScalarPlaceholder& s) const

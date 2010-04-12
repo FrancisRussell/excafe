@@ -129,27 +129,27 @@ public:
   {
   }
 
-  explicit Polynomial(const double constant)
+  Polynomial(const double constant)
   {
     addConstant(constant);
   }
 
-  explicit Polynomial(const variable_t& variable)
+  Polynomial(const variable_t& variable)
   {
     addTerm(1.0, variable, 1);
   }
 
-  explicit Polynomial(const double coefficient, const variable_t& variable)
+  Polynomial(const double coefficient, const variable_t& variable)
   {
     addTerm(coefficient, variable, 1);
   }
 
-  explicit Polynomial(const variable_t& variable, const std::size_t exponent)
+  Polynomial(const variable_t& variable, const std::size_t exponent)
   {
     addTerm(1.0, variable, exponent);
   }
 
-  explicit Polynomial(const double coefficient, const variable_t& variable, const std::size_t exponent)
+  Polynomial(const double coefficient, const variable_t& variable, const std::size_t exponent)
   {
     addTerm(coefficient, variable, exponent);
   }
