@@ -168,6 +168,7 @@ public:
     TensorArrayMatrixRight matrix(t);
     TensorArray::polynomial_t det(0.0);
 
+    //FIXME: handle arbitrary dimensions
     if (matrix.getDimension() == 1)
     {
       det = matrix(0,0);
@@ -182,6 +183,33 @@ public:
     }
 
     return asRankZeroTensor(det);
+  }
+
+  TensorArrayRef adjugate(const TensorArrayRef& t)
+  {
+    if (t->getTensorSize().getRank() != 2) CFD_EXCEPTION("Can only find adjugate of a rank 2 tensor.");
+
+    TensorArrayMatrixRight matrix(t);
+    TensorArrayMatrixLeft adjugateMatrix(matrix.getDimension());
+
+    //FIXME: handle arbitrary dimensions
+    if (matrix.getDimension() == 1)
+    {
+      adjugateMatrix(0,0) = matrix(0,0);
+    }
+    else if (matrix.getDimension() == 2)
+    {
+      adjugateMatrix(0,0) = matrix(1,1);
+      adjugateMatrix(0,1) = matrix(0,1) * -1.0;
+      adjugateMatrix(1,0) = matrix(1,0) * -1.0;
+      adjugateMatrix(1,1) = matrix(0,0);
+    }
+    else
+    {
+      CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
+    }
+
+    return adjugateMatrix.toTensorArrayRef();
   }
 
   TensorArrayRef localGradient(const TensorArrayRef& v)
