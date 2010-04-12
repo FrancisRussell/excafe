@@ -36,7 +36,9 @@ private:
   TensorArrayRef cellVertices;
 
   TensorArrayRef jacobian;
-  TensorArrayRef jacobianDeterminant;
+  TensorArray::polynomial_t jacobianDeterminant;
+  TensorArrayRef jacobianDeterminantAsTensor;
+  TensorArrayRef inverseJacobianDeterminantAsTensor;
 
   bool equalSize(const TensorArrayRef& a, const TensorArrayRef& b) const
   {
@@ -87,7 +89,9 @@ public:
     cell(_cell), position(new TensorArrayPlaceholderPosition(dimension)), 
     cellVertexIndex(generator.newArrayIndexVariable(cell->numEntities(dimension))), 
     cellVertices(new TensorArrayPlaceholderVertices(cellVertexIndex, dimension)),
-    jacobian(buildJacobian()), jacobianDeterminant(determinant(jacobian))
+    jacobian(buildJacobian()), jacobianDeterminant(determinant(jacobian)),
+    jacobianDeterminantAsTensor(asRankZeroTensor(jacobianDeterminant)),
+    inverseJacobianDeterminantAsTensor(asRankZeroTensor(1/jacobianDeterminant))
   {
   }
 
@@ -161,7 +165,7 @@ public:
     return TensorArrayRef::cloneFrom(product);
   }
 
-  TensorArrayRef determinant(const TensorArrayRef& t)
+  TensorArray::polynomial_t determinant(const TensorArrayRef& t)
   {
     if (t->getTensorSize().getRank() != 2) CFD_EXCEPTION("Can only take determinant of a rank 2 tensor.");
 
@@ -182,7 +186,7 @@ public:
       CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
     }
 
-    return asRankZeroTensor(det);
+    return det;
   }
 
   TensorArrayRef adjugate(const TensorArrayRef& t)
@@ -238,9 +242,25 @@ public:
     return TensorArrayRef::cloneFrom(result);
   }
 
-  TensorArrayRef globalGradient(const TensorArrayRef& v)
+  TensorArrayRef gradient(const TensorArrayRef& v)
   {
-    //FIXME: implement me!
+    const TensorArrayRef localGradientTensor = localGradient(v);
+    const TensorArrayRef inverseJacobian = outer(inverseJacobianDeterminantAsTensor, inverseJacobian);
+    return inner(inverseJacobian, localGradientTensor);
+  }
+
+  TensorArrayRef divergence(const TensorArrayRef& v)
+  {
+    const std::size_t rank = v->getTensorSize().getRank();
+    if (rank < 1) CFD_EXCEPTION("Can only take divergence of rank 1 tensor or higher.");
+
+    const TensorArrayRef gradientTensor = gradient(v);
+    const TensorSize resultSize(rank - 1, dimension);
+    TensorArrayCollectiveProduct result(resultSize);
+    TensorIndex restrictionIndex = result.getVisibleIndices();
+    restrictionIndex = restrictionIndex.prepend(restrictionIndex[0].toIndexVariable());
+    result.addOperand(restrictionIndex, gradientTensor);
+    return TensorArrayRef::cloneFrom(result);
   }
 };
 

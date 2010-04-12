@@ -84,8 +84,8 @@ public:
 
   virtual void exit(FieldGradient& gradient)
   {
-    //FIXME: implement me!
-    assert(false);
+    const TensorArrayRef value = pop();
+    valueStack.push(helper.gradient(value));
   }
 
   virtual void enter(FieldDivergence& divergence)
@@ -94,8 +94,8 @@ public:
 
   virtual void exit(FieldDivergence& divergence)
   {
-    //FIXME: implement me!
-    assert(false);
+    const TensorArrayRef value = pop();
+    valueStack.push(helper.divergence(value));
   }
 
   // Terminals
