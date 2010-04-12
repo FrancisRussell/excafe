@@ -35,10 +35,10 @@ public:
       IndexedTensor& differentiated = subTerm.operand(i);
       differentiated = IndexedTensor(differentiated.getTensorRef()->derivative(x),
         differentiated.getIndex());
-      result.addOperand(result.getVisibleIndices(), subTerm);
+      result.addOperand(result.getVisibleIndices(), TensorArrayRef::cloneFrom(subTerm));
     }
 
-    return result;
+    return TensorArrayRef::cloneFrom(result);
   }
 
 };

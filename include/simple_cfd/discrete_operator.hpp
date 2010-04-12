@@ -20,6 +20,7 @@
 #include "capture/tensor/tensor_placeholder.hpp"
 #include "capture/tensor/tensor_array_collective.hpp"
 #include "capture/tensor/tensor_array_builder.hpp"
+#include "capture/tensor/index.hpp"
 
 namespace cfd
 {
@@ -98,8 +99,8 @@ private:
       detail::ArraySize nullArray(0);
       detail::TensorSize pointSize(1, element->getDimension());
       detail::TensorPlaceholder coord(generator, 0, nullArray, pointSize);
-
-      element->getBasisFunctions(generator, basisIndex, coord);
+      detail::ArrayIndexVariable vertexIndex(generator.newArrayIndexVariable(element->getCell()->numEntities(dimension)));
+      detail::TensorArrayBuilder<dimension> builder(element->getCell(), coord, coord, vertexIndex);
     }
 
 

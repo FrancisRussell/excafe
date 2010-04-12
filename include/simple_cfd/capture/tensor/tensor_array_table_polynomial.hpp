@@ -38,7 +38,7 @@ public:
       element = element.derivative(x);
     }
 
-    return result;
+    return TensorArrayRef::cloneFrom(result);
   }
 };
 

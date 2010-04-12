@@ -154,7 +154,7 @@ public:
 
   detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
     const detail::ArrayIndexVariable& basisIndexVariable, 
-    const detail::TensorPlaceholder& v) const
+    const detail::TensorArrayRef& v) const
   {
     using namespace detail;
 
@@ -221,7 +221,7 @@ public:
       bases(basisIndex, tensorIndex) = (gf/gn) * (hf/hn);
     }
 
-    return bases;
+    return detail::TensorArrayRef::cloneFrom(bases);
   }
 
   gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const

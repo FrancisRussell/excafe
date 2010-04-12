@@ -34,7 +34,7 @@ public:
     {
       indexed = IndexedTensor(indexed.getTensorRef()->derivative(x), indexed.getIndex());
     }
-    return result;
+    return TensorArrayRef::cloneFrom(result);
   }
 };
 

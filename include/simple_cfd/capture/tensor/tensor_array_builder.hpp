@@ -20,10 +20,7 @@ private:
   static const std::size_t dimension = D;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
 
-  TensorArrayHelper helper;
-  cell_ref_t cell;
-  TensorPlaceholder position;
-  TensorPlaceholder cellVertices;
+  TensorArrayHelper<dimension> helper;
   std::stack<TensorArrayRef> valueStack;
 
   TensorArrayRef pop()
@@ -35,8 +32,8 @@ private:
 
 public:
   TensorArrayBuilder(const cell_ref_t _cell, const TensorPlaceholder& _position,
-    const TensorPlaceholder& _cellVertices) :
-    cell(_cell), position(_position), cellVertices(_cellVertices)
+    const TensorPlaceholder& _cellVertices, const ArrayIndexVariable& _cellVertexIndex) :
+    helper(_cell, _position, _cellVertices, _cellVertexIndex)
   {
   }
 
@@ -88,19 +85,46 @@ public:
   {
   }
 
-  virtual void exit(FieldGradient& gradient) = 0;
+  virtual void exit(FieldGradient& gradient)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
 
   virtual void enter(FieldDivergence& divergence)
   {
   }
 
-  virtual void exit(FieldDivergence& divergence) = 0;
+  virtual void exit(FieldDivergence& divergence)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
 
   // Terminals
-  virtual void visit(FacetNormal& normal) = 0;
-  virtual void visit(FieldBasis& basis) = 0;
-  virtual void visit(FieldDiscreteReference& field) = 0;
-  virtual void visit(FieldScalar& s) = 0;
+  virtual void visit(FacetNormal& normal)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
+
+  virtual void visit(FieldBasis& basis)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
+
+  virtual void visit(FieldDiscreteReference& field)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
+
+  virtual void visit(FieldScalar& s)
+  {
+    //FIXME: implement me!
+    assert(false);
+  }
 };
 
 }

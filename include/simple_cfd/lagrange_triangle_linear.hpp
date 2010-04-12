@@ -89,7 +89,7 @@ public:
 
   detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
     const detail::ArrayIndexVariable& basisIndexVariable, 
-    const detail::TensorPlaceholder& v) const
+    const detail::TensorArrayRef& v) const
   {
     using namespace detail;
 
@@ -125,7 +125,7 @@ public:
         (v[0] - referenceCell->getLocalVertex(ip1)[0]);
     }
 
-    return bases;
+    return detail::TensorArrayRef::cloneFrom(bases);
   }
 
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const

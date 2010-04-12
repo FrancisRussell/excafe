@@ -33,7 +33,7 @@ public:
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const = 0;
   virtual detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
     const detail::ArrayIndexVariable& basisIndex, 
-    const detail::TensorPlaceholder& position) const = 0;
+    const detail::TensorArrayRef& position) const = 0;
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
