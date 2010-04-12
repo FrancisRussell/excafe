@@ -5,7 +5,6 @@
 #include "tensor_array.hpp"
 #include "tensor_array_table.hpp"
 #include "scalar_placeholder.hpp"
-#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -30,8 +29,6 @@ public:
 
   virtual TensorArrayRef derivative(const ScalarPlaceholder& x) const
   {
-    if (x.isBound()) CFD_EXCEPTION("Cannot differentiate w.r.t. bound value.");
-
     TensorArrayTablePolynomial result(*this);
     BOOST_FOREACH(TensorArray::polynomial_t& element, result)
     {

@@ -10,7 +10,7 @@ capture/fields/discrete_expr_container_builder_form_visitor.cpp capture/fields/d
 capture/fields/operator_assembly.cpp capture/evaluation/discrete_expr_scoping.cpp \
 capture/fields/temporal_index_set.cpp capture/fields/temporal_index_value.cpp \
 capture/evaluation/evaluation_strategy.cpp capture/solve_operation.cpp \
-capture/tensor/tensor_placeholder.cpp capture/tensor/tensor_array_ref.cpp
+capture/tensor/tensor_array_ref.cpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \

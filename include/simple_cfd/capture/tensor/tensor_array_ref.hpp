@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/assert.hpp>
+#include "index.hpp"
 #include "tensor_fwd.hpp"
 #include "tensor_array.hpp"
 
@@ -31,13 +32,7 @@ public:
   TensorArrayRef(element_t* const _value) : value(_value)
   {
   }
-/*
-  template<typename R>
-  explicit TensorArrayRef(const R& _value) : value(new R(_value))
-  {
-    BOOST_STATIC_ASSERT((boost::is_base_of<TensorArray, R>::value));
-  }
-*/
+
   TensorArrayRef(const TensorArrayRef& h) : value(h.value)
   {
   }

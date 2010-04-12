@@ -4,9 +4,7 @@
 #include <cassert>
 #include <utility>
 #include <boost/operators.hpp>
-#include <boost/variant.hpp>
 #include "tensor_fwd.hpp"
-#include "tensor_placeholder.hpp"
 #include "tensor_array_ref.hpp"
 #include "index.hpp"
 #include <simple_cfd/numeric/polynomial.hpp>
@@ -21,18 +19,10 @@ namespace detail
 class ScalarPlaceholder : boost::equality_comparable<ScalarPlaceholder>
 {
 private:
-  typedef boost::variant<TensorPlaceholder, TensorArrayRef> tensor_ref_t;
-  tensor_ref_t tensor;
+  TensorArrayRef tensor;
   TensorIndex tensorIndex;
 
 public:
-  ScalarPlaceholder(const TensorPlaceholder& _tensor, const TensorIndex& _tensorIndex) :
-    tensor(_tensor), tensorIndex(_tensorIndex)
-  {
-    // We enforce this so we don't have to do co-ordinate index expansion
-    assert(tensorIndex.allConstant());
-  }
-
   ScalarPlaceholder(const TensorArrayRef& _tensor, const TensorIndex& _tensorIndex) :
     tensor(_tensor), tensorIndex(_tensorIndex)
   {
@@ -70,21 +60,9 @@ public:
       std::make_pair(s.tensor, s.tensorIndex);
   }
 
-  bool isBound() const
-  {
-    return boost::get<TensorArrayRef>(&tensor) != NULL;
-  }
-
-  TensorPlaceholder getTensorPlaceholder() const
-  {
-    if (isBound()) CFD_EXCEPTION("Cannot get tensor placeholder from bound scalar placeholder.");
-    return boost::get<TensorPlaceholder>(tensor);
-  }
-
   TensorArrayRef getTensorArrayRef() const
   {
-    if (!isBound()) CFD_EXCEPTION("Cannot get tensor array reference from unbound scalar placeholder.");
-    return boost::get<TensorArrayRef>(tensor);
+    return tensor;
   }
 
   TensorIndex getTensorIndex() const

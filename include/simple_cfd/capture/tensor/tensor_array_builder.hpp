@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <stack>
-#include "tensor_placeholder.hpp"
 #include "tensor_array_helper.hpp"
 #include <simple_cfd/capture/forms/field_visitor.hpp>
 
@@ -31,9 +30,7 @@ private:
   }
 
 public:
-  TensorArrayBuilder(const cell_ref_t _cell, const TensorPlaceholder& _position,
-    const TensorPlaceholder& _cellVertices, const ArrayIndexVariable& _cellVertexIndex) :
-    helper(_cell, _position, _cellVertices, _cellVertexIndex)
+  TensorArrayBuilder(const cell_ref_t _cell) : helper(_cell)
   {
   }
 

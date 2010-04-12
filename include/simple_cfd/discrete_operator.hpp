@@ -15,12 +15,7 @@
 #include "capture/forms/bilinear_form_integral_sum.hpp"
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
-
-#include "capture/tensor/index_generator.hpp"
-#include "capture/tensor/tensor_placeholder.hpp"
-#include "capture/tensor/tensor_array_collective.hpp"
 #include "capture/tensor/tensor_array_builder.hpp"
-#include "capture/tensor/index.hpp"
 
 namespace cfd
 {
@@ -92,15 +87,7 @@ private:
     // These are only here to force compilation of local tensor capture
     {
       const finite_element_t* const element = *trialElements.begin();
-      detail::IndexGenerator generator;
-      const std::size_t spaceDimension = element->spaceDimension();
-      detail::ArrayIndexVariable basisIndex(generator.newArrayIndexVariable(spaceDimension));
-
-      detail::ArraySize nullArray(0);
-      detail::TensorSize pointSize(1, element->getDimension());
-      detail::TensorPlaceholder coord(generator, 0, nullArray, pointSize);
-      detail::ArrayIndexVariable vertexIndex(generator.newArrayIndexVariable(element->getCell()->numEntities(dimension)));
-      detail::TensorArrayBuilder<dimension> builder(element->getCell(), coord, coord, vertexIndex);
+      detail::TensorArrayBuilder<dimension> builder(element->getCell());
     }
 
 

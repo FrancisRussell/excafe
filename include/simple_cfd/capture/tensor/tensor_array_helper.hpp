@@ -68,8 +68,7 @@ private:
   }
 
 public:
-  TensorArrayHelper(const cell_ref_t _cell, const TensorPlaceholder& _position,
-    const TensorPlaceholder& _cellVertices, const ArrayIndexVariable _cellVertexIndex) : 
+  TensorArrayHelper(const cell_ref_t _cell) : 
     cell(_cell), position(new TensorArrayPlaceholderPosition(dimension)), 
     cellVertexIndex(generator.newArrayIndexVariable(cell->numEntities(dimension))), 
     cellVertices(new TensorArrayPlaceholderVertices(cellVertexIndex, dimension)),
