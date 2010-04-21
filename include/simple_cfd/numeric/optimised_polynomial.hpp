@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 #define SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 
-#include <simple_cfd_fwd.hpp>
+#include "numeric_fwd.hpp"
 #include <numeric/polynomial.hpp>
 #include <numeric/monomial.hpp>
 #include <numeric>

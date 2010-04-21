@@ -7,7 +7,11 @@
 #include <map>
 #include "simple_cfd_fwd.hpp"
 #include "cell_manager.hpp"
-#include "capture/tensor/tensor_fwd.hpp"
+#include "numeric/tensor.hpp"
+#include "numeric/polynomial.hpp"
+#include "capture/assembly/assembly_fwd.hpp"
+#include "capture/assembly/position_placeholder.hpp"
+#include "capture/assembly/assembly_polynomial.hpp"
 
 namespace cfd
 {
@@ -20,6 +24,7 @@ public:
   typedef vertex<dimension> vertex_type;
   typedef Dof<dimension> dof_t;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
+  typedef Tensor<dimension, detail::assembly_polynomial_t> tensor_expr_t;
 
   virtual std::size_t getRank() const = 0;
   virtual std::size_t getDimension() const = 0;
@@ -31,9 +36,7 @@ public:
   virtual vertex_type getDofCoordinateLocal(const std::size_t dof) const = 0;
   virtual vertex_type getDofCoordinateGlobal(const Mesh<dimension>& m, const cell_id cid, const std::size_t dof) const = 0;
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const = 0;
-  virtual detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
-    const detail::ArrayIndexVariable& basisIndex, 
-    const detail::TensorArrayRef& position) const = 0;
+  virtual tensor_expr_t getBasis(const std::size_t i, const detail::PositionPlaceholder& pos) const = 0;
   virtual Tensor<dimension> evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;

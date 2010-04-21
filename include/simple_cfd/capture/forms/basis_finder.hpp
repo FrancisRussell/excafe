@@ -1,5 +1,5 @@
 #ifndef SIMPLE_CFD_FORM_BASIS_FINDER_HPP
-#define SIMPLE_CFD_FORM_BASIS_FUNDER_HPP
+#define SIMPLE_CFD_FORM_BASIS_FINDER_HPP
 
 #include <cstddef>
 #include <cassert>
@@ -34,16 +34,7 @@ private:
   typedef FiniteElement<dimension> finite_element_t;
 
   Scenario<dimension>& scenario;
-  detail::ExpressionValues<dimension>& values;
   const finite_element_t* basis;
-
-  void handle(const DiscreteField<dimension>& field)
-  {
-    const std::set<const finite_element_t*> elements(field.getRowMappings().getFiniteElements());
-    assert(elements.size() == 1);
-
-    handle(*elements.begin());
-  }
 
   void handle(const finite_element_t* const element)
   {
@@ -60,13 +51,14 @@ private:
   }
 
 public:
-  BasisFinder(Scenario<dimension>& _scenario, detail::ExpressionValues<dimension>& _values) : scenario(_scenario),
-   values(_values), basis(NULL)
+  BasisFinder(Scenario<dimension>& _scenario) : scenario(_scenario),
+   basis(NULL)
   {
   }
 
   const finite_element_t* getBasis() const
   {
+    assert(basis != NULL);
     return basis;
   }
 
@@ -135,15 +127,6 @@ public:
   virtual void visit(detail::FieldScalar& s)
   {
   }
-
-/*
-  FIXME: where the hell did this go?
-
-  virtual void visit(TensorLiteral& tensor)
-  {
-    // We don't reference any fields
-  }
-*/
 };
 
 }

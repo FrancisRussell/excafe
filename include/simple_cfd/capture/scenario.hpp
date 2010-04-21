@@ -203,6 +203,11 @@ public:
     return mesh;
   }
 
+  const Mesh<dimension>& getMesh() const
+  {
+    return mesh;
+  }
+
   Element addElement(FiniteElement<dimension>* const e)
   {
     elements.push_back(e);
@@ -242,7 +247,7 @@ public:
       (*fsIter)->accept(functionSpaceResolver);
   }
 
-  DofMap<dimension> getDofMap(detail::FunctionSpaceExpr& e)
+  DofMap<dimension>& getDofMap(detail::FunctionSpaceExpr& e)
   {
     const typename std::map< function_space_ptr, DofMap<dimension> >::iterator mapIter = functionSpaceMap.find(&e);
     assert(mapIter != functionSpaceMap.end());

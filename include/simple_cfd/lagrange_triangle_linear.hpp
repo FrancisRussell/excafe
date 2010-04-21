@@ -13,12 +13,12 @@
 #include "mesh.hpp"
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
+#include "numeric/tensor_size.hpp"
+#include "numeric/index.hpp"
+#include "numeric/polynomial_fraction.hpp"
 #include "dof_numbering_basic.hpp"
 #include "cell_manager.hpp"
 #include "exception.hpp"
-#include "capture/tensor/tensor_array_ref.hpp"
-#include "capture/tensor/tensor_array_table_polynomial.hpp"
-#include "capture/tensor/index_generator.hpp"
 
 namespace cfd
 {
@@ -86,45 +86,34 @@ public:
     return dimension;
   }
 
-  detail::TensorArrayRef getBasisFunctions(detail::IndexGenerator& generator, 
-    const detail::ArrayIndexVariable& basisIndexVariable, 
-    const detail::TensorArrayRef& v) const
+  tensor_expr_t getBasis(const std::size_t i, const detail::PositionPlaceholder& v) const
   {
     using namespace detail;
 
-    if (basisIndexVariable.getLimit() != spaceDimension())
-      CFD_EXCEPTION("Limit of passed ArrayIndex must have same value as space dimension.");
+    if (i >= spaceDimension())
+      CFD_EXCEPTION("Requested invalid basis function.");
 
-    ArrayIndex basisIndex(1);
-    basisIndex[0] = basisIndexVariable;
     const TensorSize tensorSize(rank, dimension);
-    detail::TensorArrayTablePolynomial bases(generator, basisIndex, tensorSize);
+    tensor_expr_t bases(tensorSize);
 
-
-    for(std::size_t i=0; i<spaceDimension(); ++i)
-    {
-      ArrayIndex basisIndex(1);
-      basisIndex[0] = i;
-
-      const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
   
-      assert(dofAssociation.getEntityDimension() == 0);
-      const unsigned node_on_cell = dofAssociation.getEntityIndex();
-      const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+    assert(dofAssociation.getEntityDimension() == 0);
+    const unsigned node_on_cell = dofAssociation.getEntityIndex();
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
   
-      const int ip1 = (node_on_cell+1) % 3;
-      const int ip2 = (node_on_cell+2) % 3;
+    const int ip1 = (node_on_cell+1) % 3;
+    const int ip2 = (node_on_cell+2) % 3;
 
-      const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
-        row_major_tag());
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
 
-      bases(basisIndex, tensorIndex) = (referenceCell->getLocalVertex(ip2)[0] - referenceCell->getLocalVertex(ip1)[0]) * 
-        (v[1] - referenceCell->getLocalVertex(ip1)[1]) - 
-        (referenceCell->getLocalVertex(ip2)[1] - referenceCell->getLocalVertex(ip1)[1]) * 
-        (v[0] - referenceCell->getLocalVertex(ip1)[0]);
-    }
+    bases[tensorIndex] = (referenceCell->getLocalVertex(ip2)[0] - referenceCell->getLocalVertex(ip1)[0]) * 
+      (v[1] - referenceCell->getLocalVertex(ip1)[1]) - 
+      (referenceCell->getLocalVertex(ip2)[1] - referenceCell->getLocalVertex(ip1)[1]) * 
+      (v[0] - referenceCell->getLocalVertex(ip1)[0]);
 
-    return detail::TensorArrayRef::cloneFrom(bases);
+    return bases;
   }
 
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const

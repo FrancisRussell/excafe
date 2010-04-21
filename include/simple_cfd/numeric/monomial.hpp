@@ -3,6 +3,7 @@
 
 #include <map>
 #include <cstddef>
+#include <cmath>
 #include <set>
 #include <iosfwd>
 #include <utility>
@@ -116,6 +117,13 @@ public:
     return std::make_pair(coefficient, result);
   }
 
+  std::pair<double, Monomial> substituteValue(const variable_t& var, const double value) const
+  {
+    const double coefficient = std::pow(value, getExponent(var));
+    Monomial result(*this);
+    result.exponents.erase(var);
+    return std::make_pair(coefficient, result);
+  }
 
   void swap(Monomial& m)
   {

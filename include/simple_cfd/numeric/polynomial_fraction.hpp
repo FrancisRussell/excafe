@@ -65,6 +65,13 @@ public:
     divisor.replaceIndependentVariable(from, to);
   }
 
+  PolynomialFraction substituteValue(const variable_t& variable, const double value) const
+  {
+    polynomial_t newDividend = dividend.substituteValue(variable, value);
+    polynomial_t newDivisor = divisor.substituteValue(variable, value);
+    return PolynomialFraction(newDividend, newDivisor);
+  }
+
   PolynomialFraction& operator*=(const double x)
   {
     dividend *= x;

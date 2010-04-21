@@ -15,7 +15,9 @@
 #include "capture/forms/bilinear_form_integral_sum.hpp"
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
-#include "capture/tensor/tensor_array_builder.hpp"
+#include "local_assembly_matrix.hpp"
+#include "capture/assembly/assembly_helper.hpp"
+#include "capture/assembly/assembly_polynomial.hpp"
 
 namespace cfd
 {
@@ -73,6 +75,49 @@ private:
     return pattern;
   }
 
+  void addTermGeneral2(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
+    const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
+    const forms::BilinearFormIntegralSum::const_iterator sumEnd,
+    const MeshFunction<bool>& subDomain)
+  {
+    using namespace cfd::forms;
+
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+
+    detail::AssemblyHelper<dimension> assemblyHelper(scenario);
+    detail::LocalAssemblyMatrix<dimension, detail::assembly_polynomial_t> localMatrix(trialElements, testElements);
+
+    const MeshEntity localCellEntity(dimension, 0);
+    assemblyHelper.integrate(localMatrix, localCellEntity);
+
+    for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
+    }
+
+    const Mesh<dimension>& m = rowMappings.getMesh();
+    const std::size_t entityDimension = subDomain.getDimension();
+
+    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    {
+      if (subDomain(*eIter))
+      {
+        const std::size_t cid = m.getContainingCell(*eIter);
+        const CellVertices<dimension> vertices(m.getCoordinates(cid));
+        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+  
+        //FIXME: we only know how to handle cell integrals atm.
+        if (localEntity == localCellEntity)
+        {
+          //FIXME: evaluate assembly tensor
+          //FIXME: insert assembly tensor into global matrix
+        }
+      }
+    }
+  }
+
+
   void addTermGeneral(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
     const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
@@ -83,14 +128,6 @@ private:
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
-
-    // These are only here to force compilation of local tensor capture
-    {
-      const finite_element_t* const element = *trialElements.begin();
-      detail::TensorArrayBuilder<dimension> builder(element->getCell());
-    }
-
-
     typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
     typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
 
@@ -99,7 +136,7 @@ private:
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
       // Find trial
-      BasisFinder<dimension> trialFinder(scenario, values);
+      BasisFinder<dimension> trialFinder(scenario);
       formIter->getTrialField()->accept(trialFinder);
 
       const finite_element_t* const trialBasis = trialFinder.getBasis();
@@ -107,7 +144,7 @@ private:
       assert(trialElements.find(trialBasis) != trialElements.end());
 
       // Find test
-      BasisFinder<dimension> testFinder(scenario, values);
+      BasisFinder<dimension> testFinder(scenario);
       formIter->getTestField()->accept(testFinder);
 
       const finite_element_t* const testBasis = testFinder.getBasis();

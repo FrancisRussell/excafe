@@ -4,7 +4,7 @@
 #include <set>
 #include <cstddef>
 #include <string>
-#include <simple_cfd/simple_cfd_fwd.hpp>
+#include "numeric/numeric_fwd.hpp"
 
 namespace cfd
 {
