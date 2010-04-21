@@ -74,7 +74,6 @@ public:
       coefficients.push_back(std::make_pair(buildExponentVector(mIter->first), mIter->second));
   }
 
-
   double operator()() const
   {
     assert(variables.empty());

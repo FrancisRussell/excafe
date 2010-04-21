@@ -72,6 +72,16 @@ public:
     return PolynomialFraction(newDividend, newDivisor);
   }
 
+  polynomial_t getDividend() const
+  {
+    return dividend;
+  }
+
+  polynomial_t getDivisor() const
+  {
+    return divisor;
+  }
+
   PolynomialFraction& operator*=(const double x)
   {
     dividend *= x;

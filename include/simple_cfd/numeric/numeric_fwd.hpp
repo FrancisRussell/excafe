@@ -20,6 +20,7 @@ template<typename V> class Polynomial;
 template<typename V> class PolynomialFraction;
 template<typename V> class Monomial;
 template<typename V> class OptimisedPolynomial;
+template<typename V> class OptimisedPolynomialFraction;
 
 template<std::size_t D, typename T> class Tensor;
 class TensorSize;

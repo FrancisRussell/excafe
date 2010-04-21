@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstddef>
 #include <set>
+#include <algorithm>
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/operators.hpp>
@@ -145,6 +146,14 @@ public:
     assert(trial < trialSize);
 
     return values[test * trialSize + trial];
+  }
+
+  template<typename unary_function>
+  LocalAssemblyMatrix<dimension, typename unary_function::result_type> transform(const unary_function& f) const
+  {
+    LocalAssemblyMatrix<dimension, typename unary_function::result_type> result(trialElements, testElements);
+    std::transform(begin(), end(), result.begin(), f);
+    return result;
   }
 };
 

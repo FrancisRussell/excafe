@@ -29,6 +29,33 @@ public:
   }
 };
 
+template<typename T>
+class PolynomialOptimiser
+{
+public:
+  typedef T value_type;
+  typedef OptimisedPolynomial<value_type> result_type;
+
+  result_type operator()(const Polynomial<value_type>& p) const
+  {
+    return p;
+  }
+};
+
+template<typename T>
+class PolynomialFractionOptimiser
+{
+public:
+  typedef T value_type;
+  typedef OptimisedPolynomialFraction<value_type> result_type;
+
+  result_type operator()(const PolynomialFraction<value_type>& p) const
+  {
+    return p;
+  }
+};
+
+
 }
 
 #endif

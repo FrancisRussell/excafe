@@ -10,6 +10,7 @@
 #include "discrete_field.hpp"
 #include "mesh.hpp"
 #include "numeric/matrix.hpp"
+#include "numeric/functional.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
 #include "capture/forms/bilinear_form_integral_sum.hpp"
@@ -18,6 +19,7 @@
 #include "local_assembly_matrix.hpp"
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/assembly_polynomial.hpp"
+#include "capture/assembly/scalar_placeholder_evaluator.hpp"
 
 namespace cfd
 {
@@ -81,15 +83,19 @@ private:
     const MeshFunction<bool>& subDomain)
   {
     using namespace cfd::forms;
+    typedef detail::LocalAssemblyMatrix<dimension, detail::assembly_polynomial_t> local_matrix_t;
+    typedef detail::LocalAssemblyMatrix<dimension, detail::optimised_assembly_polynomial_t> opt_local_matrix_t;
+    typedef detail::LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
     detail::AssemblyHelper<dimension> assemblyHelper(scenario);
-    detail::LocalAssemblyMatrix<dimension, detail::assembly_polynomial_t> localMatrix(trialElements, testElements);
+    local_matrix_t localMatrix(trialElements, testElements);
 
     const MeshEntity localCellEntity(dimension, 0);
-    assemblyHelper.integrate(localMatrix, localCellEntity);
+    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
+    opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialFractionOptimiser<detail::ScalarPlaceholder>()));
 
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
@@ -110,7 +116,8 @@ private:
         //FIXME: we only know how to handle cell integrals atm.
         if (localEntity == localCellEntity)
         {
-          //FIXME: evaluate assembly tensor
+          detail::ScalarPlaceholderEvaluator<dimension> evaluator(values);
+          evaluated_local_matrix_t evaluatedLocalMatrix(optimisedLocalMatrix.transform(evaluator));
           //FIXME: insert assembly tensor into global matrix
         }
       }
@@ -272,7 +279,10 @@ public:
     const Mesh<dimension> m(rowMappings.getMesh());
 
     const MeshFunction<bool> allCells(dimension, true);
-    addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
+    if (true)
+      addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
+    else
+      addTermGeneral2(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
 
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
     addTermGeneral(scenario, values, expr.begin_ds(), expr.end_ds(), boundaryFunction);
