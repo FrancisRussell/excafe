@@ -19,7 +19,6 @@
 #include "local_assembly_matrix.hpp"
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/assembly_polynomial.hpp"
-#include "capture/assembly/scalar_placeholder_evaluator.hpp"
 
 namespace cfd
 {
@@ -116,8 +115,6 @@ private:
         //FIXME: we only know how to handle cell integrals atm.
         if (localEntity == localCellEntity)
         {
-          detail::ScalarPlaceholderEvaluator<dimension> evaluator(values);
-          evaluated_local_matrix_t evaluatedLocalMatrix(optimisedLocalMatrix.transform(evaluator));
           //FIXME: insert assembly tensor into global matrix
         }
       }

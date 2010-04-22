@@ -28,6 +28,10 @@ private:
   }
 
 public:
+  OptimisedPolynomialFraction()
+  {
+  }
+
   OptimisedPolynomialFraction(const PolynomialFraction<variable_t>& p) : dividend(p.getDividend()),
     divisor(p.getDivisor())
   {

@@ -40,7 +40,7 @@ public:
 
 private:
   typedef std::vector< std::pair<std::vector<std::size_t>, double> > coefficient_vec_t;
-  const std::set<variable_t> variables;
+  std::set<variable_t> variables;
   coefficient_vec_t coefficients;
   mutable std::vector<double> paramData;
 
@@ -65,6 +65,10 @@ private:
   }
 
 public:
+  OptimisedPolynomial()
+  {
+  }
+
   OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(p.getIndependentVariables()),
   paramData(variables.size())
   {

@@ -1,9 +1,10 @@
 #ifndef SIMPLE_CFD_NUMERIC_FUNCTIONAL_HPP
 #define SIMPLE_CFD_NUMERIC_FUNCTIONAL_HPP
 
-#include "numeric_fwd.hpp"
+#include <set>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include "numeric_fwd.hpp"
 
 namespace cfd
 {
@@ -53,6 +54,13 @@ public:
   {
     return p;
   }
+};
+
+template<typename T>
+class VariableCollector
+{
+private:
+  typedef T value_type;
 };
 
 
