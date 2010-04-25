@@ -59,6 +59,17 @@ public:
   {
   }
 
+  std::set<variable_t> getVariables() const
+  {
+    const std::set<variable_t> dividendVariables(dividend.getVariables());
+    const std::set<variable_t> divisorVariables(divisor.getVariables());
+
+    std::set<variable_t> result;
+    result.insert(dividendVariables.begin(), dividendVariables.end());
+    result.insert(divisorVariables.begin(), divisorVariables.end());
+    return result;
+  }
+
   void replaceIndependentVariable(const variable_t& from, const variable_t& to)
   {
     dividend.replaceIndependentVariable(from, to);

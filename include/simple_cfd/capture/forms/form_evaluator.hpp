@@ -54,8 +54,8 @@ private:
   const MeshEntity localEntity;
   const vertex<dimension> localVertex;
   const Dof<dimension> dof;
-  Scenario<dimension>& scenario;
-  detail::ExpressionValues<dimension>& values;
+  const Scenario<dimension>& scenario;
+  const detail::ExpressionValues<dimension>& values;
 
 
   EvaluationState evaluationState;
@@ -78,8 +78,8 @@ private:
   }
 
 public:
-  FormEvaluatorVisitor(const cell_ref_t _cell, Scenario<dimension>& _scenario,
-    detail::ExpressionValues<dimension>& _values, const LinearForm& _form, 
+  FormEvaluatorVisitor(const cell_ref_t _cell, const Scenario<dimension>& _scenario,
+    const detail::ExpressionValues<dimension>& _values, const LinearForm& _form, 
     const CellVertices<dimension>& _cellVertices, const MeshEntity& _localEntity, 
     const vertex<dimension>& v, const Dof<dimension>& _dof) : 
     form(_form), cell(_cell), vertices(_cellVertices), localEntity(_localEntity), localVertex(v), 
@@ -222,15 +222,6 @@ public:
     value[NULL] = values.getValue(*s.getValue().getExpr());
     valueStack.push(value);
   }
-
-/*
-  TODO: Where the hell did this go?
-
-  virtual void visit(TensorLiteral& literal)
-  {
-    valueStack.push(boost::any_cast< Tensor<dimension> >(literal.getTensor().getTensor()));
-  }
-*/
 };
 
 }
@@ -242,13 +233,13 @@ private:
   static const std::size_t dimension = D;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
   cell_ref_t cell;
-  Scenario<dimension>* scenario;
-  detail::ExpressionValues<dimension>* values;
+  const Scenario<dimension>* scenario;
+  const detail::ExpressionValues<dimension>* values;
   LinearForm form;
 
 public:
-  FormEvaluator(const cell_ref_t _cell, Scenario<dimension>& _scenario, 
-    detail::ExpressionValues<dimension>& _values, const LinearForm& _form) :
+  FormEvaluator(const cell_ref_t _cell, const Scenario<dimension>& _scenario, 
+    const detail::ExpressionValues<dimension>& _values, const LinearForm& _form) :
     cell(_cell), scenario(&_scenario), values(&_values), form(_form)
   {
   }

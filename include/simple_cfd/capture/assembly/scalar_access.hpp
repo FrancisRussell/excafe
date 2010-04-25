@@ -30,6 +30,11 @@ public:
   {
     return scalarExpr < s.scalarExpr;
   }
+
+  ScalarExpr::expr_ptr getExpr() const
+  {
+    return scalarExpr;
+  }
 };
 
 }

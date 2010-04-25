@@ -66,10 +66,10 @@ private:
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
   typedef assembly_polynomial_t polynomial_t;
 
-  Scenario<dimension>& scenario;
+  const Scenario<dimension>& scenario;
 
 public:
-  AssemblyHelper(Scenario<dimension>& _scenario) : scenario(_scenario)
+  AssemblyHelper(const Scenario<dimension>& _scenario) : scenario(_scenario)
   {
   }
 

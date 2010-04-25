@@ -57,10 +57,24 @@ public:
 };
 
 template<typename T>
-class VariableCollector
+class PolynomialVariableCollector
 {
 private:
   typedef T value_type;
+  std::set<value_type> variables;
+
+public:
+  template<typename Poly>
+  void operator()(const Poly& p)
+  {
+    const std::set<value_type> vars(p.getVariables());
+    variables.insert(vars.begin(), vars.end());
+  }
+
+  std::set<value_type> getVariables() const
+  {
+    return variables;
+  }
 };
 
 

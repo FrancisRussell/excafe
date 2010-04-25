@@ -4,6 +4,7 @@
 #include "numeric_fwd.hpp"
 #include <numeric/polynomial_fraction.hpp>
 #include <numeric/optimised_polynomial.hpp>
+#include <set>
 #include <vector>
 #include <cstddef>
 #include <cassert>
@@ -36,6 +37,17 @@ public:
     divisor(p.getDivisor())
   {
 
+  }
+
+  std::set<variable_t> getVariables() const
+  {
+    const std::set<variable_t> dividendVariables(dividend.getVariables());
+    const std::set<variable_t> divisorVariables(divisor.getVariables());
+
+    std::set<variable_t> result;
+    result.insert(dividendVariables.begin(), dividendVariables.end());
+    result.insert(divisorVariables.begin(), divisorVariables.end());
+    return result;
   }
 };
 

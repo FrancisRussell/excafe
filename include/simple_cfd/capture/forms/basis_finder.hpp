@@ -33,7 +33,7 @@ private:
   static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
 
-  Scenario<dimension>& scenario;
+  const Scenario<dimension>& scenario;
   const finite_element_t* basis;
 
   void handle(const finite_element_t* const element)
@@ -51,7 +51,7 @@ private:
   }
 
 public:
-  BasisFinder(Scenario<dimension>& _scenario) : scenario(_scenario),
+  BasisFinder(const Scenario<dimension>& _scenario) : scenario(_scenario),
    basis(NULL)
   {
   }

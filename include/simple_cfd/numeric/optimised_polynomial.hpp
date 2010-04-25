@@ -69,13 +69,18 @@ public:
   {
   }
 
-  OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(p.getIndependentVariables()),
-  paramData(variables.size())
+  OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(p.getVariables()),
+    paramData(variables.size())
   {
     p.checkConsistent();
   
     for(typename Polynomial<variable_t>::const_iterator mIter(p.begin()); mIter!=p.end(); ++mIter)
       coefficients.push_back(std::make_pair(buildExponentVector(mIter->first), mIter->second));
+  }
+
+  std::set<variable_t> getVariables() const
+  {
+    return variables;
   }
 
   double operator()() const

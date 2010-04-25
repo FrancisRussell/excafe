@@ -34,6 +34,16 @@ public:
     return std::make_pair(vertex, component) < 
            std::make_pair(p.vertex, p.component);
   }
+
+  std::size_t getVertexID() const
+  {
+    return vertex;
+  }
+
+  std::size_t getComponent() const
+  {
+    return component;
+  }
 };
 
 }

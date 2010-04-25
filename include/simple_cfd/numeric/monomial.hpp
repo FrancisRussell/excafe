@@ -9,12 +9,13 @@
 #include <utility>
 #include <ostream>
 #include <boost/foreach.hpp>
+#include <boost/operators.hpp>
 
 namespace cfd
 {
 
 template<typename V>
-class Monomial
+class Monomial : boost::multipliable<Monomial<V> >
 {
 public:
   typedef V variable_t;
@@ -43,13 +44,6 @@ public:
       exponents[expIter->first] += expIter->second;
 
     return *this;
-  }
-
-  Monomial operator*(const Monomial& m) const
-  {
-    Monomial result(*this);
-    result *= m;
-    return result;
   }
 
   bool operator==(const Monomial& m) const

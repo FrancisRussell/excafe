@@ -35,6 +35,16 @@ public:
     return std::make_pair(fieldExpr, index) <
       std::make_pair(c.fieldExpr, c.index);
   }
+
+  DiscreteFieldExpr::expr_ptr getField() const
+  {
+    return fieldExpr;
+  }
+
+  std::size_t getIndex() const
+  {
+    return index;
+  }
 };
 
 }

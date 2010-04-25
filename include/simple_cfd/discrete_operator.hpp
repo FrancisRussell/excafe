@@ -18,6 +18,8 @@
 #include "capture/forms/form_evaluator.hpp"
 #include "local_assembly_matrix.hpp"
 #include "capture/assembly/assembly_helper.hpp"
+#include "capture/assembly/scalar_placeholder.hpp"
+#include "capture/assembly/scalar_placeholder_evaluator.hpp"
 #include "capture/assembly/assembly_polynomial.hpp"
 
 namespace cfd
@@ -76,30 +78,50 @@ private:
     return pattern;
   }
 
-  void addTermGeneral2(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
+  std::map<detail::ScalarPlaceholder, double> evaluatePlaceholders(const Scenario<dimension>& scenario,
+    const detail::ExpressionValues<dimension>& expressionValues, const std::size_t cid, 
+    const std::set<detail::ScalarPlaceholder>& placeholders) const
+  {
+    using namespace detail;
+
+    const ScalarPlaceholderEvaluator<dimension> evaluator(scenario, expressionValues, cid);
+    std::map<ScalarPlaceholder, double> values;
+
+    BOOST_FOREACH(const ScalarPlaceholder& placeholder, placeholders)
+    {
+      values.insert(std::make_pair(placeholder, evaluator(placeholder)));
+    }
+
+    return values;
+  }
+
+  void addTermGeneral2(const Scenario<dimension>& scenario, 
+    const detail::ExpressionValues<dimension>& values,
     const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
     const MeshFunction<bool>& subDomain)
   {
     using namespace cfd::forms;
-    typedef detail::LocalAssemblyMatrix<dimension, detail::assembly_polynomial_t> local_matrix_t;
-    typedef detail::LocalAssemblyMatrix<dimension, detail::optimised_assembly_polynomial_t> opt_local_matrix_t;
-    typedef detail::LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
+    using namespace cfd::detail;
+
+    typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t> local_matrix_t;
+    typedef LocalAssemblyMatrix<dimension, optimised_assembly_polynomial_t> opt_local_matrix_t;
+    typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
-    detail::AssemblyHelper<dimension> assemblyHelper(scenario);
+    AssemblyHelper<dimension> assemblyHelper(scenario);
     local_matrix_t localMatrix(trialElements, testElements);
-
-    const MeshEntity localCellEntity(dimension, 0);
-    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
-    opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialFractionOptimiser<detail::ScalarPlaceholder>()));
 
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
       assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
     }
+
+    const MeshEntity localCellEntity(dimension, 0);
+    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
+    opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialFractionOptimiser<detail::ScalarPlaceholder>()));
 
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t entityDimension = subDomain.getDimension();
@@ -115,14 +137,17 @@ private:
         //FIXME: we only know how to handle cell integrals atm.
         if (localEntity == localCellEntity)
         {
+          PolynomialVariableCollector<ScalarPlaceholder> collector;
+          std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
+          const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
+          const std::map<ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
           //FIXME: insert assembly tensor into global matrix
         }
       }
     }
   }
 
-
-  void addTermGeneral(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
+  void addTermGeneral(const Scenario<dimension>& scenario, const detail::ExpressionValues<dimension>& values,
     const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
     const MeshFunction<bool>& subDomain)
@@ -276,7 +301,7 @@ public:
     const Mesh<dimension> m(rowMappings.getMesh());
 
     const MeshFunction<bool> allCells(dimension, true);
-    if (true)
+    if (false)
       addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
     else
       addTermGeneral2(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);

@@ -42,10 +42,10 @@ private:
   typedef assembly_polynomial_t polynomial_t;
   typedef Tensor<dimension, polynomial_t> tensor_t;
 
-  Scenario<dimension>& scenario;
+  const Scenario<dimension>& scenario;
   PositionPlaceholder position;
   CellVerticesPlaceholder<dimension> cellVertices;
-  std::size_t basisFunctionIndex;
+  const std::size_t basisFunctionIndex;
   std::stack<tensor_t> valueStack;
 
   tensor_t buildLocalGradient(const tensor_t& operand) const
@@ -182,7 +182,7 @@ private:
   }
 
 public:
-  FormEvaluationVisitor(Scenario<dimension>& _scenario, const std::size_t _basisFunctionIndex) : 
+  FormEvaluationVisitor(const Scenario<dimension>& _scenario, const std::size_t _basisFunctionIndex) : 
     scenario(_scenario), basisFunctionIndex(_basisFunctionIndex)
   {
   }

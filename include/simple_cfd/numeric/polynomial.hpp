@@ -40,14 +40,14 @@ private:
 
   void addTerm(const double coefficient, const variable_t& variable, const std::size_t exponent)
   {
-    addIndependentVariable(variable);
+    addVariable(variable);
     coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
     cleanZeros();
   }
 
   void addTerm(const Monomial<variable_t>& m, const double coefficient)
   {
-    addIndependentVariables(m);
+    addVariables(m);
     coefficients[m] += coefficient;
   }
 
@@ -57,12 +57,12 @@ private:
     cleanZeros();
   }
 
-  void addIndependentVariables(const Polynomial& p)
+  void addVariables(const Polynomial& p)
   {
     independentVariables.insert(p.independentVariables.begin(), p.independentVariables.end());
   }
 
-  void addIndependentVariables(const Monomial<variable_t>& m)
+  void addVariables(const Monomial<variable_t>& m)
   {
     const std::set<variable_t> mVariables(m.getVariables()); 
     independentVariables.insert(mVariables.begin(), mVariables.end());
@@ -82,7 +82,6 @@ private:
       coefficients.erase(*mIter);
   }
 
-
   void addMonomial(const double coefficient, const Monomial<variable_t>& m)
   {
     coefficients[m] += coefficient;
@@ -97,7 +96,7 @@ private:
 
   Polynomial& operator*=(const Monomial<variable_t>& m)
   {
-    addIndependentVariables(m);
+    addVariables(m);
     std::map<Monomial<variable_t>, double> newCoefficients;
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
@@ -106,7 +105,6 @@ private:
     coefficients.swap(newCoefficients);
     return *this;
   }
-
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
@@ -174,12 +172,12 @@ public:
     return coefficients.end();
   }
 
-  void addIndependentVariable(const variable_t& variable)
+  void addVariable(const variable_t& variable)
   {
     independentVariables.insert(variable);
   }
 
-  void replaceIndependentVariable(const variable_t& from, const variable_t& to)
+  void replaceVariable(const variable_t& from, const variable_t& to)
   {
     const typename std::set<variable_t>::const_iterator fromIter = independentVariables.find(from);
 
@@ -200,7 +198,7 @@ public:
     }
   }
 
-  std::set<variable_t> getIndependentVariables() const
+  std::set<variable_t> getVariables() const
   {
     return independentVariables;
   }
@@ -260,7 +258,7 @@ public:
 
   Polynomial& operator+=(const Polynomial& p)
   {
-    addIndependentVariables(p);
+    addVariables(p);
   
     for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
       coefficients[cIter->first] += cIter->second;
@@ -285,7 +283,7 @@ public:
   Polynomial derivative(const variable_t& variable) const
   {
     Polynomial result;
-    result.addIndependentVariables(*this);
+    result.addVariables(*this);
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
     {
@@ -300,7 +298,7 @@ public:
   Polynomial substituteValue(const variable_t& variable, const double value) const
   {
     Polynomial result;
-    result.addIndependentVariables(*this);
+    result.addVariables(*this);
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
     {

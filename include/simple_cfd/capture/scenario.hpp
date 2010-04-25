@@ -214,7 +214,7 @@ public:
     return Element(elements.size() - 1);
   }
 
-  FiniteElement<dimension>& getElement(const Element& e)
+  const FiniteElement<dimension>& getElement(const Element& e) const
   {
     assert(e.getIndex() < elements.size());
     return elements[e.getIndex()];
@@ -247,9 +247,9 @@ public:
       (*fsIter)->accept(functionSpaceResolver);
   }
 
-  DofMap<dimension>& getDofMap(detail::FunctionSpaceExpr& e)
+  const DofMap<dimension>& getDofMap(detail::FunctionSpaceExpr& e) const
   {
-    const typename std::map< function_space_ptr, DofMap<dimension> >::iterator mapIter = functionSpaceMap.find(&e);
+    const typename std::map< function_space_ptr, DofMap<dimension> >::const_iterator mapIter = functionSpaceMap.find(&e);
     assert(mapIter != functionSpaceMap.end());
     return mapIter->second;
   }
