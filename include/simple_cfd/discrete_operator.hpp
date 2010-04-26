@@ -121,7 +121,7 @@ private:
 
     const MeshEntity localCellEntity(dimension, 0);
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
-    opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialFractionOptimiser<detail::ScalarPlaceholder>()));
+    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<assembly_polynomial_t>()));
 
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t entityDimension = subDomain.getDimension();
@@ -137,11 +137,15 @@ private:
         //FIXME: we only know how to handle cell integrals atm.
         if (localEntity == localCellEntity)
         {
-          PolynomialVariableCollector<ScalarPlaceholder> collector;
+          // Build a set of placeholders and find their values
+          PolynomialVariableCollector<optimised_assembly_polynomial_t> collector;
           std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
           const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
           const std::map<ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
-          //FIXME: insert assembly tensor into global matrix
+
+          // Build concrete local assembly matrix
+          const PolynomialEvaluator<optimised_assembly_polynomial_t> evaluator(placeholderValues);
+          const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
         }
       }
     }

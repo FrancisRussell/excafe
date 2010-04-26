@@ -22,6 +22,7 @@ class PolynomialFraction : boost::addable<PolynomialFraction<V>, double,
 public:
   typedef V variable_t;
   typedef Polynomial<variable_t> polynomial_t;
+  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
 
 private:
   polynomial_t dividend;
@@ -150,6 +151,11 @@ public:
     PolynomialFraction result(*this);
     result *= 1.0;
     return result;
+  }
+
+  optimised_t optimise() const
+  {
+    return optimised_t(*this);
   }
 
   PolynomialFraction derivative(const variable_t& variable) const

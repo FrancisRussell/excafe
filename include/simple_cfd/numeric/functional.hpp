@@ -2,81 +2,88 @@
 #define SIMPLE_CFD_NUMERIC_FUNCTIONAL_HPP
 
 #include <set>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_same.hpp>
+#include <map>
 #include "numeric_fwd.hpp"
 
 namespace cfd
 {
 
-template<typename T>
+template<typename P>
 class PolynomialDifferentiator
 {
 private:
-  typedef T value_t;
-  value_t dx;
+  typedef P polynomial_t;
+  typedef typename polynomial_t::variable_t variable_t;
+  variable_t dx;
 
 public:
-  PolynomialDifferentiator(const value_t& _dx) : dx(_dx)
+  PolynomialDifferentiator(const variable_t& _dx) : dx(_dx)
   {
   }
 
-  template<typename P>
-  P operator()(const P& p) const
+  polynomial_t operator()(const polynomial_t& p) const
   {
-    BOOST_STATIC_ASSERT((boost::is_same<P, Polynomial<value_t> >::value || 
-      boost::is_same<P, PolynomialFraction<value_t> >::value));
     return p.derivative(dx);
   }
 };
 
-template<typename T>
+template<typename P>
 class PolynomialOptimiser
 {
 public:
-  typedef T value_type;
-  typedef OptimisedPolynomial<value_type> result_type;
+  typedef P polynomial_t;
+  typedef typename polynomial_t::optimised_t result_type;
 
-  result_type operator()(const Polynomial<value_type>& p) const
+  result_type operator()(const polynomial_t& p) const
   {
-    return p;
+    return p.optimise();
   }
 };
 
-template<typename T>
-class PolynomialFractionOptimiser
-{
-public:
-  typedef T value_type;
-  typedef OptimisedPolynomialFraction<value_type> result_type;
-
-  result_type operator()(const PolynomialFraction<value_type>& p) const
-  {
-    return p;
-  }
-};
-
-template<typename T>
+template<typename P>
 class PolynomialVariableCollector
 {
 private:
-  typedef T value_type;
-  std::set<value_type> variables;
+  typedef P polynomial_t;
+  typedef typename polynomial_t::variable_t variable_t;
+  std::set<variable_t> variables;
 
 public:
-  template<typename Poly>
-  void operator()(const Poly& p)
+  void operator()(const polynomial_t& p)
   {
-    const std::set<value_type> vars(p.getVariables());
+    const std::set<variable_t> vars(p.getVariables());
     variables.insert(vars.begin(), vars.end());
   }
 
-  std::set<value_type> getVariables() const
+  std::set<variable_t> getVariables() const
   {
     return variables;
   }
 };
 
+template<typename P>
+class PolynomialEvaluator
+{
+private:
+  typedef P polynomial_t;
+  typedef typename polynomial_t::variable_t variable_t;
+  typedef typename polynomial_t::value_type value_type;
+
+  std::map<variable_t, value_type> variableValues;
+
+public:
+  typedef value_type result_type;
+
+  PolynomialEvaluator(const std::map<variable_t, value_type>& _variableValues) :
+    variableValues(_variableValues)
+  {
+  }
+
+  result_type operator()(const polynomial_t& p) const
+  {
+    return p.evaluate(variableValues);
+  }
+};
 
 }
 

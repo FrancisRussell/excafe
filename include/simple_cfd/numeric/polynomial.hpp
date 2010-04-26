@@ -32,6 +32,7 @@ class Polynomial : boost::addable<Polynomial<V>, double,
 {
 public:
   typedef V variable_t;
+  typedef OptimisedPolynomial<variable_t> optimised_t;
 
 private:
   typedef std::map<Monomial<variable_t>, double> coefficient_map_t;
@@ -310,9 +311,9 @@ public:
     return result;
   }
 
-  OptimisedPolynomial<variable_t> optimise() const
+  optimised_t optimise() const
   {
-    return OptimisedPolynomial<variable_t>(*this);
+    return optimised_t(*this);
   }
 
   std::size_t numTerms() const
