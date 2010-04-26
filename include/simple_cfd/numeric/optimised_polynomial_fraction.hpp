@@ -1,13 +1,14 @@
 #ifndef SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_FRACTION_HPP
 #define SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_FRACTION_HPP
 
-#include "numeric_fwd.hpp"
-#include <numeric/polynomial_fraction.hpp>
-#include <numeric/optimised_polynomial.hpp>
 #include <set>
 #include <vector>
+#include <map>
 #include <cstddef>
 #include <cassert>
+#include "numeric_fwd.hpp"
+#include "polynomial_fraction.hpp"
+#include "optimised_polynomial.hpp"
 
 namespace cfd
 {
@@ -17,16 +18,12 @@ class OptimisedPolynomialFraction
 {
 public:
   typedef V variable_t;
+  typedef double value_type;
 
 private:
   typedef OptimisedPolynomial<variable_t> polynomial_t;
   polynomial_t dividend;
   polynomial_t divisor;
-
-  double evaluate(const std::vector<double>& params) const
-  {
-    return dividend.evaluate(params) / divisor.evaluate(params);
-  }
 
 public:
   OptimisedPolynomialFraction()
@@ -48,6 +45,11 @@ public:
     result.insert(dividendVariables.begin(), dividendVariables.end());
     result.insert(divisorVariables.begin(), divisorVariables.end());
     return result;
+  }
+
+  value_type evaluate(const std::map<variable_t, value_type>& variableValues) const
+  {
+    return dividend.evaluate(variableValues)/divisor.evaluate(variableValues);
   }
 };
 

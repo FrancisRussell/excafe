@@ -1,15 +1,18 @@
 #ifndef SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 #define SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 
-#include "numeric_fwd.hpp"
-#include <numeric/polynomial.hpp>
-#include <numeric/monomial.hpp>
 #include <numeric>
 #include <set>
+#include <map>
 #include <vector>
 #include <utility>
 #include <cstddef>
 #include <cassert>
+#include <boost/foreach.hpp>
+#include "numeric_fwd.hpp"
+#include "polynomial.hpp"
+#include "monomial.hpp"
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -17,11 +20,14 @@ namespace cfd
 namespace 
 {
 
+template<typename T>
 struct Pow
 {
-  inline double operator()(const double value, const std::size_t exponent) const
+  typedef T value_type;
+
+  inline value_type operator()(const value_type value, const std::size_t exponent) const
   {
-    double result=1.0;
+    value_type result=1.0;
 
     for(std::size_t power=0; power<exponent; ++power)
       result *= value;
@@ -37,12 +43,15 @@ class OptimisedPolynomial
 {
 public:
   typedef V variable_t;
+  typedef double value_type;
 
 private:
-  typedef std::vector< std::pair<std::vector<std::size_t>, double> > coefficient_vec_t;
+  typedef std::vector< std::pair<std::vector<std::size_t>, value_type> > coefficient_vec_t;
   std::set<variable_t> variables;
   coefficient_vec_t coefficients;
-  mutable std::vector<double> paramData;
+
+  // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
+  mutable std::vector<value_type> paramData;
 
   std::vector<std::size_t> buildExponentVector(const Monomial<variable_t>& m) const
   {
@@ -54,12 +63,15 @@ private:
     return exponents;
   }
 
-  double evaluate(const std::vector<double>& params) const
+  value_type evaluate(const std::vector<value_type>& params) const
   {
-    double result = 0.0;
+    value_type result = 0.0;
   
     for(coefficient_vec_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
-      result += std::inner_product(params.begin(), params.end(), cIter->first.begin(), cIter->second, std::multiplies<double>(), Pow());
+    {
+      result += std::inner_product(params.begin(), params.end(), cIter->first.begin(), cIter->second,
+        std::multiplies<value_type>(), Pow<value_type>());
+    }
   
     return result;
   }
@@ -83,13 +95,13 @@ public:
     return variables;
   }
 
-  double operator()() const
+  value_type operator()() const
   {
     assert(variables.empty());
     return evaluate(paramData);
   }
 
-  double operator()(const double a) const
+  value_type operator()(const value_type a) const
   {
     assert(variables.size() == 1);
   
@@ -97,7 +109,7 @@ public:
     return evaluate(paramData);
   }
 
-  double operator()(const double a, const double b) const
+  value_type operator()(const value_type a, const value_type b) const
   {
     assert(variables.size() == 2);
   
@@ -106,7 +118,7 @@ public:
     return evaluate(paramData);
   }
 
-  double operator()(const double a, const double b, const double c) const
+  value_type operator()(const value_type a, const value_type b, const value_type c) const
   {
     assert(variables.size() == 3);
   
@@ -116,6 +128,27 @@ public:
     return evaluate(paramData);
   }
 
+  value_type evaluate(const std::map<variable_t, value_type>& variableValues) const
+  {
+    std::size_t variableIndex = 0;
+
+    BOOST_FOREACH(const variable_t& v, variables)
+    {
+      const typename std::map<variable_t, value_type>::const_iterator varValIter(variableValues.find(v));
+
+      if (varValIter == variableValues.end())
+      {
+        CFD_EXCEPTION("Missing variable binding when evaluating OptimisedPolynomial.");
+      }
+      else
+      {
+        paramData[variableIndex] = varValIter->second;
+      }
+      ++variableIndex;
+    }
+
+    return evaluate(paramData);
+  }
 };
 
 }
