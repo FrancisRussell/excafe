@@ -123,6 +123,11 @@ private:
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
     const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<assembly_polynomial_t>()));
 
+    // Build set of placeholders
+    PolynomialVariableCollector<optimised_assembly_polynomial_t> collector;
+    std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
+    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
+
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t entityDimension = subDomain.getDimension();
 
@@ -134,18 +139,20 @@ private:
         const CellVertices<dimension> vertices(m.getCoordinates(cid));
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
   
-        //FIXME: we only know how to handle cell integrals atm.
         if (localEntity == localCellEntity)
         {
-          // Build a set of placeholders and find their values
-          PolynomialVariableCollector<optimised_assembly_polynomial_t> collector;
-          std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
-          const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
+          // Find placeholder values
           const std::map<ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
 
           // Build concrete local assembly matrix
           const PolynomialEvaluator<optimised_assembly_polynomial_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
+          addValues(cid, concreteLocalMatrix);
+        }
+        else
+        {
+          //FIXME: work out how to capture edge integrals
+          CFD_EXCEPTION("Can only handle capture of cell-integrals at the moment.");
         }
       }
     }
@@ -284,6 +291,13 @@ public:
     assert(colMappings == f.colMappings);
     matrix = f.matrix;
     return *this;
+  }
+
+  void addValues(const std::size_t cid, const detail::LocalAssemblyMatrix<dimension, double>& localMatrix)
+  {
+    const std::vector<dof_t> trialDofs(localMatrix.getTrialDofs(cid));
+    const std::vector<dof_t> testDofs(localMatrix.getTestDofs(cid));
+    addValues(testDofs.size(), trialDofs.size(), &testDofs[0], &trialDofs[0], &(*localMatrix.begin()));
   }
 
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)

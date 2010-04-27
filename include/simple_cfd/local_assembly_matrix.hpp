@@ -63,6 +63,21 @@ private:
     CFD_EXCEPTION("Failed to locate requested element in local assembly matrix");
   }
 
+  std::vector< Dof<dimension> > getDofs(const std::set<const element_t*>& elements, const std::size_t cid) const
+  {
+    std::vector< Dof<dimension> > dofs;
+
+    BOOST_FOREACH(const element_t* element, elements)
+    {
+      const std::size_t spaceDimension = element->spaceDimension();
+      for (std::size_t index=0; index<spaceDimension; ++index)
+      {
+        dofs.push_back(Dof<dimension>(element, cid, index));
+      }
+    }
+    return dofs;
+  }
+
 public:
   LocalAssemblyMatrix(const std::set<const element_t*>& _trialElements, const std::set<const element_t*> _testElements) : 
     trialElements(_trialElements), testElements(_testElements),
@@ -108,6 +123,16 @@ public:
   std::size_t getTestOffset(const FiniteElement<dimension>& testElement, const std::size_t index) const
   {
     return getOffset(testElements, &testElement, index);
+  }
+
+  std::vector< Dof<dimension> > getTrialDofs(const std::size_t cid) const
+  {
+    return getDofs(trialElements, cid);
+  }
+
+  std::vector< Dof<dimension> > getTestDofs(const std::size_t cid) const
+  {
+    return getDofs(testElements, cid);
   }
 
   LocalAssemblyMatrix& operator*=(const value_type& v)

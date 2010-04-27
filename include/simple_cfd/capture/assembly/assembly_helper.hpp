@@ -65,6 +65,7 @@ public:
 private:
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
   typedef assembly_polynomial_t polynomial_t;
+  typedef Tensor<dimension, polynomial_t> tensor_t;
 
   const Scenario<dimension>& scenario;
 
@@ -83,8 +84,8 @@ public:
     form.getTestField()->accept(testFinder);
     const FiniteElement<dimension>* testElement = testFinder.getBasis();
 
-    std::vector<polynomial_t> trialValues(trialElement->spaceDimension());
-    std::vector<polynomial_t> testValues(testElement->spaceDimension());
+    std::vector<tensor_t> trialValues(trialElement->spaceDimension());
+    std::vector<tensor_t> testValues(testElement->spaceDimension());
 
     for(std::size_t trialBasis=0; trialBasis < trialValues.size(); ++trialBasis)
     {
@@ -106,8 +107,7 @@ public:
       {
         const std::size_t row = matrix.getTestOffset(*testElement, testBasis);
         const std::size_t col = matrix.getTrialOffset(*trialElement, trialBasis);
-
-        matrix(row, col) += trialValues[trialBasis] * testValues[testBasis]; 
+        matrix(row, col) += trialValues[trialBasis].colon_product(testValues[testBasis]); 
       }
     }
   }

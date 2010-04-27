@@ -56,7 +56,7 @@ private:
     for(std::size_t d=0; d<dimension; ++d)
     {
       const ScalarPlaceholder coord(position[d]);
-      tensor_t derivative(derivative);
+      tensor_t derivative(operand);
       std::transform(derivative.begin(), derivative.end(), derivative.begin(),
         PolynomialDifferentiator<polynomial_t>(coord));
       result.setElement(d, derivative);
@@ -76,7 +76,7 @@ private:
   tensor_t buildGlobalPosition() const
   {
     const cell_ref_t cell = scenario.getMesh().getReferenceCell();
-    assert(cell->getCoordinateMapping().spaceDimension() == dimension);
+    assert(cell->getCoordinateMapping().spaceDimension() == cell->numEntities(0));
 
     const TensorSize positionSize(1, dimension);
     tensor_t globalPosition(positionSize);
