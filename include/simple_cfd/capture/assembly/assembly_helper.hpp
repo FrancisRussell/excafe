@@ -48,7 +48,7 @@ public:
         const ScalarPlaceholder dx(component);
         weighted = weighted.substituteValue(dx, rule[point].first[d]);
       }
-      result += weight;
+      result += weighted;
     }
     return result;
   }

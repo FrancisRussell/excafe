@@ -171,7 +171,7 @@ private:
       for(std::size_t d=0; d<dimension; ++d)
       {
         // First two indices into gradient are equal
-        const std::size_t gradIndexFlat = (d*dimension + d) * divergenceSize.getExtent();
+        const std::size_t gradIndexFlat = (d*dimension + d) * divergenceSize.getExtent() + divIndexFlat;
         const TensorIndex divIndex = TensorIndex::unflatten(divergenceSize, divIndexFlat, row_major_tag());
         const TensorIndex gradIndex = TensorIndex::unflatten(gradientSize, gradIndexFlat, row_major_tag());
 
