@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 #define SIMPLE_CFD_NUMERIC_OPTIMISED_POLYNOMIAL_HPP
 
+#include <sstream>
 #include <numeric>
 #include <set>
 #include <map>
@@ -138,7 +139,9 @@ public:
 
       if (varValIter == variableValues.end())
       {
-        CFD_EXCEPTION("Missing variable binding when evaluating OptimisedPolynomial.");
+        std::ostringstream error;
+        error << "Missing variable binding when evaluating OptimisedPolynomial: " << v << ".";
+        CFD_EXCEPTION(error.str());
       }
       else
       {

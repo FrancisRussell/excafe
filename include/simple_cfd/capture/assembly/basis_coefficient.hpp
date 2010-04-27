@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <utility>
+#include <ostream>
 #include <simple_cfd/capture/fields/field.hpp>
 #include <simple_cfd/capture/fields/discrete_field_expr.hpp>
 #include "scalar_placeholder_operators.hpp"
@@ -45,7 +46,14 @@ public:
   {
     return index;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "field[" << fieldExpr << "][" << index << "]";
+  }
 };
+
+std::ostream& operator<<(std::ostream& o, const BasisCoefficient& c);
 
 }
 

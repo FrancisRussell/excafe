@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_ACCESS_HPP
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_ACCESS_HPP
 
+#include <ostream>
 #include <simple_cfd/capture/fields/scalar.hpp>
 #include <simple_cfd/capture/fields/scalar_expr.hpp>
 #include "scalar_placeholder_operators.hpp"
@@ -35,7 +36,14 @@ public:
   {
     return scalarExpr;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "scalar[" << scalarExpr << "]";
+  }
 };
+
+std::ostream& operator<<(std::ostream& o, const ScalarAccess& c);
 
 }
 

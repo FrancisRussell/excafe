@@ -44,7 +44,14 @@ public:
   {
     return component;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "cell[" << vertex << "][" << static_cast<char>('x'+component) << "]";
+  }
 };
+
+std::ostream& operator<<(std::ostream& o, const CellVertexComponent& c);
 
 }
 

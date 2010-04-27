@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_PLACEHOLDER_OPERATORS_HPP
 
 #include "assembly_fwd.hpp"
+#include <simple_cfd/numeric/polynomial.hpp>
 
 namespace cfd
 {

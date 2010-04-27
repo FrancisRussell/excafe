@@ -300,6 +300,7 @@ public:
   {
     Polynomial result;
     result.addVariables(*this);
+    result.independentVariables.erase(variable);
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
     {

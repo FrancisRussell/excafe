@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <map>
+#include <ostream>
 #include <boost/variant.hpp>
 #include <boost/operators.hpp>
 #include "position_component.hpp"
@@ -23,19 +24,19 @@ private:
   variant_t value;
 
 public:
-  ScalarPlaceholder(const PositionComponent& c) : value(c)
+  explicit ScalarPlaceholder(const PositionComponent& c) : value(c)
   {
   }
 
-  ScalarPlaceholder(const CellVertexComponent& c) : value(c)
+  explicit ScalarPlaceholder(const CellVertexComponent& c) : value(c)
   {
   }
 
-  ScalarPlaceholder(const ScalarAccess& s) : value(s)
+  explicit ScalarPlaceholder(const ScalarAccess& s) : value(s)
   {
   }
 
-  ScalarPlaceholder(const BasisCoefficient& c) : value(c)
+  explicit ScalarPlaceholder(const BasisCoefficient& c) : value(c)
   {
   }
 
@@ -54,7 +55,14 @@ public:
   {
     return boost::apply_visitor(v, value);
   }
+
+  void write(std::ostream& o) const
+  {
+    o << value;
+  }
 };
+
+std::ostream& operator<<(std::ostream& o, const ScalarPlaceholder& s);
 
 }
 

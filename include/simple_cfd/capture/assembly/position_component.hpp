@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_POSITION_COMPONENT_HPP
 
 #include <cstddef>
+#include <ostream>
 #include "scalar_placeholder_operators.hpp"
 
 namespace cfd
@@ -29,7 +30,14 @@ public:
   {
     return component < p.component;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "pos[" << static_cast<char>('x'+component) << "]";
+  }
 };
+
+std::ostream& operator<<(std::ostream& o, const PositionComponent& p);
 
 }
 
