@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <boost/operators.hpp>
 #include "polynomial.hpp"
+#include <ostream>
 
 namespace cfd
 {
@@ -165,6 +166,13 @@ public:
     return PolynomialFraction(newDividend, newDivisor);
   }
 };
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const PolynomialFraction<T>& f)
+{
+  o << "(" << f.getDividend() << ")/(" << f.getDivisor() << ")"; 
+  return o;
+}
 
 }
 #endif

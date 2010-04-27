@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/operators.hpp>
+#include <ostream>
 
 namespace cfd
 {
@@ -76,6 +77,21 @@ private:
       }
     }
     return dofs;
+  }
+
+  void write(std::ostream& o, const element_t* element) const
+  {
+    o << "Finite Elemement: " << "address=" << element << ", rank=" << element->getRank();
+    o << ", dimension=" << element->getDimension() << ", space_dimension=" << element->spaceDimension();
+    o << std::endl;
+  }
+
+  void write(std::ostream& o, const std::set<const element_t*>& elements) const
+  {
+    BOOST_FOREACH(const element_t* element, elements)
+    {
+      write(o, element);
+    }
   }
 
 public:
@@ -180,7 +196,33 @@ public:
     std::transform(begin(), end(), result.begin(), f);
     return result;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "Local assembly matrix: size(trials)=" << getTrialSize() << ", size(test)=" << getTestSize() << std::endl;
+    o << "Trial functions:" << std::endl;
+    write(o, trialElements);
+    o << "Test functions:" << std::endl;
+    write(o, testElements);
+    o << std::endl;
+
+    for(std::size_t test=0; test<getTestSize(); ++test)
+    {
+      for(std::size_t trial=0; trial<getTrialSize(); ++trial)
+      {
+        o << "(" << test << ", " << trial << ") = " << (*this)(test, trial) << std::endl;
+      }
+    }
+    o << std::endl;
+  }
 };
+
+template<std::size_t D, typename T>
+std::ostream& operator<<(std::ostream& o, class LocalAssemblyMatrix<D,T>& m)
+{
+  m.write(o);
+  return o;
+}
 
 }
 
