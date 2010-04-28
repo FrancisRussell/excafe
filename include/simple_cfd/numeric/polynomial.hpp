@@ -27,8 +27,9 @@ class Polynomial : boost::addable<Polynomial<V>, double,
                    boost::multipliable<Polynomial<V>, double, 
                    boost::addable<Polynomial<V>,
                    boost::subtractable< Polynomial<V>,
-                   boost::multipliable< Polynomial<V>
-                   > > > > > > >
+                   boost::multipliable< Polynomial<V>,
+                   boost::equality_comparable< Polynomial<V>
+                   > > > > > > > >
 {
 public:
   typedef V variable_t;
@@ -44,12 +45,6 @@ private:
     addVariable(variable);
     coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
     cleanZeros();
-  }
-
-  void addTerm(const Monomial<variable_t>& m, const double coefficient)
-  {
-    addVariables(m);
-    coefficients[m] += coefficient;
   }
 
   void addConstant(const double constant)
@@ -85,6 +80,7 @@ private:
 
   void addMonomial(const double coefficient, const Monomial<variable_t>& m)
   {
+    addVariables(m);
     coefficients[m] += coefficient;
   }
 
@@ -218,6 +214,11 @@ public:
   
     assert(std::includes(independentVariables.begin(), independentVariables.end(),
            referencedVariables.begin(), referencedVariables.end()));
+  }
+
+  bool operator==(const Polynomial& p) const
+  {
+    return coefficients == p.coefficients;
   }
 
   Polynomial& operator*=(const double x)

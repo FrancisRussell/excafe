@@ -17,8 +17,9 @@ class PolynomialFraction : boost::addable<PolynomialFraction<V>, double,
                            boost::addable<PolynomialFraction<V>,
                            boost::subtractable< PolynomialFraction<V>,
                            boost::dividable< PolynomialFraction<V>,
-                           boost::multipliable< PolynomialFraction<V>
-                           > > > > > > > >
+                           boost::multipliable< PolynomialFraction<V>,
+                           boost::equality_comparable< PolynomialFraction<V>
+                           > > > > > > > > >
 {
 public:
   typedef V variable_t;
@@ -32,6 +33,21 @@ private:
   PolynomialFraction(const polynomial_t& _dividend, const polynomial_t& _divisor) :
     dividend(_dividend), divisor(_divisor)
   {
+    simplify();
+  }
+
+  void simplify()
+  {
+    if (dividend == polynomial_t(0.0))
+    {
+      divisor = polynomial_t(1.0);
+    }
+
+    if (dividend == divisor)
+    {
+      dividend = polynomial_t(1.0);
+      divisor = polynomial_t(1.0);
+    }
   }
 
 public:
@@ -95,6 +111,11 @@ public:
     return divisor;
   }
 
+  bool operator==(const PolynomialFraction& p) const
+  {
+    return dividend == p.dividend && divisor == p.divisor;
+  }
+
   PolynomialFraction& operator*=(const double x)
   {
     dividend *= x;
@@ -103,7 +124,7 @@ public:
 
   PolynomialFraction& operator/=(const double x)
   {
-    divisor *= x;
+    divisor /= x;
     return *this;
   }
 
@@ -123,6 +144,7 @@ public:
   {
     dividend *= p.dividend;
     divisor *= p.divisor;
+    simplify();
     return *this;
   }
 
@@ -130,27 +152,35 @@ public:
   {
     dividend *= p.divisor;
     divisor *= p.dividend;
+    simplify();
     return *this;
   }
 
   PolynomialFraction& operator+=(const PolynomialFraction& p)
   {
-    dividend = dividend * p.divisor + p.dividend * divisor;
-    divisor *= p.divisor;
+    if (divisor != p.divisor)
+    {
+      dividend = dividend * p.divisor + p.dividend * divisor;
+      divisor *= p.divisor;
+    }
+    else
+    {
+      dividend += p.dividend;
+    }
+    simplify();
     return *this;
   }
 
   PolynomialFraction& operator-=(const PolynomialFraction& p)
   {
-    dividend = dividend * p.divisor - p.dividend * divisor;
-    divisor *= p.divisor;
+    (*this) += -p;
     return *this;
   }
 
   PolynomialFraction operator-() const
   {
     PolynomialFraction result(*this);
-    result *= 1.0;
+    result *= -1.0;
     return result;
   }
 
