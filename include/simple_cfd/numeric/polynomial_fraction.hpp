@@ -96,8 +96,8 @@ public:
 
   PolynomialFraction substituteValue(const variable_t& variable, const double value) const
   {
-    polynomial_t newDividend = dividend.substituteValue(variable, value);
-    polynomial_t newDivisor = divisor.substituteValue(variable, value);
+    const polynomial_t newDividend = dividend.substituteValue(variable, value);
+    const polynomial_t newDivisor = divisor.substituteValue(variable, value);
     return PolynomialFraction(newDividend, newDivisor);
   }
 
@@ -124,7 +124,7 @@ public:
 
   PolynomialFraction& operator/=(const double x)
   {
-    divisor /= x;
+    dividend /= x;
     return *this;
   }
 
