@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <numeric>
+#include <cmath>
 #include <set>
 #include <map>
 #include <vector>
@@ -28,12 +29,7 @@ struct Pow
 
   inline value_type operator()(const value_type value, const std::size_t exponent) const
   {
-    value_type result=1.0;
-
-    for(std::size_t power=0; power<exponent; ++power)
-      result *= value;
-
-    return result;
+    return std::pow(value, exponent);
   }
 };
 
