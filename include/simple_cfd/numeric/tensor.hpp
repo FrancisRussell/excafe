@@ -11,6 +11,7 @@
 #include <numeric>
 #include <algorithm>
 #include <functional>
+#include <ostream>
 #include "index.hpp"
 #include "tensor_size.hpp"
 
@@ -267,12 +268,33 @@ public:
     assert(getRank() == 0 && "Attempt to convert non-rank 0 tensor to scalar");
     return elements[0];
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "Tensor: rank=" << size.getRank() << ", dimension=" << size.getDimension() << std::endl;
+
+    const std::size_t extent = size.getExtent();
+    for(std::size_t i=0; i<extent; ++i)
+    {
+      const TensorIndex index = TensorIndex::unflatten(size, i, row_major_tag());
+      o << index << " = " << (*this)[index] << std::endl;
+    }
+
+    o << std::endl;
+  }
 };
 
 template<std::size_t D, typename T> 
 Tensor<D, T>  operator*(const typename Tensor<D, T>::value_type s, const Tensor<D, T>& t)
 {
   return t*s;
+}
+
+template<std::size_t D, typename T> 
+std::ostream& operator<<(std::ostream& o, const Tensor<D, T>& t)
+{
+  t.write(o);
+  return o;
 }
 
 }

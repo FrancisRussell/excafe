@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <deque>
 #include <cassert>
+#include <ostream>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/foreach.hpp>
@@ -115,7 +116,29 @@ public:
     assert(n <= size.numIndices());
     return Index(size.tail(n), indices.end()-n, indices.end());
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "(";
+
+    for(std::size_t i=0; i<size.numIndices(); ++i)
+    {
+      o << indices[i];
+
+      if (i != size.numIndices()-1)
+        o << ", ";
+    }
+
+    o << ")";
+  }
 };
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const Index<T>& index) 
+{
+  index.write(o);
+  return o;
+}
 
 }
 
