@@ -76,18 +76,20 @@ private:
   tensor_t buildGlobalPosition() const
   {
     const cell_ref_t cell = scenario.getMesh().getReferenceCell();
-    assert(cell->getCoordinateMapping().spaceDimension() == cell->numEntities(0));
+    const std::size_t numVertices = cell->numEntities(0);
+    assert(cell->getCoordinateMapping().spaceDimension() == numVertices);
 
     const TensorSize positionSize(1, dimension);
     tensor_t globalPosition(positionSize);
 
-    for(std::size_t d=0; d<dimension; ++d)
+    for(std::size_t i=0; i<numVertices; ++i)
     {
-      globalPosition += cell->getCoordinateMapping().getBasis(d, position) * cellVertices[d];
+      globalPosition += cell->getCoordinateMapping().getBasis(i, position) * cellVertices[i];
     }
 
     return globalPosition;
   }
+
 
   tensor_t buildJacobian() const
   {
