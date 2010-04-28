@@ -7,6 +7,7 @@
 #include <utility>
 #include <cassert>
 #include <memory>
+#include <iostream>
 #include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
@@ -65,6 +66,7 @@ public:
   Mesh(const Mesh& m) : referenceCell(m.referenceCell), topology(m.topology), geometry(m.geometry),
     facetLabels(m.facetLabels), boundaryFacets(m.boundaryFacets), baseConnectivity(m.baseConnectivity)
   {
+    std::cout << "Warning: potentially expensive mesh copy operation." << std::endl;
   }
 
   std::size_t getDimension() const

@@ -46,7 +46,7 @@ public:
 
   result_type operator()(const CellVertexComponent& c) const
   {
-    const Mesh<dimension> mesh(scenario.getMesh());
+    const Mesh<dimension>& mesh(scenario.getMesh());
     const CellVertices<dimension> vertices(mesh.getCoordinates(cid));
     return vertices[c.getVertexID()][c.getComponent()];
   }
