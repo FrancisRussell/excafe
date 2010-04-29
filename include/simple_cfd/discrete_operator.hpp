@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <cassert>
+#include <boost/foreach.hpp>
 #include "vertex.hpp"
 #include "dof_map.hpp"
 #include "discrete_field.hpp"
@@ -104,6 +105,8 @@ private:
     using namespace cfd::forms;
     using namespace cfd::detail;
 
+    std::cout << "Entered new assembly function..." << std::endl;
+
     typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t> local_matrix_t;
     typedef LocalAssemblyMatrix<dimension, optimised_assembly_polynomial_t> opt_local_matrix_t;
     typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
@@ -119,16 +122,27 @@ private:
       assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
     }
 
+    //std::cout << localMatrix;
+    
+    std::cout << "Built bilinear form..." << std::endl;
+
     const MeshEntity localCellEntity(dimension, 0);
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
+
+    std::cout << "Integrated bilinear form..." << std::endl;
+
     const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<assembly_polynomial_t>()));
+
+    std::cout << "Built optimised matrix.." << std::endl;
 
     // Build set of placeholders
     PolynomialVariableCollector<optimised_assembly_polynomial_t> collector;
-    std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
+    collector = std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
     const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
 
-    const Mesh<dimension>& m = rowMappings.getMesh();
+    std::cout << "Built set of ScalarPlaceholder of size " << placeholders.size() << "." << std::endl;
+
+    const Mesh<dimension>& m = scenario.getMesh();
     const std::size_t entityDimension = subDomain.getDimension();
 
     for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
@@ -144,6 +158,13 @@ private:
           // Find placeholder values
           const std::map<ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
 
+/*
+          typedef std::pair<ScalarPlaceholder, double> pair_t;
+          BOOST_FOREACH(const pair_t& p, placeholderValues)
+          {
+            std::cout << p.first << " = " << p.second << std::endl;
+          }
+*/
           // Build concrete local assembly matrix
           const PolynomialEvaluator<optimised_assembly_polynomial_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));

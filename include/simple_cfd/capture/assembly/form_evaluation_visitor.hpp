@@ -50,6 +50,7 @@ private:
 
   tensor_t buildLocalGradient(const tensor_t& operand) const
   {
+    std::cout << "LocalGradient Operand: " << std::endl << operand << std::endl;
     const TensorSize resultSize(operand.getRank()+1, dimension);
     tensor_t result(resultSize);
 
@@ -61,6 +62,8 @@ private:
         PolynomialDifferentiator<polynomial_t>(coord));
       result.setElement(d, derivative);
     }
+
+    std::cout << "LocalGradient Result: " << std::endl << result << std::endl;
 
     return result;
   }
@@ -89,7 +92,6 @@ private:
 
     return globalPosition;
   }
-
 
   tensor_t buildJacobian() const
   {
@@ -184,6 +186,14 @@ private:
     return div;
   }
 
+  void printTop(const std::string& name) const
+  {
+    std::ostream& out = std::cout;
+
+    out << name << ":" << std::endl;
+    out << valueStack.top();
+  }
+
 public:
   FormEvaluationVisitor(const Scenario<dimension>& _scenario, const std::size_t _basisFunctionIndex) : 
     scenario(_scenario), basisFunctionIndex(_basisFunctionIndex)
@@ -215,6 +225,7 @@ public:
     valueStack.pop();
 
     valueStack.push(first + second);
+    printTop("FieldAddition");
   }
 
   virtual void enter(detail::FieldInnerProduct& inner)
@@ -231,6 +242,7 @@ public:
     valueStack.pop();
 
     valueStack.push(first.inner_product(second));
+    printTop("InnerProduct");
   }
 
   virtual void enter(detail::FieldOuterProduct& outer)
@@ -247,6 +259,7 @@ public:
     valueStack.pop();
 
     valueStack.push(first.outer_product(second));
+    printTop("OuterProduct");
   }
 
   virtual void enter(detail::FieldColonProduct& colon)
@@ -263,6 +276,7 @@ public:
     valueStack.pop();
 
     valueStack.push(first.colon_product(second));
+    printTop("ColonProduct");
   }
 
   virtual void enter(detail::FieldGradient& gradient)
@@ -276,6 +290,7 @@ public:
     valueStack.pop();
 
     valueStack.push(buildGlobalGradient(value));
+    printTop("Gradient");
   }
 
   virtual void enter(detail::FieldDivergence& divergence)
@@ -289,18 +304,21 @@ public:
     valueStack.pop();
 
     valueStack.push(gradToDiv(buildGlobalGradient(value)));
+    printTop("Divergence");
   }
 
   virtual void visit(detail::FacetNormal& normal)
   {
     //FIXME: implement me
     CFD_EXCEPTION("Facet normal generation not yet implemented!");
+    printTop("FacetNormal");
   }
 
   virtual void visit(detail::FieldBasis& basis)
   {
     const FiniteElement<dimension>& element = scenario.getElement(basis.getElement());
     valueStack.push(element.getBasis(basisFunctionIndex, position));
+    printTop("Basis");
   }
 
   virtual void visit(detail::FieldDiscreteReference& field)
@@ -318,14 +336,15 @@ public:
       fieldValue += element.getBasis(index, position) * 
         ScalarPlaceholder(BasisCoefficient(field.getDiscreteField(), index));
     }
-
     valueStack.push(fieldValue);
+    printTop("DiscreteField");
   }
 
   virtual void visit(detail::FieldScalar& s)
   {
     const ScalarPlaceholder scalar(ScalarAccess(s.getValue()));
     valueStack.push(asTensor(scalar));
+    printTop("FieldScalar");
   }
 };
 
