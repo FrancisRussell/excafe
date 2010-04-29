@@ -53,16 +53,15 @@ private:
 
   void cleanZeros()
   {
-    std::set< Monomial<variable_t> > zeroMonomials;
-  
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    coefficient_map_t newCoefficients;
+
+    BOOST_FOREACH(typename coefficient_map_t::value_type mapping, coefficients)
     {
-      if (cIter->second == 0.0)
-        zeroMonomials.insert(cIter->first);
+      if (mapping.second != 0.0)
+        newCoefficients.insert(mapping);
     }
-  
-    for(typename std::set< Monomial<variable_t> >::const_iterator mIter(zeroMonomials.begin()); mIter!=zeroMonomials.end(); ++mIter)
-      coefficients.erase(*mIter);
+
+    std::swap(coefficients, newCoefficients);
   }
 
   void addMonomial(const double coefficient, const Monomial<variable_t>& m)
@@ -84,7 +83,7 @@ private:
     for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
       newCoefficients.insert(std::make_pair(cIter->first * m, cIter->second));
   
-    coefficients.swap(newCoefficients);
+    std::swap(coefficients, newCoefficients);
     return *this;
   }
 
@@ -220,10 +219,13 @@ public:
   
     for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
     {
-      result += (*this) * cIter->first * cIter->second;
+      Polynomial multipliedTerm(*this);
+      multipliedTerm *= cIter->first;
+      multipliedTerm *= cIter->second;
+      result += multipliedTerm;
     }
   
-    result.swap(*this);
+    std::swap(result, *this);
     return *this;
   }
 
