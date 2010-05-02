@@ -13,6 +13,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/foreach.hpp>
+#include <boost/utility.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <numeric/monomial.hpp>
 #include <numeric/optimised_polynomial.hpp>
@@ -42,26 +43,29 @@ private:
   void addTerm(const double coefficient, const variable_t& variable, const std::size_t exponent)
   {
     coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
-    cleanZeros();
   }
 
   void addConstant(const double constant)
   {
     coefficients[Monomial<variable_t>()] += constant;
-    cleanZeros();
   }
 
+  // We currently only call this from public methods
   void cleanZeros()
   {
-    coefficient_map_t newCoefficients;
+    typedef typename coefficient_map_t::iterator coeff_map_iter;
 
-    BOOST_FOREACH(typename coefficient_map_t::value_type mapping, coefficients)
+    // We need this construction because we invalidate the current iterator on erase
+    coeff_map_iter currentIter = coefficients.begin();
+    while(currentIter != coefficients.end())
     {
-      if (mapping.second != 0.0)
-        newCoefficients.insert(mapping);
-    }
+      const coeff_map_iter nextIter = boost::next(currentIter);
 
-    std::swap(coefficients, newCoefficients);
+      if (currentIter->second == 0.0)
+        coefficients.erase(currentIter);
+
+      currentIter = nextIter;
+    }
   }
 
   void addMonomial(const double coefficient, const Monomial<variable_t>& m)
@@ -69,31 +73,11 @@ private:
     coefficients[m] += coefficient;
   }
 
-  Polynomial operator*(const Monomial<variable_t>& m) const
-  {
-    Polynomial result(*this);
-    result *= m;
-    return result;
-  }
-
-  Polynomial& operator*=(const Monomial<variable_t>& m)
-  {
-    std::map<Monomial<variable_t>, double> newCoefficients;
-  
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
-      newCoefficients.insert(std::make_pair(cIter->first * m, cIter->second));
-  
-    std::swap(coefficients, newCoefficients);
-    return *this;
-  }
-
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
   {
     for(typename coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
       cIter->second = f(cIter->second);
-
-    cleanZeros();
   }
 
 public:
@@ -111,26 +95,31 @@ public:
   Polynomial(const double constant)
   {
     addConstant(constant);
+    cleanZeros();
   }
 
   Polynomial(const variable_t& variable)
   {
     addTerm(1.0, variable, 1);
+    cleanZeros();
   }
 
   Polynomial(const double coefficient, const variable_t& variable)
   {
     addTerm(coefficient, variable, 1);
+    cleanZeros();
   }
 
   Polynomial(const variable_t& variable, const std::size_t exponent)
   {
     addTerm(1.0, variable, exponent);
+    cleanZeros();
   }
 
   Polynomial(const double coefficient, const variable_t& variable, const std::size_t exponent)
   {
     addTerm(coefficient, variable, exponent);
+    cleanZeros();
   }
 
   iterator begin()
@@ -158,12 +147,13 @@ public:
     coefficient_map_t oldCoefficients;
     std::swap(coefficients, oldCoefficients);
 
-    BOOST_FOREACH(typename coefficient_map_t::value_type monomialMapping, oldCoefficients)
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& monomialMapping, oldCoefficients)
     {
       // We specifically use addTerm here, to avoid issues when previously distinct monomials
       // become identical after variable substitution
       addTerm(monomialMapping.first.substitute(from, to), monomialMapping.second);
     }
+    cleanZeros();
   }
 
   std::set<variable_t> getVariables() const
@@ -192,40 +182,45 @@ public:
   Polynomial& operator*=(const double x)
   {
     transformCoefficients(boost::lambda::_1 * x);
+    cleanZeros();
     return *this;
   }
 
   Polynomial& operator/=(const double x)
   {
     transformCoefficients(boost::lambda::_1 / x);
+    cleanZeros();
     return *this;
   }
 
   Polynomial& operator+=(const double x)
   {
     addConstant(x);
+    cleanZeros();
     return *this;
   }
 
   Polynomial& operator-=(const double x)
   {
     addConstant(-x);
+    cleanZeros();
     return *this;
   }
 
-  Polynomial& operator*=(const Polynomial& p)
+  Polynomial& operator*=(const Polynomial& b)
   {
-    Polynomial result;
+    Polynomial a;
+    std::swap(a, *this);
   
-    for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& aMapping, a.coefficients)
     {
-      Polynomial multipliedTerm(*this);
-      multipliedTerm *= cIter->first;
-      multipliedTerm *= cIter->second;
-      result += multipliedTerm;
+      BOOST_FOREACH(const typename coefficient_map_t::value_type& bMapping, b.coefficients)
+      {
+        addMonomial(aMapping.second * bMapping.second, aMapping.first * bMapping.first);
+      }
     }
-  
-    std::swap(result, *this);
+
+    cleanZeros();
     return *this;
   }
 
