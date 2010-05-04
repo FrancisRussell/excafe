@@ -128,10 +128,12 @@ public:
   value_type evaluate(const std::map<variable_t, value_type>& variableValues) const
   {
     std::size_t variableIndex = 0;
+    typename std::map<variable_t, value_type>::const_iterator varValIter = variableValues.begin();
 
     BOOST_FOREACH(const variable_t& v, variables)
     {
-      const typename std::map<variable_t, value_type>::const_iterator varValIter(variableValues.find(v));
+      while (varValIter->first != v && varValIter != variableValues.end())
+        ++varValIter;
 
       if (varValIter == variableValues.end())
       {
