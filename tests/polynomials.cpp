@@ -1,12 +1,11 @@
 #include <iostream>
 #include <string>
 #include <simple_cfd/numeric/polynomial.hpp>
+#include <simple_cfd/numeric/ginac_expression.hpp>
 
-
-int main(int argc, char** argv)
+template<typename polynomial_t>
+void testPolynomial()
 {
-  typedef cfd::Polynomial<std::string> polynomial_t;
-
   std::cout << "5.1: " << polynomial_t(5.1) << std::endl;
   std::cout << "x: " << polynomial_t("x") << std::endl;
   std::cout << "2y: " << polynomial_t(2, "y") << std::endl;
@@ -34,9 +33,18 @@ int main(int argc, char** argv)
 
   std::cout << std::endl;
 
-
   const polynomial_t dTest = polynomial_t(0.5, "x", 3) + polynomial_t(4.0, "y", 2);
   std::cout << "(d/dx) 0.5x^3 + 4y^2: " << dTest.derivative("x")  << std::endl;
   std::cout << "(d/dy) 0.5x^3 + 4y^2: " << dTest.derivative("y")  << std::endl;
+}
 
+int main(int argc, char** argv)
+{
+  std::cout << "Testing cfd::Polynomial<std::string>:" << std::endl;
+  testPolynomial< cfd::Polynomial<std::string> >();
+
+  std::cout << std::endl << std::endl;
+
+  std::cout << "Testing cfd::GinacExpression<std::string>:" << std::endl;
+  testPolynomial< cfd::GinacExpression<std::string> >();
 }
