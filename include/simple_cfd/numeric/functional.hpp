@@ -69,12 +69,12 @@ private:
   typedef typename polynomial_t::variable_t variable_t;
   typedef typename polynomial_t::value_type value_type;
 
-  std::map<variable_t, value_type> variableValues;
+  typename polynomial_t::value_map_t variableValues;
 
 public:
   typedef value_type result_type;
 
-  PolynomialEvaluator(const std::map<variable_t, value_type>& _variableValues) :
+  PolynomialEvaluator(const typename polynomial_t::value_map_t& _variableValues) :
     variableValues(_variableValues)
   {
   }

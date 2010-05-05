@@ -2,7 +2,9 @@
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_CELL_VERTEX_COMPONENT_HPP
 
 #include <cstddef>
+#include <ostream>
 #include <utility>
+#include "assembly_fwd.hpp"
 #include "scalar_placeholder_operators.hpp"
 
 namespace cfd

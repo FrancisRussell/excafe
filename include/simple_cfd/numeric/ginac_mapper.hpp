@@ -1,8 +1,9 @@
 #ifndef SIMPLE_CFD_NUMERIC_GINAC_MAPPER_HPP
 #define SIMPLE_CFD_NUMERIC_GINAC_MAPPER_HPP
 
-#include <map>
 #include <sstream>
+#include <boost/bimap.hpp>
+#include <simple_cfd/exception.hpp>
 #include <ginac/symbol.h>
 
 namespace cfd
@@ -18,7 +19,7 @@ private:
   typedef T key_type;
   typedef GiNaC::symbol value_type;
 
-  std::map<key_type, value_type> mappings;
+  boost::bimap<key_type, value_type> mappings;
 
   struct object_creator
   {
@@ -39,11 +40,11 @@ public:
     return mapper;
   }
 
-  value_type getSymbol(const key_type& k)
+  value_type getGiNaCSymbol(const key_type& k)
   {
-    const typename std::map<key_type, value_type>::iterator iter = mappings.find(k);
+    const typename boost::bimap<key_type, value_type>::left_iterator iter = mappings.left.find(k);
 
-    if (iter != mappings.end())
+    if (iter != mappings.left.end())
     {
       return iter->second;
     }
@@ -52,8 +53,22 @@ public:
       std::ostringstream name;
       name << k;
       const value_type symbol(name.str());
-      mappings.insert(std::make_pair(k, symbol));
+      mappings.left.insert(std::make_pair(k, symbol));
       return symbol;
+    }
+  }
+
+  key_type getOriginalSymbol(const value_type& v) const
+  {
+    const typename boost::bimap<key_type, value_type>::right_const_iterator iter = mappings.right.find(v);
+
+    if (iter != mappings.right.end())
+    {
+      return iter->second;
+    }
+    else
+    {
+      CFD_EXCEPTION("Attempted to convert an unknown GiNaC symbol back to a key");
     }
   }
 };

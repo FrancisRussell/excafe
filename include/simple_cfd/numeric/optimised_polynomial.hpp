@@ -41,6 +41,7 @@ class OptimisedPolynomial
 public:
   typedef V variable_t;
   typedef double value_type;
+  typedef std::map<variable_t, value_type> value_map_t;
 
 private:
   typedef std::vector< std::pair<std::vector<std::size_t>, value_type> > coefficient_vec_t;
@@ -125,7 +126,7 @@ public:
     return evaluate(paramData);
   }
 
-  value_type evaluate(const std::map<variable_t, value_type>& variableValues) const
+  value_type evaluate(const value_map_t& variableValues) const
   {
     std::size_t variableIndex = 0;
     typename std::map<variable_t, value_type>::const_iterator varValIter = variableValues.begin();
