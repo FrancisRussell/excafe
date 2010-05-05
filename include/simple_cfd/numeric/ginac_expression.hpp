@@ -68,7 +68,7 @@ private:
   variable_t getVariable(const ginac_symbol_t& s) const
   {
     detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
-    return mapper.getOriginalSymbol(s);
+    return mapper.getKey(s);
   }
 
   GinacExpression(const ginac_expr_t& e) : expr(e)

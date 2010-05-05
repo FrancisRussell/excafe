@@ -37,6 +37,12 @@ private:
   {
   }
 
+  void checkConsistent() const
+  {
+    if (mappings.size() != reverse_mappings.size())
+      CFD_EXCEPTION("Inconsistency detected in GinacMapper bi-directional mapping.");
+  }
+
 public:
   static GinacMapper& instance()
   {
@@ -47,6 +53,8 @@ public:
 
   value_type getGiNaCSymbol(const key_type& k)
   {
+    checkConsistent();
+
     const typename std::map<key_type, value_type>::const_iterator iter = mappings.find(k);
 
     if (iter != mappings.end())
@@ -64,8 +72,10 @@ public:
     }
   }
 
-  key_type getOriginalSymbol(const value_type& v) const
+  key_type getKey(const value_type& v) const
   {
+    checkConsistent();
+
     const typename std::map<value_type, key_type>::const_iterator iter = reverse_mappings.find(v);
 
     if (iter != reverse_mappings.end())
@@ -74,7 +84,7 @@ public:
     }
     else
     {
-      CFD_EXCEPTION("Attempted to convert an unknown GiNaC symbol back to a key");
+      CFD_EXCEPTION("Attempted to convert an unknown GiNaC symbol back to a key.");
     }
   }
 };
