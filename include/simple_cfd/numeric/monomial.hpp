@@ -113,9 +113,16 @@ public:
 
   std::pair<double, Monomial> substituteValue(const variable_t& var, const double value) const
   {
-    const double coefficient = std::pow(value, getExponent(var));
     Monomial result(*this);
-    result.exponents.erase(var);
+    double coefficient = 1.0;
+    const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents.find(var));
+
+    if (varIter != result.exponents.end())
+    {
+      coefficient = std::pow(value, varIter->second);
+      result.exponents.erase(varIter);
+    }
+
     return std::make_pair(coefficient, result);
   }
 
