@@ -226,9 +226,19 @@ public:
 
   Polynomial& operator+=(const Polynomial& p)
   {
-    for(typename coefficient_map_t::const_iterator cIter(p.coefficients.begin()); cIter!=p.coefficients.end(); ++cIter)
-      coefficients[cIter->first] += cIter->second;
-  
+    typename coefficient_map_t::iterator coeffIter = coefficients.begin();
+
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& pMapping, p.coefficients)
+    {
+      while(coeffIter != coefficients.end() && coeffIter->first < pMapping.first)
+        ++coeffIter;
+
+      if (coeffIter == coefficients.end() || !(coeffIter->first == pMapping.first))
+        coefficients.insert(pMapping);
+      else
+        coeffIter->second += pMapping.second;
+    }
+
     cleanZeros();
     return *this;
   }
