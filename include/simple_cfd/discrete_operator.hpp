@@ -116,7 +116,7 @@ private:
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
     AssemblyHelper<dimension> assemblyHelper(scenario);
-    local_matrix_t localMatrix(trialElements, testElements);
+    local_matrix_t localMatrix(testElements, trialElements);
 
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
@@ -191,6 +191,9 @@ private:
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
+    typedef detail::LocalAssemblyMatrix<dimension, double> local_matrix_t;
+    local_matrix_t localMatrix(testElements, trialElements);
+
     typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
     typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
 
@@ -234,6 +237,7 @@ private:
         const CellVertices<dimension> vertices(m.getCoordinates(cid));
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
         const double jacobian = m.getReferenceCell()->getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+        localMatrix.clear();
   
         for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
         {
@@ -249,17 +253,15 @@ private:
           std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
           std::vector< Tensor<dimension> > testValues(testSpaceDimension);
   
-          std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-  
           for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
           {
   
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
+              trialIndices[trial] = localMatrix.getTrialOffset(*trialFunction, trial);
   
             for(unsigned test=0; test<testSpaceDimension; ++test)
-              testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
-  
+              testIndices[test] = localMatrix.getTestOffset(*testFunction, test);
+
             for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
             {
               for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
@@ -269,12 +271,17 @@ private:
                 testValues[test] = bFormIter->second.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(testFunction, cid, test));
   
               for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              {
                 for(unsigned test=0; test<testSpaceDimension; ++test)
-                  valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
+                {
+                  localMatrix(testIndices[test], trialIndices[trial]) += trialValues[trial].colon_product(testValues[test]) *
+                    quadIter->second * jacobian;
+                }
+              }
             }
           }
-          matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
         }
+        addValues(cid, localMatrix);
       }
     }
   }
@@ -318,9 +325,9 @@ public:
 
   void addValues(const std::size_t cid, const detail::LocalAssemblyMatrix<dimension, double>& localMatrix)
   {
-    const std::vector<dof_t> trialDofs(localMatrix.getTrialDofs(cid));
     const std::vector<dof_t> testDofs(localMatrix.getTestDofs(cid));
-    addValues(testDofs.size(), trialDofs.size(), &testDofs[0], &trialDofs[0], &(*localMatrix.begin()));
+    const std::vector<dof_t> trialDofs(localMatrix.getTrialDofs(cid));
+    addValues(testDofs.size(), trialDofs.size(), &testDofs[0], &trialDofs[0], localMatrix.data());
   }
 
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)

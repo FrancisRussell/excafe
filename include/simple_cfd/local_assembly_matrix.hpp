@@ -29,8 +29,8 @@ public:
   typedef typename std::vector<value_type>::const_iterator const_iterator;
 
 private:
-  std::set<const element_t*> trialElements;
   std::set<const element_t*> testElements;
+  std::set<const element_t*> trialElements;
   std::vector<value_type> values;
 
   static std::size_t getSpaceDimension(const std::set<const element_t*>& elements)
@@ -57,7 +57,7 @@ private:
       }
       else
       {
-        offset += element->spaceDimension();
+        offset += currentElement->spaceDimension();
       }
     }
 
@@ -95,10 +95,20 @@ private:
   }
 
 public:
-  LocalAssemblyMatrix(const std::set<const element_t*>& _trialElements, const std::set<const element_t*> _testElements) : 
-    trialElements(_trialElements), testElements(_testElements),
+  LocalAssemblyMatrix(const std::set<const element_t*>& _testElements, const std::set<const element_t*> _trialElements) : 
+    testElements(_testElements), trialElements(_trialElements),
     values(getTrialSize()*getTestSize())
   {
+  }
+  
+  void clear()
+  {
+    std::fill(begin(), end(), value_type());
+  }
+
+  const value_type* data() const
+  {
+    return &values[0];
   }
 
   iterator begin()
