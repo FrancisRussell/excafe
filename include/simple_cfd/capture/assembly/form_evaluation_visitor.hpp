@@ -95,7 +95,7 @@ private:
 
   tensor_t buildJacobian() const
   {
-    return buildLocalGradient(buildGlobalPosition());
+    return transpose(buildLocalGradient(buildGlobalPosition()));
   }
 
   static tensor_t adjugate(const tensor_t& t)
@@ -123,6 +123,25 @@ private:
     }
 
     return adjugateTensor; 
+  }
+
+  static tensor_t transpose(const tensor_t& t)
+  {
+    tensor_t operand(t);
+    TensorMatrixView<dimension, polynomial_t> operandMatrix(operand);
+
+    tensor_t transposeTensor(operand.getSize());
+    TensorMatrixView<dimension, polynomial_t> transposeMatrix(transposeTensor);
+
+    for(std::size_t row=0; row<dimension; ++row)
+    {
+      for(std::size_t col=0; col<dimension; ++col)
+      {
+        transposeMatrix(col, row) = operandMatrix(row, col);
+      }
+    }
+
+    return transposeTensor;
   }
 
   static tensor_t asTensor(const polynomial_t& p)
