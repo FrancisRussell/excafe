@@ -26,6 +26,13 @@ private:
   polynomial_t divisor;
 
 public:
+  typedef typename polynomial_t::value_map_t value_map_t;
+
+  static value_map_t buildValueMap(const std::map<variable_t, value_type>& mapping) 
+  {
+    return polynomial_t::buildValueMap(mapping);
+  }
+
   OptimisedPolynomialFraction()
   {
   }
