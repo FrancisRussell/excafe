@@ -6,6 +6,7 @@
 #include <utility>
 #include <cassert>
 #include <cmath>
+#include <ostream>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include "simple_cfd_fwd.hpp"
@@ -272,6 +273,12 @@ public:
   virtual cell_ref_t getCell() const
   {
     return referenceCell;
+  }
+
+  void write(std::ostream& o) const
+  {
+    o << "finite_element(name=\"Lagrange Triangle Linear\", rank=" << rank << ", dimension=" << dimension;
+    o << ", space=" << spaceDimension() << ")";
   }
 };
 

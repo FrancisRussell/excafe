@@ -5,6 +5,7 @@
 #include <set>
 #include <cstddef>
 #include <map>
+#include <ostream>
 #include "simple_cfd_fwd.hpp"
 #include "cell_manager.hpp"
 #include "numeric/tensor.hpp"
@@ -41,8 +42,21 @@ public:
   virtual Tensor<dimension> evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual Tensor<dimension> evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const = 0;
   virtual cell_ref_t getCell() const = 0;
+  virtual void write(std::ostream& o) const = 0;
   virtual ~FiniteElement() {}
 };
+
+}
+
+namespace std
+{
+
+template<std::size_t D>
+std::ostream& operator<<(std::ostream& o, const cfd::FiniteElement<D>& f) 
+{
+  f.write(o);
+  return o;
+}
 
 }
 

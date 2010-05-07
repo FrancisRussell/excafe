@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_DOF_HPP
 #define SIMPLE_CFD_DOF_HPP
 
+#include <ostream>
 #include "simple_cfd_fwd.hpp"
 
 namespace cfd
@@ -48,7 +49,24 @@ public:
     if (element == d.element && cid == d.cid && dof < d.dof) return true;
     return false;
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "dof(element=" << *element << ", cid=" << cid << ", index=" << dof << ")";
+  }
 };
+
+}
+
+namespace std
+{
+
+template<std::size_t D>
+std::ostream& operator<<(std::ostream& o, const cfd::Dof<D>& dof)
+{
+  dof.write(o);
+  return o;
+}
 
 }
 

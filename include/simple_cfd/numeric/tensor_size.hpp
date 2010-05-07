@@ -97,7 +97,7 @@ public:
 
   void write(std::ostream& o) const
   {
-    o << "{rank=" << rank << ", dimension=" << dimension << "}";
+    o << "tensor_size(rank=" << rank << ", dimension=" << dimension << ")";
   }
 };
 
