@@ -31,6 +31,11 @@ public:
     return component < p.component;
   }
 
+  std::size_t getComponent() const
+  {
+    return component;
+  }
+
   void write(std::ostream& o) const
   {
     o << "pos[" << static_cast<char>('x'+component) << "]";
