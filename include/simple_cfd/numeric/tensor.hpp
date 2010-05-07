@@ -44,7 +44,7 @@ public:
   typedef T value_type;
   typedef row_major_tag layout_tag;
   typedef typename std::vector<value_type>::iterator iterator;
-  typedef typename std::vector<value_type>::iterator const_iterator;
+  typedef typename std::vector<value_type>::const_iterator const_iterator;
 
   TensorSize size;
 
@@ -97,7 +97,7 @@ public:
     return elements.end();
   }
 
-  iterator end() const
+  const_iterator end() const
   {
     return elements.end();
   }
@@ -261,6 +261,14 @@ public:
     {
       elements[i*elementSize + index] = t.elements[index]; 
     }
+  }
+
+  template<typename unary_function>
+  Tensor<dimension, typename unary_function::result_type> transform(const unary_function& f) const
+  {
+    Tensor<dimension, typename unary_function::result_type> result(size);
+    std::transform(begin(), end(), result.begin(), f);
+    return result;
   }
 
   operator value_type()
