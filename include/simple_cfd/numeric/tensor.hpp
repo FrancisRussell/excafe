@@ -1,7 +1,6 @@
 #ifndef SIMPLE_CFD_NUMERIC_TENSOR_HPP
 #define SIMPLE_CFD_NUMERIC_TENSOR_HPP
 
-#include <simple_cfd_fwd.hpp>
 #include <vector>
 #include <algorithm>
 #include <cstddef>
@@ -12,6 +11,8 @@
 #include <algorithm>
 #include <functional>
 #include <ostream>
+#include <boost/operators.hpp>
+#include <simple_cfd_fwd.hpp>
 #include "index.hpp"
 #include "tensor_size.hpp"
 
@@ -36,7 +37,11 @@ struct Power<X, 0>
 }
 
 template<std::size_t D, typename T>
-class Tensor
+class Tensor : boost::addable< Tensor<D,T>,
+               boost::subtractable< Tensor<D,T>,
+               boost::multipliable< Tensor<D,T>, T, 
+               boost::dividable< Tensor<D,T>, T
+               > > > >
 {
 public:
   static const std::size_t  dimension = D;
@@ -54,7 +59,7 @@ private:
   static std::size_t pow(const std::size_t base, const std::size_t exponent)
   {
     std::size_t result = 1;
-
+     
     for(std::size_t i=0; i<exponent; ++i)
       result *= base;
 
@@ -173,20 +178,6 @@ public:
     return *this;
   }
 
-  Tensor operator/(const value_type& t) const
-  {
-    Tensor result(*this);
-    result/=t;
-    return result;
-  }
-
-  Tensor operator*(const value_type s) const
-  {
-    Tensor x(*this);
-    x*=s;
-    return x;
-  }
-
   Tensor& operator+=(const Tensor& t)
   {
     assert(size == t.size);
@@ -194,11 +185,11 @@ public:
     return *this;
   }
 
-  Tensor operator+(const Tensor& t) const
+  Tensor& operator-=(const Tensor& t)
   {
-    Tensor result(*this);
-    result+=t;
-    return result;
+    assert(size == t.size);
+    std::transform(elements.begin(), elements.end(), t.elements.begin(), elements.begin(), std::minus<value_type>());
+    return *this;
   }
 
   Tensor operator*(const Tensor& t) const
