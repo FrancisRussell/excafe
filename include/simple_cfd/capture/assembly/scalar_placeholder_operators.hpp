@@ -22,10 +22,15 @@ private:
     return *static_cast<const child_t*>(this);
   }
 
+  const polynomial_t toPolynomial() const
+  {
+    return polynomial_t(ScalarPlaceholder(toChild()));
+  }
+
 public:
   polynomial_t operator-(const double d) const
   {
-    return polynomial_t(ScalarPlaceholder(toChild()));
+    return toPolynomial() - d;
   }
 };
 
