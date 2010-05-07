@@ -1,4 +1,4 @@
-#ifndef SIMPLE_CFD_FORMS_FORM_EVAULATOR_VISITOR_HPP
+#ifndef SIMPLE_CFD_FORMS_FORM_EVALUATOR_VISITOR_HPP
 #define SIMPLE_CFD_FORMS_FORM_EVALUATOR_VISITOR_HPP
 
 #include <cstddef>
@@ -85,6 +85,12 @@ public:
   Tensor<dimension> getResult() const
   {
     assert(valueStack.size() == 1);
+    return valueStack.top();
+  }
+
+  Tensor<dimension> getTop() const
+  {
+    assert(!valueStack.empty());
     return valueStack.top();
   }
 
