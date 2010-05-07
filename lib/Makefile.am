@@ -12,7 +12,7 @@ capture/fields/temporal_index_set.cpp capture/fields/temporal_index_value.cpp \
 capture/evaluation/evaluation_strategy.cpp capture/solve_operation.cpp \
 capture/assembly/scalar_placeholder.cpp capture/assembly/position_component.cpp \
 capture/assembly/cell_vertex_component.cpp capture/assembly/basis_coefficient.cpp \
-capture/assembly/scalar_access.cpp
+capture/assembly/scalar_access.cpp numeric/tensor_size.cpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \

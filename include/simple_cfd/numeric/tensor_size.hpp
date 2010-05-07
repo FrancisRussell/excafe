@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cassert>
 #include <utility>
+#include <ostream>
 #include <boost/operators.hpp>
 #include <simple_cfd/exception.hpp>
 
@@ -93,7 +94,19 @@ public:
     assert(n <= rank);
     return TensorSize(rank-n, dimension);
   }
+
+  void write(std::ostream& o) const
+  {
+    o << "{rank=" << rank << ", dimension=" << dimension << "}";
+  }
 };
+
+}
+
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& o, const cfd::TensorSize& s);
 
 }
 
