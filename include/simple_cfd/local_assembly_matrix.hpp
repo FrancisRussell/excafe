@@ -227,13 +227,18 @@ public:
   }
 };
 
+}
+
+}
+
+namespace std
+{
+
 template<std::size_t D, typename T>
-std::ostream& operator<<(std::ostream& o, class LocalAssemblyMatrix<D,T>& m)
+std::ostream& operator<<(std::ostream& o, const cfd::detail::LocalAssemblyMatrix<D,T>& m)
 {
   m.write(o);
   return o;
-}
-
 }
 
 }
