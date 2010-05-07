@@ -10,7 +10,11 @@ namespace detail
 {
 
 class ScalarPlaceholder;
-template<typename T> class ScalarPlaceholderPolynomialOperators;
+class PositionComponent;
+class CellVertexComponent;
+class BasisCoefficient;
+class ScalarAccess;
+template<typename T> class ScalarPlaceholderOperators;
 
 }
 

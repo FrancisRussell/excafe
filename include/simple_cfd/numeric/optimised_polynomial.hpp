@@ -131,7 +131,7 @@ public:
     return evaluate(paramData);
   }
 
-  value_type evaluate(const std::map<variable_t, value_type>& variableValues) const
+  value_type evaluate(const value_map_t& variableValues) const
   {
     std::size_t variableIndex = 0;
     typename std::map<variable_t, value_type>::const_iterator varValIter = variableValues.begin();
