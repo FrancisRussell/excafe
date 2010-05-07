@@ -40,8 +40,18 @@ public:
 
   Monomial& operator*=(const Monomial& m)
   {
-    for (typename std::map<variable_t, std::size_t>::const_iterator expIter(m.exponents.begin()); expIter!=m.exponents.end(); ++expIter)
-      exponents[expIter->first] += expIter->second;
+    typename exponent_map_t::iterator expIter = exponents.begin();
+
+    BOOST_FOREACH(const typename exponent_map_t::value_type& mMapping, m.exponents)
+    {
+      while(expIter != exponents.end() && expIter->first < mMapping.first)
+        ++expIter;
+
+      if (expIter == exponents.end() || !(expIter->first == mMapping.first))
+        exponents.insert(expIter, mMapping);
+      else
+        expIter->second += mMapping.second;
+    }
 
     return *this;
   }

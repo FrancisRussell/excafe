@@ -234,7 +234,7 @@ public:
         ++coeffIter;
 
       if (coeffIter == coefficients.end() || !(coeffIter->first == pMapping.first))
-        coefficients.insert(pMapping);
+        coefficients.insert(coeffIter, pMapping);
       else
         coeffIter->second += pMapping.second;
     }
