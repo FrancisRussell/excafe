@@ -79,19 +79,18 @@ private:
     return pattern;
   }
 
-  template<typename map_t>
-  map_t evaluatePlaceholders(const Scenario<dimension>& scenario,
+  std::map<detail::ScalarPlaceholder, double> evaluatePlaceholders(const Scenario<dimension>& scenario,
     const detail::ExpressionValues<dimension>& expressionValues, const std::size_t cid, 
     const std::set<detail::ScalarPlaceholder>& placeholders) const
   {
     using namespace detail;
 
     const ScalarPlaceholderEvaluator<dimension> evaluator(scenario, expressionValues, cid);
-    map_t values;
+    std::map<detail::ScalarPlaceholder, double> values;
 
     BOOST_FOREACH(const ScalarPlaceholder& placeholder, placeholders)
     {
-      values.insert(typename map_t::value_type(placeholder, evaluator(placeholder)));
+      values.insert(std::make_pair(placeholder, evaluator(placeholder)));
     }
 
     return values;
@@ -157,8 +156,7 @@ private:
         if (localEntity == localCellEntity)
         {
           // Find placeholder values
-          typedef optimised_assembly_polynomial_t::value_map_t value_map_t;
-          const value_map_t placeholderValues(evaluatePlaceholders<value_map_t>(scenario, values, cid, placeholders));
+          const std::map<detail::ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
 
 /*
           typedef std::pair<ScalarPlaceholder, double> pair_t;

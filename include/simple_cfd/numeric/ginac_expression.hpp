@@ -19,7 +19,7 @@ namespace
 class GinacSymbolCollector : public GiNaC::visitor, public GiNaC::symbol::visitor
 {
 private:
-  std::set<GiNaC::symbol> symbols;
+  std::set<GiNaC::symbol, GiNaC::ex_is_less> symbols;
 
 public:
   void visit(const GiNaC::symbol& s) 
@@ -27,7 +27,7 @@ public:
     symbols.insert(s);
   }
 
-  std::set<GiNaC::symbol> getSymbols() const
+  std::set<GiNaC::symbol, GiNaC::ex_is_less> getSymbols() const
   {
     return symbols;
   }
@@ -47,10 +47,10 @@ class GinacExpression : boost::addable<GinacExpression<V>, double,
                         > > > > > > > >
 {
 public:
-  typedef double value_type;
-  typedef V variable_t;
+  typedef double                      value_type;
+  typedef V                           variable_t;
   typedef GinacExpression<variable_t> optimised_t;
-  typedef std::map<variable_t, value_type>   value_map_t;
+  typedef GiNaC::exmap                value_map_t;
 
 private:
   typedef GiNaC::ex      ginac_expr_t;
@@ -59,13 +59,13 @@ private:
   
   ginac_expr_t expr;
 
-  ginac_symbol_t getSymbol(const variable_t& var) const
+  static ginac_symbol_t getSymbol(const variable_t& var)
   {
     detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
     return mapper.getGiNaCSymbol(var);
   }
 
-  variable_t getVariable(const ginac_symbol_t& s) const
+  static variable_t getVariable(const ginac_symbol_t& s)
   {
     detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
     return mapper.getKey(s);
@@ -75,7 +75,24 @@ private:
   {
   }
 
+  void simplify()
+  {
+    expr = expr.normal();
+  }
+
 public:
+  static value_map_t buildValueMap(const std::map<variable_t, value_type>& values)
+  {
+    value_map_t ginacMap;
+
+    typedef typename std::map<variable_t, value_type>::value_type pair_type;
+    BOOST_FOREACH(const pair_type& mapping, values)
+    {
+      ginacMap.insert(value_map_t::value_type(getSymbol(mapping.first), ginac_numeric_t(mapping.second)));
+    }
+    return ginacMap;
+  }
+
   GinacExpression()
   {
   }
@@ -150,12 +167,14 @@ public:
   GinacExpression& operator*=(const GinacExpression& e)
   {
     expr *= e.expr;
+    simplify();
     return *this;
   }
 
   GinacExpression& operator/=(const GinacExpression& e)
   {
     expr /= e.expr;
+    simplify();
     return *this;
   }
 
@@ -177,9 +196,9 @@ public:
   std::set<variable_t> getVariables() const
   {
     GinacSymbolCollector collector;
-    expr.accept(collector);
+    expr.traverse(collector);
 
-    const std::set<GiNaC::symbol> ginacSymbols(collector.getSymbols());
+    const std::set<GiNaC::symbol, GiNaC::ex_is_less> ginacSymbols(collector.getSymbols());
     std::set<variable_t> variables;
 
     BOOST_FOREACH(const GiNaC::symbol& s, ginacSymbols)
@@ -202,15 +221,7 @@ public:
 
   value_type evaluate(const value_map_t& variableValues) const
   {
-    typedef GiNaC::exmap ginac_exmap_t;
-    ginac_exmap_t ginacMap;
-
-    BOOST_FOREACH(const typename value_map_t::value_type& mapping, variableValues)
-    {
-      ginacMap.insert(ginac_exmap_t::value_type(getSymbol(mapping.first), ginac_numeric_t(mapping.second)));
-    }
-
-    const ginac_expr_t evaluated = expr.subs(ginacMap);
+    const ginac_expr_t evaluated = GiNaC::evalf(expr.subs(variableValues));
 
     if (GiNaC::is_a<GiNaC::numeric>(evaluated))
     {
