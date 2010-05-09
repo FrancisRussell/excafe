@@ -2,7 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_PLACEHOLDER_OPERATORS_HPP
 
 #include "assembly_fwd.hpp"
-#include <simple_cfd/numeric/ginac_expression.hpp>
+#include <simple_cfd/numeric/polynomial.hpp>
 
 namespace cfd
 {
@@ -15,7 +15,7 @@ class ScalarPlaceholderOperators
 {
 private:
   typedef T child_t;
-  typedef GinacExpression<ScalarPlaceholder> polynomial_t;
+  typedef Polynomial<ScalarPlaceholder> polynomial_t;
 
   const child_t& toChild() const
   {
