@@ -59,12 +59,12 @@ public:
 
   bool operator==(const Monomial& m) const
   {
-    return exponents == m.exponents;
+    return *exponents == *m.exponents;
   }
 
   bool operator<(const Monomial& m) const
   {
-    return exponents < m.exponents;
+    return *exponents < *m.exponents;
   }
 
   Monomial& operator=(const Monomial& m)

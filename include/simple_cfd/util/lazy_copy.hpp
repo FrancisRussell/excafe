@@ -16,6 +16,8 @@ public:
   typedef T value_type;
 
 private:
+  bool operator==(const LazyCopy&) const;
+
   struct ValueHolder
   {
     ValueHolder() {}
@@ -43,16 +45,6 @@ public:
   {
     holder = l.holder;
     return *this;
-  }
-
-  bool operator==(const LazyCopy& l) const
-  {
-    return cref() == l.cref();
-  }
-
-  bool operator<(const LazyCopy& l) const
-  {
-    return cref() < l.cref();
   }
 
   const value_type& cref() const

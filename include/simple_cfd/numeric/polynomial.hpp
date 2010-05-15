@@ -177,7 +177,7 @@ public:
 
   bool operator==(const Polynomial& p) const
   {
-    return coefficients == p.coefficients;
+    return *coefficients == *p.coefficients;
   }
 
   Polynomial& operator*=(const double x)
