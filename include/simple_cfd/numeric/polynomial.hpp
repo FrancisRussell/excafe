@@ -15,9 +15,9 @@
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <simple_cfd_fwd.hpp>
-#include <numeric/monomial.hpp>
-#include <numeric/optimised_polynomial.hpp>
-#include <util/lazy_copy.hpp>
+#include "monomial.hpp"
+#include "optimised_polynomial.hpp"
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
