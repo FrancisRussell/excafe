@@ -138,7 +138,7 @@ public:
 
     BOOST_FOREACH(const variable_t& v, variables)
     {
-      while (varValIter->first != v && varValIter != variableValues.end())
+      while (varValIter != variableValues.end() && varValIter->first != v)
         ++varValIter;
 
       if (varValIter == variableValues.end())
