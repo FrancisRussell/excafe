@@ -108,7 +108,7 @@ private:
     std::cout << "Entered new assembly function..." << std::endl;
 
     typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, optimised_assembly_polynomial_t> opt_local_matrix_t;
+    typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t::optimised_t> opt_local_matrix_t;
     typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
@@ -136,7 +136,7 @@ private:
     std::cout << "Built optimised matrix.." << std::endl;
 
     // Build set of placeholders
-    PolynomialVariableCollector<optimised_assembly_polynomial_t> collector;
+    PolynomialVariableCollector<assembly_polynomial_t::optimised_t> collector;
     collector = std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
     const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
 
@@ -166,7 +166,7 @@ private:
           }
 */
           // Build concrete local assembly matrix
-          const PolynomialEvaluator<optimised_assembly_polynomial_t> evaluator(placeholderValues);
+          const PolynomialEvaluator<assembly_polynomial_t::optimised_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
           addValues(cid, concreteLocalMatrix);
         }

@@ -13,7 +13,6 @@ namespace detail
 
 // typedef for easy alteration of capture polynomial type
 typedef PolynomialFraction<ScalarPlaceholder> assembly_polynomial_t;
-typedef OptimisedPolynomialFraction<ScalarPlaceholder> optimised_assembly_polynomial_t;
 
 }
 
