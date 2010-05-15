@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <map>
 #include <utility>
 #include <algorithm>
 #include <simple_cfd/cell_manager.hpp>
@@ -37,18 +38,19 @@ public:
   assembly_polynomial_t operator()(const assembly_polynomial_t& p) const
   {
     assembly_polynomial_t result;
+    std::map<ScalarPlaceholder, double> valueMap;
+
     for(std::size_t point=0; point<rule.size(); ++point)
     {
       const double weight = rule[point].second;
-      assembly_polynomial_t weighted = p*weight;
 
       for(std::size_t d=0; d<dimension; ++d)
       {
         const PositionComponent component(d);
-        const ScalarPlaceholder dx(component);
-        weighted = weighted.substituteValue(dx, rule[point].first[d]);
+        const ScalarPlaceholder x(component);
+        valueMap[x] = rule[point].first[d];
       }
-      result += weighted;
+      result += p.substituteValues(valueMap) * weight;
     }
     return result;
   }

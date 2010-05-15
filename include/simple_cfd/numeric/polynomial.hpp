@@ -270,13 +270,13 @@ public:
     return result;
   }
 
-  Polynomial substituteValue(const variable_t& variable, const double value) const
+  Polynomial substituteValues(const std::map<variable_t, double>& valueMap) const
   {
     Polynomial result;
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
-      const std::pair< double, Monomial<variable_t> > mBound(cIter->first.substituteValue(variable, value));
+      const std::pair< double, Monomial<variable_t> > mBound(cIter->first.substituteValues(valueMap));
       result.addMonomial(cIter->second * mBound.first, mBound.second);
     }
   

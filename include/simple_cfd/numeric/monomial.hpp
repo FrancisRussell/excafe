@@ -122,16 +122,22 @@ public:
     return std::make_pair(coefficient, result);
   }
 
-  std::pair<double, Monomial> substituteValue(const variable_t& var, const double value) const
+  std::pair<double, Monomial> substituteValues(const std::map<variable_t, double>& valueMap) const
   {
     Monomial result(*this);
     double coefficient = 1.0;
-    const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents->find(var));
 
-    if (varIter != result.exponents->end())
+    typedef std::pair<variable_t, double> pair_t;
+
+    BOOST_FOREACH(const pair_t& mapping, valueMap)
     {
-      coefficient = std::pow(value, varIter->second);
-      result.exponents->erase(varIter);
+      const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents->find(mapping.first));
+
+      if (varIter != result.exponents->end())
+      {
+        coefficient *= std::pow(mapping.second, varIter->second);
+        result.exponents->erase(varIter);
+      }
     }
 
     return std::make_pair(coefficient, result);

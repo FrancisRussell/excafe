@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_NUMERIC_POLYNOMIAL_FRACTION_HPP
 
 #include <cstddef>
+#include <map>
 #include <boost/operators.hpp>
 #include "polynomial.hpp"
 #include <ostream>
@@ -94,10 +95,10 @@ public:
     divisor.replaceIndependentVariable(from, to);
   }
 
-  PolynomialFraction substituteValue(const variable_t& variable, const double value) const
+  PolynomialFraction substituteValues(const std::map<variable_t, double>& valueMap) const
   {
-    const polynomial_t newDividend = dividend.substituteValue(variable, value);
-    const polynomial_t newDivisor = divisor.substituteValue(variable, value);
+    const polynomial_t newDividend = dividend.substituteValues(valueMap);
+    const polynomial_t newDivisor = divisor.substituteValues(valueMap);
     return PolynomialFraction(newDividend, newDivisor);
   }
 
