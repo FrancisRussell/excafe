@@ -10,6 +10,7 @@
 #include <ostream>
 #include <boost/foreach.hpp>
 #include <boost/operators.hpp>
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
@@ -22,7 +23,7 @@ public:
 
 private:
   typedef std::map<variable_t, std::size_t> exponent_map_t;
-  exponent_map_t exponents;
+  util::LazyCopy<exponent_map_t> exponents;
 
 public:
   Monomial()
@@ -35,20 +36,20 @@ public:
 
   Monomial(const variable_t& variable, const std::size_t exponent)
   {
-    exponents.insert(std::make_pair(variable, exponent));
+    exponents->insert(std::make_pair(variable, exponent));
   }
 
   Monomial& operator*=(const Monomial& m)
   {
-    typename exponent_map_t::iterator expIter = exponents.begin();
+    typename exponent_map_t::iterator expIter = exponents->begin();
 
-    BOOST_FOREACH(const typename exponent_map_t::value_type& mMapping, m.exponents)
+    BOOST_FOREACH(const typename exponent_map_t::value_type& mMapping, *m.exponents)
     {
-      while(expIter != exponents.end() && expIter->first < mMapping.first)
+      while(expIter != exponents->end() && expIter->first < mMapping.first)
         ++expIter;
 
-      if (expIter == exponents.end() || !(expIter->first == mMapping.first))
-        exponents.insert(expIter, mMapping);
+      if (expIter == exponents->end() || !(expIter->first == mMapping.first))
+        exponents->insert(expIter, mMapping);
       else
         expIter->second += mMapping.second;
     }
@@ -74,14 +75,14 @@ public:
 
   bool isOne() const
   {
-    return exponents.empty();
+    return exponents->empty();
   }
 
   std::set<variable_t> getVariables() const
   {
     std::set<variable_t> variables;
 
-    for (typename std::map<variable_t, std::size_t>::const_iterator expIter(exponents.begin()); expIter!=exponents.end(); ++expIter)
+    for (typename std::map<variable_t, std::size_t>::const_iterator expIter(exponents->begin()); expIter!=exponents->end(); ++expIter)
       variables.insert(expIter->first);
 
     return variables;
@@ -89,9 +90,9 @@ public:
 
   std::size_t getExponent(const variable_t& variable) const
   {
-    const typename std::map<variable_t, std::size_t>::const_iterator varIter(exponents.find(variable));
+    const typename std::map<variable_t, std::size_t>::const_iterator varIter(exponents->find(variable));
   
-    if (varIter == exponents.end())
+    if (varIter == exponents->end())
     {
       return 0;
     }
@@ -106,15 +107,15 @@ public:
     const double coefficient = getExponent(variable);
     Monomial result;
 
-    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
+    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents->begin()); eIter!=exponents->end(); ++eIter)
     {
       if (eIter->first != variable)
       {
-        result.exponents.insert(*eIter);
+        result.exponents->insert(*eIter);
       }
       else if (eIter->second > 1)
       {
-        result.exponents.insert(std::make_pair(eIter->first, eIter->second - 1));
+        result.exponents->insert(std::make_pair(eIter->first, eIter->second - 1));
       }
     }
 
@@ -125,12 +126,12 @@ public:
   {
     Monomial result(*this);
     double coefficient = 1.0;
-    const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents.find(var));
+    const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents->find(var));
 
-    if (varIter != result.exponents.end())
+    if (varIter != result.exponents->end())
     {
       coefficient = std::pow(value, varIter->second);
-      result.exponents.erase(varIter);
+      result.exponents->erase(varIter);
     }
 
     return std::make_pair(coefficient, result);
@@ -143,7 +144,7 @@ public:
 
   std::ostream& write(std::ostream& out) const
   {
-    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents.begin()); eIter!=exponents.end(); ++eIter)
+    for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents->begin()); eIter!=exponents->end(); ++eIter)
     {
       out << eIter->first;
 
@@ -151,7 +152,7 @@ public:
         out << "^{" << eIter->second << "}";
     }
   
-    if (exponents.empty())
+    if (exponents->empty())
       out << "1.0";
 
     return out;
@@ -161,12 +162,12 @@ public:
   {
     Monomial result;
 
-    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, exponents)
+    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, exponents.cref())
     {
       if (exponentMapping.first == from)
-        result.exponents.insert(std::make_pair(to, exponentMapping.second));
+        result.exponents->insert(std::make_pair(to, exponentMapping.second));
       else
-        result.exponents.insert(exponentMapping);
+        result.exponents->insert(exponentMapping);
     }
 
     return result;

@@ -17,6 +17,7 @@
 #include <simple_cfd_fwd.hpp>
 #include <numeric/monomial.hpp>
 #include <numeric/optimised_polynomial.hpp>
+#include <util/lazy_copy.hpp>
 
 namespace cfd
 {
@@ -38,16 +39,16 @@ public:
 
 private:
   typedef std::map<Monomial<variable_t>, double> coefficient_map_t;
-  coefficient_map_t coefficients;
+  util::LazyCopy<coefficient_map_t> coefficients;
 
   void addTerm(const double coefficient, const variable_t& variable, const std::size_t exponent)
   {
-    coefficients[Monomial<variable_t>(variable, exponent)] += coefficient;
+    (*coefficients)[Monomial<variable_t>(variable, exponent)] += coefficient;
   }
 
   void addConstant(const double constant)
   {
-    coefficients[Monomial<variable_t>()] += constant;
+    (*coefficients)[Monomial<variable_t>()] += constant;
   }
 
   // We currently only call this from public methods
@@ -56,13 +57,13 @@ private:
     typedef typename coefficient_map_t::iterator coeff_map_iter;
 
     // We need this construction because we invalidate the current iterator on erase
-    coeff_map_iter currentIter = coefficients.begin();
-    while(currentIter != coefficients.end())
+    coeff_map_iter currentIter = coefficients->begin();
+    while(currentIter != coefficients->end())
     {
       const coeff_map_iter nextIter = boost::next(currentIter);
 
       if (currentIter->second == 0.0)
-        coefficients.erase(currentIter);
+        coefficients->erase(currentIter);
 
       currentIter = nextIter;
     }
@@ -70,13 +71,13 @@ private:
 
   void addMonomial(const double coefficient, const Monomial<variable_t>& m)
   {
-    coefficients[m] += coefficient;
+    (*coefficients)[m] += coefficient;
   }
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
   {
-    for(typename coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
       cIter->second = f(cIter->second);
   }
 
@@ -124,22 +125,22 @@ public:
 
   iterator begin()
   {
-    return coefficients.begin();
+    return coefficients->begin();
   }
 
   iterator end()
   {
-    return coefficients.end();
+    return coefficients->end();
   }
 
   const_iterator begin() const
   {
-    return coefficients.begin();
+    return coefficients->begin();
   }
 
   const_iterator end() const
   {
-    return coefficients.end();
+    return coefficients->end();
   }
 
   void replaceVariable(const variable_t& from, const variable_t& to)
@@ -160,7 +161,7 @@ public:
   {
     std::set<variable_t> result;
 
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
       const std::set<variable_t> monomialVariables = cIter->first.getVariables();
       result.insert(monomialVariables.begin(), monomialVariables.end());
@@ -212,9 +213,9 @@ public:
     Polynomial a;
     std::swap(a, *this);
   
-    BOOST_FOREACH(const typename coefficient_map_t::value_type& aMapping, a.coefficients)
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& aMapping, a.coefficients.cref())
     {
-      BOOST_FOREACH(const typename coefficient_map_t::value_type& bMapping, b.coefficients)
+      BOOST_FOREACH(const typename coefficient_map_t::value_type& bMapping, b.coefficients.cref())
       {
         addMonomial(aMapping.second * bMapping.second, aMapping.first * bMapping.first);
       }
@@ -226,15 +227,15 @@ public:
 
   Polynomial& operator+=(const Polynomial& p)
   {
-    typename coefficient_map_t::iterator coeffIter = coefficients.begin();
+    typename coefficient_map_t::iterator coeffIter = coefficients->begin();
 
-    BOOST_FOREACH(const typename coefficient_map_t::value_type& pMapping, p.coefficients)
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& pMapping, *p.coefficients)
     {
-      while(coeffIter != coefficients.end() && coeffIter->first < pMapping.first)
+      while(coeffIter != coefficients->end() && coeffIter->first < pMapping.first)
         ++coeffIter;
 
-      if (coeffIter == coefficients.end() || !(coeffIter->first == pMapping.first))
-        coefficients.insert(coeffIter, pMapping);
+      if (coeffIter == coefficients->end() || !(coeffIter->first == pMapping.first))
+        coefficients->insert(coeffIter, pMapping);
       else
         coeffIter->second += pMapping.second;
     }
@@ -259,7 +260,7 @@ public:
   Polynomial derivative(const variable_t& variable) const
   {
     Polynomial result;
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
       const std::pair< double, Monomial<variable_t> > mDerivative(cIter->first.derivative(variable));
       result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
@@ -273,7 +274,7 @@ public:
   {
     Polynomial result;
   
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
       const std::pair< double, Monomial<variable_t> > mBound(cIter->first.substituteValue(variable, value));
       result.addMonomial(cIter->second * mBound.first, mBound.second);
@@ -290,14 +291,14 @@ public:
 
   std::size_t numTerms() const
   {
-    return coefficients.size();
+    return coefficients->size();
   }
 
   std::ostream& write(std::ostream& out) const
   {
-    for(typename coefficient_map_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
-      if (cIter != coefficients.begin())
+      if (cIter != coefficients->begin())
         out << " + ";
   
       const bool renderCoefficient = cIter->second != 1.0 || cIter->first.isOne();
@@ -313,7 +314,7 @@ public:
         out << cIter->first;
     }
     
-    if (coefficients.empty())
+    if (coefficients->empty())
       out << 0.0;
   
     return out;
