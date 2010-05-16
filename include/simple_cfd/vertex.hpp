@@ -16,12 +16,10 @@ namespace cfd
 {
 
 template<unsigned int D>
-class vertex :  private boost::less_than_comparable< vertex<D> >,
-                private boost::equality_comparable< vertex<D> >,
-                private boost::addable< vertex<D> >,
-                private boost::subtractable< vertex<D> >,
-                private boost::dividable<vertex<D>, double>,
-                private boost::multipliable<vertex<D>, double>
+class vertex :  boost::totally_ordered<vertex<D>,
+                boost::additive<vertex<D>,
+                boost::multiplicative<vertex<D>, double
+                > > >
 {
 public:
   static const unsigned int dimension = D;

@@ -17,9 +17,7 @@ namespace detail
 {
 
 template<std::size_t D, typename T>
-class LocalAssemblyMatrix : boost::multipliable<LocalAssemblyMatrix<D,T>, T,
-                            boost::dividable<LocalAssemblyMatrix<D,T>, T
-                            > >
+class LocalAssemblyMatrix : boost::multiplicative<LocalAssemblyMatrix<D,T>, T>
 {
 public:
   static const std::size_t dimension = D;

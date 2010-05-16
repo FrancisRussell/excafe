@@ -7,11 +7,7 @@
 namespace cfd
 {
 
-class Scalar : boost::addable<Scalar,
-               boost::subtractable<Scalar,
-               boost::multipliable<Scalar,
-               boost::dividable<Scalar
-               > > > >
+class Scalar : boost::arithmetic<Scalar>
 {
 private:
   typedef detail::ScalarExpr::expr_ptr expr_ptr;
