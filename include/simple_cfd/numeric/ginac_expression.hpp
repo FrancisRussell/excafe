@@ -37,15 +37,9 @@ public:
 }
 
 template<typename V>
-class GinacExpression : boost::addable<GinacExpression<V>, double,
-                        boost::subtractable<GinacExpression<V>, double,
-                        boost::multipliable<GinacExpression<V>, double,
-                        boost::dividable<GinacExpression<V>, double,
-                        boost::addable<GinacExpression<V>,
-                        boost::subtractable<GinacExpression<V>,
-                        boost::dividable<GinacExpression<V>,
-                        boost::multipliable<GinacExpression<V>
-                        > > > > > > > >
+class GinacExpression : boost::arithmetic<GinacExpression<V>, double,
+                        boost::arithmetic<GinacExpression<V>
+                        > >
 {
 public:
   typedef double                             value_type;
