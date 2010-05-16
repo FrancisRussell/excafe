@@ -4,6 +4,7 @@
 #include <ostream>
 #include <boost/operators.hpp>
 #include <cln/cln.h>
+#include "cast.hpp"
 
 namespace cfd
 {
@@ -82,26 +83,65 @@ public:
     return *this;
   }
 
+  double toDouble() const
+  {
+    return cln::double_approx(value);
+  }
+
+  float toFloat() const
+  {
+    return cln::float_approx(value);
+  }
+
   void swap(CLNWrapper& b)
   {
     std::swap(value, b.value);
+  }
+
+  CLNWrapper pow(const int y) const
+  {
+    return convert(cln::expt(value, y));
+  }
+
+  CLNWrapper floor() const
+  {
+    return convert(cln::floor1(value));
+  }
+
+  CLNWrapper ceil() const
+  {
+    return convert(cln::ceiling1(value));
   }
 
   void write(std::ostream& o) const
   {
     o << value;
   }
-
-  operator double() const
-  {
-    return cln::double_approx(value);
-  }
-
-  operator cln::cl_F() const
-  {
-    return value;
-  }
 };
+
+template<std::size_t P>
+CLNWrapper<P> pow(const CLNWrapper<P>& x, const CLNWrapper<P>& y)
+{
+  return x.pow(y);
+}
+
+template<std::size_t P>
+CLNWrapper<P> pow(const CLNWrapper<P>& x, const int y)
+{
+  return x.pow(y);
+}
+
+template<std::size_t P>
+CLNWrapper<P> floor(const CLNWrapper<P>& x)
+{
+  return x.floor();
+}
+
+template<std::size_t P>
+CLNWrapper<P> ceil(const CLNWrapper<P>& x)
+{
+  return x.ceil();
+}
 
 template<std::size_t P>
 std::ostream& operator<<(std::ostream& o, const CLNWrapper<P> c)
@@ -110,15 +150,41 @@ std::ostream& operator<<(std::ostream& o, const CLNWrapper<P> c)
   return o;
 }
 
+namespace detail
+{
+
+template<std::size_t P>
+struct RawConverter<CLNWrapper<P>, float>
+{
+  static float low_level_convert(const CLNWrapper<P>& s) 
+  { 
+    return s.toFloat();
+  }
+};
+
+
+template<std::size_t P>
+struct RawConverter<CLNWrapper<P>, double>
+{
+  static double low_level_convert(const CLNWrapper<P>& s) 
+  { 
+    return s.toDouble();
+  }
+};
+
+}
+
 }
 
 namespace std
 {
-  template<std::size_t P>
-  void swap(cfd::CLNWrapper<P>& a, cfd::CLNWrapper<P>& b)
-  {
-    a.swap(b);
-  }
+
+template<std::size_t P>
+void swap(cfd::CLNWrapper<P>& a, cfd::CLNWrapper<P>& b)
+{
+  a.swap(b);
+}
+
 }
 
 #endif
