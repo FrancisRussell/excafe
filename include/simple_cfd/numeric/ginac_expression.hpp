@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include <ginac/ginac.h>
 #include "ginac_mapper.hpp"
+#include "ginac_value_map.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -47,10 +48,10 @@ class GinacExpression : boost::addable<GinacExpression<V>, double,
                         > > > > > > > >
 {
 public:
-  typedef double                      value_type;
-  typedef V                           variable_t;
-  typedef GinacExpression<variable_t> optimised_t;
-  typedef GiNaC::exmap                value_map_t;
+  typedef double                             value_type;
+  typedef V                                  variable_t;
+  typedef GinacExpression<variable_t>        optimised_t;
+  typedef detail::GinacValueMap<variable_t>  value_map;
 
 private:
   typedef GiNaC::ex      ginac_expr_t;
@@ -81,18 +82,6 @@ private:
   }
 
 public:
-  static value_map_t buildValueMap(const std::map<variable_t, value_type>& values)
-  {
-    value_map_t ginacMap;
-
-    typedef typename std::map<variable_t, value_type>::value_type pair_type;
-    BOOST_FOREACH(const pair_type& mapping, values)
-    {
-      ginacMap.insert(value_map_t::value_type(getSymbol(mapping.first), ginac_numeric_t(mapping.second)));
-    }
-    return ginacMap;
-  }
-
   GinacExpression()
   {
   }
@@ -183,9 +172,9 @@ public:
     return GinacExpression(expr.diff(getSymbol(variable)));
   }
 
-  GinacExpression substituteValue(const variable_t& variable, const double value) const
+  GinacExpression substituteValues(const value_map& valueMap) const
   {
-    return GinacExpression(expr.subs(getSymbol(variable) == value));
+    return GinacExpression(expr.subs(valueMap.getReference()));
   }
 
   optimised_t optimise() const
@@ -219,9 +208,9 @@ public:
     expr.swap(e.expr);
   }
 
-  value_type evaluate(const value_map_t& variableValues) const
+  value_type evaluate(const value_map& variableValues) const
   {
-    const ginac_expr_t evaluated = GiNaC::evalf(expr.subs(variableValues));
+    const ginac_expr_t evaluated = GiNaC::evalf(expr.subs(variableValues.getReference()));
 
     if (GiNaC::is_a<GiNaC::numeric>(evaluated))
     {
