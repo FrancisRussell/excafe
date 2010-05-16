@@ -11,16 +11,10 @@ namespace cfd
 {
 
 template<typename V>
-class PolynomialFraction : boost::addable<PolynomialFraction<V>, double,
-                           boost::subtractable<PolynomialFraction<V>, double,
-                           boost::dividable<PolynomialFraction<V>, double,
-                           boost::multipliable<PolynomialFraction<V>, double, 
-                           boost::addable<PolynomialFraction<V>,
-                           boost::subtractable< PolynomialFraction<V>,
-                           boost::dividable< PolynomialFraction<V>,
-                           boost::multipliable< PolynomialFraction<V>,
+class PolynomialFraction : boost::arithmetic<PolynomialFraction<V>, double,
+                           boost::arithmetic<PolynomialFraction<V>,
                            boost::totally_ordered< PolynomialFraction<V>
-                           > > > > > > > > >
+                           > > >
 {
 public:
   typedef V variable_t;
@@ -193,8 +187,8 @@ public:
 
   PolynomialFraction derivative(const variable_t& variable) const
   {
-    polynomial_t newDividend = dividend.derivative(variable)*divisor - dividend*divisor.derivative(variable);
-    polynomial_t newDivisor = divisor * divisor;
+    const polynomial_t newDividend = dividend.derivative(variable)*divisor - dividend*divisor.derivative(variable);
+    const polynomial_t newDivisor = divisor * divisor;
     return PolynomialFraction(newDividend, newDivisor);
   }
 };

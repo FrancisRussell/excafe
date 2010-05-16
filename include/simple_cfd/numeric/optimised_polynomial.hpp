@@ -56,9 +56,12 @@ private:
   std::vector<std::size_t> buildExponentVector(const monomial_t& m) const
   {
     std::vector<std::size_t> exponents;
+    exponents.reserve(variables.size());
   
-    for(typename std::set<variable_t>::const_iterator varIter(variables.begin()); varIter!=variables.end(); ++varIter)
-      exponents.push_back(m.getExponent(*varIter));
+    BOOST_FOREACH(const variable_t& var, variables)
+    {
+      exponents.push_back(m.getExponent(var));
+    }
   
     return exponents;
   }

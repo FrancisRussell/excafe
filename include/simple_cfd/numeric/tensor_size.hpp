@@ -12,7 +12,7 @@
 namespace cfd
 {
 
-class TensorSize : boost::equality_comparable<TensorSize>
+class TensorSize : boost::totally_ordered<TensorSize>
 {
 private:
   std::size_t rank;

@@ -37,14 +37,12 @@ struct Power<X, 0>
 }
 
 template<std::size_t D, typename T>
-class Tensor : boost::addable< Tensor<D,T>,
-               boost::subtractable< Tensor<D,T>,
-               boost::multipliable< Tensor<D,T>, T, 
-               boost::dividable< Tensor<D,T>, T
-               > > > >
+class Tensor : boost::additive<Tensor<D,T>,
+               boost::multiplicative<Tensor<D,T>, T
+               > >
 {
 public:
-  static const std::size_t  dimension = D;
+  static const std::size_t dimension = D;
   typedef std::size_t size_type;
   typedef T value_type;
   typedef row_major_tag layout_tag;
