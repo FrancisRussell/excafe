@@ -6,6 +6,7 @@
 #include <utility>
 #include "assembly_fwd.hpp"
 #include "scalar_placeholder_operators.hpp"
+#include <simple_cfd/numeric/cast.hpp>
 
 namespace cfd
 {
@@ -49,7 +50,7 @@ public:
 
   void write(std::ostream& o) const
   {
-    o << "cell[" << vertex << "][" << static_cast<char>('x'+component) << "]";
+    o << "cell[" << vertex << "][" << cfd::numeric_cast<char>('x'+component) << "]";
   }
 };
 

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <ostream>
 #include "scalar_placeholder_operators.hpp"
+#include <simple_cfd/numeric/cast.hpp>
 
 namespace cfd
 {
@@ -38,7 +39,7 @@ public:
 
   void write(std::ostream& o) const
   {
-    o << "pos[" << static_cast<char>('x'+component) << "]";
+    o << "pos[" << cfd::numeric_cast<char>('x'+component) << "]";
   }
 };
 
