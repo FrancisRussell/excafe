@@ -38,7 +38,7 @@ public:
   assembly_polynomial_t operator()(const assembly_polynomial_t& p) const
   {
     assembly_polynomial_t result;
-    std::map<ScalarPlaceholder, double> valueMap;
+    assembly_polynomial_t::value_map valueMap;
 
     for(std::size_t point=0; point<rule.size(); ++point)
     {
@@ -48,7 +48,7 @@ public:
       {
         const PositionComponent component(d);
         const ScalarPlaceholder x(component);
-        valueMap[x] = rule[point].first[d];
+        valueMap.bind(x, rule[point].first[d]);
       }
       result += p.substituteValues(valueMap) * weight;
     }

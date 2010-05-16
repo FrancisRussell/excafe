@@ -19,13 +19,14 @@ class PolynomialFraction : boost::addable<PolynomialFraction<V>, double,
                            boost::subtractable< PolynomialFraction<V>,
                            boost::dividable< PolynomialFraction<V>,
                            boost::multipliable< PolynomialFraction<V>,
-                           boost::equality_comparable< PolynomialFraction<V>
+                           boost::totally_ordered< PolynomialFraction<V>
                            > > > > > > > > >
 {
 public:
   typedef V variable_t;
   typedef Polynomial<variable_t> polynomial_t;
   typedef OptimisedPolynomialFraction<variable_t> optimised_t;
+  typedef typename polynomial_t::value_map value_map;
 
 private:
   polynomial_t dividend;
@@ -95,7 +96,7 @@ public:
     divisor.replaceIndependentVariable(from, to);
   }
 
-  PolynomialFraction substituteValues(const std::map<variable_t, double>& valueMap) const
+  PolynomialFraction substituteValues(const value_map& valueMap) const
   {
     const polynomial_t newDividend = dividend.substituteValues(valueMap);
     const polynomial_t newDivisor = divisor.substituteValues(valueMap);

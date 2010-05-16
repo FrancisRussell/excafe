@@ -10,13 +10,14 @@
 #include <utility>
 #include <iosfwd>
 #include <boost/operators.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <simple_cfd_fwd.hpp>
 #include "monomial.hpp"
 #include "optimised_polynomial.hpp"
+#include "cln_wrapper.hpp"
+#include "value_map.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
@@ -30,7 +31,7 @@ class Polynomial : boost::addable<Polynomial<V>, double,
                    boost::addable<Polynomial<V>,
                    boost::subtractable< Polynomial<V>,
                    boost::multipliable< Polynomial<V>,
-                   boost::equality_comparable< Polynomial<V>
+                   boost::totally_ordered< Polynomial<V>
                    > > > > > > > >
 {
 public:
@@ -38,17 +39,20 @@ public:
   typedef OptimisedPolynomial<variable_t> optimised_t;
 
 private:
-  typedef std::map<Monomial<variable_t>, double> coefficient_map_t;
+  static const std::size_t precision = 32;
+  typedef CLNWrapper<precision> internal_value_t;
+  typedef Monomial<variable_t, internal_value_t> monomial_t;
+  typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
   util::LazyCopy<coefficient_map_t> coefficients;
 
-  void addTerm(const double coefficient, const variable_t& variable, const std::size_t exponent)
+  void addTerm(const internal_value_t& coefficient, const variable_t& variable, const std::size_t exponent)
   {
-    (*coefficients)[Monomial<variable_t>(variable, exponent)] += coefficient;
+    (*coefficients)[monomial_t(variable, exponent)] += coefficient;
   }
 
-  void addConstant(const double constant)
+  void addConstant(const internal_value_t& constant)
   {
-    (*coefficients)[Monomial<variable_t>()] += constant;
+    (*coefficients)[monomial_t()] += constant;
   }
 
   // We currently only call this from public methods
@@ -62,14 +66,14 @@ private:
     {
       const coeff_map_iter nextIter = boost::next(currentIter);
 
-      if (currentIter->second == 0.0)
+      if (currentIter->second == internal_value_t(0.0))
         coefficients->erase(currentIter);
 
       currentIter = nextIter;
     }
   }
 
-  void addMonomial(const double coefficient, const Monomial<variable_t>& m)
+  void addMonomial(const internal_value_t coefficient, const monomial_t& m)
   {
     (*coefficients)[m] += coefficient;
   }
@@ -82,6 +86,7 @@ private:
   }
 
 public:
+  typedef detail::ValueMap<variable_t, internal_value_t> value_map;
   typedef typename coefficient_map_t::iterator iterator;
   typedef typename coefficient_map_t::const_iterator const_iterator;
 
@@ -182,14 +187,14 @@ public:
 
   Polynomial& operator*=(const double x)
   {
-    transformCoefficients(boost::lambda::_1 * x);
+    transformCoefficients(boost::bind(std::multiplies<internal_value_t>(), _1, x));
     cleanZeros();
     return *this;
   }
 
   Polynomial& operator/=(const double x)
   {
-    transformCoefficients(boost::lambda::_1 / x);
+    transformCoefficients(boost::bind(std::divides<internal_value_t>(), _1, x));
     cleanZeros();
     return *this;
   }
@@ -262,7 +267,7 @@ public:
     Polynomial result;
     for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
-      const std::pair< double, Monomial<variable_t> > mDerivative(cIter->first.derivative(variable));
+      const std::pair<internal_value_t, monomial_t> mDerivative(cIter->first.derivative(variable));
       result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
     }
   
@@ -270,13 +275,13 @@ public:
     return result;
   }
 
-  Polynomial substituteValues(const std::map<variable_t, double>& valueMap) const
+  Polynomial substituteValues(const value_map& valueMap) const
   {
     Polynomial result;
   
     for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
     {
-      const std::pair< double, Monomial<variable_t> > mBound(cIter->first.substituteValues(valueMap));
+      const std::pair<internal_value_t, monomial_t> mBound(cIter->first.substituteValues(valueMap));
       result.addMonomial(cIter->second * mBound.first, mBound.second);
     }
   
@@ -301,7 +306,7 @@ public:
       if (cIter != coefficients->begin())
         out << " + ";
   
-      const bool renderCoefficient = cIter->second != 1.0 || cIter->first.isOne();
+      const bool renderCoefficient = cIter->second != internal_value_t(1.0) || cIter->first.isOne();
       const bool renderMonomial = !cIter->first.isOne();
   
       if (renderCoefficient)

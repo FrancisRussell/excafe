@@ -79,18 +79,19 @@ private:
     return pattern;
   }
 
-  std::map<detail::ScalarPlaceholder, double> evaluatePlaceholders(const Scenario<dimension>& scenario,
+  template<typename value_map_t>
+  value_map_t evaluatePlaceholders(const Scenario<dimension>& scenario,
     const detail::ExpressionValues<dimension>& expressionValues, const std::size_t cid, 
     const std::set<detail::ScalarPlaceholder>& placeholders) const
   {
     using namespace detail;
 
     const ScalarPlaceholderEvaluator<dimension> evaluator(scenario, expressionValues, cid);
-    std::map<detail::ScalarPlaceholder, double> values;
+    value_map_t values;
 
     BOOST_FOREACH(const ScalarPlaceholder& placeholder, placeholders)
     {
-      values.insert(std::make_pair(placeholder, evaluator(placeholder)));
+      values.bind(placeholder, evaluator(placeholder));
     }
 
     return values;
@@ -107,8 +108,9 @@ private:
 
     std::cout << "Entered new assembly function..." << std::endl;
 
+    typedef assembly_polynomial_t::optimised_t optimised_polynomial_t;
     typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t::optimised_t> opt_local_matrix_t;
+    typedef LocalAssemblyMatrix<dimension, optimised_polynomial_t> opt_local_matrix_t;
     typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
@@ -156,7 +158,8 @@ private:
         if (localEntity == localCellEntity)
         {
           // Find placeholder values
-          const std::map<detail::ScalarPlaceholder, double> placeholderValues(evaluatePlaceholders(scenario, values, cid, placeholders));
+          typedef optimised_polynomial_t::value_map value_map;
+          const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
 
 /*
           typedef std::pair<ScalarPlaceholder, double> pair_t;
@@ -166,7 +169,7 @@ private:
           }
 */
           // Build concrete local assembly matrix
-          const PolynomialEvaluator<assembly_polynomial_t::optimised_t> evaluator(placeholderValues);
+          const PolynomialEvaluator<optimised_polynomial_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
           addValues(cid, concreteLocalMatrix);
         }

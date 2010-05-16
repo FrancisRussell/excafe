@@ -18,7 +18,7 @@ template<typename T> class Index;
 // Polynomial types
 template<typename V> class Polynomial;
 template<typename V> class PolynomialFraction;
-template<typename V> class Monomial;
+template<typename V, typename T> class Monomial;
 template<typename V> class OptimisedPolynomial;
 template<typename V> class OptimisedPolynomialFraction;
 

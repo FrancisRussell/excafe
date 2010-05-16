@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cassert>
 #include <boost/foreach.hpp>
+#include "cast.hpp"
 #include "numeric_fwd.hpp"
 #include "polynomial.hpp"
 #include "monomial.hpp"
@@ -41,12 +42,7 @@ class OptimisedPolynomial
 public:
   typedef V variable_t;
   typedef double value_type;
-  typedef std::map<variable_t, value_type> value_map_t;
-
-  static value_map_t buildValueMap(const std::map<variable_t, value_type>& values)
-  {
-    return values;
-  }
+  typedef typename Polynomial<variable_t>::value_map value_map;
 
 private:
   typedef std::vector< std::pair<std::vector<std::size_t>, value_type> > coefficient_vec_t;
@@ -56,7 +52,8 @@ private:
   // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
   mutable std::vector<value_type> paramData;
 
-  std::vector<std::size_t> buildExponentVector(const Monomial<variable_t>& m) const
+  template<typename monomial_t>
+  std::vector<std::size_t> buildExponentVector(const monomial_t& m) const
   {
     std::vector<std::size_t> exponents;
   
@@ -90,7 +87,8 @@ public:
     p.checkConsistent();
   
     for(typename Polynomial<variable_t>::const_iterator mIter(p.begin()); mIter!=p.end(); ++mIter)
-      coefficients.push_back(std::make_pair(buildExponentVector(mIter->first), mIter->second));
+      coefficients.push_back(std::make_pair(buildExponentVector(mIter->first),
+        cfd::numeric_cast<value_type>(mIter->second)));
   }
 
   std::set<variable_t> getVariables() const
@@ -131,10 +129,13 @@ public:
     return evaluate(paramData);
   }
 
-  value_type evaluate(const value_map_t& variableValues) const
+  value_type evaluate(const value_map& valueMap) const
   {
+    typedef typename value_map::internal_map_t internal_value_map_t;
+    const internal_value_map_t& variableValues = valueMap.getReference();
+
     std::size_t variableIndex = 0;
-    typename std::map<variable_t, value_type>::const_iterator varValIter = variableValues.begin();
+    typename internal_value_map_t::const_iterator varValIter = variableValues.begin();
 
     BOOST_FOREACH(const variable_t& v, variables)
     {
@@ -149,7 +150,7 @@ public:
       }
       else
       {
-        paramData[variableIndex] = varValIter->second;
+        paramData[variableIndex] = cfd::numeric_cast<value_type>(varValIter->second);
       }
       ++variableIndex;
     }

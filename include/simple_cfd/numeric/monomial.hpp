@@ -11,15 +11,20 @@
 #include <boost/foreach.hpp>
 #include <boost/operators.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
+#include "value_map.hpp"
+#include "cast.hpp"
 
 namespace cfd
 {
 
-template<typename V>
-class Monomial : boost::multipliable<Monomial<V> >
+template<typename V, typename T>
+class Monomial : boost::multipliable<Monomial<V,T>,
+                 boost::totally_ordered<Monomial<V,T>
+                 > >
 {
 public:
   typedef V variable_t;
+  typedef T value_type;
 
 private:
   typedef std::map<variable_t, std::size_t> exponent_map_t;
@@ -102,9 +107,9 @@ public:
     }
   }
 
-  std::pair<double, Monomial> derivative(const variable_t& variable) const
+  std::pair<value_type, Monomial> derivative(const variable_t& variable) const
   {
-    const double coefficient = getExponent(variable);
+    const value_type coefficient = cfd::numeric_cast<double>(getExponent(variable));
     Monomial result;
 
     for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents->begin()); eIter!=exponents->end(); ++eIter)
@@ -122,20 +127,20 @@ public:
     return std::make_pair(coefficient, result);
   }
 
-  std::pair<double, Monomial> substituteValues(const std::map<variable_t, double>& valueMap) const
+  std::pair<value_type, Monomial> substituteValues(const detail::ValueMap<variable_t, value_type>& valueMap) const
   {
     Monomial result(*this);
-    double coefficient = 1.0;
+    value_type coefficient = 1.0;
 
-    typedef std::pair<variable_t, double> pair_t;
+    typedef std::pair<variable_t, value_type> pair_t;
 
-    BOOST_FOREACH(const pair_t& mapping, valueMap)
+    BOOST_FOREACH(const pair_t& mapping, valueMap.getReference())
     {
       const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents->find(mapping.first));
 
       if (varIter != result.exponents->end())
       {
-        coefficient *= std::pow(mapping.second, varIter->second);
+        coefficient *= pow(mapping.second, varIter->second);
         result.exponents->erase(varIter);
       }
     }
@@ -180,8 +185,8 @@ public:
   }
 };
 
-template<typename V>
-std::ostream& operator<<(std::ostream& o, const Monomial<V>& p)
+template<typename V, typename T>
+std::ostream& operator<<(std::ostream& o, const Monomial<V,T>& p)
 {
   return p.write(o);
 }
@@ -190,8 +195,8 @@ std::ostream& operator<<(std::ostream& o, const Monomial<V>& p)
 
 namespace std
 {
-  template<typename V>
-  void swap(cfd::Monomial<V>& a, cfd::Monomial<V>& b)
+  template<typename V, typename T>
+  void swap(cfd::Monomial<V,T>& a, cfd::Monomial<V,T>& b)
   {
     a.swap(b);
   }
