@@ -7,7 +7,7 @@ TH = V + P
 (v, q) = TestFunctions(TH)
 (u, p) = TrialFunctions(TH)
 
-f = Function(V)
+f = Coefficient(V)
 
 a = (inner(grad(v), grad(u)) - div(v)*p + q*div(u))*dx
 L = inner(v, f)*dx
