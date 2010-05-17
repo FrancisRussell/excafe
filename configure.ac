@@ -31,6 +31,14 @@ fi
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 
+PKG_CHECK_MODULES([CLN], [cln])
+CXXFLAGS="$CXXFLAGS $CLN_CFLAGS"
+LDFLAGS="$LDFLAGS $CLN_LIBS"
+
+PKG_CHECK_MODULES([GINAC], [ginac])
+CXXFLAGS="$CXXFLAGS $GINAC_CFLAGS"
+LDFLAGS="$LDFLAGS $GINAC_LIBS"
+
 # Check for MTL
 #AC_ARG_WITH([mtl],
 #          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
