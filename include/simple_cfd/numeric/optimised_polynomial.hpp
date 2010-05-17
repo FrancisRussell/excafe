@@ -30,7 +30,7 @@ struct Pow
 
   inline value_type operator()(const value_type value, const std::size_t exponent) const
   {
-    return std::pow(value, exponent);
+    return pow(value, exponent);
   }
 };
 
@@ -41,16 +41,17 @@ class OptimisedPolynomial
 {
 public:
   typedef V variable_t;
-  typedef double value_type;
+  typedef typename Polynomial<variable_t>::value_type  value_type;
+  typedef typename Polynomial<variable_t>::internal_value_t internal_value_t;
   typedef typename Polynomial<variable_t>::value_map value_map;
 
 private:
-  typedef std::vector< std::pair<std::vector<std::size_t>, value_type> > coefficient_vec_t;
+  typedef std::vector< std::pair<std::vector<std::size_t>, internal_value_t> > coefficient_vec_t;
   std::set<variable_t> variables;
   coefficient_vec_t coefficients;
 
   // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
-  mutable std::vector<value_type> paramData;
+  mutable std::vector<internal_value_t> paramData;
 
   template<typename monomial_t>
   std::vector<std::size_t> buildExponentVector(const monomial_t& m) const
@@ -66,17 +67,17 @@ private:
     return exponents;
   }
 
-  value_type evaluate(const std::vector<value_type>& params) const
+  value_type evaluate(const std::vector<internal_value_t>& params) const
   {
-    value_type result = 0.0;
+    internal_value_t result = 0.0;
   
-    for(coefficient_vec_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_vec_t::const_iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
     {
       result += std::inner_product(params.begin(), params.end(), cIter->first.begin(), cIter->second,
-        std::multiplies<value_type>(), Pow<value_type>());
+        std::multiplies<internal_value_t>(), Pow<internal_value_t>());
     }
   
-    return result;
+    return cfd::numeric_cast<value_type>(result);
   }
 
 public:
@@ -91,7 +92,7 @@ public:
   
     for(typename Polynomial<variable_t>::const_iterator mIter(p.begin()); mIter!=p.end(); ++mIter)
       coefficients.push_back(std::make_pair(buildExponentVector(mIter->first),
-        cfd::numeric_cast<value_type>(mIter->second)));
+        cfd::numeric_cast<internal_value_t>(mIter->second)));
   }
 
   std::set<variable_t> getVariables() const
@@ -153,7 +154,7 @@ public:
       }
       else
       {
-        paramData[variableIndex] = cfd::numeric_cast<value_type>(varValIter->second);
+        paramData[variableIndex] = cfd::numeric_cast<internal_value_t>(varValIter->second);
       }
       ++variableIndex;
     }

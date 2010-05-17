@@ -18,7 +18,6 @@ class OptimisedPolynomialFraction
 {
 public:
   typedef V variable_t;
-  typedef double value_type;
 
 private:
   typedef OptimisedPolynomial<variable_t> polynomial_t;
@@ -26,6 +25,7 @@ private:
   polynomial_t divisor;
 
 public:
+  typedef typename polynomial_t::value_type value_type;
   typedef typename polynomial_t::value_map value_map;
 
   OptimisedPolynomialFraction()

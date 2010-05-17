@@ -80,7 +80,7 @@ public:
   {
   }
 
-  GinacExpression(const double s) : expr(ginac_numeric_t(s)) 
+  GinacExpression(const value_type s) : expr(ginac_numeric_t(s)) 
   {
   }
 
@@ -88,7 +88,7 @@ public:
   {
   }
 
-  GinacExpression(const double c, const variable_t& v) : expr(c * getSymbol(v)) 
+  GinacExpression(const value_type c, const variable_t& v) : expr(c * getSymbol(v)) 
   {
   }
 
@@ -96,7 +96,7 @@ public:
   {
   }
 
-  GinacExpression(const double c, const variable_t& v, const std::size_t e) : expr(c * pow(getSymbol(v), e)) 
+  GinacExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * pow(getSymbol(v), e)) 
   {
   }
 
@@ -106,25 +106,25 @@ public:
     return *this;
   }
 
-  GinacExpression& operator+=(const double s)
+  GinacExpression& operator+=(const value_type s)
   {
     expr += s;
     return *this;
   }
 
-  GinacExpression& operator-=(const double s)
+  GinacExpression& operator-=(const value_type s)
   {
     expr -= s;
     return *this;
   }
 
-  GinacExpression& operator*=(const double s)
+  GinacExpression& operator*=(const value_type s)
   {
     expr *= s;
     return *this;
   }
 
-  GinacExpression& operator/=(const double s)
+  GinacExpression& operator/=(const value_type s)
   {
     expr /= s;
     return *this;
@@ -208,7 +208,7 @@ public:
 
     if (GiNaC::is_a<GiNaC::numeric>(evaluated))
     {
-      return GiNaC::ex_to<GiNaC::numeric>(evaluated).to_double();
+      return cfd::numeric_cast<value_type>(GiNaC::ex_to<GiNaC::numeric>(evaluated).to_double());
     }
     else
     {

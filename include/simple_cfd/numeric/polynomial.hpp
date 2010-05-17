@@ -30,13 +30,18 @@ class Polynomial : boost::arithmetic<Polynomial<V>, double,
                    boost::totally_ordered< Polynomial<V>
                    > > > >
 {
-public:
-  typedef V variable_t;
-  typedef OptimisedPolynomial<variable_t> optimised_t;
-
 private:
   static const std::size_t precision = 32;
-  typedef CLNWrapper<precision> internal_value_t;
+
+public:
+  typedef V variable_t;
+  typedef double value_type;
+  typedef OptimisedPolynomial<variable_t> optimised_t;
+  //typedef CLNWrapper<precision> internal_value_t;
+  typedef double internal_value_t;
+
+
+private:
   typedef Monomial<variable_t, internal_value_t> monomial_t;
   typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
   util::LazyCopy<coefficient_map_t> coefficients;
@@ -94,7 +99,7 @@ public:
   {
   }
 
-  Polynomial(const double constant)
+  Polynomial(const value_type constant)
   {
     addConstant(constant);
     cleanZeros();
@@ -106,7 +111,7 @@ public:
     cleanZeros();
   }
 
-  Polynomial(const double coefficient, const variable_t& variable)
+  Polynomial(const value_type coefficient, const variable_t& variable)
   {
     addTerm(coefficient, variable, 1);
     cleanZeros();
@@ -118,7 +123,7 @@ public:
     cleanZeros();
   }
 
-  Polynomial(const double coefficient, const variable_t& variable, const std::size_t exponent)
+  Polynomial(const value_type coefficient, const variable_t& variable, const std::size_t exponent)
   {
     addTerm(coefficient, variable, exponent);
     cleanZeros();
@@ -181,28 +186,28 @@ public:
     return *coefficients == *p.coefficients;
   }
 
-  Polynomial& operator*=(const double x)
+  Polynomial& operator*=(const value_type x)
   {
     transformCoefficients(boost::bind(std::multiplies<internal_value_t>(), _1, x));
     cleanZeros();
     return *this;
   }
 
-  Polynomial& operator/=(const double x)
+  Polynomial& operator/=(const value_type x)
   {
     transformCoefficients(boost::bind(std::divides<internal_value_t>(), _1, x));
     cleanZeros();
     return *this;
   }
 
-  Polynomial& operator+=(const double x)
+  Polynomial& operator+=(const value_type x)
   {
     addConstant(x);
     cleanZeros();
     return *this;
   }
 
-  Polynomial& operator-=(const double x)
+  Polynomial& operator-=(const value_type x)
   {
     addConstant(-x);
     cleanZeros();

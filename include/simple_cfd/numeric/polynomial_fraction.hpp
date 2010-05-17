@@ -11,7 +11,7 @@ namespace cfd
 {
 
 template<typename V>
-class PolynomialFraction : boost::arithmetic<PolynomialFraction<V>, double,
+class PolynomialFraction : boost::arithmetic<PolynomialFraction<V>, typename Polynomial<V>::value_type,
                            boost::arithmetic<PolynomialFraction<V>,
                            boost::totally_ordered< PolynomialFraction<V>
                            > > >
@@ -19,8 +19,9 @@ class PolynomialFraction : boost::arithmetic<PolynomialFraction<V>, double,
 public:
   typedef V variable_t;
   typedef Polynomial<variable_t> polynomial_t;
-  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
+  typedef typename polynomial_t::value_type value_type;
   typedef typename polynomial_t::value_map value_map;
+  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
 
 private:
   polynomial_t dividend;
@@ -51,7 +52,7 @@ public:
   {
   }
 
-  PolynomialFraction(const double constant) : dividend(constant), divisor(1.0)
+  PolynomialFraction(const value_type constant) : dividend(constant), divisor(1.0)
   {
   }
 
@@ -68,7 +69,7 @@ public:
   {
   }
 
-  PolynomialFraction(const double coefficient, const variable_t& variable, const std::size_t exponent) :
+  PolynomialFraction(const value_type coefficient, const variable_t& variable, const std::size_t exponent) :
     dividend(coefficient, variable, exponent), divisor(1.0)
   {
   }
@@ -112,25 +113,25 @@ public:
     return dividend == p.dividend && divisor == p.divisor;
   }
 
-  PolynomialFraction& operator*=(const double x)
+  PolynomialFraction& operator*=(const value_type x)
   {
     dividend *= x;
     return *this;
   }
 
-  PolynomialFraction& operator/=(const double x)
+  PolynomialFraction& operator/=(const value_type x)
   {
     dividend /= x;
     return *this;
   }
 
-  PolynomialFraction& operator+=(const double x)
+  PolynomialFraction& operator+=(const value_type x)
   {
     dividend += divisor*x;
     return *this;
   }
 
-  PolynomialFraction& operator-=(const double x)
+  PolynomialFraction& operator-=(const value_type x)
   {
     dividend -= divisor*x;
     return *this;
