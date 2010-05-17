@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT(simple_cfd, 0.1, fpr02@doc.ic.ac.uk)
-AC_CONFIG_SRCDIR([steady_stokes/main.cpp])
+AC_CONFIG_SRCDIR([steady_stokes/solver.cpp])
 AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
