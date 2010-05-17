@@ -1,0 +1,13 @@
+VX = FiniteElement("Lagrange", triangle, 2)
+VY = FiniteElement("Lagrange", triangle, 2)
+P = FiniteElement("Lagrange", triangle, 1)
+V = VX + VY
+TH = V + P
+
+(v, q) = TestFunctions(TH)
+(u, p) = TrialFunctions(TH)
+
+f = Coefficient(V)
+
+a = (inner(grad(v), grad(u)) - div(v)*p + q*div(u))*dx
+L = inner(v, f)*dx
