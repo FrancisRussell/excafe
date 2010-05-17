@@ -270,3 +270,12 @@ std::ostream& operator<<(std::ostream& out, const Polynomial& p)
 }
 
 }
+
+namespace std
+{
+  template<>
+  void swap(cfd::Polynomial& a, cfd::Polynomial& b)
+  {
+    a.swap(b);
+  }
+}

@@ -6,8 +6,11 @@
 #include <set>
 #include <iterator>
 #include <utility>
+#include <algorithm>
 #include <cstddef>
+#include <boost/operators.hpp>
 #include "simple_cfd_fwd.hpp"
+#include "exception.hpp"
 #include "dof.hpp"
 #include "numeric/sparsity_pattern.hpp"
 
@@ -15,7 +18,9 @@ namespace cfd
 {
 
 template<std::size_t D>
-class DofMap
+class DofMap : public boost::addable< DofMap<D>,
+                      boost::subtractable< DofMap<D> 
+                      > >
 {
 public:
   static const std::size_t dimension = D;
@@ -48,6 +53,15 @@ private:
       mappingIter->second = remapping[mappingIter->second];
   }
 
+  // This ordering is only used for performing DofMap intersections
+  struct DofMappingComparator
+  {
+    bool operator()(const std::pair<dof_t, unsigned>& a, const std::pair<dof_t, unsigned>& b) const
+    {
+      return a.first < b.first;
+    }
+  };
+
 public:
   DofMap()
   {
@@ -60,6 +74,13 @@ public:
   DofMap(const Mesh<dimension>& _m, const std::set<const finite_element_t*>& _elements, const local2global_map& _mapping) : 
           m(&_m), elements(_elements), mapping(_mapping)
   {
+  }
+
+  void swap(DofMap& d)
+  {
+    std::swap(m, d.m);
+    std::swap(elements, d.elements);
+    std::swap(mapping, d.mapping);
   }
   
   bool isComposite() const
@@ -81,6 +102,92 @@ public:
   const_iterator end() const
   {
     return mapping.end();
+  }
+
+  DofMap& operator+=(const DofMap& map)
+  {
+    // TODO: better error checking or behavour if adding intersecting DofMaps
+    if (m != map.m)
+    {
+      CFD_EXCEPTION("Attempted to add two DofMaps defined on different meshes");
+    }
+
+    elements.insert(map.elements.begin(), map.elements.end());
+    const unsigned offset = getDegreesOfFreedomCount();
+
+    for(typename local2global_map::const_iterator mappingIter=map.mapping.begin(); mappingIter!=map.mapping.end();
+      ++mappingIter)
+      mapping[mappingIter->first] = mappingIter->second + offset;
+
+    return *this;
+  }
+
+  DofMap& operator-=(const DofMap& map)
+  {
+    std::set<int> removedDofs;
+
+    for(typename local2global_map::const_iterator mappingIter=map.mapping.begin(); mappingIter!=map.mapping.end();
+      ++mappingIter)
+    {
+      const typename local2global_map::const_iterator removeIter = mapping.find(mappingIter->first);
+
+      if (removeIter != mapping.end())
+        removedDofs.insert(removeIter->second);
+    }
+    
+    local2global_map newMapping;
+
+    for(typename local2global_map::const_iterator mappingIter=mapping.begin(); mappingIter!=mapping.end(); ++mappingIter)
+    {
+      if (removedDofs.find(mappingIter->second) == removedDofs.end())
+        newMapping.insert(*mappingIter);
+    }
+
+    std::swap(newMapping, mapping);
+    makeContiguous();
+    return *this;
+  }
+
+  DofMap intersect(const DofMap& d) const
+  {
+    if (m != d.m)
+    {
+      CFD_EXCEPTION("Attempted to intersect two DofMaps defined on different meshes");
+    }
+
+    std::set<const finite_element_t*> commonElements;
+    std::set_intersection(elements.begin(), elements.end(), d.elements.begin(), d.elements.end(),
+      std::inserter(commonElements, commonElements.end()));
+
+    local2global_map commonDofMappings;
+    std::set_intersection(mapping.begin(), mapping.end(), d.mapping.begin(), d.mapping.end(),
+      std::inserter(commonDofMappings, commonDofMappings.end()), DofMappingComparator());
+
+    DofMap intersection(*m, commonElements, commonDofMappings);
+
+    // NOTE: the ability to make the intersection contiguous relies on the property of 
+    // set_intersection that all copies to the output iterator are made from the first 
+    // range. Hence, we still have a sensible *sparse* numbering.
+    intersection.makeContiguous();
+
+    return intersection;
+  }
+
+  DofMap intersect(const std::set<dof_t>& dofs) const
+  {
+    local2global_map commonDofMappings;
+
+    for(typename std::set<dof_t>::const_iterator dofIter(dofs.begin()); dofIter!=dofs.end(); ++dofIter)
+    {
+      const typename local2global_map::const_iterator mappingIter(mapping.find(*dofIter));
+
+      if (mappingIter != mapping.end())
+        commonDofMappings.insert(*mappingIter);
+    }
+
+    DofMap intersection(*m, elements, commonDofMappings);
+    intersection.makeContiguous();
+    return intersection;
   }
 
   bool operator==(const DofMap& map) const
@@ -218,6 +325,15 @@ public:
   }
 };
 
+}
+
+namespace std
+{
+  template<std::size_t D>
+  void swap(cfd::DofMap<D>& a, cfd::DofMap<D>& b)
+  {
+    a.swap(b);
+  }
 }
 
 #endif

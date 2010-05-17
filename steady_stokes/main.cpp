@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
   for(int i=0; i<6000; ++i)
   {
     std::cout << "Starting timestep: " << i << std::endl;
-    system.coupledSolve();
+//  system.coupledSolve();
     std::stringstream filename;
     filename << "./steady_stokes_" << boost::format("%|04|") % i << ".vtk";
     system.outputToFile(filename.str());

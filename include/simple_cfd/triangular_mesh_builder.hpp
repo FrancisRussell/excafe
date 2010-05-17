@@ -15,7 +15,7 @@ class TriangularMeshBuilder
 {
 private:
   typedef TriangularCell cell_type;
-  typedef TriangularCell::vertex_type vertex_type;
+  typedef cell_type::vertex_type vertex_type;
   static const std::size_t dimension = cell_type::dimension;
   const double width;
   const double height;
@@ -29,6 +29,8 @@ private:
     std::vector<double>& holeList) const;
 
 public:
+  static const std::size_t cell_dimension = dimension;
+
   TriangularMeshBuilder(const double width, const double height, const double maxCellArea);
   void addPolygon(const Polygon& polygon, int label);
   Mesh<dimension> buildMesh() const;

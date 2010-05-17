@@ -94,4 +94,10 @@ std::ostream& operator<<(std::ostream& o, const Polynomial& p);
 
 }
 
+namespace std
+{
+  template<>
+  void swap(cfd::Polynomial& a, cfd::Polynomial& b);
+}
+
 #endif

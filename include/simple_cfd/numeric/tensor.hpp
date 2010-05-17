@@ -84,13 +84,21 @@ public:
   {
     return size;
   }
-
+  
   value_type& operator()(const size_type index)
   {
     assert(rank == 1);
     assert(index < dimension);
     return elements[index];
   }
+
+  const value_type operator()(const size_type index) const
+  {
+    assert(rank == 1);
+    assert(index < dimension);
+    return elements[index];
+  }
+
 
   value_type& operator[](const size_type* const indices)
   {

@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_FE_VECTOR_HPP
 #define SIMPLE_CFD_FE_VECTOR_HPP
 
+#include <cstddef>
 #include <vector>
 #include <ostream>
 #include <iostream>
@@ -17,7 +18,7 @@ private:
   static const std::size_t dimension = D;
   typedef FiniteElement<dimension> finite_element_t;
   typedef typename DofMap<dimension>::dof_t dof_t;
-  const DofMap<dimension> rowMappings;
+  DofMap<dimension> rowMappings;
   PETScVector vector;
   
   void addOrSetValues(const unsigned rows, const dof_t* rowDofs, const double* values, const bool add)
@@ -45,6 +46,12 @@ public:
 
   DiscreteField(const DiscreteField& v) : rowMappings(v.rowMappings), vector(v.vector)
   {
+  }
+
+  void swap(DiscreteField& f)
+  {
+    std::swap(rowMappings, f.rowMappings);
+    std::swap(vector, f.vector);
   }
 
   bool isComposite() const
@@ -165,16 +172,18 @@ public:
     vector.assemble();
   }
 
-  void extractSubvector(DiscreteField& s) const
+  void extractField(DiscreteField& s) const
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.extractSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+    s.assemble();
   }
 
-  void addSubvector(const DiscreteField& s)
+  void addField(const DiscreteField& s)
   {
     const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
     vector.addSubvector(s.vector, rowIndices.size(), &rowIndices[0]);
+    assemble();
   }
 
   void print(std::ostream& out = std::cout)
@@ -191,8 +200,29 @@ public:
   {
     return vector;
   }
+
+  DiscreteField project(const DofMap<dimension>& newDofMap)
+  {
+    const DofMap<dimension> intermediateMap(rowMappings.intersect(newDofMap));
+    
+    DiscreteField result(newDofMap);
+    DiscreteField intermediateField(intermediateMap);
+
+    extractField(intermediateField);
+    result.addField(intermediateField);
+
+    return result;
+  }
 };
 
 }
 
+namespace std
+{
+  template<std::size_t D> 
+  void swap(cfd::DiscreteField<D>& a, cfd::DiscreteField<D>& b)
+  {
+    a.swap(b);
+  }
+}
 #endif

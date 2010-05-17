@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <iostream>
+#include <algorithm>
 #include "petsc.h"
 #include "petscvec.h"
 

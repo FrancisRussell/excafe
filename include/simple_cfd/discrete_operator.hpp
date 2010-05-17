@@ -12,10 +12,9 @@
 #include "numeric/matrix.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
-#include "forms/bilinear_form_integral_sum.hpp"
-#include "forms/basis_finder.hpp"
-#include "forms/field.hpp"
-#include "forms/form_evaluator.hpp"
+#include "capture/forms/bilinear_form_integral_sum.hpp"
+#include "capture/forms/basis_finder.hpp"
+#include "capture/forms/form_evaluator.hpp"
 
 namespace cfd
 {
@@ -73,7 +72,8 @@ private:
     return pattern;
   }
 
-  void addTermGeneral(const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
+  void addTermGeneral(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
+    const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
     const MeshFunction<bool>& subDomain)
   {
@@ -90,7 +90,7 @@ private:
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
       // Find trial
-      BasisFinder<dimension> trialFinder;
+      BasisFinder<dimension> trialFinder(scenario, values);
       formIter->getTrialField()->accept(trialFinder);
 
       const finite_element_t* const trialBasis = trialFinder.getBasis();
@@ -98,15 +98,15 @@ private:
       assert(trialElements.find(trialBasis) != trialElements.end());
 
       // Find test
-      BasisFinder<dimension> testFinder;
+      BasisFinder<dimension> testFinder(scenario, values);
       formIter->getTestField()->accept(testFinder);
 
       const finite_element_t* const testBasis = testFinder.getBasis();
       assert(testBasis != NULL);
       assert(testElements.find(testBasis) != testElements.end());
 
-      const FormEvaluator<dimension> trialEvaluator(formIter->getTrialField(), trialBasis->getCell());
-      const FormEvaluator<dimension> testEvaluator(formIter->getTestField(), testBasis->getCell());
+      const FormEvaluator<dimension> trialEvaluator(trialBasis->getCell(), scenario, values, formIter->getTrialField());
+      const FormEvaluator<dimension> testEvaluator(testBasis->getCell(), scenario, values, formIter->getTestField());
       evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
     }
 
@@ -170,7 +170,6 @@ private:
     }
   }
 
-
 public:
   DiscreteOperator(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
@@ -222,15 +221,19 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-  DiscreteOperator& operator+=(const forms::BilinearFormIntegralSum& expr)
+  DiscreteOperator& assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
   {
     const Mesh<dimension> m(rowMappings.getMesh());
 
     const MeshFunction<bool> allCells(dimension, true);
-    addTermGeneral(expr.begin_dx(), expr.end_dx(), allCells);
+    addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
 
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
-    addTermGeneral(expr.begin_ds(), expr.end_ds(), boundaryFunction);
+    addTermGeneral(scenario, values, expr.begin_ds(), expr.end_ds(), boundaryFunction);
+
+    //FIXME: perform internal boundary integrals
+
+    assemble();
 
     return *this;
   }
@@ -245,6 +248,12 @@ public:
   {
     const int rowIndex = rowMappings.getGlobalIndex(dof);
     matrix.zeroRow(rowIndex, diagonal);
+  }
+
+  void zeroRows(const DofMap<dimension>& dofs, const double diagonal)
+  { 
+    std::vector<int> rowIndices = dofs.getIndices(rowMappings);
+    matrix.zeroRows(rowIndices.size(), &rowIndices[0], diagonal);
   }
   
   void zero()
