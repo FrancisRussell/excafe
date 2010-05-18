@@ -13,6 +13,7 @@
 #include "numeric_fwd.hpp"
 #include "polynomial.hpp"
 #include "monomial.hpp"
+#include "value_map.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -21,11 +22,13 @@ namespace cfd
 template<typename V>
 class OptimisedPolynomial
 {
+private:
+  typedef double internal_value_t;
+
 public:
   typedef V variable_t;
-  typedef typename Polynomial<variable_t>::value_type  value_type;
-  typedef typename Polynomial<variable_t>::internal_value_t internal_value_t;
-  typedef typename Polynomial<variable_t>::value_map value_map;
+  typedef double value_type;
+  typedef detail::ValueMap<variable_t, internal_value_t> value_map;
 
 private:
   typedef std::pair<std::size_t, std::size_t> exponent_t;
