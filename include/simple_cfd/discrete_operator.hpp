@@ -21,7 +21,6 @@
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/scalar_placeholder_evaluator.hpp"
-#include "capture/assembly/assembly_polynomial.hpp"
 
 namespace cfd
 {
@@ -108,9 +107,10 @@ private:
 
     std::cout << "Entered new assembly function..." << std::endl;
 
-    typedef assembly_polynomial_t::optimised_t optimised_polynomial_t;
-    typedef LocalAssemblyMatrix<dimension, assembly_polynomial_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, optimised_polynomial_t> opt_local_matrix_t;
+    typedef ScalarPlaceholder::expression_t expression_t;
+    typedef expression_t::optimised_t optimised_expression_t;
+    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+    typedef LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
     typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
 
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
@@ -133,12 +133,12 @@ private:
 
     std::cout << "Integrated bilinear form..." << std::endl;
 
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<assembly_polynomial_t>()));
+    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
 
     std::cout << "Built optimised matrix.." << std::endl;
 
     // Build set of placeholders
-    PolynomialVariableCollector<assembly_polynomial_t::optimised_t> collector;
+    PolynomialVariableCollector<expression_t::optimised_t> collector;
     collector = std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
     const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
 
@@ -158,7 +158,7 @@ private:
         if (localEntity == localCellEntity)
         {
           // Find placeholder values
-          typedef optimised_polynomial_t::value_map value_map;
+          typedef optimised_expression_t::value_map value_map;
           const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
 
 /*
@@ -169,7 +169,7 @@ private:
           }
 */
           // Build concrete local assembly matrix
-          const PolynomialEvaluator<optimised_polynomial_t> evaluator(placeholderValues);
+          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
           addValues(cid, concreteLocalMatrix);
         }

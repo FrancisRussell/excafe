@@ -12,7 +12,7 @@
 #include "numeric/polynomial.hpp"
 #include "capture/assembly/assembly_fwd.hpp"
 #include "capture/assembly/position_placeholder.hpp"
-#include "capture/assembly/assembly_polynomial.hpp"
+#include "capture/assembly/scalar_placeholder.hpp"
 
 namespace cfd
 {
@@ -25,7 +25,7 @@ public:
   typedef vertex<dimension> vertex_type;
   typedef Dof<dimension> dof_t;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
-  typedef Tensor<dimension, detail::assembly_polynomial_t> tensor_expr_t;
+  typedef Tensor<dimension, detail::ScalarPlaceholder::expression_t> tensor_expr_t;
 
   virtual std::size_t getRank() const = 0;
   virtual std::size_t getDimension() const = 0;

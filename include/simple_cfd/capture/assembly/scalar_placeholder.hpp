@@ -5,7 +5,6 @@
 #include <map>
 #include <ostream>
 #include <boost/variant.hpp>
-#include <boost/operators.hpp>
 #include "position_component.hpp"
 #include "cell_vertex_component.hpp"
 #include "scalar_access.hpp"
@@ -24,6 +23,8 @@ private:
   variant_t value;
 
 public:
+  typedef GinacExpression<ScalarPlaceholder> expression_t;
+
   explicit ScalarPlaceholder(const PositionComponent& c) : value(c)
   {
   }

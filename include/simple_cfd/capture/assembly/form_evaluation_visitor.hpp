@@ -23,7 +23,6 @@
 #include <simple_cfd/capture/forms/facet_normal.hpp>
 #include "scalar_placeholder.hpp"
 #include "position_placeholder.hpp"
-#include "assembly_polynomial.hpp"
 #include "cell_vertices_placeholder.hpp"
 #include "scalar_access.hpp"
 
@@ -39,8 +38,8 @@ class FormEvaluationVisitor : public detail::FieldVisitor
 private:
   static const std::size_t dimension = D;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
-  typedef assembly_polynomial_t polynomial_t;
-  typedef Tensor<dimension, polynomial_t> tensor_t;
+  typedef ScalarPlaceholder::expression_t expression_t;
+  typedef Tensor<dimension, expression_t> tensor_t;
 
   const Scenario<dimension>& scenario;
   PositionPlaceholder position;
@@ -58,7 +57,7 @@ private:
       const ScalarPlaceholder coord(position[d]);
       tensor_t derivative(operand);
       std::transform(derivative.begin(), derivative.end(), derivative.begin(),
-        PolynomialDifferentiator<polynomial_t>(coord));
+        PolynomialDifferentiator<expression_t>(coord));
       result.setElement(d, derivative);
     }
 
@@ -98,10 +97,10 @@ private:
   static tensor_t adjugate(const tensor_t& t)
   {
     tensor_t operand(t);
-    TensorMatrixView<dimension, polynomial_t> operandMatrix(operand);
+    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
 
     tensor_t adjugateTensor(operand.getSize());
-    TensorMatrixView<dimension, polynomial_t> adjugateMatrix(adjugateTensor);
+    TensorMatrixView<dimension, expression_t> adjugateMatrix(adjugateTensor);
 
     if (operand.getDimension() == 1)
     {
@@ -125,10 +124,10 @@ private:
   static tensor_t transpose(const tensor_t& t)
   {
     tensor_t operand(t);
-    TensorMatrixView<dimension, polynomial_t> operandMatrix(operand);
+    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
 
     tensor_t transposeTensor(operand.getSize());
-    TensorMatrixView<dimension, polynomial_t> transposeMatrix(transposeTensor);
+    TensorMatrixView<dimension, expression_t> transposeMatrix(transposeTensor);
 
     for(std::size_t row=0; row<dimension; ++row)
     {
@@ -141,7 +140,7 @@ private:
     return transposeTensor;
   }
 
-  static tensor_t asTensor(const polynomial_t& p)
+  static tensor_t asTensor(const expression_t& p)
   {
     const TensorSize scalarSize(0, dimension);
     const TensorIndex nullIndex(scalarSize);
@@ -156,11 +155,11 @@ private:
     return adjugate(t)/determinant(t);
   }
 
-  static polynomial_t determinant(const tensor_t& t)
+  static expression_t determinant(const tensor_t& t)
   {
     tensor_t operand(t);
-    TensorMatrixView<dimension, polynomial_t> operandMatrix(operand);
-    polynomial_t det(0.0);
+    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
+    expression_t det(0.0);
 
     if (operand.getDimension() == 1)
     {
@@ -216,7 +215,7 @@ public:
   {
   }
 
-  polynomial_t jacobianDeterminant() const
+  expression_t jacobianDeterminant() const
   {
     return determinant(buildJacobian());
   }

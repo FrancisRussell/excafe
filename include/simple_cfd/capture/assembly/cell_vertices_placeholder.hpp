@@ -15,7 +15,7 @@ class CellVerticesPlaceholder
 {
 public:
   static const std::size_t dimension = D;
-  typedef Tensor<dimension, assembly_polynomial_t> tensor_t;
+  typedef Tensor<dimension, ScalarPlaceholder::expression_t> tensor_t;
 
   tensor_t operator[](const std::size_t i) const
   {

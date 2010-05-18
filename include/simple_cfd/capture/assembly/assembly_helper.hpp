@@ -12,7 +12,6 @@
 #include "scalar_placeholder.hpp"
 #include "position_component.hpp"
 #include "form_evaluation_visitor.hpp"
-#include "assembly_polynomial.hpp"
 
 namespace cfd
 {
@@ -35,10 +34,10 @@ public:
   {
   }
 
-  assembly_polynomial_t operator()(const assembly_polynomial_t& p) const
+  ScalarPlaceholder::expression_t operator()(const ScalarPlaceholder::expression_t& p) const
   {
-    assembly_polynomial_t result;
-    assembly_polynomial_t::value_map valueMap;
+    ScalarPlaceholder::expression_t result;
+    ScalarPlaceholder::expression_t::value_map valueMap;
 
     for(std::size_t point=0; point<rule.size(); ++point)
     {
@@ -66,8 +65,8 @@ public:
 
 private:
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
-  typedef assembly_polynomial_t polynomial_t;
-  typedef Tensor<dimension, polynomial_t> tensor_t;
+  typedef ScalarPlaceholder::expression_t expression_t;
+  typedef Tensor<dimension, expression_t> tensor_t;
 
   const Scenario<dimension>& scenario;
 
@@ -76,7 +75,7 @@ public:
   {
   }
 
-  void assembleBilinearForm(LocalAssemblyMatrix<dimension, polynomial_t>& matrix, const forms::BilinearForm& form) const
+  void assembleBilinearForm(LocalAssemblyMatrix<dimension, expression_t>& matrix, const forms::BilinearForm& form) const
   {
     forms::BasisFinder<dimension> trialFinder(scenario);
     form.getTrialField()->accept(trialFinder);
@@ -114,7 +113,7 @@ public:
     }
   }
 
-  LocalAssemblyMatrix<dimension, polynomial_t> integrate(const LocalAssemblyMatrix<dimension, polynomial_t>& matrix,
+  LocalAssemblyMatrix<dimension, expression_t> integrate(const LocalAssemblyMatrix<dimension, expression_t>& matrix,
     const MeshEntity& localEntity)
   {
     const QuadraturePoints<dimension> quadrature(scenario.getMesh().getReferenceCell()->getQuadrature(5));
@@ -127,8 +126,8 @@ public:
 
     // FIXME: factor jacobian stuff into helper function
     FormEvaluationVisitor<dimension> evaluationVisitor(scenario, 0);
-    const polynomial_t jacobianDet = evaluationVisitor.jacobianDeterminant();
-    LocalAssemblyMatrix<dimension, polynomial_t> result(matrix * jacobianDet);
+    const expression_t jacobianDet = evaluationVisitor.jacobianDeterminant();
+    LocalAssemblyMatrix<dimension, expression_t> result(matrix * jacobianDet);
     std::transform(result.begin(), result.end(), result.begin(), integrator);
     return result;
   }
