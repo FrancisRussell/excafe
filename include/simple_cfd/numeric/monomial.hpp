@@ -41,7 +41,8 @@ public:
 
   Monomial(const variable_t& variable, const std::size_t exponent)
   {
-    exponents->insert(std::make_pair(variable, exponent));
+    if (exponent != 0)
+      exponents->insert(std::make_pair(variable, exponent));
   }
 
   Monomial& operator*=(const Monomial& m)
