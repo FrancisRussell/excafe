@@ -85,12 +85,17 @@ public:
 
   double toDouble() const
   {
-    return cln::double_approx(value);
+    return cfd::numeric_cast<double>(value);
   }
 
   float toFloat() const
   {
-    return cln::float_approx(value);
+    return cfd::numeric_cast<float>(value);
+  }
+
+  operator cln::cl_F() const
+  {
+    return value;
   }
 
   void swap(CLNWrapper& b)
@@ -156,7 +161,7 @@ namespace detail
 template<std::size_t P>
 struct RawConverter<CLNWrapper<P>, float>
 {
-  static float low_level_convert(const CLNWrapper<P>& s) 
+  static inline float low_level_convert(const CLNWrapper<P>& s) 
   { 
     return s.toFloat();
   }
@@ -166,7 +171,7 @@ struct RawConverter<CLNWrapper<P>, float>
 template<std::size_t P>
 struct RawConverter<CLNWrapper<P>, double>
 {
-  static double low_level_convert(const CLNWrapper<P>& s) 
+  static inline double low_level_convert(const CLNWrapper<P>& s) 
   { 
     return s.toDouble();
   }
