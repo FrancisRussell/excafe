@@ -28,21 +28,28 @@ public:
   typedef typename Polynomial<variable_t>::value_map value_map;
 
 private:
-  typedef std::vector< std::pair<std::size_t, std::size_t> > monomial_t;
-  typedef std::pair<monomial_t, internal_value_t> term_t;
-  typedef std::vector<term_t> term_list_t;
+  typedef std::pair<std::size_t, std::size_t> exponent_t;
   
-  term_list_t terms;
+  std::vector<exponent_t> exponents;
+  std::vector<std::size_t> monomialLengths;
+  std::vector<internal_value_t> monomialCoefficients;
   std::vector<variable_t> variables;
 
   // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
   mutable std::vector<internal_value_t> paramData;
 
   template<typename M>
-  monomial_t buildMonomial(const M& m) const
+  void pushTerm(const M& monomial, const internal_value_t& coefficient)
   {
-    monomial_t exponents;
-  
+    pushMonomial(monomial);
+    monomialCoefficients.push_back(coefficient);
+  }
+
+  template<typename M>
+  void pushMonomial(const M& m)
+  {
+    std::size_t monomialLength = 0;
+
     for(std::size_t varIndex=0; varIndex < variables.size(); ++varIndex)
     {
       const variable_t& var = variables[varIndex];
@@ -50,27 +57,33 @@ private:
       if (exponent > 0)
       {
         exponents.push_back(std::make_pair(varIndex, exponent));
+        ++monomialLength;
       }
     }
   
-    return exponents;
+    monomialLengths.push_back(monomialLength);
   }
 
   value_type evaluate(const std::vector<internal_value_t>& params) const
   {
+    assert(monomialCoefficients.size() == monomialLengths.size());
+
     internal_value_t result = 0.0;
-  
-    BOOST_FOREACH(const term_t& term, terms)
+    std::size_t exponentIndex = 0;
+
+    for(std::size_t monomialIndex=0; monomialIndex<monomialLengths.size(); ++monomialIndex)
     {
+      const std::size_t newExponentIndex = exponentIndex + monomialLengths[monomialIndex];
       internal_value_t monomialValue = 1.0;
-      BOOST_FOREACH(const monomial_t::value_type& exponentMapping, term.first)
+
+      for(; exponentIndex<newExponentIndex; ++exponentIndex)
       {
-        monomialValue *= pow(params[exponentMapping.first], exponentMapping.second);
+        monomialValue *= pow(params[exponents[exponentIndex].first], exponents[exponentIndex].second);
       }
 
-      result += monomialValue * term.second;
+      result += monomialValue * monomialCoefficients[monomialIndex];
     }
-  
+
     return cfd::numeric_cast<value_type>(result);
   }
 
@@ -92,8 +105,7 @@ public:
   
     for(typename Polynomial<variable_t>::const_iterator mIter(p.begin()); mIter!=p.end(); ++mIter)
     {
-      const internal_value_t coefficient = cfd::numeric_cast<internal_value_t>(mIter->second);
-      terms.push_back(term_t(buildMonomial(mIter->first), coefficient));
+      pushTerm(mIter->first, cfd::numeric_cast<internal_value_t>(mIter->second));
     }
   }
 
