@@ -12,6 +12,8 @@
 #include "ginac_value_map.hpp"
 #include "expression.hpp"
 #include "expression_visitor.hpp"
+#include "convert_expression.hpp"
+#include "optimised_polynomial_fraction.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -125,10 +127,10 @@ class GinacExpression : public NumericExpression<V>,
                         > >
 {
 public:
-  typedef double                             value_type;
-  typedef V                                  variable_t;
-  typedef GinacExpression<variable_t>        optimised_t;
-  typedef detail::GinacValueMap<variable_t>  value_map;
+  typedef double                                  value_type;
+  typedef V                                       variable_t;
+  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
+  typedef detail::GinacValueMap<variable_t>       value_map;
 
 private:
   typedef GiNaC::ex      ginac_expr_t;
@@ -151,11 +153,6 @@ private:
 
   GinacExpression(const ginac_expr_t& e) : expr(e)
   {
-  }
-
-  void simplify()
-  {
-    expr = expr.normal();
   }
 
 public:
@@ -233,14 +230,12 @@ public:
   GinacExpression& operator*=(const GinacExpression& e)
   {
     expr *= e.expr;
-    simplify();
     return *this;
   }
 
   GinacExpression& operator/=(const GinacExpression& e)
   {
     expr /= e.expr;
-    simplify();
     return *this;
   }
 
@@ -262,7 +257,11 @@ public:
 
   optimised_t optimise() const
   {
-    return GinacExpression(expr.normal());
+    const GinacExpression normalised(expr.normal());
+    const PolynomialFraction<variable_t> polyFraction = 
+      cfd::detail::convert_expression< GinacExpression, PolynomialFraction<variable_t> >(normalised);
+
+    return optimised_t(polyFraction);
   }
 
   std::set<variable_t> getVariables() const
