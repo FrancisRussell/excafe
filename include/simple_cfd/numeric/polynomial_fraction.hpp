@@ -5,13 +5,17 @@
 #include <map>
 #include <boost/operators.hpp>
 #include "polynomial.hpp"
+#include "numeric_fwd.hpp"
+#include "expression.hpp"
+#include "expression_visitor.hpp"
 #include <ostream>
 
 namespace cfd
 {
 
 template<typename V>
-class PolynomialFraction : boost::arithmetic<PolynomialFraction<V>, typename Polynomial<V>::value_type,
+class PolynomialFraction : public NumericExpression<V>,
+                           boost::arithmetic<PolynomialFraction<V>, typename Polynomial<V>::value_type,
                            boost::arithmetic<PolynomialFraction<V>,
                            boost::totally_ordered< PolynomialFraction<V>
                            > > >
@@ -106,6 +110,18 @@ public:
   polynomial_t getDivisor() const
   {
     return divisor;
+  }
+
+  void accept(NumericExpressionVisitor<variable_t>& v) const
+  {
+    dividend.accept(v);
+
+    if (divisor != polynomial_t(1.0))
+    {
+      divisor.accept(v);
+      v.visitExponent(-1);
+      v.postProduct(2);
+    }
   }
 
   bool operator==(const PolynomialFraction& p) const

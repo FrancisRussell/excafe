@@ -24,13 +24,17 @@ class Monomial : boost::multipliable<Monomial<V,T>,
 {
 public:
   typedef V variable_t;
-  typedef T value_type;
+  typedef T numeric_type;
 
 private:
   typedef std::map<variable_t, std::size_t> exponent_map_t;
   util::LazyCopy<exponent_map_t> exponents;
 
 public:
+  typedef typename exponent_map_t::value_type value_type;
+  typedef typename exponent_map_t::const_iterator iterator;
+  typedef typename exponent_map_t::const_iterator const_iterator;
+
   Monomial()
   {
   }
@@ -43,6 +47,21 @@ public:
   {
     if (exponent != 0)
       exponents->insert(std::make_pair(variable, exponent));
+  }
+
+  const_iterator begin() const 
+  {
+    return exponents->begin();
+  }
+
+  const_iterator end() const 
+  {
+    return exponents->end();
+  }
+
+  std::size_t size() const
+  {
+    return exponents->size();
   }
 
   Monomial& operator*=(const Monomial& m)
@@ -108,9 +127,9 @@ public:
     }
   }
 
-  std::pair<value_type, Monomial> derivative(const variable_t& variable) const
+  std::pair<numeric_type, Monomial> derivative(const variable_t& variable) const
   {
-    const value_type coefficient = cfd::numeric_cast<double>(getExponent(variable));
+    const numeric_type coefficient = cfd::numeric_cast<double>(getExponent(variable));
     Monomial result;
 
     for (typename std::map<variable_t, std::size_t>::const_iterator eIter(exponents->begin()); eIter!=exponents->end(); ++eIter)
@@ -128,12 +147,12 @@ public:
     return std::make_pair(coefficient, result);
   }
 
-  std::pair<value_type, Monomial> substituteValues(const detail::ValueMap<variable_t, value_type>& valueMap) const
+  std::pair<numeric_type, Monomial> substituteValues(const detail::ValueMap<variable_t, numeric_type>& valueMap) const
   {
     Monomial result(*this);
-    value_type coefficient = 1.0;
+    numeric_type coefficient = 1.0;
 
-    typedef std::pair<variable_t, value_type> pair_t;
+    typedef std::pair<variable_t, numeric_type> pair_t;
 
     BOOST_FOREACH(const pair_t& mapping, valueMap.getReference())
     {

@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_NUMERIC_GINAC_EXPRESSION_HPP
 
 #include <ostream>
+#include <sstream>
 #include <set>
 #include <map>
 #include <boost/operators.hpp>
@@ -9,6 +10,8 @@
 #include <ginac/ginac.h>
 #include "ginac_mapper.hpp"
 #include "ginac_value_map.hpp"
+#include "expression.hpp"
+#include "expression_visitor.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -34,10 +37,90 @@ public:
   }
 };
 
+template<typename V>
+class GinacVisitorAdapter : public GiNaC::visitor, 
+                            public GiNaC::mul::visitor, 
+                            public GiNaC::add::visitor, 
+                            public GiNaC::power::visitor, 
+                            public GiNaC::symbol::visitor,
+                            public GiNaC::numeric::visitor,
+                            public GiNaC::basic::visitor
+{
+private:
+  typedef V variable_t;
+  NumericExpressionVisitor<variable_t>& visitor;
+
+  void visitChildren(const GiNaC::expairseq& e)
+  {
+    for(std::size_t index=0; index<e.nops(); ++index)
+      e.op(index).accept(*this);
+  }
+
+public:
+  GinacVisitorAdapter(NumericExpressionVisitor<variable_t>& v) : visitor(v)
+  {
+  }
+
+  void visit(const GiNaC::mul& b)
+  {
+    visitChildren(b);
+    visitor.postProduct(b.nops());
+  }
+
+  void visit(const GiNaC::add& a)
+  {
+    visitChildren(a);
+    visitor.postSummation(a.nops());
+  }
+
+  void visit(const GiNaC::symbol& s)
+  {
+    detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
+    visitor.visitVariable(mapper.getKey(s));
+  }
+
+  void visit(const GiNaC::numeric& n)
+  {
+    const cln::cl_F value = cln::cl_float(cln::realpart(n.to_cl_N()));
+    visitor.visitConstant(value);
+  }
+
+  void visit(const GiNaC::power& p)
+  {
+    p.op(0).accept(*this);
+    const GiNaC::ex exponent = p.op(1);
+
+    if (!GiNaC::is_a<GiNaC::numeric>(exponent))
+    {
+      CFD_EXCEPTION("NumericExpressionVisitor interface cannot handle non-numeric exponent.");
+    }
+    else
+    {
+      const GiNaC::numeric exponentNumeric = GiNaC::ex_to<GiNaC::numeric>(exponent);
+      if (!exponentNumeric.is_integer())
+      {
+        CFD_EXCEPTION("NumericExpressionVisitor interface cannot handle non-integer exponent.");
+      }
+      else
+      {
+        visitor.visitExponent(exponentNumeric.to_long());
+      }
+    }
+  }
+
+  void visit(const GiNaC::basic& b)
+  {
+    std::ostringstream error;
+    error << "Cannot handle " << b << " using NumericExpressionVisitor interface.";
+    CFD_EXCEPTION(error.str());
+  }
+};
+
 }
 
 template<typename V>
-class GinacExpression : boost::arithmetic<GinacExpression<V>, double,
+class GinacExpression : public NumericExpression<V>,
+                        boost::arithmetic<GinacExpression<V>, double,
                         boost::arithmetic<GinacExpression<V>
                         > >
 {
@@ -76,7 +159,7 @@ private:
   }
 
 public:
-  GinacExpression()
+  GinacExpression() : expr(ginac_numeric_t(0.0))
   {
   }
 
@@ -159,6 +242,12 @@ public:
     expr /= e.expr;
     simplify();
     return *this;
+  }
+
+  void accept(NumericExpressionVisitor<variable_t>& v) const
+  {
+    GinacVisitorAdapter<variable_t> adapter(v);
+    expr.accept(adapter);
   }
 
   GinacExpression derivative(const variable_t& variable) const

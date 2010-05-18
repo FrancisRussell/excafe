@@ -18,13 +18,16 @@
 #include "optimised_polynomial.hpp"
 #include "cln_wrapper.hpp"
 #include "value_map.hpp"
+#include "expression.hpp"
+#include "expression_visitor.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
 
 template<typename V>
-class Polynomial : boost::arithmetic<Polynomial<V>, double,
+class Polynomial : public NumericExpression<V>,
+                   boost::arithmetic<Polynomial<V>, double,
                    boost::additive<Polynomial<V>,
                    boost::multipliable< Polynomial<V>,
                    boost::totally_ordered< Polynomial<V>
@@ -39,7 +42,6 @@ public:
   typedef OptimisedPolynomial<variable_t> optimised_t;
   //typedef CLNWrapper<precision> internal_value_t;
   typedef double internal_value_t;
-
 
 private:
   typedef Monomial<variable_t, internal_value_t> monomial_t;
@@ -324,6 +326,25 @@ public:
       out << 0.0;
   
     return out;
+  }
+
+  void accept(NumericExpressionVisitor<variable_t>& v) const
+  {
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& mapping, *coefficients)
+    {
+      const monomial_t& monomial = mapping.first;
+      v.visitConstant(mapping.second);
+      
+      BOOST_FOREACH(const typename monomial_t::value_type& exponent, monomial)
+      {
+        v.visitVariable(exponent.first);
+        v.visitExponent(exponent.second);
+      }
+
+      v.postProduct(1 + monomial.size());
+    }
+
+    v.postSummation(coefficients->size());
   }
 
   void swap(Polynomial& p)
