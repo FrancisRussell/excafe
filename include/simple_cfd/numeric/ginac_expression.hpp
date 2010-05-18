@@ -208,7 +208,7 @@ public:
 
     if (GiNaC::is_a<GiNaC::numeric>(evaluated))
     {
-      return cfd::numeric_cast<value_type>(GiNaC::ex_to<GiNaC::numeric>(evaluated).to_double());
+      return cfd::numeric_cast<value_type>(GiNaC::ex_to<GiNaC::numeric>(evaluated).to_cl_N());
     }
     else
     {
