@@ -20,6 +20,7 @@
 #include "dof_numbering_basic.hpp"
 #include "cell_manager.hpp"
 #include "exception.hpp"
+#include "capture/assembly/position_placeholder.hpp"
 
 namespace cfd
 {

@@ -5,7 +5,6 @@
 #include <ostream>
 #include <utility>
 #include "assembly_fwd.hpp"
-#include "scalar_placeholder_operators.hpp"
 #include <simple_cfd/numeric/cast.hpp>
 
 namespace cfd
@@ -14,7 +13,7 @@ namespace cfd
 namespace detail
 {
 
-class CellVertexComponent : public ScalarPlaceholderOperators<CellVertexComponent>
+class CellVertexComponent
 {
 private:
   std::size_t vertex;

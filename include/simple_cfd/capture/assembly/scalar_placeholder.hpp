@@ -5,10 +5,13 @@
 #include <map>
 #include <ostream>
 #include <boost/variant.hpp>
+#include <boost/operators.hpp>
 #include "position_component.hpp"
 #include "cell_vertex_component.hpp"
 #include "scalar_access.hpp"
 #include "basis_coefficient.hpp"
+#include "scalar_placeholder_operators.hpp"
+#include <simple_cfd/numeric/ginac_expression.hpp>
 
 namespace cfd
 {
@@ -16,14 +19,27 @@ namespace cfd
 namespace detail
 {
 
-class ScalarPlaceholder : boost::equality_comparable<ScalarPlaceholder>
+namespace
+{
+
+struct ScalarPlaceholderExpression
+{
+  typedef GinacExpression<ScalarPlaceholder> type;
+};
+
+}
+
+class ScalarPlaceholder : boost::totally_ordered<ScalarPlaceholder>,
+  detail::ImmutableArithmetic<ScalarPlaceholderExpression::type, ScalarPlaceholder, ScalarPlaceholder>,
+  detail::ImmutableArithmetic<ScalarPlaceholderExpression::type, ScalarPlaceholder, double>,
+  detail::ImmutableArithmetic<ScalarPlaceholderExpression::type, double, ScalarPlaceholder>
 {
 private:
   typedef boost::variant<PositionComponent, CellVertexComponent, ScalarAccess, BasisCoefficient> variant_t;
   variant_t value;
 
 public:
-  typedef GinacExpression<ScalarPlaceholder> expression_t;
+  typedef ScalarPlaceholderExpression::type expression_t;
 
   explicit ScalarPlaceholder(const PositionComponent& c) : value(c)
   {
@@ -68,5 +84,6 @@ std::ostream& operator<<(std::ostream& o, const ScalarPlaceholder& s);
 }
 
 }
+
 
 #endif

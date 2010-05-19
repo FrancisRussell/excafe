@@ -6,7 +6,6 @@
 #include <ostream>
 #include <simple_cfd/capture/fields/field.hpp>
 #include <simple_cfd/capture/fields/discrete_field_expr.hpp>
-#include "scalar_placeholder_operators.hpp"
 
 namespace cfd
 {
@@ -14,7 +13,7 @@ namespace cfd
 namespace detail
 {
 
-class BasisCoefficient : public ScalarPlaceholderOperators<BasisCoefficient>
+class BasisCoefficient
 {
 private:
   DiscreteFieldExpr::expr_ptr fieldExpr;

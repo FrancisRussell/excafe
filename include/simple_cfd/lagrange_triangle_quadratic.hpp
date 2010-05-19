@@ -16,6 +16,7 @@
 #include "dof.hpp"
 #include "cell_manager.hpp"
 #include "exception.hpp"
+#include "capture/assembly/position_placeholder.hpp"
 
 namespace cfd
 {

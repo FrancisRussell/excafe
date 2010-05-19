@@ -1,37 +1,19 @@
 #ifndef SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_PLACEHOLDER_OPERATORS_HPP
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_SCALAR_PLACEHOLDER_OPERATORS_HPP
 
-#include "assembly_fwd.hpp"
-#include <simple_cfd/numeric/ginac_expression.hpp>
-
 namespace cfd
 {
 
 namespace detail
 {
 
-template<typename T>
-class ScalarPlaceholderOperators
+template<typename S, typename T, typename U>
+struct ImmutableArithmetic
 {
-private:
-  typedef T child_t;
-  typedef GinacExpression<ScalarPlaceholder> polynomial_t;
-
-  const child_t& toChild() const
-  {
-    return *static_cast<const child_t*>(this);
-  }
-
-  const polynomial_t toPolynomial() const
-  {
-    return polynomial_t(ScalarPlaceholder(toChild()));
-  }
-
-public:
-  polynomial_t operator-(const double d) const
-  {
-    return toPolynomial() - d;
-  }
+  friend S operator+(const T& t, const U& u) { return S(t) + u; }
+  friend S operator-(const T& t, const U& u) { return S(t) - u; }
+  friend S operator/(const T& t, const U& u) { return S(t) / u; }
+  friend S operator*(const T& t, const U& u) { return S(t) * u; }
 };
 
 }

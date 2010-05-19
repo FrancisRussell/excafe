@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_ASSEMBLY_POSITION_PLACEHOLDER_HPP
 
 #include <cstddef>
+#include "scalar_placeholder.hpp"
 #include "position_component.hpp"
 
 namespace cfd
@@ -13,9 +14,9 @@ namespace detail
 class PositionPlaceholder
 {
 public:
-  PositionComponent operator[](const std::size_t d) const
+  ScalarPlaceholder operator[](const std::size_t d) const
   {
-    return PositionComponent(d);
+    return ScalarPlaceholder(PositionComponent(d));
   }
 };
 

@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <ostream>
-#include "scalar_placeholder_operators.hpp"
 #include <simple_cfd/numeric/cast.hpp>
 
 namespace cfd
@@ -12,7 +11,7 @@ namespace cfd
 namespace detail
 {
 
-class PositionComponent : public ScalarPlaceholderOperators<PositionComponent>
+class PositionComponent
 {
 private:
   std::size_t component;

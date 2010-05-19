@@ -4,7 +4,6 @@
 #include <ostream>
 #include <simple_cfd/capture/fields/scalar.hpp>
 #include <simple_cfd/capture/fields/scalar_expr.hpp>
-#include "scalar_placeholder_operators.hpp"
 
 namespace cfd
 {
@@ -12,7 +11,7 @@ namespace cfd
 namespace detail
 {
 
-class ScalarAccess : public ScalarPlaceholderOperators<ScalarAccess>
+class ScalarAccess
 {
 private:
   ScalarExpr::expr_ptr scalarExpr;
