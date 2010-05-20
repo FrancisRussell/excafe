@@ -7,7 +7,7 @@
 template<typename from, typename to>
 void test(const from& f)
 {
-  std::cout << f << " -> " << cfd::detail::convert_expression<from, to>(f) << std::endl;
+  std::cout << f << " -> " << cfd::detail::convert_expression<to>(f) << std::endl;
 }
 
 template<typename from, typename to>

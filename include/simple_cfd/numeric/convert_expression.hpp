@@ -14,13 +14,13 @@ namespace cfd
 namespace
 {
 
-template<typename R, typename V>
-class NumericExpressionConverter : public NumericExpressionVisitor<V>
+template<typename R>
+class NumericExpressionConverter : public NumericExpressionVisitor<typename R::variable_t>
 {
 private:
-  typedef typename NumericExpressionVisitor<V>::value_t    value_t;
-  typedef typename NumericExpressionVisitor<V>::variable_t variable_t;
   typedef R result_type;
+  typedef typename result_type::variable_t variable_t;
+  typedef typename NumericExpressionVisitor<variable_t>::value_t value_t;
   std::stack<result_type> stack;
 
 public:
@@ -95,10 +95,10 @@ public:
 namespace detail
 {
 
-template<typename source_type, typename result_type>
-result_type convert_expression(const source_type& e)
+template<typename result_type>
+result_type convert_expression(const NumericExpression<typename result_type::variable_t>& e)
 {
-  NumericExpressionConverter<result_type, typename source_type::variable_t> converter;
+  NumericExpressionConverter<result_type> converter;
   e.accept(converter);
   return converter.getResult();
 }

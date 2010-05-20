@@ -259,7 +259,7 @@ public:
   {
     const GinacExpression normalised(expr.normal());
     const PolynomialFraction<variable_t> polyFraction = 
-      cfd::detail::convert_expression< GinacExpression, PolynomialFraction<variable_t> >(normalised);
+      cfd::detail::convert_expression< PolynomialFraction<variable_t> >(normalised);
 
     return optimised_t(polyFraction);
   }
