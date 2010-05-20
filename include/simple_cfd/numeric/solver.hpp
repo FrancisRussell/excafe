@@ -1,6 +1,7 @@
 #ifndef SIMPLE_CFD_NUMERIC_SOLVER_HPP
 #define SIMPLE_CFD_NUMERIC_SOLVER_HPP
 
+#include <string>
 #include "simple_cfd_fwd.hpp"
 #include "petsc.h"
 #include "petscksp.h"
@@ -14,12 +15,24 @@ class PETScKrylovSolver
 private:
   KSP ksp;
   PC pc;
+  PetscReal rtol;
+  PetscReal atol;
+  PetscInt maxIts;
+  bool preconditionerEnabled;
 
   void checkError(const PetscErrorCode ierr) const;
+  void updateTolerances();
+  void updatePreconditioner();
 
 public:
   PETScKrylovSolver();
-  void solve(PETScMatrix& a, PETScVector& x, PETScVector& b);
+  void setMaxIterations(const std::size_t maxIter);
+  void setRelativeTolerance(const double t);
+  void setAbsoluteTolerance(const double t);
+  void enablePreconditioner(const bool enable);
+  void solve(const PETScMatrix& a, PETScVector& x, const PETScVector& b);
+  bool converged() const;
+  std::string getConvergedReason() const;
   ~PETScKrylovSolver();
 };
 

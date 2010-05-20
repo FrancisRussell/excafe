@@ -3,11 +3,14 @@
 
 #include "simple_cfd_fwd.hpp"
 #include <cassert>
+#include <cmath>
 #include <algorithm>
+#include <numeric>
 #include <vector>
 #include <boost/lambda/lambda.hpp>
 #include <boost/array.hpp>
 #include <boost/operators.hpp>
+#include <ostream>
 
 namespace cfd
 {
@@ -119,7 +122,30 @@ public:
   {
     return values.end();
   }
+
+  double distance(const vertex<dimension>& v) const 
+  {
+    const vertex delta = v - *this;
+    return std::sqrt(std::inner_product(delta.begin(), delta.end(), delta.begin(), 0.0));
+  }
 };
+
+template<unsigned int D>
+std::ostream& operator<<(std::ostream& o, const vertex<D>& v)
+{
+  o << "(";
+
+  for(typename vertex<D>::const_iterator vIter(v.begin()); vIter!=v.end(); ++vIter)
+  {
+    o << *vIter;
+
+    if (vIter+1 != v.end())
+      o << ", ";
+  }
+
+  o << ")";
+  return o;
+}
 
 }
 

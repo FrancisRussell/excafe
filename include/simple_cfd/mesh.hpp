@@ -1,219 +1,266 @@
 #ifndef SIMPLE_CFD_MESH_HPP
 #define SIMPLE_CFD_MESH_HPP
 
-#include <cassert>
-#include <iostream>
 #include <map>
 #include <set>
+#include <vector>
 #include <utility>
-#include <boost/lambda/lambda.hpp>
+#include <cassert>
+#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
-#include "utility.hpp"
-#include "cell.hpp"
+#include "mesh_connectivity.hpp"
+#include "mesh_topology.hpp"
+#include "mesh_function.hpp"
+#include "triangular_cell.hpp"
+#include "general_cell.hpp"
 #include "dof_map.hpp"
+#include "cell_vertices.hpp"
 
 namespace cfd
 {
 
-template<typename C>
-class mesh
-{
-};
-
-template<>
-class mesh< cell<triangle> >
+template<std::size_t D>
+class Mesh
 {
 public:
-  static const shape cell_shape = triangle;
-  typedef cell<cell_shape> cell_type;
-  static const unsigned int dimension = cell_type::dimension;
+  static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
+  typedef MeshTopology::global_iterator global_iterator;
+  typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  int x_size;
-  int y_size;
-  mesh_geometry<dimension> geometry;
-  std::map<cell_id, cell_type> cells;
-  std::map<vertex_id, std::set<cell_id> > vertex_to_cells;
+  boost::scoped_ptr< GeneralCell<dimension> > referenceCell;
+  mutable MeshTopology topology;
+  MeshGeometry<dimension> geometry;
+  MeshFunction<int> facetLabels;
+  MeshFunction<bool> boundaryFacets;
+  MeshConnectivity baseConnectivity;
+
+  MeshFunction<bool> buildBoundaryFunction() const
+  {
+    MeshFunction<bool> boundary(dimension-1);
+
+    for(MeshTopology::global_iterator facetIter(topology.global_begin(dimension-1)); facetIter!=topology.global_end(dimension-1); ++facetIter)
+    {
+      const std::size_t numCells = numRelations(*facetIter, dimension);
+      assert(numCells != 0);
+
+      if (numCells == 1)
+        boundary.setValue(*facetIter, true);
+    }
+
+    return boundary;
+  }
 
 public:
-  mesh(const int width, const int height) : x_size(width), y_size(height)
+  Mesh(const GeneralCell<dimension>& cell) : referenceCell(cell.cloneGeneralCell()), topology(*referenceCell), facetLabels(getDimension()-1), 
+    boundaryFacets(getDimension()-1)
   {
-    assert(x_size > 1);
-    assert(y_size > 1);
-
-    // Create vertices
-    vertex_id vid=0;
-
-    const int x_nodes = x_size;
-    const int y_nodes = y_size;
-
-    for(int y=0; y < y_nodes; ++y)
-    {
-      for(int x=0; x < x_nodes; ++x)
-      {
-        addVertex(vid, vertex_type(static_cast<double>(x) / (x_nodes-1), static_cast<double>(y) / (y_nodes-1)));
-        ++vid;
-      }
-    }
-
-    /*   Triangle Node Numbering
-  
-         LL        UR
-
-         2           1     0
-                      _____
-         |\           \    |
-         | \           \   |
-         |  \           \  |  
-         |   \           \ |
-         |    \           \|
-         ------           
-         0     1           2
-    */
-
-    // Now create cells assuming first vertex has id 0
-    std::vector<vertex_id> lower_left_vertices;
-    lower_left_vertices.push_back(0);
-    lower_left_vertices.push_back(1);
-    lower_left_vertices.push_back(x_nodes);
-
-    std::vector<vertex_id> upper_right_vertices;
-    upper_right_vertices.push_back(1 + x_nodes);
-    upper_right_vertices.push_back(x_nodes);
-    upper_right_vertices.push_back(1);
-
-    cell_id cid = 0;
-
-    for(int y = 0; y < y_size - 1; ++y)
-    {
-      for(int x =0; x < x_size - 1; ++x)
-      {
-        std::vector<vertex_id> offset_lower_left_vertices(lower_left_vertices);
-        std::vector<vertex_id> offset_upper_right_vertices(upper_right_vertices);
-
-        const int offset = x_nodes * y + x;
-
-        std::transform(offset_lower_left_vertices.begin(), 
-          offset_lower_left_vertices.end(), offset_lower_left_vertices.begin(), boost::lambda::_1 + offset);
-
-        std::transform(offset_upper_right_vertices.begin(), 
-          offset_upper_right_vertices.end(), offset_upper_right_vertices.begin(), boost::lambda::_1 + offset);
-
-        addCell(cid, cell_type(offset_lower_left_vertices));
-        ++cid;
-        addCell(cid, cell_type(offset_upper_right_vertices));
-        ++cid;
-      }
-    }
-  }
-  
-  void addVertex(const vertex_id vid, const vertex_type& v)
-  {
-    geometry.insert(vid, v);
   }
 
-  void addCell(const cell_id cid, const cell_type& c)
+  Mesh(const Mesh& m) : referenceCell(m.referenceCell->cloneGeneralCell()), topology(m.topology), geometry(m.geometry),
+    facetLabels(m.facetLabels), boundaryFacets(m.boundaryFacets), baseConnectivity(m.baseConnectivity)
   {
-    cells.insert(std::make_pair(cid, c));
-    const std::vector< vertex_id > cell_vertices(c.getIndices());
-    for(std::vector<vertex_id>::const_iterator vertexIter(cell_vertices.begin()); vertexIter != cell_vertices.end(); ++vertexIter)
-    {
-      vertex_to_cells[*vertexIter].insert(cid);
-    }
   }
-  
-  std::set<cell_id> getVertexIncidentCells(const vertex_id vid) const
+
+  std::size_t getDimension() const
   {
-    const std::map<vertex_id, std::set<cell_id> >::const_iterator vertexIter(vertex_to_cells.find(vid));
-    assert(vertexIter != vertex_to_cells.end());
-    return vertexIter->second;
+    return referenceCell->getDimension();
+  }
+
+  const vertex_id addVertex(const vertex_type& v)
+  {
+    return geometry.add(v);
+  }
+
+  const cell_id addCell(const std::vector<std::size_t> vertexIndices)
+  {
+    assert(vertexIndices.size() == referenceCell->numEntities(0));
+    const cell_id cid = baseConnectivity.addEntity(vertexIndices.begin(), vertexIndices.end());
+    return cid;
+  }
+
+  const GeneralCell<dimension>& getReferenceCell() const
+  {
+    return *referenceCell;
+  }
+
+  std::size_t getContainingCell(const MeshEntity& entity) const
+  {
+    if (entity.getDimension() == dimension)
+      return entity.getIndex();
+
+    const std::vector<std::size_t> cellIndices(getIndices(entity, dimension));
+    assert(cellIndices.size() > 0);
+    return cellIndices.front();
+  }
+
+  MeshEntity getLocalEntity(const std::size_t cid, const MeshEntity& entity) const
+  {
+    // Shortcut for finding cell on cell
+    if (entity.getDimension() == dimension)
+      return MeshEntity(dimension, 0);
+
+    const std::size_t index = referenceCell->getLocalIndex(topology, cid, entity);
+    return MeshEntity(entity.getDimension(), index);
+  }
+
+  vertex<dimension> getLocalCoordinate(const std::size_t cid, const std::size_t vid) const
+  {
+    return referenceCell->getLocalVertex(vid);
+  }
+
+  vertex<dimension> referenceToPhysical(const std::size_t cid, const vertex<dimension>& v) const
+  {
+    const CellVertices<dimension>& vertices(getCoordinates(cid));
+    return referenceCell->referenceToPhysical(vertices, v);
+  }
+
+  double getArea(const std::size_t cid) const
+  {
+    const CellVertices<dimension> vertices(getCoordinates(cid));
+    return referenceCell->getArea(vertices);
+  }
+
+  double getJacobian(const std::size_t cid, const vertex_type& v) const
+  {
+    const CellVertices<dimension> vertices(getCoordinates(cid));
+    return referenceCell->getJacobian(vertices, MeshEntity(dimension, 0), v);
+  }
+
+  void setFacetLabelling(const MeshFunction<int>& f)
+  {
+    assert(f.getDimension() == getDimension() - 1);
+    facetLabels = f;
+  }
+
+  int getFacetLabel(const MeshEntity& entity) const
+  {
+    return facetLabels(entity);
+  }
+
+  MeshFunction<bool> getBoundaryFunction() const
+  {
+    return boundaryFacets;
+  }
+
+  void finish()
+  {
+    topology.setBaseConnectivity(baseConnectivity);
+    baseConnectivity.clear();
+
+    boundaryFacets = buildBoundaryFunction();
+  }
+
+  std::size_t numEntities(const std::size_t d) const
+  {
+    return topology.numEntities(d);
+  }
+
+  std::size_t numRelations(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.numRelations(entity, d);
+  }
+
+  std::size_t numRelations(const std::size_t d, const std::size_t dPrime) const
+  {
+    return topology.numRelations(d, dPrime);
+  }
+
+  global_iterator global_begin(const std::size_t d) const
+  {
+    return topology.global_begin(d);
+  }
+
+  global_iterator global_end(const std::size_t d) const
+  {
+    return topology.global_end(d);
+  }
+
+  local_iterator local_begin(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.local_begin(entity, d);
+  }
+
+  local_iterator local_end(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.local_end(entity, d);
   }
 
   std::set<cell_id> getCellIncidentCells(const cell_id cid) const
   {
-    // Note that the returned list will also contain the original cell
-    const std::vector<vertex_id> indices(getCell(cid).getIndices());
-    std::set<cell_id> incident;
-    
-    for(std::vector<vertex_id>::const_iterator vertexIter(indices.begin()); vertexIter != indices.end(); ++vertexIter)
-    {
-      const std::set<cell_id> localIncident(getVertexIncidentCells(*vertexIter));
-      incident.insert(localIncident.begin(), localIncident.end());
-    }
-    return incident;
+    const MeshEntity cellEntity(dimension, cid);
+    const std::vector<std::size_t> vertices(topology.getIndices(cellEntity, dimension));
+    return std::set<std::size_t>(vertices.begin(), vertices.end());
   }
 
+  //NOTE: assumes a 2D mesh
   std::vector< std::pair<vertex_id, vertex_id> > getEdgeFacets() const
   {
-    std::map< std::pair<vertex_id, vertex_id>, unsigned, unordered_pair_compare<vertex_id> > facetCount;
-    for(std::map<cell_id, cell_type>::const_iterator cellIter(cells.begin()); cellIter!=cells.end(); ++cellIter)
-    {
-      const std::set< std::pair<vertex_id, vertex_id> > facets(cellIter->second.getFacets());
-      for(std::set< std::pair<vertex_id, vertex_id> >::const_iterator facetIter(facets.begin()); facetIter!=facets.end(); ++facetIter)
-        ++facetCount[*facetIter];
-    }
+    std::vector< std::pair<vertex_id, vertex_id> > result;
 
-    std::vector< std::pair<vertex_id, vertex_id> > facets;
-    for(std::map< std::pair<vertex_id, vertex_id>, unsigned >::const_iterator facetCountIter(facetCount.begin()); facetCountIter!=facetCount.end(); ++facetCountIter)
+    for(MeshTopology::global_iterator facetIter(topology.global_begin(dimension-1)); facetIter!=topology.global_end(dimension-1); ++facetIter)
     {
-      // We only want facets that are not adjacent to other facets
-      if (facetCountIter->second == 1)
-        facets.push_back(facetCountIter->first);
+      if (topology.numRelations(*facetIter, dimension) == 1)
+      {
+        const std::vector<vertex_id> vertices(topology.getIndices(*facetIter, 0));
+        assert(vertices.size() == 2);
+        result.push_back(std::make_pair(vertices[0], vertices[1]));
+      }
     }
-
-    return facets;
+    return result;
   }
 
-  std::vector< vertex<dimension> > getCoordinates(const cell_id cid) const
+  CellVertices<dimension> getCoordinates(const cell_id cid) const
   {
-    const std::vector<vertex_id> vertex_ids(getCell(cid).getIndices());
+    const std::vector<vertex_id> vertex_ids(topology.getIndices(MeshEntity(dimension, cid), 0));
     std::vector< vertex<dimension> > coords;
 
     for(std::vector<vertex_id>::const_iterator vertexIter(vertex_ids.begin()); vertexIter!=vertex_ids.end(); ++vertexIter)
       coords.push_back(getVertex(*vertexIter));
 
-    return coords;
+    return CellVertices<dimension>(coords.begin(), coords.end());
   }
 
-  void print(std::ostream& out = std::cout) const
+  std::map<MeshEntity, MeshEntity> getLocalToGlobalMapping(const cell_id cid) const
   {
-    out << "Nodes: " << geometry.size() << std::endl;
-    out << "Cells: " << cells.size() << std::endl;
-    out << std::endl;
+    const MeshEntity cellEntity(dimension, cid);
+    std::map<MeshEntity, MeshEntity> mapping;
 
-    for(std::map<cell_id, cell_type>::const_iterator cellIter = cells.begin(); cellIter != cells.end(); ++cellIter)
+    for(std::size_t d=0; d<=dimension; ++d)
     {
-      out << "Cell: " << cellIter->first << std::endl;
-      cellIter->second.print(out);
-      out << std::endl;
+      for(local_iterator eIter(local_begin(cellEntity, d)); eIter!=local_end(cellEntity, d); ++eIter)
+      {
+        const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, *eIter);
+        mapping.insert(std::make_pair(MeshEntity(d, localIndex), *eIter));
+      }
     }
-  }
-  
-  cell_type getCell(const cell_id cid) const
-  {
-    const std::map<cell_id, cell_type>::const_iterator cellIter = cells.find(cid);
-    assert(cellIter != cells.end());
-    return cellIter->second;
+    return mapping;
   }
 
-  vertex_type getVertex(const vertex_id vid) const
+  std::vector<std::size_t> getIndices(const MeshEntity& entity, const std::size_t d) const
+  {
+    return topology.getIndices(entity, d);
+  }
+
+  vertex_type getVertex(const std::size_t vid) const
   {
     return geometry[vid];
   }
 
-  std::map<cell_id, cell_type> getCells() const
-  {
-    return cells;
-  }
-
-  mesh_geometry<dimension> getGeometry() const
+  const MeshGeometry<dimension>& getGeometry() const
   {
     return geometry;
   }
 
-  virtual ~mesh()
+  MeshTopology& getTopology() const
+  {
+    return topology;
+  }
+
+  virtual ~Mesh()
   {
   }
 };
