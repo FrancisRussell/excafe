@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CAPTURE_INDICES_PROPAGATION_RULE_HPP
 
 #include "indices_fwd.hpp"
+#include <simple_cfd/capture/fields/discrete_expr.hpp>
 
 namespace cfd
 {
