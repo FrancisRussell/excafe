@@ -128,9 +128,15 @@ public:
 
   value_type operator()(const value_type a) const
   {
-    assert(variables.size() == 1);
+    /*
+     HACK: We often find x cancels out in some of our univariate formulae, so we permit calling this
+           where we have no variables.
+    */
+    assert(variables.size() < 2);
   
-    paramData[0] = a;
+    if (variables.size() == 1)
+      paramData[0] = a;
+
     return evaluate(paramData);
   }
 
