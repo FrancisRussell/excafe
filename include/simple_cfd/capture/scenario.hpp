@@ -11,12 +11,14 @@
 #include <fstream>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/mesh_function.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/discrete_field.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/boundary_condition_list.hpp>
+#include <simple_cfd/local_assembly_matrix.hpp>
 #include "solve_operation.hpp"
 #include "dimensionless_scenario.hpp"
 #include "fields/element.hpp"
@@ -28,6 +30,7 @@
 #include "evaluation/evaluation_fwd.hpp"
 #include "evaluation/function_space_resolver.hpp"
 #include "evaluation/boundary_condition_builder.hpp"
+#include "evaluation/assembly_optimising_visitor.hpp"
 
 namespace cfd
 {
@@ -40,11 +43,13 @@ private:
   typedef vertex<dimension> vertex_type;
   typedef typename DofMap<dimension>::dof_t dof_t;
   typedef detail::FunctionSpaceExpr* function_space_ptr;
+  typedef detail::LocalAssemblyMatrix<dimension, detail::ScalarPlaceholder::optimised_expression_t> local_assembly_matrix_t;
 
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::map< std::string, DiscreteField<dimension> > persistentFields;
+  std::map< const detail::OperatorAssembly*, local_assembly_matrix_t > optimisedCellIntegrals;
   std::vector< DiscreteField<dimension> > boundaryValues;
 
   boost::tuple<double, double, double> getValue(const std::size_t cid, const vertex_type& vertex, 
@@ -192,7 +197,6 @@ private:
     resolveFunctionSpaces(functionSpaceSet);
   }
 
-
 public:
   Scenario(Mesh<dimension>& _mesh) : mesh(_mesh)
   {
@@ -245,6 +249,39 @@ public:
 
     for(std::set<function_space_ptr>::const_iterator fsIter(functionSpaces.begin()); fsIter!=functionSpaces.end(); ++fsIter)
       (*fsIter)->accept(functionSpaceResolver);
+  }
+
+  virtual void optimiseLocalAssemblies(const detail::DiscreteExprSet<detail::discrete_operator_tag>& operators)
+  {
+    detail::AssemblyOptimisingVisitor<dimension> visitor(*this);
+
+    BOOST_FOREACH(detail::OperatorExpr& expr, std::make_pair(operators.begin_expr(), operators.end_expr()))
+    {
+      expr.accept(visitor);
+    }
+  }
+
+  void setOptimisedCellIntegral(const detail::OperatorAssembly& assembly, const local_assembly_matrix_t& matrix)
+  {
+    optimisedCellIntegrals.insert(std::make_pair(&assembly, matrix));
+  }
+
+  std::map<MeshEntity, local_assembly_matrix_t> getOptimisedCellIntegral(const detail::OperatorAssembly& assembly) const
+  {
+    const MeshEntity cellEntity(dimension, 0);
+    typename std::map<const detail::OperatorAssembly*, local_assembly_matrix_t>::const_iterator matIter =
+      optimisedCellIntegrals.find(&assembly);
+    
+    if (matIter != optimisedCellIntegrals.end())
+    {
+      std::map<MeshEntity, local_assembly_matrix_t> matrices;
+      matrices.insert(std::make_pair(cellEntity, matIter->second));
+      return matrices;
+    }
+    else
+    {
+      CFD_EXCEPTION("Unable to locate optimised cell integral for specified assembly operator.");
+    }
   }
 
   const DofMap<dimension>& getDofMap(detail::FunctionSpaceExpr& e) const

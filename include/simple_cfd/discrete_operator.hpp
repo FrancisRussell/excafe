@@ -14,10 +14,11 @@
 #include "numeric/functional.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
+#include "local_assembly_matrix.hpp"
+#include "exception.hpp"
 #include "capture/forms/bilinear_form_integral_sum.hpp"
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
-#include "local_assembly_matrix.hpp"
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/scalar_placeholder_evaluator.hpp"
@@ -30,9 +31,17 @@ class DiscreteOperator
 {
 private:
   static const std::size_t dimension = D;
-  typedef vertex<dimension> vertex_type;
-  typedef FiniteElement<dimension> finite_element_t;
+
+  typedef vertex<dimension>                 vertex_type;
+  typedef FiniteElement<dimension>          finite_element_t;
   typedef typename DofMap<dimension>::dof_t dof_t;
+
+  // Useful typedefs for expression capture
+  typedef detail::ScalarPlaceholder::expression_t                        expression_t;
+  typedef detail::ScalarPlaceholder::optimised_expression_t              optimised_expression_t;
+  typedef detail::LocalAssemblyMatrix<dimension, expression_t>           local_matrix_t;
+  typedef detail::LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
+  typedef detail::LocalAssemblyMatrix<dimension, double>                 evaluated_local_matrix_t;
 
   const DofMap<dimension> rowMappings;
   const DofMap<dimension> colMappings;
@@ -45,7 +54,7 @@ private:
     const unsigned colDofs = colMappings.getDegreesOfFreedomCount();
 
     SparsityPattern pattern(rowDofs, colDofs);
-    const Mesh<dimension> m(rowMappings.getMesh());
+    const Mesh<dimension>& m(rowMappings.getMesh());
 
     const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
@@ -94,92 +103,6 @@ private:
     }
 
     return values;
-  }
-
-  void addTermGeneral2(const Scenario<dimension>& scenario, 
-    const detail::ExpressionValues<dimension>& values,
-    const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
-    const forms::BilinearFormIntegralSum::const_iterator sumEnd,
-    const MeshFunction<bool>& subDomain)
-  {
-    using namespace cfd::forms;
-    using namespace cfd::detail;
-
-    std::cout << "Entered new assembly function..." << std::endl;
-
-    typedef ScalarPlaceholder::expression_t expression_t;
-    typedef expression_t::optimised_t optimised_expression_t;
-    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, double> evaluated_local_matrix_t;
-
-    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
-
-    AssemblyHelper<dimension> assemblyHelper(scenario);
-    local_matrix_t localMatrix(testElements, trialElements);
-
-    for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
-    {
-      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
-    }
-
-    //std::cout << localMatrix;
-    
-    std::cout << "Built bilinear form..." << std::endl;
-
-    const MeshEntity localCellEntity(dimension, 0);
-    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
-
-    std::cout << "Integrated bilinear form..." << std::endl;
-
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
-
-    std::cout << "Built optimised matrix.." << std::endl;
-
-    // Build set of placeholders
-    PolynomialVariableCollector<expression_t::optimised_t> collector;
-    collector = std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
-    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
-
-    std::cout << "Built set of ScalarPlaceholder of size " << placeholders.size() << "." << std::endl;
-
-    const Mesh<dimension>& m = scenario.getMesh();
-    const std::size_t entityDimension = subDomain.getDimension();
-
-    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
-    {
-      if (subDomain(*eIter))
-      {
-        const std::size_t cid = m.getContainingCell(*eIter);
-        const CellVertices<dimension> vertices(m.getCoordinates(cid));
-        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-  
-        if (localEntity == localCellEntity)
-        {
-          // Find placeholder values
-          typedef optimised_expression_t::value_map value_map;
-          const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
-
-/*
-          typedef std::pair<ScalarPlaceholder, double> pair_t;
-          BOOST_FOREACH(const pair_t& p, placeholderValues)
-          {
-            std::cout << p.first << " = " << p.second << std::endl;
-          }
-*/
-          // Build concrete local assembly matrix
-          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
-          const evaluated_local_matrix_t concreteLocalMatrix(optimisedLocalMatrix.transform(evaluator));
-          addValues(cid, concreteLocalMatrix);
-        }
-        else
-        {
-          //FIXME: work out how to capture edge integrals
-          CFD_EXCEPTION("Can only handle capture of cell-integrals at the moment.");
-        }
-      }
-    }
   }
 
   void addTermGeneral(const Scenario<dimension>& scenario, const detail::ExpressionValues<dimension>& values,
@@ -326,6 +249,7 @@ public:
 
   void addValues(const std::size_t cid, const detail::LocalAssemblyMatrix<dimension, double>& localMatrix)
   {
+    //std::cout << "Adding local assembly matrix for cell " << cid << ":" << localMatrix << std::endl;
     const std::vector<dof_t> testDofs(localMatrix.getTestDofs(cid));
     const std::vector<dof_t> trialDofs(localMatrix.getTrialDofs(cid));
     addValues(testDofs.size(), trialDofs.size(), &testDofs[0], &trialDofs[0], localMatrix.data());
@@ -345,25 +269,75 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-  DiscreteOperator& assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
+  void assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
   {
-    const Mesh<dimension> m(rowMappings.getMesh());
-
+    const Mesh<dimension>& m(scenario.getMesh());
     const MeshFunction<bool> allCells(dimension, true);
-    if (false)
       addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
-    else
-      addTermGeneral2(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
 
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
     addTermGeneral(scenario, values, expr.begin_ds(), expr.end_ds(), boundaryFunction);
 
     //FIXME: perform internal boundary integrals
+    assemble();
+  }
+
+  void assembleFromOptimisedLocalMatrix(const Scenario<dimension>& scenario, 
+    const detail::ExpressionValues<dimension>& values,
+    const std::map<MeshEntity, opt_local_matrix_t> localMatrices,
+    const MeshFunction<bool>& subDomain)
+  {
+    using namespace detail;
+
+    // Build set of placeholders
+    PolynomialVariableCollector<expression_t::optimised_t> collector;
+
+    typedef std::pair<MeshEntity, opt_local_matrix_t> entity_matrix_pair_t;
+    BOOST_FOREACH(const entity_matrix_pair_t& mapping, localMatrices)
+    {
+      collector = std::for_each(mapping.second.begin(), mapping.second.end(), collector);
+    }
+
+    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+    const Mesh<dimension>& m = scenario.getMesh();
+    const std::size_t entityDimension = subDomain.getDimension();
+    local_matrix_t localMatrix(testElements, trialElements);
+
+    std::cout << "Starting assembly...." << std::flush;
+    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    {
+      if (subDomain(*eIter))
+      {
+        const std::size_t cid = m.getContainingCell(*eIter);
+        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+        localMatrix.clear();
+        
+        const typename std::map<MeshEntity, opt_local_matrix_t>::const_iterator matIter = localMatrices.find(localEntity);
+  
+        if (matIter != localMatrices.end())
+        {
+          // Find placeholder values
+          typedef optimised_expression_t::value_map value_map;
+          const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
+
+          // Build concrete local assembly matrix
+          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
+          const evaluated_local_matrix_t concreteLocalMatrix(matIter->second.transform(evaluator));
+          addValues(cid, concreteLocalMatrix);
+        }
+        else
+        {
+          CFD_EXCEPTION("Missing optimised local assembly matrix for requested mesh entity");
+        }
+      }
+    }
 
     assemble();
-
-    return *this;
+    std::cout << "done." << std::endl;
   }
+
 
   void addToDiagonal(DiscreteField<dimension>& v)
   {

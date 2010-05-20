@@ -355,8 +355,18 @@ public:
     const DofMap<dimension>& trialDofMap(scenario.getDofMap(*a.getTrialSpace()));
     const DofMap<dimension>& testDofMap(scenario.getDofMap(*a.getTestSpace()));
     DiscreteOperator<dimension> discreteOperator(testDofMap, trialDofMap);
-    discreteOperator.assembleForms(scenario, values, a.getBilinearFormIntegralSum());
-    setValue(a, discreteOperator);
+
+    if (true)
+    {
+      //FIXME: We only handle cell integrals
+      const MeshFunction<bool> allCells(dimension, true);
+      discreteOperator.assembleFromOptimisedLocalMatrix(scenario, values, scenario.getOptimisedCellIntegral(a), allCells);
+      setValue(a, discreteOperator);
+    }
+    else
+    {
+      discreteOperator.assembleForms(scenario, values, a.getBilinearFormIntegralSum());
+    }
   }
 
   virtual void visit(OperatorApplyBC& a)

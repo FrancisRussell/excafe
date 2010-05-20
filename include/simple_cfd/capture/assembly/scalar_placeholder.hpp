@@ -40,6 +40,7 @@ private:
 
 public:
   typedef ScalarPlaceholderExpression::type expression_t;
+  typedef expression_t::optimised_t optimised_expression_t;
 
   explicit ScalarPlaceholder(const PositionComponent& c) : value(c)
   {
