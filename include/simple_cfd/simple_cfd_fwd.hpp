@@ -21,6 +21,7 @@ template<unsigned int D> class Function;
 template<typename T> class MeshFunction;
 class MeshCell;
 template<std::size_t> class GeneralCell;
+class CellManager;
 class TriangularCell;
 class MeshTopology;
 class MeshConnectivity;
@@ -43,19 +44,18 @@ class SparsityPattern;
 class PETScMatrix;
 class PETScVector;
 class PETScKrylovSolver;
-template<std::size_t> class Tensor;
+template<std::size_t D, typename T = double> class Tensor;
 template<std::size_t D> class DiscreteOperator;
 template<std::size_t D> class DiscreteField;
-
-// Polynomial types
-class Polynomial;
-class Monomial;
-class OptimisedPolynomial;
 
 // Boundary Conditions
 template<std::size_t D> class BoundaryCondition3;
 template<std::size_t D> class BoundaryConditionList;
 template<std::size_t D> class BoundaryConditionTrivial;
+
+// Tags
+struct row_major_tag {};
+
 }
 
 #endif

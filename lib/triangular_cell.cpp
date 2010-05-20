@@ -6,9 +6,10 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
+#include <lagrange_triangle_linear.hpp>
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
@@ -262,14 +263,16 @@ std::size_t TriangularCell::numEntities(const std::size_t d) const
   return numEntitiesArray[d];
 }
 
-std::auto_ptr< GeneralCell<TriangularCell::dimension> > TriangularCell::cloneGeneralCell() const
+const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMapping() const
 {
-  return std::auto_ptr< GeneralCell<dimension> >(new TriangularCell(*this));
-}
+  //IMPORTANT: we need this to be lazily constructed to avoid an initialisation dependence loop
 
-std::auto_ptr<MeshCell> TriangularCell::cloneMeshCell() const
-{
-  return std::auto_ptr<MeshCell>(new TriangularCell(*this));
+  if (coordinateMapping == false)
+  {
+    boost::scoped_ptr< FiniteElement<dimension> > constructed(new LagrangeTriangleLinear<0>());
+    coordinateMapping.swap(constructed);
+  }
+  return *coordinateMapping;
 }
 
 }

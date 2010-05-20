@@ -13,11 +13,9 @@ namespace cfd
 namespace detail
 {
 
-class TemporalIndexSet : boost::addable<TemporalIndexSet, TemporalIndexSet,
-                         boost::subtractable<TemporalIndexSet, TemporalIndexSet,
-                         boost::addable<TemporalIndexSet, TemporalIndexValue*,
-                         boost::subtractable<TemporalIndexSet, TemporalIndexValue*
-                         > > > >
+class TemporalIndexSet : boost::additive<TemporalIndexSet, TemporalIndexSet,
+                         boost::additive<TemporalIndexSet, TemporalIndexValue*
+                         > >
 {
 private:
   typedef std::set<TemporalIndexValue*> index_set_t;

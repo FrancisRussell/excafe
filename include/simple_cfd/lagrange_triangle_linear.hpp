@@ -6,24 +6,33 @@
 #include <utility>
 #include <cassert>
 #include <cmath>
+#include <ostream>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include "simple_cfd_fwd.hpp"
+#include "exception.hpp"
 #include "mesh.hpp"
 #include "finite_element.hpp"
 #include "numeric/tensor.hpp"
+#include "numeric/tensor_size.hpp"
+#include "numeric/index.hpp"
+#include "numeric/polynomial_fraction.hpp"
 #include "dof_numbering_basic.hpp"
+#include "cell_manager.hpp"
+#include "exception.hpp"
+#include "capture/assembly/position_placeholder.hpp"
 
 namespace cfd
 {
 
 template<unsigned R>
-class LagrangeTriangleLinear : public FiniteElement<TriangularCell::dimension>
+class LagrangeTriangleLinear : public FiniteElement<2>
 {
 public:
   typedef TriangularCell cell_type;
   static const std::size_t rank = R;
   static const std::size_t dimension = cell_type::dimension;
+
   typedef Tensor<dimension> value_type;
   typedef Tensor<dimension> gradient_type;
   typedef Tensor<dimension> divergence_type;
@@ -32,7 +41,7 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 3;
-  const cell_type referenceCell;
+  const cell_ref_t referenceCell;
   DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -65,7 +74,7 @@ public:
   // We define the numbering of bases on a cell in the following fashion
   // index_into_tensor * number_of_nodes_on_cell + node_on_cell_id
 
-  LagrangeTriangleLinear() : dofNumbering(buildDofNumberingHelper())
+  LagrangeTriangleLinear() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
   {
   }
 
@@ -79,13 +88,43 @@ public:
     return dimension;
   }
 
+  tensor_expr_t getBasis(const std::size_t i, const detail::PositionPlaceholder& v) const
+  {
+    using namespace detail;
+
+    if (i >= spaceDimension())
+      CFD_EXCEPTION("Requested invalid basis function.");
+
+    const TensorSize tensorSize(rank, dimension);
+    tensor_expr_t bases(tensorSize);
+
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
+  
+    assert(dofAssociation.getEntityDimension() == 0);
+    const unsigned node_on_cell = dofAssociation.getEntityIndex();
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
+  
+    const int ip1 = (node_on_cell+1) % 3;
+    const int ip2 = (node_on_cell+2) % 3;
+
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
+
+    bases[tensorIndex] = (referenceCell->getLocalVertex(ip2)[0] - referenceCell->getLocalVertex(ip1)[0]) * 
+      (v[1] - referenceCell->getLocalVertex(ip1)[1]) - 
+      (referenceCell->getLocalVertex(ip2)[1] - referenceCell->getLocalVertex(ip1)[1]) * 
+      (v[0] - referenceCell->getLocalVertex(ip1)[0]);
+
+    return bases;
+  }
+
   value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
 
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -108,9 +147,9 @@ public:
   gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
     assert(i < spaceDimension());
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -137,9 +176,9 @@ public:
   {
     assert(i < spaceDimension());
 
-    const double area = referenceCell.getArea(vertices);
+    const double area = referenceCell->getArea(vertices);
 
-    const vertex_type v = referenceCell.referenceToPhysical(vertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(vertices, vRef);
     const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(i);
 
     assert(dofAssociation.getEntityDimension() == 0);
@@ -175,14 +214,14 @@ public:
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell->referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const std::size_t dof) const
   {
     assert(dof>=0 && dof<(3 * detail::Power<dimension, rank>::value));
     const DofAssociation association = dofNumbering.getLocalAssociation(dof);
-    return referenceCell.getLocalVertex(association.getEntityIndex());
+    return referenceCell->getLocalVertex(association.getEntityIndex());
   }
 
   // NOTE: by permitting mapping dofs to tensor indices, this commits
@@ -216,7 +255,7 @@ public:
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t space_dimension = spaceDimension();
-    const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, entity);
     const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
 
     std::set< Dof<dimension> > result;
@@ -232,9 +271,15 @@ public:
     return result;
   }
 
-  virtual const GeneralCell<dimension>& getCell() const
+  virtual cell_ref_t getCell() const
   {
     return referenceCell;
+  }
+
+  void write(std::ostream& o) const
+  {
+    o << "finite_element(name=\"Lagrange Triangle Linear\", rank=" << rank << ", dimension=" << dimension;
+    o << ", space=" << spaceDimension() << ")";
   }
 };
 

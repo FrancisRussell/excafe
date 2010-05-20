@@ -3,13 +3,16 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <boost/operators.hpp>
 #include "petsc.h"
 #include "petscvec.h"
 
 namespace cfd
 {
 
-class PETScVector
+class PETScVector : boost::additive<PETScVector,
+                    boost::multipliable<PETScVector, double
+                    > >
 {
 private:
   Vec v;
@@ -24,9 +27,6 @@ public:
   PETScVector& operator*=(const double s);
   PETScVector& operator+=(const PETScVector& p);
   PETScVector& operator-=(const PETScVector& p);
-  PETScVector operator*(const double s) const;
-  PETScVector operator+(const PETScVector& p) const;
-  PETScVector operator-(const PETScVector& p) const;
   double two_norm() const;
   std::size_t numRows() const;
   void addValues(const unsigned numValues, const int* indices, const double* values);

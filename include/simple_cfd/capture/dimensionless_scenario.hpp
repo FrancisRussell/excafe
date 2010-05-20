@@ -14,6 +14,7 @@ class DimensionlessScenario
 {
 public:
   virtual void resolveFunctionSpaces(const std::set<FunctionSpaceExpr*> functionSpaces) = 0;
+  virtual void optimiseLocalAssemblies(const DiscreteExprSet<discrete_operator_tag>& operators) = 0;
   virtual void execute(SolveOperation& o) = 0;
   virtual ~DimensionlessScenario() {}
 };

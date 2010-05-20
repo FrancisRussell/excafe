@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 #include <cstddef>
-#include <memory>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_cell.hpp"
 
@@ -27,7 +26,7 @@ public:
   virtual vertex<dimension> referenceToPhysical(const CellVertices<dimension>& vertices, const vertex<dimension>& vertex) const = 0;
   virtual Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid,
     const vertex<dimension>& v) const = 0;
-  virtual std::auto_ptr<GeneralCell> cloneGeneralCell() const = 0;
+  virtual const FiniteElement<dimension>& getCoordinateMapping() const = 0;
   virtual ~GeneralCell() {}
 };
 

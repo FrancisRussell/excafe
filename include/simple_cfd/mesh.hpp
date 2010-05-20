@@ -7,6 +7,7 @@
 #include <utility>
 #include <cassert>
 #include <memory>
+#include <iostream>
 #include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "mesh_geometry.hpp"
@@ -17,6 +18,7 @@
 #include "general_cell.hpp"
 #include "dof_map.hpp"
 #include "cell_vertices.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
@@ -31,7 +33,8 @@ public:
   typedef MeshTopology::local_iterator local_iterator;
 
 private:
-  boost::scoped_ptr< GeneralCell<dimension> > referenceCell;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
+  cell_ref_t referenceCell;
   mutable MeshTopology topology;
   MeshGeometry<dimension> geometry;
   MeshFunction<int> facetLabels;
@@ -55,14 +58,15 @@ private:
   }
 
 public:
-  Mesh(const GeneralCell<dimension>& cell) : referenceCell(cell.cloneGeneralCell()), topology(*referenceCell), facetLabels(getDimension()-1), 
+  Mesh(const cell_ref_t cell) : referenceCell(cell), topology(referenceCell), facetLabels(getDimension()-1), 
     boundaryFacets(getDimension()-1)
   {
   }
 
-  Mesh(const Mesh& m) : referenceCell(m.referenceCell->cloneGeneralCell()), topology(m.topology), geometry(m.geometry),
+  Mesh(const Mesh& m) : referenceCell(m.referenceCell), topology(m.topology), geometry(m.geometry),
     facetLabels(m.facetLabels), boundaryFacets(m.boundaryFacets), baseConnectivity(m.baseConnectivity)
   {
+    std::cout << "Warning: potentially expensive mesh copy operation." << std::endl;
   }
 
   std::size_t getDimension() const
@@ -82,9 +86,9 @@ public:
     return cid;
   }
 
-  const GeneralCell<dimension>& getReferenceCell() const
+  const cell_ref_t getReferenceCell() const
   {
-    return *referenceCell;
+    return referenceCell;
   }
 
   std::size_t getContainingCell(const MeshEntity& entity) const

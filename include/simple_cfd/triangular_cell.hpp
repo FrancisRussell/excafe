@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <cstddef>
+#include <boost/scoped_ptr.hpp>
 #include "simple_cfd_fwd.hpp"
 #include "vertex.hpp"
 #include "mesh_topology.hpp"
@@ -22,14 +23,17 @@ public:
   static const unsigned int vertex_count = 3;
 
 private:
+  friend class CellManager;
   const std::vector<vertex_type> localVertices;
+  mutable boost::scoped_ptr< FiniteElement<dimension> > coordinateMapping;
 
   static std::vector<vertex_type> buildLocalVertices();
   static std::map<vertex_type, double> buildCellQuadrature(const std::size_t degree);
   static std::map<vertex_type, double> normaliseQuadrature(const std::map<vertex_type, double>& quadrature, const double value); 
 
-public:
   TriangularCell();
+
+public:
   virtual std::size_t getDimension() const;
   virtual std::size_t numEntities(std::size_t dimension) const;
   virtual vertex<dimension> getLocalVertex(const std::size_t index) const;
@@ -40,8 +44,7 @@ public:
   vertex_type referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
   Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
-  virtual std::auto_ptr<MeshCell> cloneMeshCell() const;
-  virtual std::auto_ptr< GeneralCell<dimension> > cloneGeneralCell() const;
+  virtual const FiniteElement<dimension>& getCoordinateMapping() const;
 };
 
 }

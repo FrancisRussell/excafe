@@ -1,16 +1,17 @@
 #ifndef SIMPLE_CFD_MESH_TOPOLOGY_HPP
 #define SIMPLE_CFD_MESH_TOPOLOGY_HPP
 
-#include <mesh_connectivity.hpp>
-#include <mesh_entity_iterator_global.hpp>
-#include <mesh_entity_iterator_local.hpp>
-#include <mesh_cell.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <cstddef>
 #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
+#include <boost/scoped_ptr.hpp>
+#include "mesh_connectivity.hpp"
+#include "mesh_entity_iterator_global.hpp"
+#include "mesh_entity_iterator_local.hpp"
+#include "mesh_cell.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
@@ -21,7 +22,7 @@ private:
   friend class MeshEntityIteratorGlobal;
   friend class MeshEntityIteratorLocal;
 
-  boost::scoped_ptr<MeshCell> cell;
+  CellManager::mesh_cell_ref cell;
   const std::size_t dimension;
   std::vector<MeshConnectivity> relations;
 
@@ -40,7 +41,7 @@ public:
   typedef MeshEntityIteratorGlobal global_iterator;
   typedef MeshEntityIteratorLocal local_iterator;
 
-  MeshTopology(const MeshCell& _cell);
+  MeshTopology(const CellManager::mesh_cell_ref _cell);
   MeshTopology(const MeshTopology& t);
 
   void setBaseConnectivity(const MeshConnectivity& connectivity);
