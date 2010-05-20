@@ -6,6 +6,7 @@
 #include <utility>
 #include <boost/noncopyable.hpp>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/util/singleton.hpp>
 #include <ginac/symbol.h>
 
 namespace cfd
@@ -18,6 +19,7 @@ template<typename T>
 class GinacMapper : boost::noncopyable
 {
 private:
+  friend class util::Singleton< GinacMapper<T> >;
   typedef T key_type;
   typedef GiNaC::symbol value_type;
 
@@ -25,13 +27,6 @@ private:
   
   // NOTE: we need to use a GiNaC::ex_is_less to get a sensible ordering
   std::map<value_type, key_type, GiNaC::ex_is_less> reverse_mappings;
-
-  struct object_creator
-  {
-    object_creator() { GinacMapper<T>::instance(); }
-    inline void do_nothing() const {}
-  };
-  static object_creator create_object;
 
   GinacMapper()
   {
@@ -46,9 +41,7 @@ private:
 public:
   static GinacMapper& instance()
   {
-    static GinacMapper mapper;
-    create_object.do_nothing();
-    return mapper;
+    return util::Singleton<GinacMapper>::getInstance();
   }
 
   value_type getGiNaCSymbol(const key_type& k)
@@ -88,9 +81,6 @@ public:
     }
   }
 };
-
-template<typename T>
-typename GinacMapper<T>::object_creator GinacMapper<T>::create_object;
 
 }
 

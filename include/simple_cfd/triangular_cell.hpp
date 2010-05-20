@@ -11,6 +11,7 @@
 #include "mesh_topology.hpp"
 #include "general_cell.hpp"
 #include "quadrature_points.hpp"
+#include "finite_element.hpp"
 
 namespace cfd
 {
@@ -23,7 +24,7 @@ public:
   static const unsigned int vertex_count = 3;
 
 private:
-  friend class CellManager;
+  friend class util::Singleton<TriangularCell>;
   const std::vector<vertex_type> localVertices;
   mutable boost::scoped_ptr< FiniteElement<dimension> > coordinateMapping;
 

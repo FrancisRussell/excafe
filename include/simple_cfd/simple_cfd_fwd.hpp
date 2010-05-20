@@ -56,6 +56,15 @@ template<std::size_t D> class BoundaryConditionTrivial;
 // Tags
 struct row_major_tag {};
 
+namespace util
+{
+  // Util
+  template<typename T> class Singleton;
+  template<typename T> class LazyCopy;
+  template<typename T> class Maybe;
+  template<typename T> class tag;
+}
+
 }
 
 #endif
