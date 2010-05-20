@@ -100,11 +100,6 @@ public:
 
     std::cout << "Built optimised local-matrix expression..." << std::endl;
 
-    // Build set of placeholders
-    PolynomialVariableCollector<expression_t::optimised_t> collector;
-    collector = std::for_each(optimisedLocalMatrix.begin(), optimisedLocalMatrix.end(), collector);
-    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
-
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
        depending on whether they're cell or facet, and if facet, internal or external facets.
