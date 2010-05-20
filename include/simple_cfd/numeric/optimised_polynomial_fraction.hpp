@@ -6,6 +6,7 @@
 #include <map>
 #include <cstddef>
 #include <cassert>
+#include <ostream>
 #include "numeric_fwd.hpp"
 #include "polynomial_fraction.hpp"
 #include "optimised_polynomial.hpp"
@@ -53,7 +54,27 @@ public:
   {
     return dividend.evaluate(variableValues)/divisor.evaluate(variableValues);
   }
+
+  void write(std::ostream& o) const
+  {
+    const bool noDivisor = divisor.isOne();
+
+    if (!noDivisor)
+      o << "(";
+
+    o << dividend;
+
+    if (!noDivisor)
+      o << ") * (" << divisor << ")^-1";
+  }
 };
+
+template<typename V>
+std::ostream& operator<<(std::ostream& o, const OptimisedPolynomialFraction<V>& p)
+{
+  p.write(o);
+  return o;
+}
 
 }
 

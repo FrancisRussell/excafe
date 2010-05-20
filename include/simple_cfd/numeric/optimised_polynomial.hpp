@@ -8,6 +8,7 @@
 #include <utility>
 #include <cstddef>
 #include <cassert>
+#include <ostream>
 #include <boost/foreach.hpp>
 #include "cast.hpp"
 #include "numeric_fwd.hpp"
@@ -99,6 +100,8 @@ private:
 public:
   OptimisedPolynomial()
   {
+    monomialLengths.push_back(0);
+    monomialCoefficients.push_back(0.0);
   }
 
   OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(asVector(p.getVariables())),
@@ -150,6 +153,45 @@ public:
     return evaluate(paramData);
   }
 
+  bool isOne() const
+  {
+    return monomialLengths.size() == 1 && 
+           monomialLengths[0] == 0 && 
+           monomialCoefficients[0] == 1.0;
+  }
+
+  void write(std::ostream& out) const
+  {
+    assert(monomialCoefficients.size() == monomialLengths.size());
+
+    std::size_t exponentIndex = 0;
+
+    for(std::size_t monomialIndex=0; monomialIndex<monomialLengths.size(); ++monomialIndex)
+    {
+      const std::size_t newExponentIndex = exponentIndex + monomialLengths[monomialIndex];
+
+      if (monomialIndex>0)
+        out << " + ";
+
+      out << monomialCoefficients[monomialIndex];
+
+      if (exponentIndex != newExponentIndex)
+        out << "*";
+
+      for(; exponentIndex<newExponentIndex; ++exponentIndex)
+      {
+        out << variables[exponents[exponentIndex].first];
+        const std::size_t exponent = exponents[exponentIndex].second;
+
+        if (exponent > 1)
+          out << "^" << exponent;
+      }
+    }
+
+    if (monomialLengths.empty())
+      out << 0.0;
+  }
+
   value_type evaluate(const value_map& valueMap) const
   {
     typedef typename value_map::internal_map_t internal_value_map_t;
@@ -179,6 +221,13 @@ public:
     return evaluate(paramData);
   }
 };
+
+template<typename V>
+std::ostream& operator<<(std::ostream& o, const OptimisedPolynomial<V>& p)
+{
+  p.write(o);
+  return o;
+}
 
 }
 
