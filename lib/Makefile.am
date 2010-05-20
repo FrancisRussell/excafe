@@ -16,4 +16,4 @@ capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propa
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \
-                          -lm -lblas -llapack
+                          -lm -lblas -llapack ${CLN_LIBS} ${GINAC_LIBS}
