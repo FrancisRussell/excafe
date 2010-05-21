@@ -16,6 +16,7 @@
 #include "monomial.hpp"
 #include "value_map.hpp"
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/util/hybrid_array.hpp>
 
 namespace cfd
 {
@@ -32,15 +33,15 @@ public:
   typedef detail::ValueMap<variable_t, internal_value_t> value_map;
 
 private:
+  static const std::size_t MAX_VALUES_STACK_BYTES = 512;
+  static const std::size_t MAX_VALUES_STACK = MAX_VALUES_STACK_BYTES/sizeof(value_type);
+
   typedef std::pair<std::size_t, std::size_t> exponent_t;
   
   std::vector<exponent_t> exponents;
   std::vector<std::size_t> monomialLengths;
   std::vector<internal_value_t> monomialCoefficients;
   std::vector<variable_t> variables;
-
-  // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
-  mutable std::vector<internal_value_t> mutableParamData;
 
   template<typename M>
   void pushTerm(const M& monomial, const internal_value_t& coefficient)
@@ -104,8 +105,7 @@ public:
     monomialCoefficients.push_back(0.0);
   }
 
-  OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(asVector(p.getVariables())),
-    mutableParamData(variables.size())
+  OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(asVector(p.getVariables()))
   {
     p.checkConsistent();
   
@@ -205,8 +205,8 @@ public:
   {
     typedef typename value_map::internal_map_t internal_value_map_t;
 
+    util::HybridArray<internal_value_t, MAX_VALUES_STACK> paramData(variables.size());
     const internal_value_map_t& variableValues = valueMap.getReference();
-    internal_value_t* const paramData = &mutableParamData[0];
     typename internal_value_map_t::const_iterator varValIter = variableValues.begin();
 
     for(std::size_t variableIndex=0; variableIndex < variables.size(); ++variableIndex)
@@ -228,7 +228,7 @@ public:
       }
     }
 
-    return evaluate(paramData);
+    return evaluate(paramData.get());
   }
 };
 
