@@ -148,8 +148,9 @@ int main(int argc, char** argv)
   
     for(int i=0; i<6000; ++i)
     {
+      std::cout << "Starting timestep " << i << "..." << std::endl;
       solver.step();
-      std::stringstream filename;
+      std::ostringstream filename;
       filename << "./navier_stokes_" << boost::format("%|04|") % i << ".vtk";
       solver.outputFieldsToFile(filename.str());
     }
