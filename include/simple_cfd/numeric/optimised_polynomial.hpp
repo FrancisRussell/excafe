@@ -40,7 +40,7 @@ private:
   std::vector<variable_t> variables;
 
   // A slightly hacky solution to avoid dynamic memory allocation when evaluating.
-  mutable std::vector<internal_value_t> paramData;
+  mutable std::vector<internal_value_t> mutableParamData;
 
   template<typename M>
   void pushTerm(const M& monomial, const internal_value_t& coefficient)
@@ -68,7 +68,7 @@ private:
     monomialLengths.push_back(monomialLength);
   }
 
-  value_type evaluate(const std::vector<internal_value_t>& params) const
+  value_type evaluate(const internal_value_t* const params) const
   {
     assert(monomialCoefficients.size() == monomialLengths.size());
 
@@ -105,7 +105,7 @@ public:
   }
 
   OptimisedPolynomial(const Polynomial<variable_t>& p) : variables(asVector(p.getVariables())),
-    paramData(variables.size())
+    mutableParamData(variables.size())
   {
     p.checkConsistent();
   
@@ -123,7 +123,7 @@ public:
   value_type operator()() const
   {
     assert(variables.empty());
-    return evaluate(paramData);
+    return evaluate(NULL);
   }
 
   value_type operator()(const value_type a) const
@@ -133,6 +133,7 @@ public:
            where we have no variables.
     */
     assert(variables.size() < 2);
+    internal_value_t paramData[1];
   
     if (variables.size() == 1)
       paramData[0] = a;
@@ -143,6 +144,7 @@ public:
   value_type operator()(const value_type a, const value_type b) const
   {
     assert(variables.size() == 2);
+    internal_value_t paramData[2];
   
     paramData[0] = a;
     paramData[1] = b;
@@ -152,6 +154,7 @@ public:
   value_type operator()(const value_type a, const value_type b, const value_type c) const
   {
     assert(variables.size() == 3);
+    internal_value_t paramData[3];
   
     paramData[0] = a;
     paramData[1] = b;
@@ -203,6 +206,7 @@ public:
     typedef typename value_map::internal_map_t internal_value_map_t;
 
     const internal_value_map_t& variableValues = valueMap.getReference();
+    internal_value_t* const paramData = &mutableParamData[0];
     typename internal_value_map_t::const_iterator varValIter = variableValues.begin();
 
     for(std::size_t variableIndex=0; variableIndex < variables.size(); ++variableIndex)
