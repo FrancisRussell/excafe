@@ -208,12 +208,25 @@ public:
     const polynomial_t newDivisor = divisor * divisor;
     return PolynomialFraction(newDividend, newDivisor);
   }
+
+  void write(std::ostream& o) const
+  {
+    const bool noDivisor = (divisor == polynomial_t(1.0));
+
+    if (!noDivisor)
+      o << "(";
+
+    o << dividend;
+
+    if (!noDivisor)
+      o << ") * (" << divisor << ")^-1";
+  }
 };
 
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const PolynomialFraction<T>& f)
 {
-  o << "(" << f.getDividend() << ")/(" << f.getDivisor() << ")"; 
+  f.write(o);
   return o;
 }
 
