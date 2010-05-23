@@ -14,7 +14,7 @@ typedef std::size_t cell_id;
 template<std::size_t D> class Mesh;
 template<unsigned D> class MeshGeometry;
 template<unsigned D> class MeshGeometryImpl;
-template<unsigned int D> class vertex;
+template<std::size_t D> class vertex;
 template<std::size_t D> class FiniteElement;
 template<unsigned int D> class SubDomain;
 template<unsigned int D> class Function;
@@ -30,6 +30,7 @@ class MeshEntityIteratorGlobal;
 class MeshEntityIteratorLocal;
 class Polygon;
 template<std::size_t D> class CellVertices;
+template<std::size_t FromDimension, std::size_t ToDimension> class GlobalTransformation;
 
 // Degree-of-freedom related types
 template<std::size_t D> class Dof;

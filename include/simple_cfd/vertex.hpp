@@ -15,14 +15,14 @@
 namespace cfd
 {
 
-template<unsigned int D>
+template<std::size_t D>
 class vertex :  boost::totally_ordered<vertex<D>,
                 boost::additive<vertex<D>,
                 boost::multiplicative<vertex<D>, double
                 > > >
 {
 public:
-  static const unsigned int dimension = D;
+  static const std::size_t dimension = D;
   typedef typename boost::array<double, dimension>::iterator iterator;
   typedef typename boost::array<double, dimension>::const_iterator const_iterator;
 
@@ -128,7 +128,7 @@ public:
   }
 };
 
-template<unsigned int D>
+template<std::size_t D>
 std::ostream& operator<<(std::ostream& o, const vertex<D>& v)
 {
   o << "(";

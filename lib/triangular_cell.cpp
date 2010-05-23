@@ -275,4 +275,9 @@ const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMap
   return *coordinateMapping;
 }
 
+GlobalTransformation<2, 2> TriangularCell::getLocalGlobalTransformation() const
+{
+  return GlobalTransformation<dimension, dimension>(getCoordinateMapping(), *this);
+}
+
 }

@@ -12,6 +12,7 @@
 #include "general_cell.hpp"
 #include "quadrature_points.hpp"
 #include "finite_element.hpp"
+#include "coordinate_transformation.hpp"
 
 namespace cfd
 {
@@ -43,6 +44,7 @@ public:
   virtual double getArea(const CellVertices<dimension>& vertices) const;
   double getJacobian(const CellVertices<dimension>& vertices, const MeshEntity& localEntity, const vertex_type& v) const;
   vertex_type referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
+  GlobalTransformation<dimension, dimension> getLocalGlobalTransformation() const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
   Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
   virtual const FiniteElement<dimension>& getCoordinateMapping() const;

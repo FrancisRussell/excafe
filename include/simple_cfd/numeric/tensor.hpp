@@ -260,10 +260,15 @@ public:
     return result;
   }
 
-  operator value_type()
+  value_type toScalar() const
   {
     assert(getRank() == 0 && "Attempt to convert non-rank 0 tensor to scalar");
     return elements[0];
+  }
+
+  operator value_type() const
+  {
+    return toScalar();
   }
 
   void write(std::ostream& o) const
