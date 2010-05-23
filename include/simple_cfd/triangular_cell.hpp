@@ -44,7 +44,9 @@ public:
   virtual double getArea(const CellVertices<dimension>& vertices) const;
   double getJacobian(const CellVertices<dimension>& vertices, const MeshEntity& localEntity, const vertex_type& v) const;
   vertex_type referenceToPhysical(const CellVertices<dimension>& vertices, const vertex_type& vertex) const;
-  GlobalTransformation<dimension, dimension> getLocalGlobalTransformation() const;
+  virtual GlobalTransformation<dimension, dimension> getLocalGlobalTransformation() const;
+  virtual LocalTransformation<dimension, dimension> getCellReferenceLocalTransformation() const;
+  virtual LocalTransformation<dimension-1, dimension> getFacetReferenceLocalTransformation(const std::size_t fid) const;
   std::vector< std::set<std::size_t> > getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const;
   Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
   virtual const FiniteElement<dimension>& getCoordinateMapping() const;

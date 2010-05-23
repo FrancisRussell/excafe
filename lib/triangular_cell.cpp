@@ -280,4 +280,53 @@ GlobalTransformation<2, 2> TriangularCell::getLocalGlobalTransformation() const
   return GlobalTransformation<dimension, dimension>(getCoordinateMapping(), *this);
 }
 
+LocalTransformation<2, 2> TriangularCell::getCellReferenceLocalTransformation() const
+{
+  detail::PositionPlaceholder position;
+  SmallVector<2, LocalTransformation<1, 2>::expression_t> transform;
+
+  transform[0] = (position[0]*0.5 + 0.5)*(0.5 - position[1]*0.5);
+  transform[1] = position[1]*0.5 + 0.5;
+
+  return LocalTransformation<2,2>(transform);
+}
+
+LocalTransformation<1, 2> TriangularCell::getFacetReferenceLocalTransformation(const std::size_t fid) const
+{
+  typedef LocalTransformation<1, 2>::expression_t expression_t;
+
+  detail::PositionPlaceholder refPosition;
+  detail::PositionPlaceholder localPosition;
+  SmallVector<2, expression_t> transform(getCellReferenceLocalTransformation().getTransformed());
+  expression_t::value_map valueMap;
+
+  // TODO: By performing var->var substitution, this ties us to GiNaC.
+  if (fid == 0)
+  {
+    valueMap.bind(localPosition[0], refPosition[0]);
+    valueMap.bind(localPosition[1], -1.0);
+  }
+  else if (fid == 1)
+  {
+    valueMap.bind(localPosition[0], 1.0);
+    valueMap.bind(localPosition[1], refPosition[0]);
+  }
+  else if (fid == 2)
+  {
+    valueMap.bind(localPosition[0], -1.0);
+    valueMap.bind(localPosition[1], refPosition[0]);
+  }
+  else
+  {
+    CFD_EXCEPTION("Transform requested for invalid facet.");
+  }
+
+  for(std::size_t d=0; d<transform.numRows(); ++d)
+  {
+    transform[d].substituteValues(valueMap);
+  }
+
+  return transform;
+}
+
 }

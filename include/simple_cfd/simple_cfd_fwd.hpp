@@ -31,6 +31,7 @@ class MeshEntityIteratorLocal;
 class Polygon;
 template<std::size_t D> class CellVertices;
 template<std::size_t FromDimension, std::size_t ToDimension> class GlobalTransformation;
+template<std::size_t FromDimension, std::size_t ToDimension> class LocalTransformation;
 
 // Degree-of-freedom related types
 template<std::size_t D> class Dof;

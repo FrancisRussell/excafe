@@ -27,6 +27,12 @@ public:
     map[mapper.getGiNaCSymbol(var)] = s;
   }
 
+  void bind(const key_type& var, const key_type& value)
+  {
+    detail::GinacMapper<key_type>& mapper(detail::GinacMapper<key_type>::instance());
+    map[mapper.getGiNaCSymbol(var)] = mapper.getGiNaCSymbol(value);
+  }
+
   const internal_map_t& getReference() const
   {
     return map;

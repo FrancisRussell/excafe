@@ -52,6 +52,7 @@ public:
   SmallVector& operator=(const SmallVector& v)
   {
     values = v.values;
+    return *this;
   }
 
   iterator begin() 
