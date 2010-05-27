@@ -7,7 +7,6 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include "cube.hpp"
-#include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -43,31 +42,7 @@ private:
       CFD_EXCEPTION("Inconsistency detected in SOP.");
   }
 
-  static void addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, const Cube& d)
-  {
-    typedef std::map<unsigned, std::size_t> use_count_map;
-    const use_count_map literalUseCounts = p.getLiteralUseCounts();
-
-    BOOST_FOREACH(const use_count_map::value_type& useCountMapping, literalUseCounts)
-    {
-      if (useCountMapping.second>1)
-      {
-        const unsigned j = useCountMapping.first;
-        const Cube lj(j);
-        const SOP ft = p/lj;
-        const Cube c = ft.maxDivisor();
-
-        if (c.isOne() || c.begin()->first >= j)
-        {
-          const SOP f1 = ft/c;
-          const Cube d1 = merge(d, c, lj);
-
-          kernels.insert(kernels.end(), std::make_pair(f1, d1));
-          addKernels(kernels, j, f1, d1);
-        }
-      }
-    }
-  }
+  static void addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, const Cube& d);
 
 public:
   typedef std::vector<Cube>::value_type     value_type;
@@ -113,55 +88,11 @@ public:
     addCube(cube);
   }
 
-  SOP operator/(const Cube& cube) const
-  {
-    checkConsistent();
+  SOP operator/(const Cube& cube) const;
 
-    SOP result;
-    for(std::size_t i=0; i<cubes.size(); ++i)
-    {
-      const util::Maybe<Cube> dividedCube(cubes[i]/cube); 
-
-      if (dividedCube.hasValue())
-        result.addCube(termNumbers[i], dividedCube.value());
-    }
-    return result; 
-  }
-
-  Cube maxDivisor() const
-  {
-    if (cubes.empty())
-    {
-      return Cube();
-    }
-    else
-    {
-      Cube result(*cubes.begin());
-      BOOST_FOREACH(const Cube& c, cubes)
-      {
-        result &= c;
-      }
-      return result;
-    }
-  }
-
-  std::map<unsigned, std::size_t> getLiteralUseCounts() const
-  {
-    std::map<unsigned, std::size_t> result;
-    BOOST_FOREACH(const Cube& c, cubes)
-    {
-      c.incrementUseCounts(result);
-    }
-    return result;
-  }
-
-  kernel_set_t getKernels() const
-  {
-    kernel_set_t kernels;
-    kernels.insert(kernels.end(), std::make_pair(*this, Cube()));
-    addKernels(kernels, 0, *this, Cube());
-    return kernels;
-  }
+  Cube maxDivisor() const;
+  std::map<unsigned, std::size_t> getLiteralUseCounts() const;
+  kernel_set_t getKernels() const;
 
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const

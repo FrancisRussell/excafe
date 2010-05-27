@@ -5,8 +5,6 @@
 #include <map>
 #include <utility>
 #include <algorithm>
-#include <boost/utility.hpp>
-#include <boost/foreach.hpp>
 #include <boost/operators.hpp>
 #include <simple_cfd/util/maybe.hpp>
 
@@ -90,14 +88,7 @@ public:
   Cube& operator+=(const Cube& c);
   Cube& operator&=(const Cube& c);
   util::Maybe<Cube> operator/(const Cube& c) const;
-
-  void incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const
-  {
-    BOOST_FOREACH(const exponent_map_t::value_type& lMapping, literalExponents)
-    {
-      freqs[lMapping.first] += 1;
-    }
-  }
+  void incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const;
 
 
   template<typename literal_writer>

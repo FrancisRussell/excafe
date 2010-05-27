@@ -12,6 +12,14 @@ namespace cfd
 namespace cse
 {
 
+void Cube::incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const
+{
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, literalExponents)
+  {
+    freqs[lMapping.first] += 1;
+  }
+}
+
 util::Maybe<Cube> Cube::operator/(const Cube& c) const
 {
   Cube result(*this);
