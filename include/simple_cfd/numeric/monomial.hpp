@@ -193,7 +193,7 @@ public:
   {
     Monomial result;
 
-    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, exponents.cref())
+    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, *exponents)
     {
       if (exponentMapping.first == from)
         result.exponents->insert(std::make_pair(to, exponentMapping.second));
