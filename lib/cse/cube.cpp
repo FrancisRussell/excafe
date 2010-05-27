@@ -14,7 +14,7 @@ namespace cse
 
 void Cube::incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const
 {
-  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, literalExponents)
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
   {
     freqs[lMapping.first] += 1;
   }
@@ -23,14 +23,14 @@ void Cube::incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const
 util::Maybe<Cube> Cube::operator/(const Cube& c) const
 {
   Cube result(*this);
-  std::map<unsigned, unsigned>::iterator expIter = result.literalExponents.begin();
+  std::map<unsigned, unsigned>::iterator expIter = result.literalExponents->begin();
 
-  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, c.literalExponents)
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *c.literalExponents)
   {
-    while(expIter != result.literalExponents.end() && expIter->first < lMapping.first)
+    while(expIter != result.literalExponents->end() && expIter->first < lMapping.first)
       ++expIter;
 
-    if (expIter == result.literalExponents.end() || 
+    if (expIter == result.literalExponents->end() || 
         expIter->first != lMapping.first ||
         lMapping.second > expIter->second)
     {
@@ -39,7 +39,7 @@ util::Maybe<Cube> Cube::operator/(const Cube& c) const
     else if (lMapping.second == expIter->second)
     {
       const std::map<unsigned, unsigned>::iterator nextExpIter(boost::next(expIter));
-      result.literalExponents.erase(expIter);
+      result.literalExponents->erase(expIter);
       expIter = nextExpIter;
     }
     else if (lMapping.second < expIter->second)
@@ -52,15 +52,15 @@ util::Maybe<Cube> Cube::operator/(const Cube& c) const
 
 Cube& Cube::operator+=(const Cube& c)
 {
-  std::map<unsigned, unsigned>::iterator expIter = literalExponents.begin();
+  std::map<unsigned, unsigned>::iterator expIter = literalExponents->begin();
 
-  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, c.literalExponents)
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *c.literalExponents)
   {
-    while(expIter != literalExponents.end() && expIter->first < lMapping.first)
+    while(expIter != literalExponents->end() && expIter->first < lMapping.first)
       ++expIter;
 
-    if (expIter == literalExponents.end() || expIter->first != lMapping.first)
-      literalExponents.insert(expIter, lMapping);
+    if (expIter == literalExponents->end() || expIter->first != lMapping.first)
+      literalExponents->insert(expIter, lMapping);
     else
       expIter->second += lMapping.second;
   }
@@ -69,16 +69,16 @@ Cube& Cube::operator+=(const Cube& c)
 
 Cube& Cube::operator&=(const Cube& c)
 {
-  std::map<unsigned, unsigned>::iterator expIter = literalExponents.begin();
+  std::map<unsigned, unsigned>::iterator expIter = literalExponents->begin();
 
-  while(expIter != literalExponents.end())
+  while(expIter != literalExponents->end())
   {
     const std::map<unsigned, unsigned>::iterator nextExpIter(boost::next(expIter));
-    const std::map<unsigned, unsigned>::const_iterator cIter(c.literalExponents.find(expIter->first));
+    const std::map<unsigned, unsigned>::const_iterator cIter(c.literalExponents->find(expIter->first));
 
-    if (cIter == c.literalExponents.end())
+    if (cIter == c.literalExponents->end())
     {
-      literalExponents.erase(expIter);
+      literalExponents->erase(expIter);
     }
     else
     {

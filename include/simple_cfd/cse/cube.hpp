@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 #include <simple_cfd/util/maybe.hpp>
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
@@ -29,7 +30,7 @@ class Cube : boost::totally_ordered<Cube>
 {
 private:
   typedef std::map<unsigned, unsigned> exponent_map_t;
-  exponent_map_t literalExponents; 
+  util::LazyCopy<exponent_map_t> literalExponents; 
 
 public:
   typedef exponent_map_t::value_type     value_type;
@@ -41,48 +42,48 @@ public:
   }
 
   template<typename InputIterator>
-  Cube(const InputIterator begin, const InputIterator end) : literalExponents(begin, end)
+  Cube(const InputIterator begin, const InputIterator end) : literalExponents(exponent_map_t(begin, end))
   {
   } 
 
   const_iterator begin() const
   {
-    return literalExponents.begin();
+    return literalExponents->begin();
   }
 
   const_iterator end() const
   {
-    return literalExponents.end();
+    return literalExponents->end();
   }
 
   iterator begin()
   {
-    return literalExponents.begin();
+    return literalExponents->begin();
   }
 
   iterator end()
   {
-    return literalExponents.end();
+    return literalExponents->end();
   }
 
   bool operator<(const Cube& c) const
   {
-    return literalExponents < c.literalExponents;
+    return *literalExponents < *c.literalExponents;
   }
 
   bool operator==(const Cube& c) const
   {
-    return literalExponents == c.literalExponents;
+    return *literalExponents == *c.literalExponents;
   }
 
   bool isOne() const
   {
-    return literalExponents.empty();
+    return literalExponents->empty();
   }
 
   Cube(const unsigned literal)
   {
-    literalExponents.insert(std::make_pair(literal, 1u));
+    literalExponents->insert(std::make_pair(literal, 1u));
   }
 
   Cube& operator+=(const Cube& c);
