@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include "cube.hpp"
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
@@ -21,24 +22,24 @@ public:
   typedef std::vector< std::pair<SOP, Cube> > kernel_set_t;
 
 private:
-  std::vector<unsigned> termNumbers;
-  std::vector<Cube> cubes;
+  util::LazyCopy< std::vector<unsigned> > termNumbers;
+  util::LazyCopy< std::vector<Cube> > cubes;
 
   void addCube(const Cube& cube)
   {
-    const unsigned termNumber = cubes.size();
+    const unsigned termNumber = cubes->size();
     addCube(termNumber, cube);
   }
 
   void addCube(const unsigned termNumber, const Cube& cube)
   {
-    cubes.push_back(cube);
-    termNumbers.push_back(termNumber);
+    cubes->push_back(cube);
+    termNumbers->push_back(termNumber);
   }
 
   void checkConsistent() const
   {
-    if (termNumbers.size() != cubes.size())
+    if (termNumbers->size() != cubes->size())
       CFD_EXCEPTION("Inconsistency detected in SOP.");
   }
 
@@ -64,24 +65,23 @@ public:
 
   iterator begin()
   {
-    return cubes.begin();
+    return cubes->begin();
   }
 
   iterator end()
   {
-    return cubes.end();
+    return cubes->end();
   }
 
   const_iterator begin() const
   {
-    return cubes.begin();
+    return cubes->begin();
   }
 
   const_iterator end() const
   {
-    return cubes.end();
+    return cubes->end();
   }
-
 
   void append(const Cube& cube)
   {
@@ -97,7 +97,7 @@ public:
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const
   {
-    if (cubes.empty())
+    if (cubes->empty())
       o << "0.0";
 
     for(SOP::const_iterator iter = begin(); iter != end(); ++iter)

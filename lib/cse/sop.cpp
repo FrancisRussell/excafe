@@ -43,26 +43,26 @@ SOP SOP::operator/(const Cube& cube) const
   checkConsistent();
 
   SOP result;
-  for(std::size_t i=0; i<cubes.size(); ++i)
+  for(std::size_t i=0; i<cubes->size(); ++i)
   {
-    const util::Maybe<Cube> dividedCube(cubes[i]/cube); 
+    const util::Maybe<Cube> dividedCube((*cubes)[i]/cube); 
 
     if (dividedCube.hasValue())
-      result.addCube(termNumbers[i], dividedCube.value());
+      result.addCube((*termNumbers)[i], dividedCube.value());
   }
   return result; 
 }
 
 Cube SOP::maxDivisor() const
 {
-  if (cubes.empty())
+  if (cubes->empty())
   {
     return Cube();
   }
   else
   {
-    Cube result(*cubes.begin());
-    BOOST_FOREACH(const Cube& c, cubes)
+    Cube result(*cubes->begin());
+    BOOST_FOREACH(const Cube& c, *cubes)
     {
       result &= c;
     }
@@ -73,7 +73,7 @@ Cube SOP::maxDivisor() const
 std::map<unsigned, std::size_t> SOP::getLiteralUseCounts() const
 {
   std::map<unsigned, std::size_t> result;
-  BOOST_FOREACH(const Cube& c, cubes)
+  BOOST_FOREACH(const Cube& c, *cubes)
   {
     c.incrementUseCounts(result);
   }
