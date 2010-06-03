@@ -43,6 +43,8 @@ SOP SOP::operator/(const Cube& cube) const
   checkConsistent();
 
   SOP result;
+  result.nextTermNumber = nextTermNumber;
+
   for(std::size_t i=0; i<cubes->size(); ++i)
   {
     const util::Maybe<Cube> dividedCube((*cubes)[i]/cube); 

@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <boost/foreach.hpp>
+#include "cse_fwd.hpp"
 #include "cube.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
@@ -22,13 +23,14 @@ public:
   typedef std::vector< std::pair<SOP, Cube> > kernel_set_t;
 
 private:
+  friend class SOPRewrite;
+  std::size_t nextTermNumber;
   util::LazyCopy< std::vector<unsigned> > termNumbers;
   util::LazyCopy< std::vector<Cube> > cubes;
 
   void addCube(const Cube& cube)
   {
-    const unsigned termNumber = cubes->size();
-    addCube(termNumber, cube);
+    addCube(nextTermNumber++, cube);
   }
 
   void addCube(const unsigned termNumber, const Cube& cube)
@@ -50,16 +52,16 @@ public:
   typedef std::vector<Cube>::iterator       iterator;
   typedef std::vector<Cube>::const_iterator const_iterator;
 
-  SOP()
+  SOP() : nextTermNumber(0)
   {
   }
 
-  SOP(const Cube& cube)
+  SOP(const Cube& cube) : nextTermNumber(0)
   {
     addCube(cube);
   }
 
-  SOP(const SOP& sop) : termNumbers(sop.termNumbers), cubes(sop.cubes)
+  SOP(const SOP& sop) : nextTermNumber(sop.nextTermNumber), termNumbers(sop.termNumbers), cubes(sop.cubes)
   {
   }
 
