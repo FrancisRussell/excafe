@@ -15,6 +15,7 @@
 #include "sop.hpp"
 #include "properties.hpp"
 #include "biclique.hpp"
+#include "polynomial_index.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -47,12 +48,30 @@ private:
   typedef boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
+  NewLiteralCreator& literalCreator;
   std::vector<SOP> polynomials;
   std::map<Cube, vertex_descriptor> cubeVertices;
   graph_t graph;
 
 public:
-  void addPolynomial(const SOP& sop)
+  typedef std::vector<SOP>::const_iterator iterator;
+  typedef std::vector<SOP>::const_iterator const_iterator;
+
+  const_iterator begin() const
+  {
+    return polynomials.begin();
+  }
+
+  const_iterator end() const
+  {
+    return polynomials.end();
+  }
+
+  KCM(NewLiteralCreator& _literalCreator) : literalCreator(_literalCreator)
+  {
+  }
+
+  std::size_t addPolynomial(const SOP& sop)
   {
     const std::size_t polynomialID = polynomials.size();
     polynomials.push_back(sop);
@@ -78,6 +97,8 @@ public:
 
       std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
     }
+
+    return polynomialID;
   }
 
   vertex_descriptor addCoKernel(const Cube& cokernel)
@@ -140,6 +161,24 @@ public:
 
     std::cout << "Final score: " << best.getValue() << std::endl;
     std::cout << "SOP: " << best.getSOP() << std::endl;
+
+    removeBiclique(best);
+  }
+
+  void removeBiclique(const Biclique<graph_t>& biclique)
+  {
+    //FIXME: check for duplicate terms in biclique.
+
+    const SOP newSOP = biclique.getSOP();
+    const std::size_t newSOPIndex = addPolynomial(newSOP);
+    const unsigned literal = literalCreator.getLiteralID(PolynomialIndex(newSOPIndex));
+    const std::map<std::size_t, SOPRewrite> rewrites = biclique.getRewrites(literal);
+
+    typedef std::pair<std::size_t, SOPRewrite> rewrite_mapping_t;
+    BOOST_FOREACH(const rewrite_mapping_t& rewrite, rewrites)
+    {
+      polynomials[rewrite.first] = rewrite.second(polynomials[rewrite.first]);
+    }
   }
 };
 

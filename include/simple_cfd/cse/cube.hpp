@@ -26,7 +26,9 @@ namespace detail
   };
 }
 
-class Cube : boost::totally_ordered<Cube>
+class Cube : boost::totally_ordered<Cube,
+             boost::addable<Cube
+             > >
 {
 private:
   typedef std::map<unsigned, unsigned> exponent_map_t;

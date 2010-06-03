@@ -4,6 +4,7 @@
 #include <set>
 #include <boost/foreach.hpp>
 #include "properties.hpp"
+#include "sop_rewrite.hpp"
 
 namespace cfd
 {
@@ -116,13 +117,30 @@ public:
   SOP getSOP() const
   {
     SOP result;
-
     BOOST_FOREACH(const vertex_descriptor& v, cubeVertices)
     {
       result.append(get(term_cube(), *graph, v));
     }
-
     return result;
+  }
+
+  std::map<std::size_t, SOPRewrite> getRewrites(const unsigned newVariable) const
+  {
+    std::map<std::size_t, SOPRewrite> rewrites;
+    BOOST_FOREACH(const vertex_descriptor& cubeVertex, cubeVertices)
+    {
+      BOOST_FOREACH(const edge_descriptor& edge, out_edges(cubeVertex, *graph))
+      {
+        const vertex_descriptor coKernelVertex = target(edge, *graph);
+        if (coKernelVertices.find(coKernelVertex) != coKernelVertices.end())
+        {
+          const std::pair<std::size_t, std::size_t> termID = get(term_id(), *graph, edge);
+          rewrites[termID.first].addRemovedTerm(termID.second);
+          rewrites[termID.first].addCube(get(term_cokernel(), *graph, coKernelVertex)+Cube(newVariable));
+        }
+      }
+    }
+    return rewrites;
   }
 };
 

@@ -9,6 +9,8 @@
 #include <boost/bimap.hpp>
 #include <simple_cfd/numeric/polynomial.hpp>
 #include <simple_cfd/exception.hpp>
+#include "polynomial_index.hpp"
+#include "new_literal_creator.hpp"
 #include "cube.hpp"
 #include "sop.hpp"
 #include "kcm.hpp"
@@ -20,16 +22,17 @@ namespace cse
 {
 
 template<typename V>
-class CSEOptimiser
+class CSEOptimiser : public NewLiteralCreator
 {
 public:
   typedef V variable_t;
 
 private:
   typedef Polynomial<variable_t> polynomial_t;
+  typedef PolynomialIndex polynomial_index_t;
   typedef typename Polynomial<variable_t>::monomial_t monomial_t;
   typedef typename polynomial_t::internal_value_t numeric_t;
-  typedef boost::variant<variable_t, numeric_t> literal_t;
+  typedef boost::variant<variable_t, numeric_t, polynomial_index_t> literal_t;
   boost::bimap<literal_t, unsigned> literalNumbering;
 
   class TranslatedLiteralWriter
@@ -119,12 +122,23 @@ public:
       sops.push_back(buildSOP(p));
     }
 
-    KCM kcm;
+    KCM kcm(*this);
     BOOST_FOREACH(const SOP& sop, sops)
     {
       kcm.addPolynomial(sop);
     }
+
     kcm.factorise();
+
+    std::cout << "Factorized SOPs:" << std::endl;
+    std::size_t index =0;
+    BOOST_FOREACH(const SOP& sop, kcm)
+    {
+      std::cout << "var(" << index << "): ";
+      write(std::cout, sop);
+      std::cout << std::endl;
+      ++index;
+    }
   }
 
   unsigned getLiteralID(const variable_t& var)
@@ -135,6 +149,11 @@ public:
   unsigned getLiteralID(const numeric_t& s)
   {
     return getLiteralIDTemplated(s);
+  }
+
+  unsigned getLiteralID(const polynomial_index_t& i)
+  {
+    return getLiteralIDTemplated(i);
   }
 
   void write(std::ostream& o, const Cube& c) const
