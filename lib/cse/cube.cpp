@@ -90,6 +90,16 @@ Cube& Cube::operator&=(const Cube& c)
   return *this;
 }
 
+std::size_t Cube::numMultiplies() const
+{
+  std::size_t result = 0;
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
+  {
+    result += lMapping.second;
+  }
+  return result;
+}
+
 std::ostream& operator<<(std::ostream& o, const Cube& c)
 {
   c.write(o, detail::LiteralWriter());

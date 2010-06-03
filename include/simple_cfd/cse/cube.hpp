@@ -76,6 +76,7 @@ public:
     return *literalExponents == *c.literalExponents;
   }
 
+
   bool isOne() const
   {
     return literalExponents->empty();
@@ -90,7 +91,7 @@ public:
   Cube& operator&=(const Cube& c);
   util::Maybe<Cube> operator/(const Cube& c) const;
   void incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const;
-
+  std::size_t numMultiplies() const;
 
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const

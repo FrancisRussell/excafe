@@ -88,6 +88,12 @@ SOP::kernel_set_t SOP::getKernels() const
   return kernels;
 }
 
+std::size_t SOP::getTermNumber(const const_iterator i) const
+{
+  const std::size_t offset = i - begin();
+  return (*termNumbers)[offset];
+}
+
 std::ostream& operator<<(std::ostream& o, const SOP& sop)
 {
   sop.write(o, detail::LiteralWriter());

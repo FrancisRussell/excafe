@@ -93,6 +93,7 @@ public:
   Cube maxDivisor() const;
   std::map<unsigned, std::size_t> getLiteralUseCounts() const;
   kernel_set_t getKernels() const;
+  std::size_t getTermNumber(const const_iterator i) const;
 
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const

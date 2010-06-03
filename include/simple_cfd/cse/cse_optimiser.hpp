@@ -11,6 +11,7 @@
 #include <simple_cfd/exception.hpp>
 #include "cube.hpp"
 #include "sop.hpp"
+#include "kcm.hpp"
 
 namespace cfd
 {
@@ -118,19 +119,12 @@ public:
       sops.push_back(buildSOP(p));
     }
 
+    KCM kcm;
     BOOST_FOREACH(const SOP& sop, sops)
     {
-      const SOP::kernel_set_t kernels = sop.getKernels();
-      
-      BOOST_FOREACH(const SOP::kernel_set_t::value_type kernel, kernels)
-      {
-        std::cout << "kernel: ";
-        write(std::cout, kernel.first);
-        std::cout << ", co-kernel: ";
-        write(std::cout, kernel.second);
-        std::cout << std::endl;
-      }
+      kcm.addPolynomial(sop);
     }
+    kcm.factorise();
   }
 
   unsigned getLiteralID(const variable_t& var)
