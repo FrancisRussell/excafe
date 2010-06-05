@@ -121,6 +121,7 @@ public:
     else
     {
       const vertex_descriptor v = add_vertex(graph);
+      cubeVertices.insert(std::make_pair(c, v));
       put(is_cube(), graph, v, true);
       put(term_cube(), graph, v, c);
       put(mul_count(), graph, v, c.numMultiplies());
