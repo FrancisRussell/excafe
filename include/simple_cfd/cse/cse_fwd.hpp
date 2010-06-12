@@ -7,6 +7,7 @@ namespace cfd
 namespace cse
 {
 
+template<typename B> class BicliqueSearchSpace;
 class SOPRewrite;
 class PolynomialIndex;
 

@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <queue>
 #include <iostream>
 #include <boost/foreach.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -15,6 +16,7 @@
 #include "sop.hpp"
 #include "properties.hpp"
 #include "biclique.hpp"
+#include "biclique_search_space.hpp"
 #include "polynomial_index.hpp"
 #include <simple_cfd/exception.hpp>
 
@@ -47,11 +49,48 @@ private:
 
   typedef boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
+  typedef Biclique<graph_t> biclique_t;
+  typedef BicliqueSearchSpace<biclique_t> biclique_search_t;
 
   NewLiteralCreator& literalCreator;
   std::vector<SOP> polynomials;
   std::map<Cube, vertex_descriptor> cubeVertices;
   graph_t graph;
+
+  BicliqueSearchSpace<biclique_t> getSearchSpace(const vertex_descriptor v)
+  {
+    std::set<vertex_descriptor> adjacent;
+    BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, graph))
+    {
+      adjacent.insert(target(edge, graph));
+    }
+
+    std::set<vertex_descriptor> neighbours;
+    BOOST_FOREACH(const vertex_descriptor& a, adjacent)
+    {
+      BOOST_FOREACH(const edge_descriptor& edge, out_edges(a, graph))
+      {
+        neighbours.insert(target(edge, graph));
+      }
+    }
+
+    const biclique_t seed(biclique_t(graph).addVertex(v));
+    biclique_search_t result(seed, neighbours.begin(), neighbours.end());
+    return result;
+  }
+
+  template<typename PriorityQueue>
+  void addSearchSpaces(PriorityQueue& out)
+  {
+    BOOST_FOREACH(const vertex_descriptor v, vertices(graph))
+    {
+      if (get(is_cube(), graph, v))
+      {
+        std::cout << "Adding search space for vertex " << v << "..." << std::endl;
+        out.push(getSearchSpace(v));
+      }
+    }
+  }
 
 public:
   typedef std::vector<SOP>::const_iterator iterator;
@@ -131,39 +170,57 @@ public:
 
   void factorise()
   {
-    Biclique<graph_t> best(graph);
+    typedef BicliqueSearchSpaceComparator<biclique_t> biclique_search_comparator_t;
+    std::priority_queue<biclique_search_t, std::vector<biclique_search_t>, biclique_search_comparator_t> queue;
+    addSearchSpaces(queue);
+    biclique_t best(graph);
 
-    BOOST_FOREACH(const vertex_descriptor& seed, vertices(graph))
+    while(!queue.empty())
     {
-      Biclique<graph_t> biclique(graph, seed);
-      bool grown = true;
+      const biclique_search_t bs = queue.top();
+      queue.pop();
 
-      while(grown)
+      bs.print();
+
+      if (!bs.finished() && bs.getMaximalValue() > best.getValue())
       {
-        const int currentValue = biclique.getValue();
-        grown = false;
-
-        BOOST_FOREACH(const vertex_descriptor& v, vertices(graph))
-        {
-          Biclique<graph_t> candidate(biclique);
-          candidate.addVertex(v);
-          if (candidate.getValue() > currentValue)
-          {
-            grown = true;
-            std::swap(candidate, biclique);
-            break;
-          }
-        }
+        const std::pair<biclique_search_t, biclique_search_t> pair = bs.split();
+        queue.push(pair.first);
+        queue.push(pair.second);
       }
 
-      if (best.getValue() < biclique.getValue())
-        best = biclique;
+      if (best.getValue() < bs.getValue())
+      {
+        best = bs.getBiclique();
+        std::cout << "New best score: " << best.getValue() << std::endl;
+        bs.print();
+      }
     }
 
-    std::cout << "Final score: " << best.getValue() << std::endl;
-    std::cout << "SOP: " << best.getSOP() << std::endl;
-
     removeBiclique(best);
+  }
+
+  std::size_t numEdges() const
+  {
+    return num_edges(graph);
+  }
+
+  std::size_t numCubes() const
+  {
+    std::size_t count = 0;
+    BOOST_FOREACH(const vertex_descriptor& v, vertices(graph))
+    {
+      if (get(is_cube(), graph, v))
+      {
+        ++count;
+      }
+    }
+    return count;
+  }
+
+  std::size_t numCoKernels() const
+  {
+    return num_vertices(graph) - numCubes();
   }
 
   void removeBiclique(const Biclique<graph_t>& biclique)

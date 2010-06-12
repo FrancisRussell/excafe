@@ -2,9 +2,11 @@
 #define SIMPLE_CFD_CSE_BICLIQUE_HPP
 
 #include <set>
+#include <utility>
 #include <boost/foreach.hpp>
 #include "properties.hpp"
 #include "sop_rewrite.hpp"
+#include <simple_cfd/util/maybe.hpp>
 
 namespace cfd
 {
@@ -15,22 +17,28 @@ namespace cse
 template<typename G>
 class Biclique
 {
-private:
+public:
   typedef G graph_t;
   typedef typename boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
+private:
+  friend class BicliqueSearchSpace< Biclique<graph_t> >;
+
   graph_t* graph;
   std::set<vertex_descriptor> cubeVertices;
   std::set<vertex_descriptor> coKernelVertices;
+  int cubeValueSum;
+  int coKernelValueSum;
 
-  int getValue(const std::set<vertex_descriptor>& vertices) const
+  template<typename InputIterator>
+  static int getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
   {
     int result = 0;
 
-    BOOST_FOREACH(const vertex_descriptor& v, vertices)
+    BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
     {
-      result += get(mul_count(), *graph, v);
+      result += get(mul_count(), graph, v);
     }
 
     return result;
@@ -52,32 +60,12 @@ private:
     std::swap(vertices, newVertices);
   }
 
-public:
-  Biclique(graph_t& _graph) : graph(&_graph)
-  {
-  }
-
-  Biclique(graph_t& _graph, const vertex_descriptor seed) : graph(&_graph)
-  {
-    addVertex(seed);
-
-    BOOST_FOREACH(const edge_descriptor& edge, out_edges(seed, *graph))
-    {
-      addVertex(target(edge, *graph));
-    }
-  }
-
-  int getValue() const
+  static int getValue(const int cubeValueSum, const int numCubes, const int coKernelValueSum, const int numCoKernels)
   {
     const int multiplyWeight = 1;
-    const int numCubes = cubeVertices.size();
-    const int numCoKernels = coKernelVertices.size();
 
     if (numCubes == 0 || numCoKernels == 0)
       return 0;
-
-    const int cubeValueSum = getValue(cubeVertices);
-    const int coKernelValueSum = getValue(coKernelVertices);
 
     const int origAdds = (numCubes - 1) * numCoKernels;
     const int origMuls = cubeValueSum * numCoKernels + coKernelValueSum * numCubes;
@@ -91,9 +79,11 @@ public:
     return multiplyWeight*savedMuls + savedAdds;
   }
 
-  void addVertex(const vertex_descriptor& v)
+  Biclique(const Biclique& parent, const vertex_descriptor v) : graph(parent.graph),
+    cubeVertices(parent.cubeVertices), coKernelVertices(parent.coKernelVertices)
   {
     const bool isCube = get(is_cube(), *graph, v);
+    const bool firstVertex = isCube ? cubeVertices.empty() : coKernelVertices.empty();
 
     if (isCube)
     {
@@ -105,6 +95,83 @@ public:
       coKernelVertices.insert(v);
       removeUnconnected(v, cubeVertices);
     }
+
+    if (firstVertex)
+    {
+      BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, *graph))
+      {
+        (isCube ? coKernelVertices : cubeVertices).insert(target(edge, *graph));
+      }
+    }
+
+    calculateValue();
+  }
+
+  void calculateValue()
+  {
+    cubeValueSum = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
+    coKernelValueSum = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
+  }
+
+public:
+  Biclique(graph_t& _graph) : graph(&_graph), cubeValueSum(0), coKernelValueSum(0)
+  {
+  }
+
+  const graph_t& getGraph() const
+  {
+    return *graph;
+  }
+
+  void print() const
+  {
+    std::cout << "num_cubes: " << cubeVertices.size() << ", num_cokernels: " << coKernelVertices.size();
+    std::cout << ", value=" << getValue();
+  }
+
+  bool empty() const
+  {
+    return cubeVertices.empty() && coKernelVertices.empty();
+  }
+
+  int getValue() const
+  {
+    return getValue(cubeValueSum, cubeVertices.size(), coKernelValueSum, coKernelVertices.size());
+  }
+
+  std::size_t numCubes() const
+  {
+    return cubeVertices.size();
+  }
+
+  std::size_t numCoKernels() const
+  {
+    return coKernelVertices.size();
+  }
+
+  int getCubeValueSum() const
+  {
+    return cubeValueSum;
+  }
+
+  int getCoKernelValueSum() const
+  {
+    return coKernelValueSum;
+  }
+
+  std::set<vertex_descriptor> getCubeVertices() const
+  {
+    return cubeVertices;
+  }
+
+  std::set<vertex_descriptor> getCoKernelVertices() const
+  {
+    return coKernelVertices;
+  }
+
+  Biclique addVertex(const vertex_descriptor& v) const
+  {
+    return Biclique(*this, v);
   }
 
   void swap(Biclique& b)
