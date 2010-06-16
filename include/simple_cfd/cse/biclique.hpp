@@ -22,7 +22,7 @@ public:
   typedef typename boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
-private:
+protected:
   friend class BicliqueSearchSpace< Biclique<graph_t> >;
 
   graph_t* graph;
@@ -126,7 +126,7 @@ public:
   void print() const
   {
     std::cout << "num_cubes: " << cubeVertices.size() << ", num_cokernels: " << coKernelVertices.size();
-    std::cout << ", value=" << getValue();
+    std::cout << ", value=" << getValue() << std::endl;
   }
 
   bool empty() const

@@ -16,7 +16,7 @@
 #include "sop.hpp"
 #include "properties.hpp"
 #include "biclique.hpp"
-#include "biclique_search_space.hpp"
+#include "biclique_search.hpp"
 #include "polynomial_index.hpp"
 #include <simple_cfd/exception.hpp>
 
@@ -50,34 +50,12 @@ private:
   typedef boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
   typedef Biclique<graph_t> biclique_t;
-  typedef BicliqueSearchSpace<biclique_t> biclique_search_t;
+  typedef BicliqueSearch<graph_t> biclique_search_t;
 
   NewLiteralCreator& literalCreator;
   std::vector<SOP> polynomials;
   std::map<Cube, vertex_descriptor> cubeVertices;
   graph_t graph;
-
-  BicliqueSearchSpace<biclique_t> getSearchSpace(const vertex_descriptor v)
-  {
-    std::set<vertex_descriptor> adjacent;
-    BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, graph))
-    {
-      adjacent.insert(target(edge, graph));
-    }
-
-    std::set<vertex_descriptor> neighbours;
-    BOOST_FOREACH(const vertex_descriptor& a, adjacent)
-    {
-      BOOST_FOREACH(const edge_descriptor& edge, out_edges(a, graph))
-      {
-        neighbours.insert(target(edge, graph));
-      }
-    }
-
-    const biclique_t seed(biclique_t(graph).addVertex(v));
-    biclique_search_t result(seed, neighbours.begin(), neighbours.end());
-    return result;
-  }
 
   template<typename PriorityQueue>
   void addSearchSpaces(PriorityQueue& out)
@@ -87,7 +65,7 @@ private:
       if (get(is_cube(), graph, v))
       {
         std::cout << "Adding search space for vertex " << v << "..." << std::endl;
-        out.push(getSearchSpace(v));
+        out.push(biclique_search_t(graph, v));
       }
     }
   }
@@ -170,8 +148,7 @@ public:
 
   void factorise()
   {
-    typedef BicliqueSearchSpaceComparator<biclique_t> biclique_search_comparator_t;
-    std::priority_queue<biclique_search_t, std::vector<biclique_search_t>, biclique_search_comparator_t> queue;
+    std::priority_queue<biclique_search_t, std::vector<biclique_search_t>, BicliqueSearchComparator> queue;
     addSearchSpaces(queue);
     biclique_t best(graph);
 
@@ -180,20 +157,31 @@ public:
       const biclique_search_t bs = queue.top();
       queue.pop();
 
-      bs.print();
-
-      if (!bs.finished() && bs.getMaximalValue() > best.getValue())
+      if (bs.getMaximalValue() <= best.getValue())
       {
-        const std::pair<biclique_search_t, biclique_search_t> pair = bs.split();
-        queue.push(pair.first);
-        queue.push(pair.second);
+        break;
       }
-
-      if (best.getValue() < bs.getValue())
+      else
       {
-        best = bs.getBiclique();
-        std::cout << "New best score: " << best.getValue() << std::endl;
+        std::cout << "maximal_value: " << bs.getMaximalValue() << ", ";
         bs.print();
+
+        if (!bs.isFinished())
+        {
+          const std::pair<biclique_search_t, biclique_search_t> pair = bs.split();
+
+          if (pair.first.getMaximalValue() > best.getValue())
+            queue.push(pair.first);
+
+          if (pair.second.getMaximalValue() > best.getValue())
+            queue.push(pair.second);
+        }
+
+        if (best.getValue() < bs.getValue())
+        {
+          best = bs.getBiclique();
+          std::cout << "New best score: " << best.getValue() << std::endl;
+        }
       }
     }
 
