@@ -19,9 +19,9 @@ void SOP::addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, cons
 
   BOOST_FOREACH(const use_count_map::value_type& useCountMapping, literalUseCounts)
   {
-    if (useCountMapping.second>1)
+    const unsigned j = useCountMapping.first;
+    if (j>=i && useCountMapping.second>1)
     {
-      const unsigned j = useCountMapping.first;
       const Cube lj(j);
       const SOP ft = p/lj;
       const Cube c = ft.maxDivisor();
