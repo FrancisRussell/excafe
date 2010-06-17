@@ -32,8 +32,9 @@ private:
   typedef boost::property<term_cube, Cube,
           boost::property<term_cokernel, Cube,
           boost::property<mul_count, int,
-          boost::property<is_cube, bool
-          > > > > VertexProperty;
+          boost::property<is_cube, bool,
+          boost::property<cube_ordering, std::pair<int, unsigned>
+          > > > > > VertexProperty;
 
   // std::pair<polynomial_id, term_number>
   typedef boost::property< term_id, std::pair<std::size_t, std::size_t> > EdgeProperty;
@@ -66,6 +67,19 @@ private:
       {
         std::cout << "Adding search space for vertex " << v << "..." << std::endl;
         out.push(biclique_search_t(graph, v));
+      }
+    }
+  }
+
+  void orderCubes()
+  {
+    unsigned id=0;
+    BOOST_FOREACH(const vertex_descriptor& vertex, vertices(graph))
+    {
+      if (get(is_cube(), graph, vertex))
+      {
+        put(cube_ordering(), graph, vertex, std::make_pair(+out_degree(vertex, graph), id));
+        ++id;
       }
     }
   }
@@ -148,6 +162,8 @@ public:
 
   bool factorise()
   {
+    orderCubes();
+
     std::priority_queue<biclique_search_t, std::vector<biclique_search_t>, BicliqueSearchComparator> queue;
     addSearchSpaces(queue);
     biclique_t best(graph);

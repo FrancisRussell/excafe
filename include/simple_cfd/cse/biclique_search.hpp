@@ -31,6 +31,12 @@ private:
   vertex_descriptor nextSplitPoint;
   bool finished;
 
+  typename boost::property_map<graph_t, cube_ordering>::type::value_type 
+  id(const vertex_descriptor& v) const
+  {
+    return get(cube_ordering(), this->getGraph(), v);
+  }
+
   void calculateValues(const vertex_descriptor& oldSplitPoint)
   {
     const vertex_descriptor nullVertex = boost::graph_traits<graph_t>::null_vertex();
@@ -45,10 +51,10 @@ private:
     {
       BOOST_FOREACH(const vertex_descriptor& v, vertices(this->getGraph()))
       {
-        const bool afterOldSplit = (oldSplitPoint == nullVertex || v > oldSplitPoint);
+        const bool afterOldSplit = (oldSplitPoint == nullVertex || id(v) > id(oldSplitPoint));
         if (afterOldSplit && get(is_cube(), this->getGraph(), v))
         {
-          const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || v < nextSplitPoint);
+          const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || id(v) < id(nextSplitPoint));
           if (lowerThanNextSplit)
             nextSplitPoint = v;
 
@@ -70,12 +76,12 @@ private:
         BOOST_FOREACH(const edge_descriptor& e, out_edges(coKernel, this->getGraph()))
         {
           const vertex_descriptor candidateCube = target(e, this->getGraph());
-          if (candidateCube > oldSplitPoint)
+          if (id(candidateCube) > id(oldSplitPoint))
           {
             ++currentCandidateCubes;
             currentCandidateCubesValueSum += get(mul_count(), this->getGraph(), candidateCube);
 
-            if (nextSplitPoint == nullVertex || candidateCube < nextSplitPoint)
+            if (nextSplitPoint == nullVertex || id(candidateCube) < id(nextSplitPoint))
               nextSplitPoint = candidateCube;
           }
         }
