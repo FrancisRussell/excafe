@@ -31,6 +31,24 @@ protected:
   int cubeValueSum;
   int coKernelValueSum;
 
+  class EdgeRemover
+  {
+  private:
+    const graph_t* graph;
+    std::set< std::pair<std::size_t, std::size_t> > termIDs;
+
+  public:
+    EdgeRemover(const graph_t& _graph, const std::set< std::pair<std::size_t, std::size_t> > _termIDs) : 
+      graph(&_graph), termIDs(_termIDs)
+    {
+    }
+
+    bool operator()(const edge_descriptor& e) const
+    {
+      return termIDs.find(get(term_id(), *graph, e)) != termIDs.end();
+    }
+  };
+
   template<typename InputIterator>
   static int getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
   {
@@ -196,13 +214,15 @@ public:
     const Cube newCube = get(term_cube(), *graph, newCubeVertex);
     std::set<std::pair<std::size_t, std::size_t> > termIDs;
 
+    std::cout << "performing term update" << std::endl;
     BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
     {
+      // TODO: get polynomialID from coKernelVertex instead of assigning it multiple times in the loop.
       std::size_t polynomialID = 0;
       BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
       {
-        const vertex_descriptor coKernelVertex = target(edge, *graph);
-        if (coKernelVertices.find(coKernelVertex) != coKernelVertices.end())
+        const vertex_descriptor cubeVertex = target(edge, *graph);
+        if (cubeVertices.find(cubeVertex) != cubeVertices.end())
         {
           const std::pair<std::size_t, std::size_t> termID = get(term_id(), *graph, edge);
           polynomialID = termID.first;
@@ -211,7 +231,9 @@ public:
           if (!inserted)
             CFD_EXCEPTION("Duplicate term found in biclique.");
 
-          sops[polynomialID].deleteTerm(termID.second);
+          const bool deleted = sops[polynomialID].deleteTerm(termID.second);
+          if (!deleted)
+            CFD_EXCEPTION("Failed to remove factorised term from SOP.");
         }
       }
 
@@ -224,8 +246,10 @@ public:
         CFD_EXCEPTION("Tried to insert duplicate edge when updating KCM. This should never happen.");
       put(term_id(), *graph, edgePair.first, std::make_pair(polynomialID, termID));
 
-      //FIXME: Remove old terms from graph
     }
+
+    // Remove old terms from graph
+    remove_edge_if(EdgeRemover(*graph, termIDs), *graph);
   }
 };
 
