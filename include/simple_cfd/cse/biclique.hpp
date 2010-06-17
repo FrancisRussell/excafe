@@ -209,6 +209,21 @@ public:
     }
     return rewrites;
   }
+
+  void collapse(const vertex_descriptor& newCubeVertex)
+  {
+    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
+    {
+      BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
+      {
+        const vertex_descriptor cubeVertex = target(edge, *graph);
+        if (cubeVertices.find(cubeVertex) != cubeVertices.end())
+          remove_edge(edge, *graph);
+      }
+
+      add_edge(coKernelVertex, newCubeVertex, *graph);
+    }
+  }
 };
 
 }

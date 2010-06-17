@@ -146,7 +146,7 @@ public:
     }
   }
 
-  void factorise()
+  bool factorise()
   {
     std::priority_queue<biclique_search_t, std::vector<biclique_search_t>, BicliqueSearchComparator> queue;
     addSearchSpaces(queue);
@@ -185,7 +185,15 @@ public:
       }
     }
 
-    removeBiclique(best);
+    if (best.getValue() > 0)
+    {
+      removeBiclique(best);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 
   std::size_t numEdges() const
@@ -211,7 +219,7 @@ public:
     return num_vertices(graph) - numCubes();
   }
 
-  void removeBiclique(const Biclique<graph_t>& biclique)
+  void removeBiclique(Biclique<graph_t>& biclique)
   {
     //FIXME: check for duplicate terms in biclique.
 
@@ -220,11 +228,15 @@ public:
     const unsigned literal = literalCreator.getLiteralID(PolynomialIndex(newSOPIndex));
     const std::map<std::size_t, SOPRewrite> rewrites = biclique.getRewrites(literal);
 
+    // Rewrite polynomials
     typedef std::pair<std::size_t, SOPRewrite> rewrite_mapping_t;
     BOOST_FOREACH(const rewrite_mapping_t& rewrite, rewrites)
     {
       polynomials[rewrite.first] = rewrite.second(polynomials[rewrite.first]);
     }
+
+    // Collapse biclique and replace with new cube
+    biclique.collapse(addCube(literal));
   }
 };
 
