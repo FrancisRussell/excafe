@@ -45,12 +45,13 @@ private:
     {
       BOOST_FOREACH(const vertex_descriptor& v, vertices(this->getGraph()))
       {
-        const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || v < nextSplitPoint);
         const bool afterOldSplit = (oldSplitPoint == nullVertex || v > oldSplitPoint);
-
-        if (lowerThanNextSplit && afterOldSplit && get(is_cube(), this->getGraph(), v))
+        if (afterOldSplit && get(is_cube(), this->getGraph(), v))
         {
-          nextSplitPoint = v;
+          const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || v < nextSplitPoint);
+          if (lowerThanNextSplit)
+            nextSplitPoint = v;
+
           ++candidateCubes;
           candidateCubesValueSum += get(mul_count(), this->getGraph(), v);
         }
@@ -59,6 +60,7 @@ private:
     else
     {
       assert(oldSplitPoint != boost::graph_traits<graph_t>::null_vertex());
+      int topScore = 0;
 
       BOOST_FOREACH(const vertex_descriptor& coKernel, this->coKernelVertices)
       {
@@ -77,8 +79,16 @@ private:
               nextSplitPoint = candidateCube;
           }
         }
-        candidateCubes = std::max(candidateCubes, currentCandidateCubes);
-        candidateCubesValueSum = std::max(candidateCubesValueSum, currentCandidateCubesValueSum);
+
+        const int currentScore = base_t::getValue(this->getCubeValueSum() + currentCandidateCubesValueSum, 
+          this->numCubes() + currentCandidateCubes, this->getCoKernelValueSum(), this->numCoKernels());
+
+        if (currentScore > topScore)
+        {
+          topScore = currentScore;
+          candidateCubes = currentCandidateCubes;
+          candidateCubesValueSum = currentCandidateCubesValueSum;
+        }
       }
     }
 
