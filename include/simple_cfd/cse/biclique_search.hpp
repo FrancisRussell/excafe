@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <cassert>
+#include <algorithm>
 #include <boost/foreach.hpp>
 #include "biclique.hpp"
 #include <simple_cfd/exception.hpp>
@@ -32,20 +33,27 @@ private:
 
   void calculateValues(const vertex_descriptor& oldSplitPoint)
   {
-    std::set<vertex_descriptor> candidateCubes;
+    const vertex_descriptor nullVertex = boost::graph_traits<graph_t>::null_vertex();
+    int candidateCubes = 0;
+    int candidateCubesValueSum = 0;
+    nextSplitPoint = nullVertex;
 
-    // Efficiency warning: calculating the maximal value of an empty clique involves building a set
-    // containing every cube vertex in the entire graph more than the old split point. This could be
-    // extremely large.
+    // nextSplitPoint is the lexicographically next cube vertex after the old split point
+    // contained in the cube candidates.
+
     if (this->empty())
     {
       BOOST_FOREACH(const vertex_descriptor& v, vertices(this->getGraph()))
       {
-        const bool isNullSplitPoint = oldSplitPoint==boost::graph_traits<graph_t>::null_vertex();
-        const bool isAfterSplitPoint = isNullSplitPoint || (!isNullSplitPoint && v>oldSplitPoint);
+        const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || v < nextSplitPoint);
+        const bool afterOldSplit = (oldSplitPoint == nullVertex || v > oldSplitPoint);
 
-        if (isAfterSplitPoint && get(is_cube(), this->getGraph(), v))
-          candidateCubes.insert(v);
+        if (lowerThanNextSplit && afterOldSplit && get(is_cube(), this->getGraph(), v))
+        {
+          nextSplitPoint = v;
+          ++candidateCubes;
+          candidateCubesValueSum += get(mul_count(), this->getGraph(), v);
+        }
       }
     }
     else
@@ -54,31 +62,31 @@ private:
 
       BOOST_FOREACH(const vertex_descriptor& coKernel, this->coKernelVertices)
       {
+        int currentCandidateCubes = 0;
+        int currentCandidateCubesValueSum = 0;
+
         BOOST_FOREACH(const edge_descriptor& e, out_edges(coKernel, this->getGraph()))
         {
-          if (target(e, this->getGraph()) > oldSplitPoint)
+          const vertex_descriptor candidateCube = target(e, this->getGraph());
+          if (candidateCube > oldSplitPoint)
           {
-            candidateCubes.insert(target(e, this->getGraph()));
+            ++currentCandidateCubes;
+            currentCandidateCubesValueSum += get(mul_count(), this->getGraph(), candidateCube);
+
+            if (nextSplitPoint == nullVertex || candidateCube < nextSplitPoint)
+              nextSplitPoint = candidateCube;
           }
         }
+        candidateCubes = std::max(candidateCubes, currentCandidateCubes);
+        candidateCubesValueSum = std::max(candidateCubesValueSum, currentCandidateCubesValueSum);
       }
     }
 
     // Find next split point
-    if (candidateCubes.empty())
-    {
-      finished = true;
-      nextSplitPoint = boost::graph_traits<graph_t>::null_vertex();
-    }
-    else
-    {
-      finished = false;
-      nextSplitPoint = *candidateCubes.begin();
-    }
+    finished = (nextSplitPoint == nullVertex);
 
-    maximumCubes = this->numCubes() + candidateCubes.size();
-    maximumCubeValueSum = this->getCubeValueSum() + base_t::getValue(this->getGraph(), candidateCubes.begin(),
-      candidateCubes.end());
+    maximumCubes = this->numCubes() + candidateCubes;
+    maximumCubeValueSum = this->getCubeValueSum() + candidateCubesValueSum;
   }
 
   // This constructs really large sets, so keep it private.
@@ -119,6 +127,13 @@ public:
 
     return std::make_pair(BicliqueSearch(*this, nextSplitPoint, grow_biclique_tag()),
                           BicliqueSearch(*this, nextSplitPoint, same_biclique_tag()));
+  }
+
+  void print() const
+  {
+    std::cout << "num_cubes=" << this->numCubes() << ", num_cokernels=" << this->numCoKernels();
+    std::cout << ", value=" << this->getValue() << ", maximal_value=" << getMaximalValue();
+    std::cout << ", split_vertex=" << nextSplitPoint << ", candidate_cubes=" << maximumCubes;
   }
 
   bool isFinished() const

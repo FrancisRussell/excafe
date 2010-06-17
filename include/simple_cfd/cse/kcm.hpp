@@ -163,8 +163,8 @@ public:
       }
       else
       {
-        std::cout << "maximal_value: " << bs.getMaximalValue() << ", ";
         bs.print();
+        std::cout << std::endl;
 
         if (!bs.isFinished())
         {

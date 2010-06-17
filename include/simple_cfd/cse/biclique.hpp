@@ -125,7 +125,7 @@ public:
 
   void print() const
   {
-    std::cout << "num_cubes: " << cubeVertices.size() << ", num_cokernels: " << coKernelVertices.size();
+    std::cout << "num_cubes=" << cubeVertices.size() << ", num_cokernels=" << coKernelVertices.size();
     std::cout << ", value=" << getValue() << std::endl;
   }
 
