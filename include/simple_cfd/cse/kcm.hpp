@@ -242,17 +242,9 @@ public:
     const SOP newSOP = biclique.getSOP();
     const std::size_t newSOPIndex = addPolynomial(newSOP);
     const unsigned literal = literalCreator.getLiteralID(PolynomialIndex(newSOPIndex));
-    const std::map<std::size_t, SOPRewrite> rewrites = biclique.getRewrites(literal);
 
-    // Rewrite polynomials
-    typedef std::pair<std::size_t, SOPRewrite> rewrite_mapping_t;
-    BOOST_FOREACH(const rewrite_mapping_t& rewrite, rewrites)
-    {
-      polynomials[rewrite.first] = rewrite.second(polynomials[rewrite.first]);
-    }
-
-    // Collapse biclique and replace with new cube
-    biclique.collapse(addCube(literal));
+    // Rewrite polynomials and update graph
+    biclique.rewriteAndUpdate(addCube(literal), &polynomials[0]);
   }
 };
 

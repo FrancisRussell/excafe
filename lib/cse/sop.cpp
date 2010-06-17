@@ -82,6 +82,23 @@ std::map<unsigned, std::size_t> SOP::getLiteralUseCounts() const
   return result;
 }
 
+bool SOP::deleteTerm(const std::size_t termID)
+{
+  for(std::vector<unsigned>::iterator termNumIter = termNumbers->begin(); termNumIter!=termNumbers->end();
+    ++termNumIter)
+  {
+    if (termID == *termNumIter)
+    {
+      const std::size_t offset = termNumIter - termNumbers->begin();
+      termNumbers->erase(termNumbers->begin() + offset);
+      cubes->erase(cubes->begin() + offset);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 SOP::kernel_set_t SOP::getKernels() const
 {
   kernel_set_t kernels;

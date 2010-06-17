@@ -5,8 +5,8 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include "properties.hpp"
-#include "sop_rewrite.hpp"
 #include <simple_cfd/util/maybe.hpp>
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -191,37 +191,40 @@ public:
     return result;
   }
 
-  std::map<std::size_t, SOPRewrite> getRewrites(const unsigned newVariable) const
+  void rewriteAndUpdate(const vertex_descriptor& newCubeVertex, SOP* const sops)
   {
-    std::map<std::size_t, SOPRewrite> rewrites;
-    BOOST_FOREACH(const vertex_descriptor& cubeVertex, cubeVertices)
+    const Cube newCube = get(term_cube(), *graph, newCubeVertex);
+    std::set<std::pair<std::size_t, std::size_t> > termIDs;
+
+    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
     {
-      BOOST_FOREACH(const edge_descriptor& edge, out_edges(cubeVertex, *graph))
+      std::size_t polynomialID = 0;
+      BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
       {
         const vertex_descriptor coKernelVertex = target(edge, *graph);
         if (coKernelVertices.find(coKernelVertex) != coKernelVertices.end())
         {
           const std::pair<std::size_t, std::size_t> termID = get(term_id(), *graph, edge);
-          rewrites[termID.first].addRemovedTerm(termID.second);
-          rewrites[termID.first].addCube(get(term_cokernel(), *graph, coKernelVertex)+Cube(newVariable));
+          polynomialID = termID.first;
+          
+          const bool inserted = termIDs.insert(termID).second;
+          if (!inserted)
+            CFD_EXCEPTION("Duplicate term found in biclique.");
+
+          sops[polynomialID].deleteTerm(termID.second);
         }
       }
-    }
-    return rewrites;
-  }
 
-  void collapse(const vertex_descriptor& newCubeVertex)
-  {
-    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
-    {
-      BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
-      {
-        const vertex_descriptor cubeVertex = target(edge, *graph);
-        if (cubeVertices.find(cubeVertex) != cubeVertices.end())
-          remove_edge(edge, *graph);
-      }
+      // Add new term to polynomial
+      const std::size_t termID = sops[polynomialID].append(get(term_cokernel(), *graph, coKernelVertex) + newCube);
 
-      add_edge(coKernelVertex, newCubeVertex, *graph);
+      // Add new edge to graph and tag with polynomial and termID;
+      const std::pair<edge_descriptor, bool> edgePair = add_edge(coKernelVertex, newCubeVertex, *graph);
+      if (!edgePair.second)
+        CFD_EXCEPTION("Tried to insert duplicate edge when updating KCM. This should never happen.");
+      put(term_id(), *graph, edgePair.first, std::make_pair(polynomialID, termID));
+
+      //FIXME: Remove old terms from graph
     }
   }
 };

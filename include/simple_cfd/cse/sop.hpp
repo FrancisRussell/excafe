@@ -28,9 +28,11 @@ private:
   util::LazyCopy< std::vector<unsigned> > termNumbers;
   util::LazyCopy< std::vector<Cube> > cubes;
 
-  void addCube(const Cube& cube)
+  std::size_t addCube(const Cube& cube)
   {
-    addCube(nextTermNumber++, cube);
+    const std::size_t termNumber = nextTermNumber++;
+    addCube(termNumber, cube);
+    return termNumber;
   }
 
   void addCube(const unsigned termNumber, const Cube& cube)
@@ -85,10 +87,12 @@ public:
     return cubes->end();
   }
 
-  void append(const Cube& cube)
+  std::size_t append(const Cube& cube)
   {
-    addCube(cube);
+    return addCube(cube);
   }
+
+  bool deleteTerm(const std::size_t termID);
 
   SOP operator/(const Cube& cube) const;
 
