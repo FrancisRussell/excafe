@@ -97,7 +97,7 @@ std::size_t Cube::numMultiplies() const
   {
     result += lMapping.second;
   }
-  return result;
+  return result > 0 ? result-1 : 0;
 }
 
 std::ostream& operator<<(std::ostream& o, const Cube& c)
