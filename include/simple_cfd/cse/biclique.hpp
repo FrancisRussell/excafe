@@ -209,23 +209,35 @@ public:
     return result;
   }
 
-  void rewriteAndUpdate(const vertex_descriptor& newCubeVertex, SOP* const sops)
+  std::set<std::size_t> getModifiedPolynomials() const
+  {
+    std::set<std::size_t> polynomials;
+    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
+    {
+      const std::size_t polynomialID = get(polynomial_id(), *graph, coKernelVertex);
+      polynomials.insert(polynomialID);
+    }
+    return polynomials;
+  }
+
+  void rewritePolynomials(const vertex_descriptor& newCubeVertex, SOP* const sops) const
   {
     const Cube newCube = get(term_cube(), *graph, newCubeVertex);
     std::set<std::pair<std::size_t, std::size_t> > termIDs;
 
-    std::cout << "performing term update" << std::endl;
     BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
     {
-      // TODO: get polynomialID from coKernelVertex instead of assigning it multiple times in the loop.
-      std::size_t polynomialID = 0;
+      const std::size_t polynomialID = get(polynomial_id(), *graph, coKernelVertex);
       BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
       {
         const vertex_descriptor cubeVertex = target(edge, *graph);
         if (cubeVertices.find(cubeVertex) != cubeVertices.end())
         {
           const std::pair<std::size_t, std::size_t> termID = get(term_id(), *graph, edge);
-          polynomialID = termID.first;
+
+          // If the polynomial ID of the term associated with this edge doesn't match
+          // our co-kernel, something is badly wrong.
+          assert(polynomialID == termID.first);
           
           const bool inserted = termIDs.insert(termID).second;
           if (!inserted)
@@ -238,18 +250,8 @@ public:
       }
 
       // Add new term to polynomial
-      const std::size_t termID = sops[polynomialID].append(get(term_cokernel(), *graph, coKernelVertex) + newCube);
-
-      // Add new edge to graph and tag with polynomial and termID;
-      const std::pair<edge_descriptor, bool> edgePair = add_edge(coKernelVertex, newCubeVertex, *graph);
-      if (!edgePair.second)
-        CFD_EXCEPTION("Tried to insert duplicate edge when updating KCM. This should never happen.");
-      put(term_id(), *graph, edgePair.first, std::make_pair(polynomialID, termID));
-
+      sops[polynomialID].append(get(term_cokernel(), *graph, coKernelVertex) + newCube);
     }
-
-    // Remove old terms from graph
-    remove_edge_if(EdgeRemover(*graph, termIDs), *graph);
   }
 };
 

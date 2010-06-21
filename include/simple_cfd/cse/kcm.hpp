@@ -11,6 +11,8 @@
 #include <queue>
 #include <iostream>
 #include <boost/foreach.hpp>
+#include <boost/utility.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include "cube.hpp"
 #include "sop.hpp"
@@ -33,15 +35,16 @@ private:
           boost::property<term_cokernel, Cube,
           boost::property<mul_count, int,
           boost::property<is_cube, bool,
+          boost::property<polynomial_id, std::size_t,
           boost::property<cube_ordering, std::pair<int, unsigned>
-          > > > > > VertexProperty;
+          > > > > > > VertexProperty;
 
   // std::pair<polynomial_id, term_number>
   typedef boost::property< term_id, std::pair<std::size_t, std::size_t> > EdgeProperty;
 
   typedef boost::adjacency_list<
     boost::vecS,
-    boost::vecS,
+    boost::listS,
     boost::undirectedS,
     VertexProperty,
     EdgeProperty,
@@ -50,6 +53,7 @@ private:
 
   typedef boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
   typedef boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
+  typedef boost::graph_traits<graph_t>::out_edge_iterator out_edge_iterator;
   typedef Biclique<graph_t> biclique_t;
   typedef BicliqueSearch<graph_t> biclique_search_t;
 
@@ -65,8 +69,15 @@ private:
     {
       if (get(is_cube(), graph, v))
       {
-        std::cout << "Adding search space for vertex " << v << "..." << std::endl;
-        out.push(biclique_search_t(graph, v));
+        // out_degree is potentially O(n) so we compare iterators instead.
+        out_edge_iterator edgesBegin, edgesEnd;
+        boost::tie(edgesBegin, edgesEnd) = out_edges(v, graph);
+
+        if (edgesBegin != edgesEnd)
+        {
+          std::cout << "Adding search space for vertex " << v << "..." << std::endl;
+          out.push(biclique_search_t(graph, v));
+        }
       }
     }
   }
@@ -78,9 +89,35 @@ private:
     {
       if (get(is_cube(), graph, vertex))
       {
-        put(cube_ordering(), graph, vertex, std::make_pair(+out_degree(vertex, graph), id));
+        put(cube_ordering(), graph, vertex, std::make_pair(out_degree(vertex, graph), id));
         ++id;
       }
+    }
+  }
+
+  void addPolynomial(const std::size_t polynomialID)
+  {
+    const SOP& sop = polynomials[polynomialID];
+    const SOP::kernel_set_t kernels = sop.getKernels();
+    BOOST_FOREACH(const SOP::kernel_set_t::value_type kernel, kernels)
+    {
+      const vertex_descriptor coKernelVertex = addCoKernel(polynomialID, kernel.second);
+      const SOP& sop = kernel.first;
+
+      for(SOP::const_iterator iter = sop.begin(); iter != sop.end(); ++iter)
+      {
+        const vertex_descriptor cubeVertex = addCube(*iter);
+        const std::size_t termID = sop.getTermNumber(iter);
+        const std::pair<edge_descriptor, bool> edgePair = add_edge(coKernelVertex, cubeVertex, graph);
+
+        if (!edgePair.second)
+          CFD_EXCEPTION("Attemped to insert duplicate edge into KCM. This should never happen.");
+
+        const edge_descriptor edge = edgePair.first;
+        put(term_id(), graph, edge, std::make_pair(polynomialID, termID));
+      }
+
+      std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
     }
   }
 
@@ -106,36 +143,15 @@ public:
   {
     const std::size_t polynomialID = polynomials.size();
     polynomials.push_back(sop);
-
-    const SOP::kernel_set_t kernels = sop.getKernels();
-    BOOST_FOREACH(const SOP::kernel_set_t::value_type kernel, kernels)
-    {
-      const vertex_descriptor coKernelVertex = addCoKernel(kernel.second);
-      const SOP& sop = kernel.first;
-
-      for(SOP::const_iterator iter = sop.begin(); iter != sop.end(); ++iter)
-      {
-        const vertex_descriptor cubeVertex = addCube(*iter);
-        const std::size_t termID = sop.getTermNumber(iter);
-        const std::pair<edge_descriptor, bool> edgePair = add_edge(coKernelVertex, cubeVertex, graph);
-
-        if (!edgePair.second)
-          CFD_EXCEPTION("Attemped to insert duplicate edge into KCM. This should never happen.");
-
-        const edge_descriptor edge = edgePair.first;
-        put(term_id(), graph, edge, std::make_pair(polynomialID, termID));
-      }
-
-      std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
-    }
-
+    addPolynomial(polynomialID);
     return polynomialID;
   }
 
-  vertex_descriptor addCoKernel(const Cube& cokernel)
+  vertex_descriptor addCoKernel(const std::size_t polynomialID, const Cube& cokernel)
   {
     const vertex_descriptor v = add_vertex(graph);
     put(is_cube(), graph, v, false);
+    put(polynomial_id(), graph, v, polynomialID);
     put(term_cokernel(), graph, v, cokernel);
     put(mul_count(), graph, v, cokernel.numMultiplies());
     return v;
@@ -179,8 +195,8 @@ public:
       }
       else
       {
-        bs.print();
-        std::cout << std::endl;
+        //bs.print();
+        //std::cout << std::endl;
 
         if (!bs.isFinished())
         {
@@ -223,9 +239,7 @@ public:
     BOOST_FOREACH(const vertex_descriptor& v, vertices(graph))
     {
       if (get(is_cube(), graph, v))
-      {
         ++count;
-      }
     }
     return count;
   }
@@ -235,16 +249,46 @@ public:
     return num_vertices(graph) - numCubes();
   }
 
-  void removeBiclique(Biclique<graph_t>& biclique)
+  void updateGraph(const Biclique<graph_t>& biclique)
   {
-    //FIXME: check for duplicate terms in biclique.
+    const std::set<std::size_t> modifiedPolynomials(biclique.getModifiedPolynomials());
 
+    typedef boost::graph_traits<graph_t>::vertex_iterator vertex_iter;
+    vertex_iter vi, viEnd;
+
+    boost::tie(vi, viEnd) = vertices(graph);
+    while(vi != viEnd)
+    {
+      const vertex_iter viNext = boost::next(vi);
+      if (!get(is_cube(), graph, *vi))
+      {
+        if (modifiedPolynomials.find(get(polynomial_id(), graph, *vi)) != modifiedPolynomials.end())
+        {
+          clear_vertex(*vi, graph);
+          remove_vertex(*vi, graph);
+        }
+      }
+
+      vi = viNext;
+    }
+
+    BOOST_FOREACH(const std::size_t polynomialID, modifiedPolynomials)
+    {
+      addPolynomial(polynomialID);
+    }
+  }
+
+  void removeBiclique(const Biclique<graph_t>& biclique)
+  {
     const SOP newSOP = biclique.getSOP();
     const std::size_t newSOPIndex = addPolynomial(newSOP);
     const unsigned literal = literalCreator.getLiteralID(PolynomialIndex(newSOPIndex));
 
-    // Rewrite polynomials and update graph
-    biclique.rewriteAndUpdate(addCube(literal), &polynomials[0]);
+    // Rewrite polynomials
+    biclique.rewritePolynomials(addCube(literal), &polynomials[0]);
+
+    // Update graph
+    updateGraph(biclique);
   }
 };
 

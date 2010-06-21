@@ -131,8 +131,8 @@ public:
     std::cout << "Cube count: " << kcm.numCubes() << std::endl;
     std::cout << "Co-kernel count: " << kcm.numCoKernels() << std::endl;
     std::cout << "Edge count: " << kcm.numEdges() << std::endl;
-
-    kcm.factorise();
+    
+    while(kcm.factorise());
 
     std::cout << "Factorized SOPs:" << std::endl;
     std::size_t index =0;
