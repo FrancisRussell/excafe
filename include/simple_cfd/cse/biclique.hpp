@@ -23,8 +23,6 @@ public:
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
 protected:
-  friend class BicliqueSearchSpace< Biclique<graph_t> >;
-
   graph_t* graph;
   std::set<vertex_descriptor> cubeVertices;
   std::set<vertex_descriptor> coKernelVertices;
@@ -197,6 +195,8 @@ public:
     std::swap(graph, b.graph);
     std::swap(cubeVertices, b.cubeVertices);
     std::swap(coKernelVertices, b.coKernelVertices);
+    std::swap(cubeValueSum, b.cubeValueSum);
+    std::swap(coKernelValueSum, b.coKernelValueSum);
   }
 
   SOP getSOP() const

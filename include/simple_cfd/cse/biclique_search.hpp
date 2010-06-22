@@ -176,6 +176,7 @@ public:
     std::swap(maximumCubes, b.maximumCubes);
     std::swap(maximumCubeValueSum, b.maximumCubeValueSum);
     std::swap(nextSplitPoint, b.nextSplitPoint);
+    std::swap(finished, b.finished);
   }
 };
 
