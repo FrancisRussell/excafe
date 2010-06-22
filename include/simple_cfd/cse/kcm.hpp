@@ -65,6 +65,7 @@ private:
   template<typename PriorityQueue>
   void addSearchSpaces(PriorityQueue& out)
   {
+    std::size_t count=0;
     BOOST_FOREACH(const vertex_descriptor v, vertices(graph))
     {
       if (get(is_cube(), graph, v))
@@ -75,11 +76,12 @@ private:
 
         if (edgesBegin != edgesEnd)
         {
-          std::cout << "Adding search space for vertex " << v << "..." << std::endl;
           out.push(biclique_search_t(graph, v));
+          ++count;
         }
       }
     }
+    std::cout << "Added " << count << " cubes to search space." << std::endl;
   }
 
   void orderCubes()
@@ -116,8 +118,7 @@ private:
         const edge_descriptor edge = edgePair.first;
         put(term_id(), graph, edge, std::make_pair(polynomialID, termID));
       }
-
-      std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
+      //std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
     }
   }
 

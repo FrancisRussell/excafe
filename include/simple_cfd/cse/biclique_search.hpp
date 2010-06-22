@@ -26,6 +26,7 @@ private:
   typedef typename base_t::vertex_descriptor vertex_descriptor;
   typedef typename base_t::edge_descriptor   edge_descriptor;
 
+  std::size_t depth;
   int maximumCubes;
   int maximumCubeValueSum;
   vertex_descriptor nextSplitPoint;
@@ -106,26 +107,26 @@ private:
   }
 
   // This constructs really large sets, so keep it private.
-  BicliqueSearch(graph_t& g) : base_t(g)
+  BicliqueSearch(graph_t& g) : base_t(g), depth(0)
   {
     const vertex_descriptor nullSplitPoint = boost::graph_traits<graph_t>::null_vertex();
     calculateValues(nullSplitPoint);
   }
 
   BicliqueSearch(const BicliqueSearch& b, const vertex_descriptor& newVertex, const same_biclique_tag) : 
-    base_t(b)
+    base_t(b), depth(b.depth+1)
   {
     calculateValues(newVertex);
   }
 
   BicliqueSearch(const BicliqueSearch& b, const vertex_descriptor& newVertex, const grow_biclique_tag) :
-    base_t(b, newVertex)
+    base_t(b, newVertex), depth(b.depth+1)
   {
     calculateValues(newVertex);
   }
 
 public:
-  BicliqueSearch(graph_t& graph, const vertex_descriptor& seed) : base_t(graph, seed)
+  BicliqueSearch(graph_t& graph, const vertex_descriptor& seed) : base_t(graph, seed), depth(0)
   {
     calculateValues(seed);
   }
@@ -145,11 +146,17 @@ public:
                           BicliqueSearch(*this, nextSplitPoint, same_biclique_tag()));
   }
 
+  std::size_t getDepth() const
+  {
+    return depth;
+  }
+
   void print() const
   {
     std::cout << "num_cubes=" << this->numCubes() << ", num_cokernels=" << this->numCoKernels();
     std::cout << ", value=" << this->getValue() << ", maximal_value=" << getMaximalValue();
-    std::cout << ", split_vertex=" << nextSplitPoint << ", candidate_cubes=" << maximumCubes;
+    std::cout << ", depth=" << depth << ", split_vertex=" << nextSplitPoint;
+    std::cout << ", candidate_cubes=" << maximumCubes;
   }
 
   bool isFinished() const
@@ -165,6 +172,7 @@ public:
   void swap(BicliqueSearch& b)
   {
     base_t::swap(b);
+    std::swap(depth, b.depth);
     std::swap(maximumCubes, b.maximumCubes);
     std::swap(maximumCubeValueSum, b.maximumCubeValueSum);
     std::swap(nextSplitPoint, b.nextSplitPoint);
@@ -176,7 +184,8 @@ struct BicliqueSearchComparator
   template<typename graph_t>
   bool operator()(const BicliqueSearch<graph_t>& a, const BicliqueSearch<graph_t>& b) const
   {
-    return a.getMaximalValue() < b.getMaximalValue();
+    return std::make_pair(a.getMaximalValue(), a.getDepth()) < 
+           std::make_pair(b.getMaximalValue(), b.getDepth());
   }
 };
 
