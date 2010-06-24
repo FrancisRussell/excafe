@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cassert>
+#include <boost/blank.hpp>
 #include "scalar_placeholder.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/vertex.hpp>
@@ -78,6 +79,11 @@ public:
     double coeff;
     field.getValues(1, &discreteDof, &coeff);
     return coeff;
+  }
+  
+  result_type operator()(const boost::blank&) const
+  {
+    CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");
   }
 };
 

@@ -6,6 +6,7 @@
 #include <ostream>
 #include <boost/variant.hpp>
 #include <boost/operators.hpp>
+#include <boost/blank.hpp>
 #include "position_component.hpp"
 #include "cell_vertex_component.hpp"
 #include "scalar_access.hpp"
@@ -35,7 +36,7 @@ class ScalarPlaceholder : boost::totally_ordered<ScalarPlaceholder>,
   detail::ImmutableArithmetic<ScalarPlaceholderExpression::type, double, ScalarPlaceholder>
 {
 private:
-  typedef boost::variant<PositionComponent, CellVertexComponent, ScalarAccess, BasisCoefficient> variant_t;
+  typedef boost::variant<boost::blank, PositionComponent, CellVertexComponent, ScalarAccess, BasisCoefficient> variant_t;
   variant_t value;
 
 public:
