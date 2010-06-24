@@ -203,11 +203,11 @@ public:
 
   value_type evaluate(const value_map& valueMap) const
   {
-    typedef typename value_map::internal_map_t internal_value_map_t;
+    typedef typename value_map::scalar_subst_map scalar_subst_map;
 
     util::HybridArray<internal_value_t, MAX_VALUES_STACK> paramData(variables.size());
-    const internal_value_map_t& variableValues = valueMap.getReference();
-    typename internal_value_map_t::const_iterator varValIter = variableValues.begin();
+    const scalar_subst_map& variableValues = valueMap.getScalarSubstitutions();
+    typename scalar_subst_map::const_iterator varValIter = variableValues.begin();
 
     for(std::size_t variableIndex=0; variableIndex < variables.size(); ++variableIndex)
     {
