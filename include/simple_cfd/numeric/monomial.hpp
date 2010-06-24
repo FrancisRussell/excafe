@@ -149,19 +149,31 @@ public:
 
   std::pair<numeric_type, Monomial> substituteValues(const detail::ValueMap<variable_t, numeric_type>& valueMap) const
   {
-    Monomial result(*this);
+    Monomial result;
     numeric_type coefficient = 1.0;
 
-    typedef std::pair<variable_t, numeric_type> pair_t;
+    typedef typename detail::ValueMap<variable_t, numeric_type>::var_subst_map    var_subst_map;
+    typedef typename detail::ValueMap<variable_t, numeric_type>::scalar_subst_map scalar_subst_map;
 
-    BOOST_FOREACH(const pair_t& mapping, valueMap.getReference())
+    const var_subst_map&    varSubstMap    = valueMap.getVariableSubstitutions();
+    const scalar_subst_map& scalarSubstMap = valueMap.getScalarSubstitutions();
+
+    BOOST_FOREACH(const typename exponent_map_t::value_type& exponentMapping, *exponents)
     {
-      const typename std::map<variable_t, std::size_t>::iterator varIter(result.exponents->find(mapping.first));
+      const typename scalar_subst_map::const_iterator scalarSubstIter = scalarSubstMap.find(exponentMapping.first);
+      const typename var_subst_map::const_iterator varSubstIter = varSubstMap.find(exponentMapping.first);
 
-      if (varIter != result.exponents->end())
+      if (scalarSubstIter != scalarSubstMap.end())
       {
-        coefficient *= pow(mapping.second, varIter->second);
-        result.exponents->erase(varIter);
+        coefficient *= pow(scalarSubstIter->second, exponentMapping.second);
+      }
+      else if (varSubstIter != varSubstMap.end())
+      {
+        (*result.exponents)[varSubstIter->second] += exponentMapping.second;
+      }
+      else
+      {
+        (*result.exponents)[exponentMapping.first] += exponentMapping.second;
       }
     }
 
