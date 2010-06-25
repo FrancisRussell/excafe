@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_UTIL_MAYBE_HPP
 
 #include <ostream>
+#include <algorithm>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -38,6 +39,18 @@ public:
   {
   }
 
+  bool operator==(const Maybe& m) const
+  {
+    if (nothing == m.nothing)
+    {
+      return nothing || (val == m.val);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
   bool hasValue() const
   {
     return !nothing;
@@ -63,6 +76,12 @@ public:
     else
       o << val;
   }
+
+  void swap(Maybe<T>& m)
+  {
+    std::swap(nothing, m.nothing);
+    std::swap(val, m.val);
+  }
 };
 
 }
@@ -73,12 +92,18 @@ namespace std
 {
 
 template<typename T>
+void swap(cfd::util::Maybe<T>& a, cfd::util::Maybe<T>& b)
+{
+  a.swap(b);
+}
+
+}
+
+template<typename T>
 std::ostream& operator<<(std::ostream& o, const cfd::util::Maybe<T>& m)
 {
   m.write(o);
   return o;
-}
-
 }
 
 #endif
