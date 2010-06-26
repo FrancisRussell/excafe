@@ -142,8 +142,17 @@ public:
     if (finished)
       CFD_EXCEPTION("Cannot split a finished BicliqueSearch.");
 
-    return std::make_pair(BicliqueSearch(*this, nextSplitPoint, grow_biclique_tag()),
-                          BicliqueSearch(*this, nextSplitPoint, same_biclique_tag()));
+    // If growing this biclique by a cube doesn't reduce the number of co-kernels,
+    // there is no point in considering the case where we don't add the cube.
+    const BicliqueSearch grown(*this, nextSplitPoint, grow_biclique_tag());
+    if(grown.numCoKernels() == this->numCoKernels() && !grown.isFinished())
+    {
+      return grown.split();
+    }
+    else
+    {
+      return std::make_pair(grown, BicliqueSearch(*this, nextSplitPoint, same_biclique_tag()));
+    }
   }
 
   std::size_t getDepth() const
