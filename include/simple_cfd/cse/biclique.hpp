@@ -4,6 +4,7 @@
 #include <set>
 #include <utility>
 #include <boost/foreach.hpp>
+#include <boost/tuple/tuple.hpp>
 #include "properties.hpp"
 #include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/exception.hpp>
@@ -26,38 +27,24 @@ protected:
   graph_t* graph;
   std::set<vertex_descriptor> cubeVertices;
   std::set<vertex_descriptor> coKernelVertices;
+  std::size_t nonOneCubes;
+  std::size_t nonOneCoKernels;
   int cubeValueSum;
   int coKernelValueSum;
 
-  class EdgeRemover
-  {
-  private:
-    const graph_t* graph;
-    std::set< std::pair<std::size_t, std::size_t> > termIDs;
-
-  public:
-    EdgeRemover(const graph_t& _graph, const std::set< std::pair<std::size_t, std::size_t> > _termIDs) : 
-      graph(&_graph), termIDs(_termIDs)
-    {
-    }
-
-    bool operator()(const edge_descriptor& e) const
-    {
-      return termIDs.find(get(term_id(), *graph, e)) != termIDs.end();
-    }
-  };
-
   template<typename InputIterator>
-  static int getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
+  static std::pair<std::size_t, int> getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
   {
-    int result = 0;
+    std::size_t nonOneCount = 0;
+    int value = 0;
 
     BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
     {
-      result += get(mul_count(), graph, v);
+      if (!get(is_one(), graph, v)) ++nonOneCount;
+      value += get(mul_count(), graph, v);
     }
 
-    return result;
+    return std::make_pair(nonOneCount, value);
   }
 
   void removeUnconnected(const vertex_descriptor& v, std::set<vertex_descriptor>& vertices)
@@ -76,7 +63,8 @@ protected:
     std::swap(vertices, newVertices);
   }
 
-  static int getValue(const int cubeValueSum, const int numCubes, const int coKernelValueSum, const int numCoKernels)
+  static int getValue(const int cubeValueSum, const std::size_t numNonOneCubes, const std::size_t numCubes, 
+    const int coKernelValueSum, const std::size_t numNonOneCoKernels, const std::size_t numCoKernels)
   {
     const int multiplyWeight = 1;
 
@@ -84,10 +72,10 @@ protected:
       return 0;
 
     const int origAdds = (numCubes - 1) * numCoKernels;
-    const int origMuls = cubeValueSum * numCoKernels + coKernelValueSum * numCubes;
+    const int origMuls = cubeValueSum * numCoKernels + coKernelValueSum * numCubes + numNonOneCubes*numNonOneCoKernels;
 
     const int rectAdds = numCubes - 1;
-    const int rectMuls = cubeValueSum + coKernelValueSum;
+    const int rectMuls = cubeValueSum + coKernelValueSum + numNonOneCoKernels;
 
     const int savedAdds = origAdds - rectAdds;
     const int savedMuls = origMuls - rectMuls;
@@ -125,12 +113,13 @@ protected:
 
   void calculateValue()
   {
-    cubeValueSum = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
-    coKernelValueSum = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
+    boost::tie(nonOneCubes, cubeValueSum) = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
+    boost::tie(nonOneCoKernels, coKernelValueSum) = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
   }
 
 public:
-  Biclique(graph_t& _graph) : graph(&_graph), cubeValueSum(0), coKernelValueSum(0)
+  Biclique(graph_t& _graph) : graph(&_graph), nonOneCubes(0), nonOneCoKernels(0), 
+    cubeValueSum(0), coKernelValueSum(0)
   {
   }
 
@@ -152,7 +141,8 @@ public:
 
   int getValue() const
   {
-    return getValue(cubeValueSum, cubeVertices.size(), coKernelValueSum, coKernelVertices.size());
+    return getValue(cubeValueSum, nonOneCubes, cubeVertices.size(), 
+                    coKernelValueSum, nonOneCoKernels, coKernelVertices.size());
   }
 
   std::size_t numCubes() const
@@ -160,9 +150,19 @@ public:
     return cubeVertices.size();
   }
 
+  std::size_t numNonOneCubes() const
+  {
+    return nonOneCubes;
+  }
+
   std::size_t numCoKernels() const
   {
     return coKernelVertices.size();
+  }
+
+  std::size_t numNonOneCoKernels() const
+  {
+    return nonOneCoKernels;
   }
 
   int getCubeValueSum() const

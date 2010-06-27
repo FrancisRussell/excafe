@@ -27,7 +27,8 @@ private:
   typedef typename base_t::edge_descriptor   edge_descriptor;
 
   std::size_t depth;
-  int maximumCubes;
+  std::size_t maximumCubes;
+  std::size_t maximumNonOneCubes;
   int maximumCubeValueSum;
   vertex_descriptor nextSplitPoint;
   bool finished;
@@ -41,7 +42,8 @@ private:
   void calculateValues(const vertex_descriptor& oldSplitPoint)
   {
     const vertex_descriptor nullVertex = boost::graph_traits<graph_t>::null_vertex();
-    int candidateCubes = 0;
+    std::size_t candidateCubes = 0;
+    std::size_t candidateNonOneCubes = 0;
     int candidateCubesValueSum = 0;
     nextSplitPoint = nullVertex;
 
@@ -71,7 +73,8 @@ private:
 
       BOOST_FOREACH(const vertex_descriptor& coKernel, this->coKernelVertices)
       {
-        int currentCandidateCubes = 0;
+        std::size_t currentCandidateCubes = 0;
+        std::size_t currentCandidateNonOneCubes = 0;
         int currentCandidateCubesValueSum = 0;
 
         BOOST_FOREACH(const edge_descriptor& e, out_edges(coKernel, this->getGraph()))
@@ -80,6 +83,7 @@ private:
           if (id(candidateCube) > id(oldSplitPoint))
           {
             ++currentCandidateCubes;
+            if (!get(is_one(), this->getGraph(), candidateCube)) ++currentCandidateNonOneCubes;
             currentCandidateCubesValueSum += get(mul_count(), this->getGraph(), candidateCube);
 
             if (nextSplitPoint == nullVertex || id(candidateCube) < id(nextSplitPoint))
@@ -87,13 +91,18 @@ private:
           }
         }
 
-        const int currentScore = base_t::getValue(this->getCubeValueSum() + currentCandidateCubesValueSum, 
-          this->numCubes() + currentCandidateCubes, this->getCoKernelValueSum(), this->numCoKernels());
+        const int currentScore = base_t::getValue(this->getCubeValueSum() + currentCandidateCubesValueSum,
+          this->numNonOneCubes() + currentCandidateNonOneCubes,
+          this->numCubes() + currentCandidateCubes, 
+          this->getCoKernelValueSum(), 
+          this->numNonOneCoKernels(), 
+          this->numCoKernels());
 
         if (currentScore > topScore)
         {
           topScore = currentScore;
           candidateCubes = currentCandidateCubes;
+          candidateNonOneCubes = currentCandidateNonOneCubes;
           candidateCubesValueSum = currentCandidateCubesValueSum;
         }
       }
@@ -103,6 +112,7 @@ private:
     finished = (nextSplitPoint == nullVertex);
 
     maximumCubes = this->numCubes() + candidateCubes;
+    maximumNonOneCubes = this->numNonOneCubes() + candidateNonOneCubes;
     maximumCubeValueSum = this->getCubeValueSum() + candidateCubesValueSum;
   }
 
@@ -133,8 +143,8 @@ public:
 
   int getMaximalValue() const
   {
-    return base_t::getValue(maximumCubeValueSum, maximumCubes, this->getCoKernelValueSum(),
-      this->numCoKernels());
+    return base_t::getValue(maximumCubeValueSum, maximumNonOneCubes, maximumCubes, 
+      this->getCoKernelValueSum(), this->numNonOneCoKernels(), this->numCoKernels());
   }
 
   std::pair<BicliqueSearch, BicliqueSearch> split() const
