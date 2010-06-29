@@ -4,7 +4,16 @@
 #include <functional>
 #include <vector>
 #include <algorithm>
+#include <iterator>
 #include <utility>
+
+/*
+This class implements a map with contiguous storage.
+Differences from STL requirements:
+ - erase does not obey complexity guarantees.
+ - erase and insert invalidate all iterators.
+ - erase returns a new valid iterator instead of void.
+*/
 
 namespace cfd
 {
@@ -166,7 +175,7 @@ public:
   {
     std::swap(keyCompare, _map.keyCompare);
     std::swap(valueCompare, _map.valueCompare);
-    std::swap(values, _map.values);
+    values.swap(_map.values);
   }
 
   std::pair<iterator, bool> insert(const value_type& x)
@@ -181,14 +190,16 @@ public:
   iterator insert(const iterator pos, const value_type& x)
   {
     if ((pos==begin() || keyCompare((pos-1)->first, x.first)) && (pos==end() || keyCompare(x.first, pos->first)))
-        return values.insert(pos, x);
-    
+      return values.insert(pos, x);
+
     return insert(x).first;
   }
 
   template<typename InputIterator>
   void insert(const InputIterator f, const InputIterator l)
   {
+    values.reserve(values.size() + std::distance(f, l));
+
     iterator pos = end();
     for(InputIterator current = f; current!=l; ++current)
     {
@@ -196,14 +207,22 @@ public:
     }
   }
 
-  void erase(const iterator pos)
+  iterator erase(const iterator pos)
   {
-    values.erase(pos);
+    return values.erase(pos);
   }
 
   void erase(const iterator first, const iterator last)
   {
     values.erase(first, last);
+  }
+
+  size_type erase(const key_type& k)
+  {
+    const std::pair<iterator, iterator> range = equal_range(k);
+    const size_type distance = range.second - range.first;
+    erase(range.first, range.second);
+    return distance;
   }
 
   void clear()
@@ -269,7 +288,7 @@ public:
   {
     const iterator lower = lower_bound(k);
     if (lower == end() || !equal(lower->first, k))
-      return insert(lower, data_type())->second;
+      return insert(lower, value_type(k, data_type()))->second;
     else
       return lower->second;
   }
