@@ -82,6 +82,16 @@ std::map<unsigned, std::size_t> SOP::getLiteralUseCounts() const
   return result;
 }
 
+std::size_t SOP::numMultiplies() const
+{
+  std::size_t result = 0;
+  BOOST_FOREACH(const Cube& c, *cubes)
+  {
+    result += c.numMultiplies();
+  }
+  return result;
+}
+
 bool SOP::deleteTerm(const std::size_t termID)
 {
   for(std::vector<unsigned>::iterator termNumIter = termNumbers->begin(); termNumIter!=termNumbers->end();

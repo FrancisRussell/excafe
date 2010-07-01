@@ -134,6 +134,9 @@ public:
     
     while(kcm.factorise());
 
+    std::cout << "Remaining multiplies: " << kcm.numMultiplies() << std::endl;
+    std::cout << "Remaining additions: " << kcm.numAdditions() << std::endl;
+
     std::cout << "Factorized SOPs:" << std::endl;
     std::size_t index =0;
     BOOST_FOREACH(const SOP& sop, kcm)

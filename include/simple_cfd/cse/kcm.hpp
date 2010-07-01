@@ -253,6 +253,26 @@ public:
     return num_vertices(graph) - numCubes();
   }
 
+  std::size_t numAdditions() const
+  {
+    std::size_t result=0;
+    BOOST_FOREACH(const SOP& sop, polynomials)
+    {
+      result += sop.numAdditions();
+    }
+    return result;
+  }
+
+  std::size_t numMultiplies() const
+  {
+    std::size_t result=0;
+    BOOST_FOREACH(const SOP& sop, polynomials)
+    {
+      result += sop.numMultiplies();
+    }
+    return result;
+  }
+
   void updateGraph(const Biclique<graph_t>& biclique)
   {
     const std::set<std::size_t> modifiedPolynomials(biclique.getModifiedPolynomials());
