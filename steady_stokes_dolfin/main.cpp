@@ -1,34 +1,34 @@
-#include<dolfin.h>
-#include<SteadyStokes.h>
-#include<cstdlib>
-#include<iostream>
-#include<vector>
+#include <dolfin.h>
+#include <SteadyStokes.h>
+#include <cstdlib>
+#include <iostream>
+#include <vector>
 
 using namespace dolfin;
 
 class VelocityXBC : public Expression
 {
 public:
-  VelocityXBC(Mesh& mesh) : Expression(2)
+  VelocityXBC(Mesh& mesh) : Expression()
   {
   }
 
-  void eval(real* values, const real* x) const
+  void eval(Array<double>& values, const Array<double>& x) const
   {
-    (*values) = x[0]*x[0] + x[1]*x[1];
+    values[0] = x[0]*x[0] + x[1]*x[1];
   }
 };
 
 class ZeroBC : public Expression
 {
 public:
-  ZeroBC(Mesh& mesh) : Expression(2)
+  ZeroBC(Mesh& mesh) : Expression()
   {
   }
 
-  void eval(real* values, const real* x) const
+  void eval(Array<double>& values, const Array<double>& x) const
   {
-    (*values) = 0.0;
+    values[0] = 0.0;
   }
 };
 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
   Boundary boundary;
   LeftRightBoundary leftRightBoundary;
   TopBottomBoundary topBottomBoundary;
-  
+
   // Define sub systems for boundary conditions
   SteadyStokes::FunctionSpace mixedSpace(mesh);
   SubSpace velocity(mixedSpace, 0);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
   DirichletBC pressure_bc(pressure, zeroBC, topBottomBoundary, "topological");
 
   // Set up PDE
-  Constant f(2, 0.0, 0.0);
+  Constant f(0.0, 0.0);
   SteadyStokes::BilinearForm a(mixedSpace, mixedSpace);
   SteadyStokes::LinearForm L(mixedSpace);
   L.f = f;
@@ -111,8 +111,6 @@ int main(int argc, char* argv[])
   
   // Solve PDE
   Function w(mixedSpace);
-  //Function u;
-  //Function p;
   pde.parameters["linear_solver"] = "direct";
   pde.solve(w);
   Function u = w[0];
