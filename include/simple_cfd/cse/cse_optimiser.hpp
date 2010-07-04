@@ -134,8 +134,11 @@ public:
     
     while(kcm.factorise());
 
-    std::cout << "Remaining multiplies: " << kcm.numMultiplies() << std::endl;
-    std::cout << "Remaining additions: " << kcm.numAdditions() << std::endl;
+    const std::size_t numAdditions = kcm.numAdditions();
+    const std::size_t numMultiplies = kcm.numMultiplies();
+
+    std::cout << "Total floating point operations: " << numAdditions+numMultiplies;
+    std::cout << " (" << numAdditions << " additions, " << numMultiplies << " multiplies)" << std::endl;
 
     std::cout << "Factorized SOPs:" << std::endl;
     std::size_t index =0;
