@@ -263,6 +263,16 @@ public:
     return result;
   }
 
+  std::size_t degree(const variable_t& variable) const
+  {
+    std::size_t result = 0;
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& cMapping, *coefficients)
+    {
+      result = std::max(result, cMapping.first.getExponent(variable));
+    }
+    return result;
+  }
+
   Polynomial derivative(const variable_t& variable) const
   {
     Polynomial result;

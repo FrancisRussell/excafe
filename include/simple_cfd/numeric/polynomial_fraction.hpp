@@ -8,6 +8,7 @@
 #include "numeric_fwd.hpp"
 #include "expression.hpp"
 #include "expression_visitor.hpp"
+#include <simple_cfd/exception.hpp>
 #include <ostream>
 
 namespace cfd
@@ -200,6 +201,14 @@ public:
   optimised_t optimise() const
   {
     return optimised_t(*this);
+  }
+
+  std::size_t degree(const variable_t& variable) const
+  {
+    if (divisor.degree(variable)>0)
+      CFD_EXCEPTION("Cannot compute degree of variable in numerator and denominator of fraction.");
+    else
+      return dividend.degree(variable);
   }
 
   PolynomialFraction derivative(const variable_t& variable) const
