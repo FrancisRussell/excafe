@@ -148,7 +148,9 @@ private:
 
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t degree = 5;
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell()->getQuadrature(degree);
+    boost::array<std::size_t, dimension> degrees;
+    std::fill(degrees.begin(), degrees.end(), degree);
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell()->getQuadrature(degrees);
 
     const std::size_t entityDimension = subDomain.getDimension();
 

@@ -6,6 +6,7 @@
 #include <map>
 #include <utility>
 #include <algorithm>
+#include <boost/array.hpp>
 #include <simple_cfd/cell_manager.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
 #include <simple_cfd/capture/forms/basis_finder.hpp>
@@ -52,6 +53,31 @@ public:
       result += p.substituteValues(valueMap) * weight;
     }
     return result;
+  }
+};
+
+template<std::size_t D>
+class DegreeFinder
+{
+private:
+  static const std::size_t dimension = D;
+  boost::array<std::size_t, dimension> degrees;
+
+public:
+  DegreeFinder()
+  {
+    std::fill(degrees.begin(), degrees.end(), 0);
+  }
+
+  void operator()(const ScalarPlaceholder::expression_t& p)
+  {
+    for(std::size_t d=0; d<dimension; ++d)
+      degrees[d] = std::max(degrees[d], p.degree(ScalarPlaceholder(PositionComponent(d))));
+  }
+
+  boost::array<std::size_t, dimension> getDegrees() const
+  {
+    return degrees;
   }
 };
 
@@ -116,7 +142,11 @@ public:
   LocalAssemblyMatrix<dimension, expression_t> integrate(const LocalAssemblyMatrix<dimension, expression_t>& matrix,
     const MeshEntity& localEntity)
   {
-    const QuadraturePoints<dimension> quadrature(scenario.getMesh().getReferenceCell()->getQuadrature(5));
+    DegreeFinder<dimension> degreeFinder;
+    degreeFinder = std::for_each(matrix.begin(), matrix.end(), degreeFinder);
+    const boost::array<std::size_t, dimension> degrees = degreeFinder.getDegrees();
+
+    const QuadraturePoints<dimension> quadrature(scenario.getMesh().getReferenceCell()->getQuadrature(degrees));
 
     // FIXME: edge integrals, etc.
     assert(localEntity.getDimension() == dimension);
