@@ -8,6 +8,7 @@
 #include <map>
 #include <iostream>
 #include <cmath>
+#include <boost/array.hpp>
 
 using namespace cfd;
 
@@ -63,7 +64,11 @@ void Tester::testTriangleQuadrature()
   Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
   const std::size_t dimension = m.getDimension();
 
-  cfd::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(5));
+  const std::size_t degree = 5;
+  boost::array<std::size_t, 2> degrees;
+  std::fill(degrees.begin(), degrees.end(), degree);
+
+  cfd::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(degrees));
   const cfd::MeshEntity localCell(dimension, 0);
 
   for(Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)

@@ -41,14 +41,14 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadratur
   return newQuadrature;
 }
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadrature(const std::size_t degree)
+std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadrature(const boost::array<std::size_t, dimension>& degrees)
 {
   Quadrature quadrature;
 
   // We increase degree of s quadrature by one to handle (1-s) factor in Jacobian of co-ordinate
   // transformation from reference square to triangle.
-  const std::map<double, double> rQuadrature(quadrature.getGauss(degree));
-  const std::map<double, double> sQuadrature(quadrature.getGauss(degree+1));
+  const std::map<double, double> rQuadrature(quadrature.getGauss(degrees[0]));
+  const std::map<double, double> sQuadrature(quadrature.getGauss(degrees[1]+1));
 
   std::map<vertex_type, double> squareQuadrature;
 
@@ -69,13 +69,13 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadratur
   return triangularQuadrature;
 }
 
-QuadraturePoints<2> TriangularCell::getQuadrature(const std::size_t degree) const
+QuadraturePoints<2> TriangularCell::getQuadrature(const boost::array<std::size_t, dimension>& degrees) const
 {
   Quadrature quadrature;
-  const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
+  const std::map<double, double> unitQuadrature = quadrature.getGauss(std::max(degrees[0], degrees[1]));
 
   QuadraturePoints<2> points;
-  points.setQuadrature(MeshEntity(dimension, 0), buildCellQuadrature(degree));
+  points.setQuadrature(MeshEntity(dimension, 0), buildCellQuadrature(degrees));
 
   for(std::size_t index=0; index<3; ++index)
   {

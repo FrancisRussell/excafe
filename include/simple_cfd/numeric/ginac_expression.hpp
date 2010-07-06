@@ -249,6 +249,11 @@ public:
   {
     return GinacExpression(expr.diff(getSymbol(variable)));
   }
+  
+  std::size_t degree(const variable_t& variable) const
+  {
+    return expr.degree(getSymbol(variable));
+  }
 
   GinacExpression substituteValues(const value_map& valueMap) const
   {
