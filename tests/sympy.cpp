@@ -9,16 +9,18 @@ static const char* code =
 "  return dict(symList)\n"
 
 "def commonToSymPy(symbolMap, e):\n"
-"  if e[0] == SimpleCFD.OperatorType.SYM:\n"
-"    return symbolMap[e[1]]\n"
-"  elif e[0] == SimpleCFD.OperatorType.CONST:\n"
-"    return sympy.Real(e[1])\n"
-"  elif e[0] == SimpleCFD.OperatorType.EXP:\n"
-"    return commonToSymPy(symbolMap, e[1][0])**e[1][1]\n"
-"  elif e[0] == SimpleCFD.OperatorType.MUL:\n"
-"    return reduce((lambda x,y: x*y), map((lambda x: commonToSymPy(symbolMap, x)), e[1]))\n"
-"  elif e[0] == SimpleCFD.OperatorType.ADD:\n"
-"    return reduce((lambda x,y: x+y), map((lambda x: commonToSymPy(symbolMap, x)), e[1]))\n"
+"  op = e[0]\n"
+"  arg = e[1]\n"
+"  if op == SimpleCFD.OperatorType.SYM:\n"
+"    return symbolMap[arg]\n"
+"  elif op == SimpleCFD.OperatorType.CONST:\n"
+"    return sympy.Real(arg)\n"
+"  elif op == SimpleCFD.OperatorType.EXP:\n"
+"    return commonToSymPy(symbolMap, arg[0])**arg[1]\n"
+"  elif op == SimpleCFD.OperatorType.MUL:\n"
+"    return reduce((lambda x,y: x*y), map((lambda x: commonToSymPy(symbolMap, x)), arg))\n"
+"  elif op == SimpleCFD.OperatorType.ADD:\n"
+"    return reduce((lambda x,y: x+y), map((lambda x: commonToSymPy(symbolMap, x)), arg))\n"
 "  else:\n"
 "    raise Exception('Unknown enum value')\n"
 
@@ -85,5 +87,4 @@ int main(int, char**)
   {
     PyErr_Print();
   }
-
 }
