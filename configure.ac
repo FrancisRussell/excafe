@@ -39,6 +39,8 @@ PKG_CHECK_MODULES([GINAC], [ginac])
 CXXFLAGS="$CXXFLAGS $GINAC_CFLAGS"
 AC_SUBST(GINAC_LIBS)
 
+AC_PYTHON_DEVEL
+
 # Check for MTL
 #AC_ARG_WITH([mtl],
 #          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
