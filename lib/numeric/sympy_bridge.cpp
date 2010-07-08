@@ -24,6 +24,12 @@ static const char* initCode =
 "def toString(o):\n"
 "  return str(o)\n"
 
+"def integrate_indefinite(symbolMap, expr, var):\n"
+"  return sympy.integrate(expr, symbolMap[var])\n"
+
+"def integrate_definite(symbolMap, expr, var, a, b):\n"
+"  return sympy.integrate(expr, (symbolMap[var], a, b))\n"
+
 "def commonToSymPy(symbolMap, e):\n"
 "  (op, arg) = e\n"
 "  if op == SymPyBridge.OperatorType.SYM:\n"

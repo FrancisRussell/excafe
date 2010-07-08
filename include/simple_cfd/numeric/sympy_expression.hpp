@@ -81,6 +81,24 @@ private:
     }
   }
 
+  SymPyExpression(const SymPyExpression& parent, const boost::python::object& value) :
+    variableMap(parent.variableMap), symbolMap(parent.symbolMap), sympyExpression(value)
+  {
+  }
+
+  std::size_t getID(const variable_t& variable) const
+  {
+    const typename boost::bimap<variable_t, std::size_t>::left_const_iterator iter = variableMap.left.find(variable);
+    if (iter != variableMap.left.end())
+    {
+     return iter->second;
+    }
+    else
+    {
+      CFD_EXCEPTION("Variable has no SymPy identifier.");
+    }
+  }
+
 public:
   SymPyExpression()
   {
@@ -107,11 +125,23 @@ public:
     o << desc;
   }
   
-  virtual void accept(NumericExpressionVisitor<V>& v) const
+  virtual void accept(NumericExpressionVisitor<variable_t>& v) const
   {
     const boost::python::object symPyToCommon = PythonManager::instance().getObject("symPyToCommon");
     const boost::python::object expression = symPyToCommon(symbolMap, sympyExpression);
     visitTuple(v, boost::python::extract<boost::python::tuple>(expression));
+  }
+
+  SymPyExpression integrate(const variable_t& v) const
+  {
+    const boost::python::object integrate = PythonManager::instance().getObject("integrate_indefinite");
+    return SymPyExpression(*this, integrate(symbolMap, sympyExpression, getID(v)));
+  }
+
+  SymPyExpression integrate(const variable_t& v, const double a, const double b) const
+  {
+    const boost::python::object integrate = PythonManager::instance().getObject("integrate_definite");
+    return SymPyExpression(*this, integrate(symbolMap, sympyExpression, getID(v), a, b));
   }
 };
 

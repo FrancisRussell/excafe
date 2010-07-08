@@ -23,6 +23,9 @@ int main(int, char**)
     std::cout << "After GiNaC -> SymPy: " << sympyExpr << std::endl;
     std::cout << "After SymPy -> GiNaC: ";
     std::cout << cfd::detail::convert_expression< GinacExpression<std::string> >(sympyExpr) << std::endl;
+
+    std::cout << "Integrated w.r.t. x: " << sympyExpr.integrate("x") << std::endl;
+    std::cout << "Integrated w.r.t. x (0<x<1): " << sympyExpr.integrate("x", 0, 1) << std::endl;
   }
   catch (boost::python::error_already_set&)
   {
