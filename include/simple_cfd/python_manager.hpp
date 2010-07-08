@@ -22,6 +22,7 @@ private:
 public:
   static PythonManager& instance();
   void init();
+  boost::python::object getObject(const std::string& name);
   boost::python::object execute(const std::string& code, boost::python::dict& localScope);
   ~PythonManager();
 };

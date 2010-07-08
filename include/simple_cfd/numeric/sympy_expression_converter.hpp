@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_NUMERIC_SYMPY_EXPRESSION_CONVERTER_HPP
 
 #include <cstddef>
-#include <map>
 #include <utility>
 #include <stack>
 #include <sstream>
@@ -10,6 +9,7 @@
 #include <boost/python/list.hpp>
 #include <boost/python/tuple.hpp>
 #include <boost/python/object.hpp>
+#include <boost/bimap.hpp>
 #include "expression_visitor.hpp"
 #include "cast.hpp"
 #include "sympy_bridge.hpp"
@@ -22,35 +22,35 @@ namespace detail
 namespace sympy_bridge
 {
 
-template<typename R>
-class SymPyExpressionConverter : public NumericExpressionVisitor<typename R::variable_t>
+template<typename V>
+class SymPyExpressionConverter : public NumericExpressionVisitor<V>
 {
 private:
+  typedef V variable_t;
   typedef boost::python::object result_type;
-  typedef typename R::variable_t variable_t;
   typedef typename NumericExpressionVisitor<variable_t>::value_t value_t;
-  std::map<variable_t, std::size_t> variableIDs;
+  typedef boost::bimap<variable_t, std::size_t> variable_map_t;
+  variable_map_t variableIDs;
   std::stack<result_type> stack;
 
   std::size_t getID(const variable_t& var)
   {
-    const typename std::map<variable_t, std::size_t>::iterator varIter = variableIDs.find(var);
+    const typename variable_map_t::left_iterator varIter = variableIDs.left.find(var);
 
-    if (varIter!=variableIDs.end())
+    if (varIter!=variableIDs.left.end())
     {
       return varIter->second;
     }
     else
     {
       const std::size_t id = variableIDs.size();
-      variableIDs.insert(std::make_pair(var, id));
+      variableIDs.left.insert(std::make_pair(var, id));
       return id;
     }
   }
 
 public:
   virtual void visitConstant(const value_t& s)
-  
   {
     stack.push(boost::python::make_tuple(CONST, cfd::numeric_cast<double>(s)));
   }
@@ -110,20 +110,24 @@ public:
     }
   }
 
+  boost::bimap<variable_t, std::size_t> getVariableMap() const
+  {
+    return variableIDs;
+  }
+
   boost::python::dict getNameMap() const
   {
     boost::python::dict result;
-    for(typename std::map<variable_t, std::size_t>::const_iterator varIter=variableIDs.begin(); 
+    for(typename variable_map_t::const_iterator varIter=variableIDs.begin(); 
       varIter!=variableIDs.end(); ++varIter)
     {
       std::ostringstream nameStream;
-      nameStream << varIter->first;
-      result[varIter->second] = nameStream.str();
+      nameStream << varIter->left;
+      result[varIter->right] = nameStream.str();
     }
     return result;
   }
 };
-
 }
 using sympy_bridge::SymPyExpressionConverter;
 

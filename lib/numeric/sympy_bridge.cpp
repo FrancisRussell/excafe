@@ -14,9 +14,15 @@ namespace sympy_bridge
 {
 
 static const char* initCode =
-"def defineSymbols(names):\n"
+"def buildSymbolMap(names):\n"
 "  symList = map(lambda (id, name): (id, sympy.Symbol(name)), names.items())\n"
 "  return dict(symList)\n"
+
+"def symPyZero():\n"
+"  return sympy.Real(0.0)\n"
+
+"def toString(o):\n"
+"  return str(o)\n"
 
 "def commonToSymPy(symbolMap, e):\n"
 "  (op, arg) = e\n"
@@ -57,7 +63,7 @@ static const char* initCode =
 "\n"
 "  def _convert_Pow(self, symbolMap, expr):\n"
 "    if not expr.args[1].is_integer: raise Exception('Cannot convert non-integer exponent')\n"
-"    return (SymPyBridge.OperatorType.EXP, (self.convert(symbolMap, expr.args[0]), expr.args[1]))\n"
+"    return (SymPyBridge.OperatorType.EXP, (self.convert(symbolMap, expr.args[0]), int(expr.args[1])))\n"
 "\n"
 "  def _convert_Symbol(self, symbolMap, expr):\n"
 "    return (SymPyBridge.OperatorType.SYM, symbolMap[expr])\n";
@@ -79,7 +85,7 @@ void init(boost::python::object& global)
   initSymPyBridge();
   global["sympy"] = boost::python::import("sympy");
   global["SymPyBridge"] = boost::python::import("SymPyBridge");
-  boost::python::exec(initCode, global, global);
+  boost::python::exec(initCode, global);
 }
 
 }

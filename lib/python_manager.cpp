@@ -20,7 +20,7 @@ void PythonManager::init()
   using boost::python::object;
   using boost::python::error_already_set;
 
-  if (!initialised)
+  if (!Py_IsInitialized())
   {
     try
     {
@@ -31,17 +31,19 @@ void PythonManager::init()
 
       // Call the SymPy bridge init code
       cfd::detail::sympy_bridge::init(global);
-
-      initialised = true;
     }
     catch(error_already_set&)
     {
       PyErr_Print();
     }
   }
+  else
+  {
+    CFD_EXCEPTION("Double Python initialisation detected.");
+  }
 }
 
-PythonManager::PythonManager() : initialised(false)
+PythonManager::PythonManager()
 {
 }
 
@@ -50,9 +52,14 @@ PythonManager& PythonManager::instance()
   return util::Singleton<PythonManager>::getInstance();
 }
 
+boost::python::object PythonManager::getObject(const std::string& name)
+{
+  return global[name];
+}
+
 boost::python::object PythonManager::execute(const std::string& code, boost::python::dict& localScope)
 {
-  if (!initialised)
+  if (!Py_IsInitialized())
     CFD_EXCEPTION("PythonManager must be initialised before executing code.");
 
   return boost::python::exec(code.c_str(), global, localScope);
@@ -60,6 +67,8 @@ boost::python::object PythonManager::execute(const std::string& code, boost::pyt
 
 PythonManager::~PythonManager()
 {
+  // Enable this when Boost says it's OK
+  // Py_Finalize();
 }
 
 }
