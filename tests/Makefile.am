@@ -1,5 +1,5 @@
 CXX=${MPICXX}
-AM_CXXFLAGS=-I$(top_srcdir)/include -I/usr/include/petsc
+AM_CXXFLAGS=-I$(top_srcdir)/include -I/usr/include/petsc ${PYTHON_CPPFLAGS}
 
 bin_PROGRAMS = tests polynomials legendre expression_conversion sympy #forms
 
@@ -16,8 +16,7 @@ expression_conversion_SOURCES = expression_conversion.cpp
 expression_conversion_LDADD=$(top_srcdir)/lib/libsimplecfd.la
 
 sympy_SOURCES = sympy.cpp
-sympy_CPPFLAGS = ${PYTHON_CPPFLAGS}
-sympy_LDADD=$(top_srcdir)/lib/libsimplecfd.la ${PYTHON_LDFLAGS} -lboost_python
+sympy_LDADD=$(top_srcdir)/lib/libsimplecfd.la
 
 #forms_SOURCES = forms.cpp
 #forms_LDADD=$(top_srcdir)/lib/libsimplecfd.la
