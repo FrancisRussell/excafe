@@ -6,8 +6,10 @@
 #include <boost/python/list.hpp>
 #include <boost/python/tuple.hpp>
 #include <boost/python/extract.hpp>
+#include <simple_cfd/python_manager.hpp>
 #include <simple_cfd/numeric/expression.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
+#include <simple_cfd/numeric/sympy_expression_converter.hpp>
 #include <simple_cfd/numeric/sympy_bridge.hpp>
 #include <simple_cfd/numeric/cast.hpp>
 #include <simple_cfd/exception.hpp>
