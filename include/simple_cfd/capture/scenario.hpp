@@ -71,7 +71,7 @@ private:
 
       if (field.getRank() == 0)
       {
-        boost::get<0>(value) = basis * valueCoeff;
+        boost::get<0>(value) += basis * valueCoeff;
       }
       else
       {
