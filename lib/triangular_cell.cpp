@@ -228,15 +228,12 @@ Tensor<TriangularCell::dimension> TriangularCell::getFacetNormal(const CellVerti
   const vertex_type v1 = vertices[localFacetID];
   const vertex_type v2 = vertices[(localFacetID+1)%3];
 
-  const std::size_t zero = 0;
-  const std::size_t one = 1;
-
   const double facetLength = v1.distance(v2);
   const vertex_type delta = v2 - v1;
 
   // The x and y values are exchanged to create the perpendicular
-  normal[&zero] = delta[1] / facetLength;
-  normal[&one] = -delta[0] / facetLength;
+  normal(0) = delta[1] / facetLength;
+  normal(1) = -delta[0] / facetLength;
 
   return normal;
 }
