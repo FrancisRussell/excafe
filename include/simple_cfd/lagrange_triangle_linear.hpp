@@ -134,11 +134,12 @@ public:
     const int ip1 = (node_on_cell+1) % 3;
     const int ip2 = (node_on_cell+2) % 3;
 
-    boost::array<std::size_t, rank> tensorIndex;
-    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+    const TensorSize tensorSize(rank, dimension);
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
 
     value_type result(rank);
-    result[tensorIndex.data()] = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
+    result[tensorIndex] = ((vertices[ip2][0] - vertices[ip1][0]) * (v[1] - vertices[ip1][1]) -
                           (vertices[ip2][1] - vertices[ip1][1]) * (v[0] - vertices[ip1][0])) / (2.0 * area);
 
     return result;

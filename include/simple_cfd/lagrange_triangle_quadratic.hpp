@@ -140,11 +140,12 @@ public:
     const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
                       (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
 
-    boost::array<std::size_t, rank> tensorIndex;
-    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+    const TensorSize tensorSize(rank, dimension);
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
 
     value_type result(rank);
-    result[tensorIndex.data()] = (gf/gn) * (hf/hn);
+    result[tensorIndex] = (gf/gn) * (hf/hn);
 
     return result;
   }
