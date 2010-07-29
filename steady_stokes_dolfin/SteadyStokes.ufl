@@ -1,8 +1,8 @@
 VX = FiniteElement("Lagrange", triangle, 2)
 VY = FiniteElement("Lagrange", triangle, 2)
 P = FiniteElement("Lagrange", triangle, 1)
-V = VX + VY
-TH = V + P
+V = VX * VY
+TH = V * P
 
 (v, q) = TestFunctions(TH)
 (u, p) = TrialFunctions(TH)
