@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CFD_CAPTURE_INDICES_PROPOGATION_RULES_HPP
-#define SIMPLE_CFD_CAPTURE_INDICES_PROPOGATION_RULES_HPP
+#ifndef SIMPLE_CFD_CAPTURE_INDICES_PROPAGATION_RULES_HPP
+#define SIMPLE_CFD_CAPTURE_INDICES_PROPAGATION_RULES_HPP
 
 #include <set>
 #include <map>
@@ -12,6 +12,7 @@
 #include "index_propagation_except.hpp"
 #include "propagation_rule_visitor.hpp"
 #include <simple_cfd/capture/fields/temporal_index_set.hpp>
+#include <simple_cfd/capture/fields/discrete_expr.hpp>
 
 namespace cfd
 {
@@ -29,29 +30,8 @@ public:
   {
   }
 
-  void visit(IndexPropagationAll& i)
-  {
-    const std::map<DiscreteExpr*, TemporalIndexSet>::const_iterator fromIter(exprIndices.find(&i.getFrom()));
-    const std::map<DiscreteExpr*, TemporalIndexSet>::iterator toIter(exprIndices.find(&i.getTo()));
-
-    assert(fromIter != exprIndices.end());
-    assert(toIter != exprIndices.end());
-
-    toIter->second += fromIter->second;
-  }
-
-  void visit(IndexPropagationExcept& i)
-  {
-    const std::map<DiscreteExpr*, TemporalIndexSet>::const_iterator fromIter(exprIndices.find(&i.getFrom()));
-    const std::map<DiscreteExpr*, TemporalIndexSet>::iterator toIter(exprIndices.find(&i.getTo()));
-
-    assert(fromIter != exprIndices.end());
-    assert(toIter != exprIndices.end());
-
-    TemporalIndexSet indices(fromIter->second);
-    indices -= &i.getExcludedIndex();
-    toIter->second += indices;
-  }
+  void visit(IndexPropagationAll& i);
+  void visit(IndexPropagationExcept& i);
 };
 
 class PropagationRules
@@ -69,29 +49,8 @@ public:
     rules.insert(boost::shared_ptr<PropagationRule>(rule.release()));
   }
 
-  void propagateIndices(std::map<DiscreteExpr*, TemporalIndexSet>& exprIndices) const
-  {
-    bool converged = false;
-    RulePropagationHelper propagationHelper(exprIndices);
-
-    while(!converged)
-    {
-      const std::map<DiscreteExpr*, TemporalIndexSet> exprIndicesOld(exprIndices);
-
-      for(const_iterator ruleIter(begin()); ruleIter!=end(); ++ruleIter)
-      {
-        ruleIter->accept(propagationHelper);
-      }
-
-      converged = (exprIndices == exprIndicesOld);
-    }
-  }
-
-  PropagationRules& operator+=(const PropagationRules& p)
-  {
-    rules.insert(p.rules.begin(), p.rules.end());
-    return *this;
-  }
+  void propagateIndices(std::map<DiscreteExpr*, TemporalIndexSet>& exprIndices) const;
+  PropagationRules& operator+=(const PropagationRules& p);
 
   std::size_t size() const
   {

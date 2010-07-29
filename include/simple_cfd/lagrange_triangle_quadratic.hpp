@@ -6,6 +6,7 @@
 #include <map>
 #include <cassert>
 #include <cstddef>
+#include <ostream>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include "simple_cfd_fwd.hpp"
@@ -13,12 +14,15 @@
 #include "dof_numbering_basic.hpp"
 #include "dof_association.hpp"
 #include "dof.hpp"
+#include "cell_manager.hpp"
+#include "exception.hpp"
+#include "capture/assembly/position_placeholder.hpp"
 
 namespace cfd
 {
 
 template<unsigned int R>
-class LagrangeTriangleQuadratic : public FiniteElement<TriangularCell::dimension>
+class LagrangeTriangleQuadratic : public FiniteElement<2>
 {
 public:
   typedef TriangularCell cell_type;
@@ -32,7 +36,7 @@ public:
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
   static const unsigned int dofs_per_index = 6;
-  const cell_type referenceCell;
+  const cell_ref_t referenceCell;
   DofNumberingBasic<dimension> dofNumbering;
 
   // This converts a value to a list of tensor indices in row major order.
@@ -62,7 +66,7 @@ private:
   }
 
 public:
-  LagrangeTriangleQuadratic() : dofNumbering(buildDofNumberingHelper())
+  LagrangeTriangleQuadratic() : referenceCell(CellManager::getInstance<cell_type>()), dofNumbering(buildDofNumberingHelper())
   {
   }
 
@@ -82,11 +86,11 @@ public:
 
        2
 
-       |\ 
-       | \ 
+       |\
+       | \
      5 |  \ 4
-       |   \ 
-       |    \ 
+       |   \
+       |    \
        ------ 
        0  3  1
   */
@@ -98,7 +102,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -136,13 +140,77 @@ public:
     const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
                       (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
 
-    boost::array<std::size_t, rank> tensorIndex;
-    convert_to_tensor_index(index_into_tensor, tensorIndex.data());
+    const TensorSize tensorSize(rank, dimension);
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
 
     value_type result(rank);
-    result[tensorIndex.data()] = (gf/gn) * (hf/hn);
+    result[tensorIndex] = (gf/gn) * (hf/hn);
 
     return result;
+  }
+
+  tensor_expr_t getBasis(const std::size_t index, const detail::PositionPlaceholder& v) const
+  {
+    using namespace detail;
+
+    if (index >= spaceDimension())
+      CFD_EXCEPTION("Requested invalid basis function.");
+
+    const TensorSize tensorSize(rank, dimension);
+    tensor_expr_t bases(tensorSize);
+
+    boost::array<vertex_type, 6> vertices;
+    for(std::size_t i=0; i<3; ++i)
+    {
+      vertices[i] = referenceCell->getLocalVertex(i);
+    }
+
+    // Create interpolated vertices
+    vertices[3] = (vertices[0] + vertices[1])/2;
+    vertices[4] = (vertices[1] + vertices[2])/2;
+    vertices[5] = (vertices[2] + vertices[0])/2;
+
+    const DofAssociation dofAssociation = dofNumbering.getLocalAssociation(index);
+    const unsigned index_into_tensor = dofNumbering.getTensorIndex(index);
+    const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
+      dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
+  
+    int j1, j2, k1, k2;
+    if (node_on_cell < 3)
+    {
+      j1 = (node_on_cell+1)%3;
+      j2 = (node_on_cell+2)%3;
+      k1 = 3 + node_on_cell;
+      k2 = 3 + (node_on_cell + 5)%3;
+    }
+    else
+    {
+      j1 = node_on_cell-3;
+      j2 = (node_on_cell-3+2)%3;
+      k1 = (node_on_cell-3+1)%3;
+      k2 = (node_on_cell-3+2)%3;
+    }
+
+    typedef tensor_expr_t::value_type polynomial_t;
+
+    const polynomial_t gf = (v[0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (v[1] - vertices[j1][1]);
+
+    const double gn = (vertices[node_on_cell][0] - vertices[j1][0]) * (vertices[j2][1] - vertices[j1][1]) -
+                      (vertices[j2][0] - vertices[j1][0]) * (vertices[node_on_cell][1] - vertices[j1][1]);
+  
+    const polynomial_t hf = (v[0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (v[1] - vertices[k1][1]);
+  
+    const double hn = (vertices[node_on_cell][0] - vertices[k1][0]) * (vertices[k2][1] - vertices[k1][1]) -
+                      (vertices[k2][0] - vertices[k1][0]) * (vertices[node_on_cell][1] - vertices[k1][1]);
+
+    const TensorIndex tensorIndex = TensorIndex::unflatten(tensorSize, index_into_tensor,
+      row_major_tag());
+
+    bases[tensorIndex] = (gf/gn) * (hf/hn);
+    return bases;
   }
 
   gradient_type evaluateGradient(const CellVertices<dimension>& cellVertices, const std::size_t i, const vertex_type& vRef) const
@@ -153,7 +221,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -215,7 +283,7 @@ public:
     const unsigned index_into_tensor = dofNumbering.getTensorIndex(i);
     const unsigned node_on_cell = dofAssociation.getEntityDimension() == 0 ? 
       dofAssociation.getEntityIndex() : dofAssociation.getEntityIndex()+3;
-    const vertex_type v = referenceCell.referenceToPhysical(cellVertices, vRef);
+    const vertex_type v = referenceCell->referenceToPhysical(cellVertices, vRef);
 
     boost::array<vertex_type, 6> vertices;
     std::copy(cellVertices.begin(), cellVertices.end(), vertices.begin());
@@ -281,7 +349,7 @@ public:
   {
     assert((dof>=0 && dof< 6*detail::Power<dimension, rank>::value));
     const CellVertices<dimension> vertices = m.getCoordinates(cid);
-    return referenceCell.referenceToPhysical(vertices, getDofCoordinateLocal(dof));
+    return referenceCell->referenceToPhysical(vertices, getDofCoordinateLocal(dof));
   }
 
   vertex_type getDofCoordinateLocal(const std::size_t dof) const
@@ -291,13 +359,13 @@ public:
 
     if (association.getEntityDimension() == 0)
     {
-      return referenceCell.getLocalVertex(association.getEntityIndex());
+      return referenceCell->getLocalVertex(association.getEntityIndex());
     }
     else
     {
       const int vid1 = (association.getEntityIndex())%3;
       const int vid2 = (association.getEntityIndex()+1)%3;
-      return (referenceCell.getLocalVertex(vid1) + referenceCell.getLocalVertex(vid2))/2.0;
+      return (referenceCell->getLocalVertex(vid1) + referenceCell->getLocalVertex(vid2))/2.0;
     }
   }
 
@@ -331,7 +399,7 @@ public:
   virtual std::set< Dof<dimension> > getDofsOnEntity(MeshTopology& topology, const cell_id cid, const MeshEntity& entity) const
   {
     const std::size_t space_dimension = spaceDimension();
-    const std::size_t localIndex = referenceCell.getLocalIndex(topology, cid, entity);
+    const std::size_t localIndex = referenceCell->getLocalIndex(topology, cid, entity);
     const MeshEntity localEntity = MeshEntity(entity.getDimension(), localIndex);
 
     std::set< Dof<dimension> > result;
@@ -347,9 +415,15 @@ public:
     return result;
   }
 
-  virtual const GeneralCell<dimension>& getCell() const
+  virtual cell_ref_t getCell() const
   {
     return referenceCell;
+  }
+
+  void write(std::ostream& o) const
+  {
+    o << "finite_element(name=\"Lagrange Triangle Quadratic\", rank=" << rank << ", dimension=" << dimension;
+    o << ", space=" << spaceDimension() << ")";
   }
 };
 

@@ -65,27 +65,6 @@ PETScVector& PETScVector::operator-=(const PETScVector& p)
   return *this;
 }
 
-PETScVector PETScVector::operator*(const double s) const
-{
-  PETScVector result(*this);
-  result *= s;
-  return result;
-}
-
-PETScVector PETScVector::operator+(const PETScVector& p) const
-{
-  PETScVector result(*this);
-  result += p;
-  return result;
-}
-
-PETScVector PETScVector::operator-(const PETScVector& p) const
-{
-  PETScVector result(*this);
-  result -= p;
-  return result;
-}
-
 double PETScVector::two_norm() const
 {
   PetscReal r;

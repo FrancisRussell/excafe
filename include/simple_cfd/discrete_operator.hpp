@@ -5,16 +5,23 @@
 #include <vector>
 #include <set>
 #include <cassert>
+#include <boost/foreach.hpp>
 #include "vertex.hpp"
 #include "dof_map.hpp"
 #include "discrete_field.hpp"
 #include "mesh.hpp"
 #include "numeric/matrix.hpp"
+#include "numeric/functional.hpp"
 #include "numeric/sparsity_pattern.hpp"
 #include "quadrature_points.hpp"
+#include "local_assembly_matrix.hpp"
+#include "exception.hpp"
 #include "capture/forms/bilinear_form_integral_sum.hpp"
 #include "capture/forms/basis_finder.hpp"
 #include "capture/forms/form_evaluator.hpp"
+#include "capture/assembly/assembly_helper.hpp"
+#include "capture/assembly/scalar_placeholder.hpp"
+#include "capture/assembly/scalar_placeholder_evaluator.hpp"
 
 namespace cfd
 {
@@ -24,9 +31,17 @@ class DiscreteOperator
 {
 private:
   static const std::size_t dimension = D;
-  typedef vertex<dimension> vertex_type;
-  typedef FiniteElement<dimension> finite_element_t;
+
+  typedef vertex<dimension>                 vertex_type;
+  typedef FiniteElement<dimension>          finite_element_t;
   typedef typename DofMap<dimension>::dof_t dof_t;
+
+  // Useful typedefs for expression capture
+  typedef detail::ScalarPlaceholder::expression_t                        expression_t;
+  typedef detail::ScalarPlaceholder::optimised_expression_t              optimised_expression_t;
+  typedef detail::LocalAssemblyMatrix<dimension, expression_t>           local_matrix_t;
+  typedef detail::LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
+  typedef detail::LocalAssemblyMatrix<dimension, double>                 evaluated_local_matrix_t;
 
   const DofMap<dimension> rowMappings;
   const DofMap<dimension> colMappings;
@@ -39,7 +54,7 @@ private:
     const unsigned colDofs = colMappings.getDegreesOfFreedomCount();
 
     SparsityPattern pattern(rowDofs, colDofs);
-    const Mesh<dimension> m(rowMappings.getMesh());
+    const Mesh<dimension>& m(rowMappings.getMesh());
 
     const std::set<const finite_element_t*> rowElements(rowMappings.getFiniteElements());
     const std::set<const finite_element_t*> colElements(colMappings.getFiniteElements());
@@ -72,7 +87,25 @@ private:
     return pattern;
   }
 
-  void addTermGeneral(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values,
+  template<typename value_map_t>
+  value_map_t evaluatePlaceholders(const Scenario<dimension>& scenario,
+    const detail::ExpressionValues<dimension>& expressionValues, const std::size_t cid, 
+    const std::set<detail::ScalarPlaceholder>& placeholders) const
+  {
+    using namespace detail;
+
+    const ScalarPlaceholderEvaluator<dimension> evaluator(scenario, expressionValues, cid);
+    value_map_t values;
+
+    BOOST_FOREACH(const ScalarPlaceholder& placeholder, placeholders)
+    {
+      values.bind(placeholder, evaluator(placeholder));
+    }
+
+    return values;
+  }
+
+  void addTermGeneral(const Scenario<dimension>& scenario, const detail::ExpressionValues<dimension>& values,
     const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
     const forms::BilinearFormIntegralSum::const_iterator sumEnd,
     const MeshFunction<bool>& subDomain)
@@ -82,6 +115,9 @@ private:
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
 
+    typedef detail::LocalAssemblyMatrix<dimension, double> local_matrix_t;
+    local_matrix_t localMatrix(testElements, trialElements);
+
     typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
     typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
 
@@ -90,7 +126,7 @@ private:
     for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
     {
       // Find trial
-      BasisFinder<dimension> trialFinder(scenario, values);
+      BasisFinder<dimension> trialFinder(scenario);
       formIter->getTrialField()->accept(trialFinder);
 
       const finite_element_t* const trialBasis = trialFinder.getBasis();
@@ -98,7 +134,7 @@ private:
       assert(trialElements.find(trialBasis) != trialElements.end());
 
       // Find test
-      BasisFinder<dimension> testFinder(scenario, values);
+      BasisFinder<dimension> testFinder(scenario);
       formIter->getTestField()->accept(testFinder);
 
       const finite_element_t* const testBasis = testFinder.getBasis();
@@ -112,7 +148,9 @@ private:
 
     const Mesh<dimension>& m = rowMappings.getMesh();
     const std::size_t degree = 5;
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell().getQuadrature(degree);
+    boost::array<std::size_t, dimension> degrees;
+    std::fill(degrees.begin(), degrees.end(), degree);
+    const QuadraturePoints<dimension> quadrature = m.getReferenceCell()->getQuadrature(degrees);
 
     const std::size_t entityDimension = subDomain.getDimension();
 
@@ -124,7 +162,8 @@ private:
         const std::size_t cid = m.getContainingCell(*eIter);
         const CellVertices<dimension> vertices(m.getCoordinates(cid));
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-        const double jacobian = m.getReferenceCell().getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+        const double jacobian = m.getReferenceCell()->getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
+        localMatrix.clear();
   
         for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
         {
@@ -140,17 +179,15 @@ private:
           std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
           std::vector< Tensor<dimension> > testValues(testSpaceDimension);
   
-          std::vector<double> valueBlock(testSpaceDimension*trialSpaceDimension);
-  
           for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
           {
   
             for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              trialIndices[trial] = colMappings.getGlobalIndexWithMissingAsNegative(dof_t(trialFunction, cid, trial));
+              trialIndices[trial] = localMatrix.getTrialOffset(*trialFunction, trial);
   
             for(unsigned test=0; test<testSpaceDimension; ++test)
-              testIndices[test] = rowMappings.getGlobalIndexWithMissingAsNegative(dof_t(testFunction, cid, test));
-  
+              testIndices[test] = localMatrix.getTestOffset(*testFunction, test);
+
             for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
             {
               for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
@@ -160,12 +197,17 @@ private:
                 testValues[test] = bFormIter->second.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(testFunction, cid, test));
   
               for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
+              {
                 for(unsigned test=0; test<testSpaceDimension; ++test)
-                  valueBlock[test * trialSpaceDimension + trial] += trialValues[trial].colon_product(testValues[test]) * quadIter->second * jacobian;
+                {
+                  localMatrix(testIndices[test], trialIndices[trial]) += trialValues[trial].colon_product(testValues[test]) *
+                    quadIter->second * jacobian;
+                }
+              }
             }
           }
-          matrix.addValues(testSpaceDimension, trialSpaceDimension, &testIndices[0], &trialIndices[0], &valueBlock[0]);
         }
+        addValues(cid, localMatrix);
       }
     }
   }
@@ -207,6 +249,14 @@ public:
     return *this;
   }
 
+  void addValues(const std::size_t cid, const detail::LocalAssemblyMatrix<dimension, double>& localMatrix)
+  {
+    //std::cout << "Adding local assembly matrix for cell " << cid << ":" << localMatrix << std::endl;
+    const std::vector<dof_t> testDofs(localMatrix.getTestDofs(cid));
+    const std::vector<dof_t> trialDofs(localMatrix.getTrialDofs(cid));
+    addValues(testDofs.size(), trialDofs.size(), &testDofs[0], &trialDofs[0], localMatrix.data());
+  }
+
   void addValues(const unsigned rows, const unsigned cols, const dof_t* rowDofs, const dof_t* colDofs, const double* block)
   {
     std::vector<int> rowIndices(rows);
@@ -221,22 +271,75 @@ public:
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
   }
 
-  DiscreteOperator& assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
+  void assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
   {
-    const Mesh<dimension> m(rowMappings.getMesh());
-
+    const Mesh<dimension>& m(scenario.getMesh());
     const MeshFunction<bool> allCells(dimension, true);
-    addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
+      addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
 
     const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
     addTermGeneral(scenario, values, expr.begin_ds(), expr.end_ds(), boundaryFunction);
 
     //FIXME: perform internal boundary integrals
+    assemble();
+  }
+
+  void assembleFromOptimisedLocalMatrix(const Scenario<dimension>& scenario, 
+    const detail::ExpressionValues<dimension>& values,
+    const std::map<MeshEntity, opt_local_matrix_t> localMatrices,
+    const MeshFunction<bool>& subDomain)
+  {
+    using namespace detail;
+
+    // Build set of placeholders
+    PolynomialVariableCollector<expression_t::optimised_t> collector;
+
+    typedef std::pair<MeshEntity, opt_local_matrix_t> entity_matrix_pair_t;
+    BOOST_FOREACH(const entity_matrix_pair_t& mapping, localMatrices)
+    {
+      collector = std::for_each(mapping.second.begin(), mapping.second.end(), collector);
+    }
+
+    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
+    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
+    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
+    const Mesh<dimension>& m = scenario.getMesh();
+    const std::size_t entityDimension = subDomain.getDimension();
+    local_matrix_t localMatrix(testElements, trialElements);
+
+    std::cout << "Starting assembly...." << std::flush;
+    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
+    {
+      if (subDomain(*eIter))
+      {
+        const std::size_t cid = m.getContainingCell(*eIter);
+        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
+        localMatrix.clear();
+        
+        const typename std::map<MeshEntity, opt_local_matrix_t>::const_iterator matIter = localMatrices.find(localEntity);
+  
+        if (matIter != localMatrices.end())
+        {
+          // Find placeholder values
+          typedef optimised_expression_t::value_map value_map;
+          const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
+
+          // Build concrete local assembly matrix
+          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
+          const evaluated_local_matrix_t concreteLocalMatrix(matIter->second.transform(evaluator));
+          addValues(cid, concreteLocalMatrix);
+        }
+        else
+        {
+          CFD_EXCEPTION("Missing optimised local assembly matrix for requested mesh entity");
+        }
+      }
+    }
 
     assemble();
-
-    return *this;
+    std::cout << "done." << std::endl;
   }
+
 
   void addToDiagonal(DiscreteField<dimension>& v)
   {

@@ -18,9 +18,7 @@ namespace cfd
 {
 
 template<std::size_t D>
-class DofMap : public boost::addable< DofMap<D>,
-                      boost::subtractable< DofMap<D> 
-                      > >
+class DofMap : public boost::additive< DofMap<D> >
 {
 public:
   static const std::size_t dimension = D;

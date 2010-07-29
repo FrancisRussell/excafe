@@ -8,9 +8,7 @@
 namespace cfd
 {
 
-class Field : boost::addable<Field,
-              boost::subtractable<Field
-              > >
+class Field : boost::additive<Field>
 {
 public:
   typedef detail::DiscreteFieldExpr::expr_ptr expr_ptr;

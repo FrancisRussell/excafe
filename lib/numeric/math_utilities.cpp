@@ -4,6 +4,7 @@
 #include <cmath>
 #include <set>
 #include <vector>
+#include <string>
 
 namespace cfd
 {
@@ -28,27 +29,28 @@ double MathUtilities::jacobi_a_4_n(const double alpha, const double beta, const 
   return 2*(n + alpha)*(n + beta)*(2*n + alpha + beta + 2);
 }
 
-Polynomial MathUtilities::jacobi(const double alpha, const double beta, const std::size_t n)
+Polynomial<std::string> MathUtilities::jacobi(const double alpha, const double beta, const std::size_t n)
 {
   if (n == 0)
   {
-    return Polynomial(1.0);
+    return Polynomial<std::string>(1.0);
   }
   else if (n == 1)
   {
-    return (alpha - beta + (alpha + beta + 2.0)*Polynomial("x")) * 0.5;
+    return (alpha - beta + (alpha + beta + 2.0)*Polynomial<std::string>("x")) * 0.5;
   }
   else
   {
-    return ((jacobi_a_2_n(alpha, beta, n-1) + jacobi_a_3_n(alpha, beta, n-1)*Polynomial("x")) * jacobi(alpha, beta, n-1) -
-      jacobi_a_4_n(alpha, beta, n-1) * jacobi(alpha, beta, n-2)) / jacobi_a_1_n(alpha, beta, n-1);
+    return ((jacobi_a_2_n(alpha, beta, n-1) + jacobi_a_3_n(alpha, beta, n-1)*Polynomial<std::string>("x")) * 
+            jacobi(alpha, beta, n-1) -
+            jacobi_a_4_n(alpha, beta, n-1) * jacobi(alpha, beta, n-2)) / jacobi_a_1_n(alpha, beta, n-1);
   }
 }
 
 std::set<double> MathUtilities::jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon)
 {
-  const OptimisedPolynomial j = jacobi(alpha, beta, n).optimise();
-  const OptimisedPolynomial jPrime = jacobi(alpha, beta, n).derivative("x").optimise();
+  const OptimisedPolynomial<std::string> j = jacobi(alpha, beta, n).optimise();
+  const OptimisedPolynomial<std::string> jPrime = jacobi(alpha, beta, n).derivative("x").optimise();
 
   std::vector<double> roots(n);
 

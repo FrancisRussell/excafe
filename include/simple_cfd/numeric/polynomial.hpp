@@ -2,102 +2,380 @@
 #define SIMPLE_CFD_NUMERIC_POLYNOMIAL_HPP
 
 #include <vector>
-#include <string>
 #include <map>
 #include <set>
 #include <cstddef>
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <iosfwd>
 #include <boost/operators.hpp>
+#include <boost/bind.hpp>
+#include <boost/foreach.hpp>
+#include <boost/utility.hpp>
 #include <simple_cfd_fwd.hpp>
-#include <numeric/monomial.hpp>
+#include "monomial.hpp"
+#include "optimised_polynomial.hpp"
+#include "cln_wrapper.hpp"
+#include "value_map.hpp"
+#include "expression.hpp"
+#include "expression_visitor.hpp"
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
 
-class Polynomial : boost::addable2<Polynomial, double,
-                   boost::subtractable2<Polynomial, double,
-                   boost::dividable2<Polynomial, double,
-                   boost::multipliable2<Polynomial, double, 
-                   boost::addable< Polynomial,
-                   boost::subtractable< Polynomial,
-                   boost::multipliable< Polynomial
-                   > > > > > > >
+template<typename V>
+class Polynomial : public NumericExpression<V>,
+                   boost::arithmetic<Polynomial<V>, double,
+                   boost::additive<Polynomial<V>,
+                   boost::multipliable< Polynomial<V>,
+                   boost::totally_ordered< Polynomial<V>
+                   > > > >
 {
+public:
+  typedef V variable_t;
+  typedef double value_type;
+  typedef OptimisedPolynomial<variable_t> optimised_t;
+
 private:
-  friend std::ostream& operator<<(std::ostream& o, const Polynomial& p);
+  //typedef double internal_value_t;
+  static const std::size_t precision = 32;
+  typedef CLNWrapper<precision> internal_value_t;
+  typedef Monomial<variable_t, internal_value_t> monomial_t;
+  typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
+  util::LazyCopy<coefficient_map_t> coefficients;
 
-  typedef std::map<Monomial, double> coefficient_map_t;
-  std::set<std::string> independentVariables;
-  coefficient_map_t coefficients;
+  void addTerm(const internal_value_t& coefficient, const variable_t& variable, const std::size_t exponent)
+  {
+    (*coefficients)[monomial_t(variable, exponent)] += coefficient;
+  }
 
-  void addTerm(const double coefficient, const std::string& variable, const std::size_t exponent);
-  void addConstant(const double constant);
-  void addIndependentVariables(const Polynomial& p);
-  void addIndependentVariables(const Monomial& m);
-  void cleanZeros();
+  void addConstant(const internal_value_t& constant)
+  {
+    (*coefficients)[monomial_t()] += constant;
+  }
 
-  void addMonomial(const double coefficient, const Monomial& m);
-  Polynomial operator*(const Monomial& m) const;
-  Polynomial& operator*=(const Monomial& m);
+  // We currently only call this from public methods
+  void cleanZeros()
+  {
+    typedef typename coefficient_map_t::iterator coeff_map_iter;
+
+    // We need this construction because we invalidate the current iterator on erase
+    coeff_map_iter currentIter = coefficients->begin();
+    while(currentIter != coefficients->end())
+    {
+      const coeff_map_iter nextIter = boost::next(currentIter);
+
+      if (currentIter->second == internal_value_t(0.0))
+        coefficients->erase(currentIter);
+
+      currentIter = nextIter;
+    }
+  }
+
+  void addMonomial(const internal_value_t coefficient, const monomial_t& m)
+  {
+    (*coefficients)[m] += coefficient;
+  }
 
   template<typename UnaryFunction>
   void transformCoefficients(const UnaryFunction& f)
   {
-    for(coefficient_map_t::iterator cIter(coefficients.begin()); cIter!=coefficients.end(); ++cIter)
+    for(typename coefficient_map_t::iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
       cIter->second = f(cIter->second);
-
-    cleanZeros();
   }
 
 public:
-  typedef coefficient_map_t::iterator iterator;
-  typedef coefficient_map_t::const_iterator const_iterator;
+  typedef detail::ValueMap<variable_t, internal_value_t> value_map;
+  typedef typename coefficient_map_t::iterator iterator;
+  typedef typename coefficient_map_t::const_iterator const_iterator;
 
-  Polynomial();
-  Polynomial(const Polynomial& p);
+  Polynomial()
+  {
+  }
 
-  explicit Polynomial(const double constant);
-  explicit Polynomial(const std::string& variable);
-  explicit Polynomial(const double coefficient, const std::string& variable);
-  explicit Polynomial(const std::string& variable, const std::size_t exponent);
-  explicit Polynomial(const double coefficient, const std::string& variable, const std::size_t exponent);
+  Polynomial(const Polynomial& p) : coefficients(p.coefficients)
+  {
+  }
 
-  iterator begin();
-  iterator end();
-  const_iterator begin() const;
-  const_iterator end() const;
+  Polynomial(const value_type constant)
+  {
+    addConstant(constant);
+    cleanZeros();
+  }
 
-  void addIndependentVariable(const std::string& s);
-  std::set<std::string> getIndependentVariables() const;
-  void checkConsistent() const;
+  Polynomial(const variable_t& variable)
+  {
+    addTerm(1.0, variable, 1);
+    cleanZeros();
+  }
 
-  Polynomial& operator*=(const double x);
-  Polynomial& operator/=(const double x);
-  Polynomial& operator+=(const double x);
-  Polynomial& operator-=(const double x);
+  Polynomial(const value_type coefficient, const variable_t& variable)
+  {
+    addTerm(coefficient, variable, 1);
+    cleanZeros();
+  }
 
-  Polynomial& operator*=(const Polynomial& p);
-  Polynomial& operator+=(const Polynomial& p);
-  Polynomial& operator-=(const Polynomial& p);
+  Polynomial(const variable_t& variable, const std::size_t exponent)
+  {
+    addTerm(1.0, variable, exponent);
+    cleanZeros();
+  }
 
-  Polynomial operator-() const;
+  Polynomial(const value_type coefficient, const variable_t& variable, const std::size_t exponent)
+  {
+    addTerm(coefficient, variable, exponent);
+    cleanZeros();
+  }
 
-  Polynomial derivative(const std::string& variable) const;
-  OptimisedPolynomial optimise() const;
-  std::size_t numTerms() const;
-  void swap(Polynomial& p);
+  iterator begin()
+  {
+    return coefficients->begin();
+  }
+
+  iterator end()
+  {
+    return coefficients->end();
+  }
+
+  const_iterator begin() const
+  {
+    return coefficients->begin();
+  }
+
+  const_iterator end() const
+  {
+    return coefficients->end();
+  }
+
+  void replaceVariable(const variable_t& from, const variable_t& to)
+  {
+    coefficient_map_t oldCoefficients;
+    std::swap(coefficients, oldCoefficients);
+
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& monomialMapping, oldCoefficients)
+    {
+      // We specifically use addTerm here, to avoid issues when previously distinct monomials
+      // become identical after variable substitution
+      addTerm(monomialMapping.first.substitute(from, to), monomialMapping.second);
+    }
+    cleanZeros();
+  }
+
+  std::set<variable_t> getVariables() const
+  {
+    std::set<variable_t> result;
+
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
+    {
+      const std::set<variable_t> monomialVariables = cIter->first.getVariables();
+      result.insert(monomialVariables.begin(), monomialVariables.end());
+    }
+
+    return result;
+  }
+
+  void checkConsistent() const
+  {
+    // NOOP
+  }
+
+  bool operator==(const Polynomial& p) const
+  {
+    return *coefficients == *p.coefficients;
+  }
+
+  Polynomial& operator*=(const value_type x)
+  {
+    transformCoefficients(boost::bind(std::multiplies<internal_value_t>(), _1, x));
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator/=(const value_type x)
+  {
+    transformCoefficients(boost::bind(std::divides<internal_value_t>(), _1, x));
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator+=(const value_type x)
+  {
+    addConstant(x);
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator-=(const value_type x)
+  {
+    addConstant(-x);
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator*=(const Polynomial& b)
+  {
+    Polynomial a;
+    std::swap(a, *this);
+  
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& aMapping, a.coefficients.cref())
+    {
+      BOOST_FOREACH(const typename coefficient_map_t::value_type& bMapping, b.coefficients.cref())
+      {
+        addMonomial(aMapping.second * bMapping.second, aMapping.first * bMapping.first);
+      }
+    }
+
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator+=(const Polynomial& p)
+  {
+    typename coefficient_map_t::iterator coeffIter = coefficients->begin();
+
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& pMapping, *p.coefficients)
+    {
+      while(coeffIter != coefficients->end() && coeffIter->first < pMapping.first)
+        ++coeffIter;
+
+      if (coeffIter == coefficients->end() || !(coeffIter->first == pMapping.first))
+        coefficients->insert(coeffIter, pMapping);
+      else
+        coeffIter->second += pMapping.second;
+    }
+
+    cleanZeros();
+    return *this;
+  }
+
+  Polynomial& operator-=(const Polynomial& p)
+  {
+    *this += -p;
+    return *this;
+  }
+
+  Polynomial operator-() const
+  {
+    Polynomial result(*this);
+    result *= -1.0;
+    return result;
+  }
+
+  std::size_t degree(const variable_t& variable) const
+  {
+    std::size_t result = 0;
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& cMapping, *coefficients)
+    {
+      result = std::max(result, cMapping.first.getExponent(variable));
+    }
+    return result;
+  }
+
+  Polynomial derivative(const variable_t& variable) const
+  {
+    Polynomial result;
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
+    {
+      const std::pair<internal_value_t, monomial_t> mDerivative(cIter->first.derivative(variable));
+      result.addMonomial(cIter->second * mDerivative.first, mDerivative.second);
+    }
+  
+    result.cleanZeros();
+    return result;
+  }
+
+  Polynomial substituteValues(const value_map& valueMap) const
+  {
+    Polynomial result;
+  
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
+    {
+      const std::pair<internal_value_t, monomial_t> mBound(cIter->first.substituteValues(valueMap));
+      result.addMonomial(cIter->second * mBound.first, mBound.second);
+    }
+  
+    result.cleanZeros();
+    return result;
+  }
+
+  optimised_t optimise() const
+  {
+    return optimised_t(*this);
+  }
+
+  std::size_t numTerms() const
+  {
+    return coefficients->size();
+  }
+
+  std::ostream& write(std::ostream& out) const
+  {
+    for(typename coefficient_map_t::const_iterator cIter(coefficients->begin()); cIter!=coefficients->end(); ++cIter)
+    {
+      if (cIter != coefficients->begin())
+        out << " + ";
+  
+      const bool renderCoefficient = cIter->second != internal_value_t(1.0) || cIter->first.isOne();
+      const bool renderMonomial = !cIter->first.isOne();
+  
+      if (renderCoefficient)
+        out << cIter->second; 
+        
+      if (renderCoefficient && renderMonomial)
+        out << "*";
+        
+      if (renderMonomial) 
+        out << cIter->first;
+    }
+    
+    if (coefficients->empty())
+      out << 0.0;
+  
+    return out;
+  }
+
+  void accept(NumericExpressionVisitor<variable_t>& v) const
+  {
+    BOOST_FOREACH(const typename coefficient_map_t::value_type& mapping, *coefficients)
+    {
+      const monomial_t& monomial = mapping.first;
+      v.visitConstant(mapping.second);
+      
+      BOOST_FOREACH(const typename monomial_t::value_type& exponent, monomial)
+      {
+        v.visitVariable(exponent.first);
+        v.visitExponent(exponent.second);
+      }
+
+      v.postProduct(1 + monomial.size());
+    }
+
+    v.postSummation(coefficients->size());
+  }
+
+  void swap(Polynomial& p)
+  {
+    coefficients.swap(p.coefficients);
+  }
 };
 
-std::ostream& operator<<(std::ostream& o, const Polynomial& p);
+template<typename V>
+std::ostream& operator<<(std::ostream& out, const Polynomial<V>& p)
+{
+  return p.write(out);
+}
 
 }
 
 namespace std
 {
-  template<>
-  void swap(cfd::Polynomial& a, cfd::Polynomial& b);
+  template<typename V>
+  void swap(cfd::Polynomial<V>& a, cfd::Polynomial<V>& b)
+  {
+    a.swap(b);
+  }
 }
 
 #endif

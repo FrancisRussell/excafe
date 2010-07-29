@@ -6,9 +6,10 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
+#include <lagrange_triangle_linear.hpp>
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
@@ -40,14 +41,14 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::normaliseQuadratur
   return newQuadrature;
 }
 
-std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadrature(const std::size_t degree)
+std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadrature(const boost::array<std::size_t, dimension>& degrees)
 {
   Quadrature quadrature;
 
   // We increase degree of s quadrature by one to handle (1-s) factor in Jacobian of co-ordinate
   // transformation from reference square to triangle.
-  const std::map<double, double> rQuadrature(quadrature.getGauss(degree));
-  const std::map<double, double> sQuadrature(quadrature.getGauss(degree+1));
+  const std::map<double, double> rQuadrature(quadrature.getGauss(degrees[0]));
+  const std::map<double, double> sQuadrature(quadrature.getGauss(degrees[1]+1));
 
   std::map<vertex_type, double> squareQuadrature;
 
@@ -68,13 +69,13 @@ std::map<TriangularCell::vertex_type, double> TriangularCell::buildCellQuadratur
   return triangularQuadrature;
 }
 
-QuadraturePoints<2> TriangularCell::getQuadrature(const std::size_t degree) const
+QuadraturePoints<2> TriangularCell::getQuadrature(const boost::array<std::size_t, dimension>& degrees) const
 {
   Quadrature quadrature;
-  const std::map<double, double> unitQuadrature = quadrature.getGauss(degree);
+  const std::map<double, double> unitQuadrature = quadrature.getGauss(std::max(degrees[0], degrees[1]));
 
   QuadraturePoints<2> points;
-  points.setQuadrature(MeshEntity(dimension, 0), buildCellQuadrature(degree));
+  points.setQuadrature(MeshEntity(dimension, 0), buildCellQuadrature(degrees));
 
   for(std::size_t index=0; index<3; ++index)
   {
@@ -227,15 +228,12 @@ Tensor<TriangularCell::dimension> TriangularCell::getFacetNormal(const CellVerti
   const vertex_type v1 = vertices[localFacetID];
   const vertex_type v2 = vertices[(localFacetID+1)%3];
 
-  const std::size_t zero = 0;
-  const std::size_t one = 1;
-
   const double facetLength = v1.distance(v2);
   const vertex_type delta = v2 - v1;
 
   // The x and y values are exchanged to create the perpendicular
-  normal[&zero] = delta[1] / facetLength;
-  normal[&one] = -delta[0] / facetLength;
+  normal(0) = delta[1] / facetLength;
+  normal(1) = -delta[0] / facetLength;
 
   return normal;
 }
@@ -262,14 +260,70 @@ std::size_t TriangularCell::numEntities(const std::size_t d) const
   return numEntitiesArray[d];
 }
 
-std::auto_ptr< GeneralCell<TriangularCell::dimension> > TriangularCell::cloneGeneralCell() const
+const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMapping() const
 {
-  return std::auto_ptr< GeneralCell<dimension> >(new TriangularCell(*this));
+  //IMPORTANT: we need this to be lazily constructed to avoid an initialisation dependence loop
+
+  if (coordinateMapping == false)
+  {
+    boost::scoped_ptr< FiniteElement<dimension> > constructed(new LagrangeTriangleLinear<0>());
+    coordinateMapping.swap(constructed);
+  }
+  return *coordinateMapping;
 }
 
-std::auto_ptr<MeshCell> TriangularCell::cloneMeshCell() const
+GlobalTransformation<2, 2> TriangularCell::getLocalGlobalTransformation() const
 {
-  return std::auto_ptr<MeshCell>(new TriangularCell(*this));
+  return GlobalTransformation<dimension, dimension>(getCoordinateMapping(), *this);
+}
+
+LocalTransformation<2, 2> TriangularCell::getCellReferenceLocalTransformation() const
+{
+  detail::PositionPlaceholder position;
+  SmallVector<2, LocalTransformation<1, 2>::expression_t> transform;
+
+  transform[0] = (position[0]*0.5 + 0.5)*(0.5 - position[1]*0.5);
+  transform[1] = position[1]*0.5 + 0.5;
+
+  return LocalTransformation<2,2>(transform);
+}
+
+LocalTransformation<1, 2> TriangularCell::getFacetReferenceLocalTransformation(const std::size_t fid) const
+{
+  typedef LocalTransformation<1, 2>::expression_t expression_t;
+
+  detail::PositionPlaceholder refPosition;
+  detail::PositionPlaceholder localPosition;
+  SmallVector<2, expression_t> transform(getCellReferenceLocalTransformation().getTransformed());
+  expression_t::value_map valueMap;
+
+  // TODO: By performing var->var substitution, this ties us to GiNaC.
+  if (fid == 0)
+  {
+    valueMap.bind(localPosition[0], refPosition[0]);
+    valueMap.bind(localPosition[1], -1.0);
+  }
+  else if (fid == 1)
+  {
+    valueMap.bind(localPosition[0], 1.0);
+    valueMap.bind(localPosition[1], refPosition[0]);
+  }
+  else if (fid == 2)
+  {
+    valueMap.bind(localPosition[0], -1.0);
+    valueMap.bind(localPosition[1], refPosition[0]);
+  }
+  else
+  {
+    CFD_EXCEPTION("Transform requested for invalid facet.");
+  }
+
+  for(std::size_t d=0; d<transform.numRows(); ++d)
+  {
+    transform[d].substituteValues(valueMap);
+  }
+
+  return transform;
 }
 
 }

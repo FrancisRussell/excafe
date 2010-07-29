@@ -76,17 +76,27 @@ public:
     return values->getValue(e);
   }
 
+  const scalar_value_t& getValue(ScalarExpr& e) const
+  {
+    return values->getValue(e);
+  }
+
+  const field_value_t& getValue(DiscreteFieldExpr& e) const
+  {
+    return values->getValue(e);
+  }
+
+  const operator_value_t& getValue(OperatorExpr& e) const
+  {
+    return values->getValue(e);
+  }
+
   bool hasValue(ScalarExpr& e) const
   {
     return values->hasValue(e);
   }
 
   bool hasValue(DiscreteFieldExpr& e) const
-  {
-    return values->hasValue(e);
-  }
-
-  bool getValue(OperatorExpr& e) const
   {
     return values->hasValue(e);
   }

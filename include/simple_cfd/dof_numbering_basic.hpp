@@ -12,6 +12,7 @@
 #include "general_cell.hpp"
 #include "mesh_entity.hpp"
 #include "dof_association.hpp"
+#include "cell_manager.hpp"
 
 namespace cfd
 {
@@ -22,17 +23,18 @@ class DofNumberingBasic
 private:
   static const std::size_t dimension = D;
 
-  boost::scoped_ptr< GeneralCell<dimension> > cell;
+  typedef typename CellManager::ref<dimension>::general cell_ref_t;
+  cell_ref_t cell;
   const boost::array<std::size_t, dimension+1> dofsPerEntity;
   const boost::array<std::size_t, dimension+1> numCellEntities;
   const std::size_t tensorSize;
 
-  static boost::array<std::size_t, dimension+1> buildNumCellEntities(const GeneralCell<dimension>& cell)
+  static boost::array<std::size_t, dimension+1> buildNumCellEntities(const cell_ref_t cell)
   {
     boost::array<std::size_t, dimension+1> numCellEntities;
 
     for(std::size_t i=0; i<=dimension; ++i)
-      numCellEntities[i] = cell.numEntities(i);
+      numCellEntities[i] = cell->numEntities(i);
 
     return numCellEntities;
   }
@@ -43,13 +45,14 @@ private:
   }
 
 public:
-  DofNumberingBasic(const GeneralCell<dimension>& _cell, const boost::array<std::size_t, dimension+1>& _dofsPerEntity,
-    const std::size_t _tensorSize) : cell(_cell.cloneGeneralCell()), dofsPerEntity(_dofsPerEntity),
-    numCellEntities(buildNumCellEntities(*cell)), tensorSize(_tensorSize)
+  DofNumberingBasic(const cell_ref_t _cell, 
+    const boost::array<std::size_t, dimension+1>& _dofsPerEntity,
+    const std::size_t _tensorSize) : cell(_cell), dofsPerEntity(_dofsPerEntity),
+    numCellEntities(buildNumCellEntities(cell)), tensorSize(_tensorSize)
   {
   }
 
-  DofNumberingBasic(const DofNumberingBasic& d) : cell(d.cell->cloneGeneralCell()),
+  DofNumberingBasic(const DofNumberingBasic& d) : cell(d.cell),
     dofsPerEntity(d.dofsPerEntity), numCellEntities(d.numCellEntities), tensorSize(d.tensorSize)
   {
   }

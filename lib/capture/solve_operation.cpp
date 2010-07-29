@@ -4,6 +4,8 @@
 #include <simple_cfd/capture/dimensionless_scenario.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_container.hpp>
 #include <simple_cfd/capture/fields/discrete_expr_container_builder.hpp>
+#include <simple_cfd/capture/fields/discrete_expr_container_builder.hpp>
+#include <simple_cfd/capture/evaluation/assembly_optimising_visitor.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -44,6 +46,7 @@ void SolveOperation::finish()
   detail::DiscreteExprContainer exprContainer(containerBuilder.getContainer());
 
   scenario->resolveFunctionSpaces(exprContainer.getFunctionSpaces());
+  scenario->optimiseLocalAssemblies(exprContainer.getOperatorExpressions());
   boost::shared_ptr<detail::EvaluationStrategy> strategy(new detail::EvaluationStrategy(exprContainer, outputExpressions));
   evaluationStrategy.swap(strategy);
 }

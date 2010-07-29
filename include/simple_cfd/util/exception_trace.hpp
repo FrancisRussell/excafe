@@ -7,6 +7,7 @@ extern "C" {
 }
 #endif
 
+#include <cstdlib>
 #include <string>
 #include <sstream>
 

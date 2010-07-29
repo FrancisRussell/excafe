@@ -1,0 +1,5 @@
+- Implement grad and div.
+- Implement inverse jacobian.
+- Implement grad-to-div restriction operator.
+- Get rid of reverse loops with i>=0 condition. No warnings when i is unsigned.
+- Differentiate between ArrayIndexVariable and TensorIndexVariable generators.
