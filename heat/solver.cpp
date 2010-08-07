@@ -70,8 +70,8 @@ public:
 
     SolveOperation s = scenario.newSolveOperation();
 
-    Scalar c = 0.1;
-    Scalar k  = 0.01;
+    Scalar c = 1e-4;
+    Scalar k  = 10.0;
 
     Operator massMatrix(temperatureSpace, temperatureSpace);
     massMatrix = B(temperature, temperature)*dx;
