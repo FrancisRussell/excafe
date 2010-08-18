@@ -196,12 +196,6 @@ PETScVector PETScMatrix::getLumpedDiagonal() const
   return *this * allOnes;
 }
 
-void PETScMatrix::extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const
-{
-  const PetscErrorCode ierr = MatGetSubMatrixRaw(m, rows, rowIndices, cols, colIndices, PETSC_DECIDE, MAT_INITIAL_MATRIX, &dest.m);
-  checkError(ierr);
-}
-
 PETScMatrix::~PETScMatrix()
 {
   const PetscErrorCode ierr = MatDestroy(m);

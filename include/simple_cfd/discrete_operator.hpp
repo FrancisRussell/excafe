@@ -364,13 +364,6 @@ public:
     matrix.zero();
   }
 
-  void extractSubmatrix(DiscreteOperator& s) const
-  {
-    const std::vector<int> rowIndices = s.rowMappings.getIndices(rowMappings);
-    const std::vector<int> colIndices = s.colMappings.getIndices(colMappings);
-    matrix.extractSubmatrix(s.matrix, rowIndices.size(), colIndices.size(), &rowIndices[0], &colIndices[0]);
-  }
-
   DiscreteField<dimension> getLumpedDiagonal() const
   {
     assert(rowMappings == colMappings);

@@ -39,7 +39,6 @@ public:
   void scaleDiagonal(const PETScVector& s);
   void zero();
   void assemble();
-  void extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const;
   void view() const;
   PETScVector getLumpedDiagonal() const;
   Mat getPETScHandle() const;
