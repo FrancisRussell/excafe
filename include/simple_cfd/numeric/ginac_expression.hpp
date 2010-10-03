@@ -127,10 +127,11 @@ class GinacExpression : public NumericExpression<V>,
                         > >
 {
 public:
-  typedef double                                  value_type;
-  typedef V                                       variable_t;
-  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
-  typedef detail::GinacValueMap<variable_t>       value_map;
+  typedef double                                              value_type;
+  typedef V                                                   variable_t;
+  typedef OptimisedPolynomialFraction<variable_t>             optimised_t;
+  typedef detail::GinacValueMap<variable_t, GinacExpression>  value_map;
+  friend class detail::GinacValueMap<variable_t, GinacExpression>;
 
 private:
   typedef GiNaC::ex      ginac_expr_t;
@@ -249,6 +250,11 @@ public:
   {
     return GinacExpression(expr.diff(getSymbol(variable)));
   }
+
+  GinacExpression integrate(const variable_t& variable, const value_type& a, const value_type& b) const
+  {
+    return GinacExpression(GiNaC::integral(getSymbol(variable), a, b, expr).eval_integ().eval());
+  }
   
   std::size_t degree(const variable_t& variable) const
   {
@@ -267,6 +273,11 @@ public:
       cfd::detail::convert_expression< PolynomialFraction<variable_t> >(normalised);
 
     return optimised_t(polyFraction);
+  }
+
+  GinacExpression normalised() const
+  {
+    return GinacExpression(expr.normal());
   }
 
   std::set<variable_t> getVariables() const

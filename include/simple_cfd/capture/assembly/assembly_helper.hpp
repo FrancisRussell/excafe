@@ -24,60 +24,42 @@ namespace
 {
 
 template<std::size_t D>
-class PolynomialIntegrator
+class SymbolicIntegrator
 {
 private:
   static const std::size_t dimension = D;
-  std::vector< std::pair<vertex<dimension>, double> > rule;
+  typedef ScalarPlaceholder::expression_t expression_t;
+  typedef expression_t::value_map value_map;
+
+  ScalarPlaceholder::expression_t jacobian;
+  value_map valueMap;
+
+  static value_map getValueMap(const LocalTransformation<dimension, dimension>& transform)
+  {
+    value_map valueMap;
+    const SmallVector<dimension, expression_t> transformed = transform.getTransformed();
+
+    for(std::size_t d=0; d<dimension; ++d)
+      valueMap.bind(ScalarPlaceholder(PositionComponent(d)), transformed[d]);
+
+    return valueMap;
+  }
 
 public:
-  PolynomialIntegrator(const std::vector<std::pair<vertex<dimension>, double> >& _rule) : rule(_rule)
+  SymbolicIntegrator(const typename CellManager::ref<dimension>::general cell) : 
+    jacobian(cell->getCellReferenceLocalTransformation().getScalingFactor()),
+    valueMap(getValueMap(cell->getCellReferenceLocalTransformation()))
   {
   }
 
   ScalarPlaceholder::expression_t operator()(const ScalarPlaceholder::expression_t& p) const
   {
-    ScalarPlaceholder::expression_t result;
-    ScalarPlaceholder::expression_t::value_map valueMap;
+    expression_t integrand = p.substituteValues(valueMap)*jacobian;
 
-    for(std::size_t point=0; point<rule.size(); ++point)
-    {
-      const double weight = rule[point].second;
-
-      for(std::size_t d=0; d<dimension; ++d)
-      {
-        const PositionComponent component(d);
-        const ScalarPlaceholder x(component);
-        valueMap.bind(x, rule[point].first[d]);
-      }
-      result += p.substituteValues(valueMap) * weight;
-    }
-    return result;
-  }
-};
-
-template<std::size_t D>
-class DegreeFinder
-{
-private:
-  static const std::size_t dimension = D;
-  boost::array<std::size_t, dimension> degrees;
-
-public:
-  DegreeFinder()
-  {
-    std::fill(degrees.begin(), degrees.end(), 0);
-  }
-
-  void operator()(const ScalarPlaceholder::expression_t& p)
-  {
     for(std::size_t d=0; d<dimension; ++d)
-      degrees[d] = std::max(degrees[d], p.degree(ScalarPlaceholder(PositionComponent(d))));
-  }
+      integrand = integrand.integrate(ScalarPlaceholder(PositionComponent(d)), -1, 1);
 
-  boost::array<std::size_t, dimension> getDegrees() const
-  {
-    return degrees;
+    return integrand.normalised();
   }
 };
 
@@ -142,22 +124,16 @@ public:
   LocalAssemblyMatrix<dimension, expression_t> integrate(const LocalAssemblyMatrix<dimension, expression_t>& matrix,
     const MeshEntity& localEntity)
   {
-    DegreeFinder<dimension> degreeFinder;
-    degreeFinder = std::for_each(matrix.begin(), matrix.end(), degreeFinder);
-    const boost::array<std::size_t, dimension> degrees = degreeFinder.getDegrees();
+    // TODO: edge integrals, etc.
+    const SymbolicIntegrator<dimension> integrator(scenario.getMesh().getReferenceCell());
 
-    const QuadraturePoints<dimension> quadrature(scenario.getMesh().getReferenceCell()->getQuadrature(degrees));
-
-    // FIXME: edge integrals, etc.
-    assert(localEntity.getDimension() == dimension);
-
-    const std::vector< std::pair<vertex<dimension>, double> > rule(quadrature.begin(localEntity), quadrature.end(localEntity));
-    const PolynomialIntegrator<dimension> integrator(rule);
-
-    // FIXME: factor jacobian stuff into helper function
+    // Multiply by local-to-global jacobian
+    // TODO: factor jacobian stuff into helper function
     FormEvaluationVisitor<dimension> evaluationVisitor(scenario, 0);
     const expression_t jacobianDet = evaluationVisitor.jacobianDeterminant();
     LocalAssemblyMatrix<dimension, expression_t> result(matrix * jacobianDet);
+
+    // Now change co-ordinates and integrate over reference space, -1 to 1
     std::transform(result.begin(), result.end(), result.begin(), integrator);
     return result;
   }
