@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_SYMBOLIC_EXPR_HPP
 
 #include <boost/shared_ptr.hpp>
+#include <map>
 #include "symbolic_fwd.hpp"
 
 namespace cfd
@@ -19,8 +20,11 @@ private:
   ref_t expr;
 
 public:
+  typedef std::map<Symbol, Expr> subst_map;
+
   explicit Expr(Basic* e);
   explicit Expr(ref_t& e);
+  Expr();
   Expr(const double s);
   Expr& operator=(const Expr& e);
   bool operator<(const Expr& e) const;
@@ -31,6 +35,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
   const Basic& internal() const;
+  Expr subs(const subst_map& map) const;
 };
 
 std::size_t hash_value(const Expr& e);

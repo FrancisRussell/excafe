@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/number.hpp>
 #include <boost/functional/hash.hpp>
+#include <iostream>
 
 namespace cfd
 {
@@ -52,6 +53,21 @@ std::size_t Symbol::untypedHash() const
 {
   return boost::hash<int>()(serial);
 }
+
+Expr Symbol::subs(const Expr::subst_map& map) const
+{
+  const Expr::subst_map::const_iterator iter = map.find(*this);
+
+  if (iter != map.end())
+  {
+    return iter->second;
+  }
+  else
+  {
+    return clone();
+  }
+}
+
 
 }
 

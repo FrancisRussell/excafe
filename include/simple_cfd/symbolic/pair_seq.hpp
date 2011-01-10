@@ -44,7 +44,7 @@ protected:
   
   virtual Expr null() const = 0;
 
-  void addSimplifiedTerms(TermMap& newTermMap, const child_type& seq) const
+  void addSimplifiedTerms(const int multiplier, TermMap& newTermMap, const child_type& seq) const
   {
     const Expr nullExpr = null();
     BOOST_FOREACH(const TermMap::value_type term, std::make_pair(seq.begin(), seq.end()))
@@ -57,12 +57,12 @@ protected:
         if (AbstractBasic<T>::getType(simplified.internal()) == AbstractBasic<T>::getType(*this))
         {
           const child_type& child(static_cast<const child_type&>(simplified.internal()));
-          addSimplifiedTerms(newTermMap, child);
+          addSimplifiedTerms(multiplier*term.second, newTermMap, child);
         }
         else if (simplified != nullExpr)
         {
           // Terms equal that are 0 in a sum, or 1 in a product can be removed
-          newTermMap[simplified] += term.second;
+          newTermMap[simplified] += multiplier*term.second;
         }
       }
     }
@@ -106,7 +106,7 @@ public:
   {
     const Expr nullExpr = null();
     TermMap newTermMap;
-    addSimplifiedTerms(newTermMap, static_cast<const child_type&>(*this));
+    addSimplifiedTerms(1, newTermMap, static_cast<const child_type&>(*this));
 
     if (newTermMap.empty())
     {
@@ -120,6 +120,16 @@ public:
     {
       return child_type(newTermMap);
     }
+  }
+
+  Expr subs(const Expr::subst_map& map) const
+  {
+    TermMap newTermMap;
+    BOOST_FOREACH(const TermMap::value_type term, std::make_pair(begin(), end()))
+    {
+      newTermMap[term.first.subs(map)] += term.second;
+    }
+    return child_type(newTermMap);
   }
 
   std::size_t untypedHash() const

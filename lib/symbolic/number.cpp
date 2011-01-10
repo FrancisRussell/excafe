@@ -48,6 +48,11 @@ std::size_t Number::untypedHash() const
   return boost::hash<double>()(value);
 }
 
+Expr Number::subs(const Expr::subst_map& map) const
+{
+  return clone();
+}
+
 }
 
 }

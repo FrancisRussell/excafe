@@ -23,6 +23,10 @@ Expr::Expr(const double s) : expr(new Number(s))
 {
 }
 
+Expr::Expr() : expr(new Number(0))
+{
+}
+
 Expr operator+(const Expr& a, const Expr& b)
 {
   return Sum(a, b).simplify();
@@ -100,6 +104,11 @@ std::ostream& operator<<(std::ostream& o, const Expr& e)
 Expr Expr::derivative(const Symbol& s) const
 {
   return expr->derivative(s).simplify();
+}
+
+Expr Expr::subs(const subst_map& map) const
+{
+  return expr->subs(map).simplify();
 }
 
 Expr pow(const Expr& e, const int power)

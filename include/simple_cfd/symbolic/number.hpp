@@ -24,6 +24,7 @@ public:
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
   virtual bool isNumber() const;
+  Expr subs(const Expr::subst_map& map) const;
   bool operator==(const Number& n) const;
   bool operator<(const Number& n) const;
   std::size_t untypedHash() const;
