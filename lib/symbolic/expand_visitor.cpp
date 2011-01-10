@@ -11,6 +11,7 @@ namespace symbolic
 
 void ExpandVisitor::accept(const Sum& s)
 {
+  Sum reduction;
   BOOST_FOREACH(const Sum::value_type& term, std::make_pair(s.begin(), s.end()))
   {
     term.first.accept(*this);
@@ -18,15 +19,7 @@ void ExpandVisitor::accept(const Sum& s)
 
     const Sum a = stack.top(); stack.pop();
     const Sum b = stack.top(); stack.pop();
-    stack.push(a*b);
-  }
-
-  Sum reduction;
-  assert(stack.size() >= s.nops());
-  for(std::size_t i=0; i<s.nops(); ++i)
-  {
-    reduction = reduction + stack.top();
-    stack.pop();
+    reduction = reduction + a*b;
   }
 
   stack.push(reduction);
@@ -34,28 +27,23 @@ void ExpandVisitor::accept(const Sum& s)
 
 void ExpandVisitor::accept(const Product& p)
 {
+  Sum dividend = Sum::multiplier(1);
+  Sum divisor = Sum::multiplier(1);
+
   BOOST_FOREACH(const Product::value_type& term, std::make_pair(p.begin(), p.end()))
   {
     term.first.accept(*this);
-
     const Sum multiplicand(stack.top()); stack.pop();
-    Sum result = Sum::multiplier(1);
 
-    for(int i=0; i<term.second; ++i)
+    Sum& result = (term.second < 0) ? divisor : dividend;
+    for(int i=0; i<std::abs(term.second); ++i)
+    {
       result = result.expandedProduct(multiplicand);
-
-    stack.push(result);
+    }
   }
 
-  Sum reduction = Sum::multiplier(1);
-  assert(stack.size() >= p.nops());
-  for(std::size_t i=0; i<p.nops(); ++i)
-  {
-    reduction = reduction.expandedProduct(stack.top());
-    stack.pop();
-  }
-
-  stack.push(reduction);
+  const Product quotient(dividend, Product::pow(divisor, -1));
+  stack.push(Sum(quotient));
 }
 
 void ExpandVisitor::accept(const Basic& b)
