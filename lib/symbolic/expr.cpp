@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/number.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <ostream>
 
 namespace cfd
@@ -109,6 +110,18 @@ Expr Expr::derivative(const Symbol& s) const
 Expr Expr::integrate(const Symbol& s) const
 {
   return expr->integrate(s).simplify();
+}
+
+void Expr::accept(Visitor& v) const
+{
+  return expr->accept(v);
+}
+
+Expr Expr::expand() const
+{
+  ExpandVisitor v;
+  expr->accept(v);
+  return v.getResult().simplify();
 }
 
 Expr Expr::subs(const subst_map& map) const

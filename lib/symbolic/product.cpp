@@ -62,7 +62,7 @@ Expr Product::derivative(const Symbol& s) const
 
 Expr Product::integrate(const Symbol& s) const
 {
-#error implement me
+  //FIXME: implement me
 }
 
 Expr Product::simplify() const

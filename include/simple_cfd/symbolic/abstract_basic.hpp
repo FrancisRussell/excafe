@@ -4,6 +4,7 @@
 #include <boost/functional/hash.hpp>
 #include <simple_cfd/util/type_info.hpp>
 #include "basic.hpp"
+#include "visitor.hpp"
 
 namespace cfd
 {
@@ -39,6 +40,12 @@ protected:
   }
 
 public:
+  class Visitor
+  {
+  public:
+    virtual void accept(const child_type& c) = 0;
+  };
+
   bool operator==(const Basic& b) const
   {
     if (this == &b)
@@ -95,6 +102,19 @@ public:
     std::size_t hash = getTypeHash();
     boost::hash_combine(hash, asChild(*this).untypedHash());
     return hash;
+  }
+
+  Expr expand() const
+  {
+    return clone();
+  }
+
+  void accept(symbolic::Visitor& v) const
+  {
+    if (Visitor* s = dynamic_cast<Visitor*>(&v))
+      s->accept(asChild(*this));
+    else
+      v.accept(*this);
   }
 };
 

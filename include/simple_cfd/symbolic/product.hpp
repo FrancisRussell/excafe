@@ -51,6 +51,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
   Expr simplify() const;
+  Expr expand() const;
 };
 
 }

@@ -1,5 +1,6 @@
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/product.hpp>
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
@@ -25,6 +26,7 @@ void Sum::write(std::ostream& o) const
 
   const_iterator current(begin());
 
+  o << "(";
   while(current != end())
   {
     o << (current->second < 0 ? "-" : "");
@@ -38,6 +40,7 @@ void Sum::write(std::ostream& o) const
     if (current != end())
       o << " + ";
   }
+  o << ")";
 }
 
 Sum Sum::operator+(const Expr& e) const
@@ -64,6 +67,21 @@ Expr Sum::integrate(const Symbol& s) const
   {
     newTerms.insert(std::make_pair(e.first.integrate(s), e.second));
   }
+  return Sum(newTerms);
+}
+
+Sum Sum::expandedProduct(const Sum& s) const
+{
+  TermMap newTerms;
+
+  BOOST_FOREACH(const TermMap::value_type& a, std::make_pair(begin(), end()))
+  {
+    BOOST_FOREACH(const TermMap::value_type& b, std::make_pair(s.begin(), s.end()))
+    {
+      newTerms[Product(a.first, b.first)] += a.second*b.second;
+    }
+  }
+
   return Sum(newTerms);
 }
 

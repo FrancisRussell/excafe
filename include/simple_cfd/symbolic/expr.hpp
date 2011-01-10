@@ -37,6 +37,8 @@ public:
   Expr integrate(const Symbol& s) const;
   const Basic& internal() const;
   Expr subs(const subst_map& map) const;
+  virtual void accept(Visitor& v) const;
+  virtual Expr expand() const;
 };
 
 std::size_t hash_value(const Expr& e);

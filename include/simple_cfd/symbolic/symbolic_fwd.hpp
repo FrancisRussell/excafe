@@ -11,6 +11,7 @@ class Expr;
 class Basic;
 class Symbol;
 class Number;
+class Visitor;
 template<typename T> class AbstractBasic;
 template<typename T> class PairSeq;
 

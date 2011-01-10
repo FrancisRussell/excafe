@@ -8,6 +8,7 @@
 #include <vector>
 #include "pair_seq.hpp"
 #include "expr.hpp"
+#include "number.hpp"
 #include <iostream>
 
 namespace cfd
@@ -26,7 +27,7 @@ protected:
   }
 
   Expr null() const;
-
+  
 public:
   static Sum sub(const Expr& a, const Expr& b)
   {
@@ -36,8 +37,20 @@ public:
     return Sum(terms);
   }
 
+  static Sum multiplier(const int n)
+  {
+    TermMap terms;
+    terms[Expr(new Number(1))]+=n;
+    return Sum(terms);
+  }
+
   Sum()
   {
+  }
+  
+  Sum(const Expr& a)
+  {
+    ++terms[a];
   }
 
   Sum(const Expr& a, const Expr& b) : PairSeq<Sum>(a, b)
@@ -48,6 +61,7 @@ public:
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
+  Sum expandedProduct(const Sum& s) const;
 };
 
 }

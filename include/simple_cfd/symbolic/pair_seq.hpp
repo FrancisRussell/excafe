@@ -69,6 +69,7 @@ protected:
   }
 
 public:
+  typedef TermMap::value_type value_type;
   typedef TermMap::const_iterator iterator;
   typedef TermMap::const_iterator const_iterator;
 
