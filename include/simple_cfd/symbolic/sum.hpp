@@ -1,11 +1,14 @@
-#ifndef SIMPLE_CFD_SYMBOLIC_PAIR_SET_HPP
-#define SIMPLE_CFD_SYMBOLIC_PAIR_SET_HPP
+#ifndef SIMPLE_CFD_SUM_HPP
+#define SIMPLE_CFD_SUM_HPP
 
 #include <cstddef>
+#include <map>
 #include <ostream>
 #include <utility>
 #include <vector>
-#include "basic.hpp"
+#include "pair_seq.hpp"
+#include "expr.hpp"
+#include <iostream>
 
 namespace cfd
 {
@@ -13,25 +16,37 @@ namespace cfd
 namespace symbolic
 {
 
-class Sum : public Basic
+class Sum : public PairSeq<Sum>
 {
-private:
-  std::set<Basic::ref_t> terms;
+protected:
+  friend class PairSeq<Sum>;
+
+  Sum(const TermMap& _terms): PairSeq<Sum>(_terms)
+  {
+  }
+
+  Expr null() const;
 
 public:
-  virtual std::size_t nops() const
+  static Sum sub(const Expr& a, const Expr& b)
   {
-    return terms.size();
+    TermMap terms;
+    ++terms[a];
+    --terms[b];
+    return Sum(terms);
   }
 
-  virtual void write(std::ostream& o) const
+  Sum()
   {
   }
 
-  virtual Expr clone() const = 0;
-  virtual Expr derivative(const Symbol& s) const = 0;
-  virtual bool isNumber() const = 0;
-  virtual ~Basic();
+  Sum(const Expr& a, const Expr& b) : PairSeq<Sum>(a, b)
+  {
+  }
+
+  Sum operator+(const Expr& e) const;
+  void write(std::ostream& o) const;
+  Expr derivative(const Symbol& s) const;
 };
 
 }

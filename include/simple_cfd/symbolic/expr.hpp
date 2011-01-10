@@ -21,13 +21,25 @@ private:
 public:
   explicit Expr(Basic* e);
   explicit Expr(ref_t& e);
-
+  Expr(const double s);
   Expr& operator=(const Expr& e);
-  
-  int getTypeID() const;
+  bool operator<(const Expr& e) const;
+  bool operator==(const Expr& e) const;
+  bool operator!=(const Expr& e) const;
+  void write(std::ostream& o) const;
+  std::size_t hashValue() const;
+  Expr derivative(const Symbol& s) const;
+  Expr simplify() const;
+  const Basic& internal() const;
 };
 
+std::size_t hash_value(const Expr& e);
 Expr operator+(const Expr& a, const Expr& b);
+Expr operator-(const Expr& a, const Expr& b);
+Expr operator*(const Expr& a, const Expr& b);
+Expr operator/(const Expr& a, const Expr& b);
+Expr pow(const Expr& e, int power);
+std::ostream& operator<<(std::ostream& o, const Expr& e);
 
 }
 

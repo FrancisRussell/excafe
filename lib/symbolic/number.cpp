@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/number.hpp>
 #include <boost/functional/hash.hpp>
 
+#include <iostream>
 namespace cfd
 {
 
@@ -22,11 +23,6 @@ void Number::write(std::ostream& o) const
   o << value;
 }
 
-Expr Number::clone() const
-{
-  return Expr(new Number(*this));
-}
-
 Expr Number::derivative(const Symbol& s) const
 {
   return Expr(new Number(0));
@@ -37,11 +33,20 @@ bool Number::isNumber() const
   return true;
 }
 
-std::size_t Number::hashValue() const
+bool Number::operator<(const Number& n) const
+{
+  return value < n.value;
+}
+
+bool Number::operator==(const Number& n) const
+{
+  return value == n.value;
+}
+
+std::size_t Number::untypedHash() const
 {
   return boost::hash<double>()(value);
 }
-
 
 }
 

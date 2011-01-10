@@ -25,11 +25,6 @@ void Symbol::write(std::ostream& o) const
   o << name;
 }
 
-Expr Symbol::clone() const
-{
-  return Expr(new Symbol(*this));
-}
-
 Expr Symbol::derivative(const Symbol& s) const
 {
   if (serial == s.serial)
@@ -43,7 +38,17 @@ bool Symbol::isNumber() const
   return false;
 }
 
-std::size_t Symbol::hashValue() const
+bool Symbol::operator==(const Symbol& s) const
+{
+  return serial == s.serial;
+}
+
+bool Symbol::operator<(const Symbol& s) const
+{
+  return serial < s.serial;
+}
+
+std::size_t Symbol::untypedHash() const
 {
   return boost::hash<int>()(serial);
 }

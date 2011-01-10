@@ -5,10 +5,9 @@
 #include <cstddef>
 #include <ostream>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/void.hpp>
 #include "symbolic_fwd.hpp"
-#include "ertti.hpp"
 #include "expr.hpp"
+#include <simple_cfd/util/type_info.hpp>
 
 namespace cfd
 {
@@ -16,22 +15,23 @@ namespace cfd
 namespace symbolic
 {
 
-class Basic : public ERTTI<Basic, Basic>
+class Basic
 {
 public:
   virtual std::size_t nops() const = 0;
   virtual void write(std::ostream& o) const = 0;
   virtual Expr clone() const = 0;
   virtual Expr derivative(const Symbol& s) const = 0;
+  virtual Expr simplify() const = 0;
   virtual bool isNumber() const = 0;
   virtual std::size_t hashValue() const = 0;
+  virtual bool operator==(const Basic& b) const = 0;
+  virtual bool operator<(const Basic& b) const = 0;
+  virtual operator Expr() const = 0;
   virtual ~Basic() {}
-
-  operator Expr() const
-  {
-    return Expr(clone());
-  }
 };
+
+std::ostream& operator<<(std::ostream& o, const Basic& b);
 
 }
 
