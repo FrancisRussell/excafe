@@ -1,8 +1,9 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
 #include <boost/functional/hash.hpp>
 
-#include <iostream>
 namespace cfd
 {
 
@@ -41,6 +42,11 @@ bool Number::operator<(const Number& n) const
 bool Number::operator==(const Number& n) const
 {
   return value == n.value;
+}
+
+Expr Number::integrate(const Symbol& s) const
+{
+  return Expr(new Product(*this, s));
 }
 
 std::size_t Number::untypedHash() const

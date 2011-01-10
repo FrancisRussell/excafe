@@ -34,6 +34,7 @@ public:
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
+  Expr integrate(const Symbol& s) const;
   const Basic& internal() const;
   Expr subs(const subst_map& map) const;
 };

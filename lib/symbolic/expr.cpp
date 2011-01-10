@@ -106,6 +106,11 @@ Expr Expr::derivative(const Symbol& s) const
   return expr->derivative(s).simplify();
 }
 
+Expr Expr::integrate(const Symbol& s) const
+{
+  return expr->integrate(s).simplify();
+}
+
 Expr Expr::subs(const subst_map& map) const
 {
   return expr->subs(map).simplify();

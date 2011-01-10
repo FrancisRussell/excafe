@@ -49,6 +49,7 @@ public:
 
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
+  Expr integrate(const Symbol& s) const;
   Expr simplify() const;
 };
 

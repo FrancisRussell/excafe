@@ -57,6 +57,16 @@ Expr Sum::derivative(const Symbol& s) const
   return Sum(newTerms);
 }
 
+Expr Sum::integrate(const Symbol& s) const
+{
+  TermMap newTerms;
+  BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
+  {
+    newTerms.insert(std::make_pair(e.first.integrate(s), e.second));
+  }
+  return Sum(newTerms);
+}
+
 }
 
 }

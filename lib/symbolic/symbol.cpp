@@ -1,6 +1,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/product.hpp>
 #include <boost/functional/hash.hpp>
 #include <iostream>
 
@@ -68,6 +69,13 @@ Expr Symbol::subs(const Expr::subst_map& map) const
   }
 }
 
+Expr Symbol::integrate(const Symbol& s) const
+{
+  if (serial != s.serial)
+    return Product(*this, s);
+  else
+    return Product::pow(s, 2);
+}
 
 }
 

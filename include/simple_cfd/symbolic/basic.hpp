@@ -22,6 +22,7 @@ public:
   virtual void write(std::ostream& o) const = 0;
   virtual Expr clone() const = 0;
   virtual Expr derivative(const Symbol& s) const = 0;
+  virtual Expr integrate(const Symbol& s) const = 0;
   virtual Expr simplify() const = 0;
   virtual bool isNumber() const = 0;
   virtual std::size_t hashValue() const = 0;

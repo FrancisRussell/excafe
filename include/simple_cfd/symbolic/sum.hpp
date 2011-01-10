@@ -47,6 +47,7 @@ public:
   Sum operator+(const Expr& e) const;
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
+  Expr integrate(const Symbol& s) const;
 };
 
 }

@@ -60,6 +60,11 @@ Expr Product::derivative(const Symbol& s) const
   return summation;
 }
 
+Expr Product::integrate(const Symbol& s) const
+{
+#error implement me
+}
+
 Expr Product::simplify() const
 {
   const Number zero(0);
