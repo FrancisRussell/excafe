@@ -34,6 +34,11 @@ bool Number::isNumber() const
   return true;
 }
 
+bool Number::has(const Expr& e) const
+{
+  return e == *this;
+}
+
 bool Number::operator<(const Number& n) const
 {
   return value < n.value;

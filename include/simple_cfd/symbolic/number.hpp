@@ -24,6 +24,7 @@ public:
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
   virtual bool isNumber() const;
+  virtual bool has(const Expr& e) const;
   Expr subs(const Expr::subst_map& map) const;
   Expr integrate(const Symbol& s) const;
   bool operator==(const Number& n) const;

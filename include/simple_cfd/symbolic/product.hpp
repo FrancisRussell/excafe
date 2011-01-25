@@ -18,8 +18,10 @@ namespace symbolic
 
 class Product : public PairSeq<Product>
 {
-protected:
+private:
   friend class PairSeq<Product>;
+
+  static Expr integrate(const Expr& a, const Expr& b, const Symbol& s);
 
   Product(const TermMap& _terms): PairSeq<Product>(_terms)
   {

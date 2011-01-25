@@ -133,6 +133,20 @@ public:
     return child_type(newTermMap);
   }
 
+  bool has(const Expr& e) const
+  {
+    if (e == *this)
+      return true;
+
+    BOOST_FOREACH(const TermMap::value_type term, std::make_pair(begin(), end()))
+    {
+      if (term.first.has(e))
+        return true;
+    }
+
+    return false;
+  }
+
   std::size_t untypedHash() const
   {
     return boost::hash_range(terms.begin(), terms.end());

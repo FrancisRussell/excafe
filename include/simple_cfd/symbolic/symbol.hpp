@@ -30,6 +30,7 @@ public:
  bool isNumber() const;
  bool operator==(const Symbol& s) const;
  bool operator<(const Symbol& s) const;
+ bool has(const Expr& e) const;
  Expr integrate(const Symbol& s) const;
  Expr subs(const Expr::subst_map& map) const;
  std::size_t untypedHash() const;

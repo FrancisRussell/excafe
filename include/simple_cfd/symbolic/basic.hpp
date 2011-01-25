@@ -30,6 +30,7 @@ public:
   virtual bool operator<(const Basic& b) const = 0;
   virtual operator Expr() const = 0;
   virtual Expr subs(const Expr::subst_map& map) const = 0;
+  virtual bool has(const Expr& e) const = 0;
   virtual void accept(Visitor& v) const = 0;
   virtual ~Basic() {}
 };

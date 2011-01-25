@@ -30,6 +30,7 @@ public:
   bool operator<(const Expr& e) const;
   bool operator==(const Expr& e) const;
   bool operator!=(const Expr& e) const;
+  bool has(const Expr& e) const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;

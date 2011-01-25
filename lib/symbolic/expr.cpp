@@ -76,6 +76,11 @@ bool Expr::operator!=(const Expr& e) const
   return !(*this == e);
 }
 
+bool Expr::has(const Expr& e) const
+{
+  return expr->has(e);
+}
+
 std::size_t Expr::hashValue() const
 {
   return expr->hashValue();

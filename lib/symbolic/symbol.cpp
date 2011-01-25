@@ -50,6 +50,11 @@ bool Symbol::operator<(const Symbol& s) const
   return serial < s.serial;
 }
 
+bool Symbol::has(const Expr& e) const
+{
+  return e == *this;
+}
+
 std::size_t Symbol::untypedHash() const
 {
   return boost::hash<int>()(serial);
