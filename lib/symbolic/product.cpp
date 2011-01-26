@@ -92,7 +92,12 @@ Expr Product::integrate(const Symbol& s) const
     if (exponent < 0)
       CFD_EXCEPTION("Cannot integrate functions involving variable raised to negative exponents.");
 
-    if (exponent == 0)
+    if (expr == s)
+    {
+      /* Directly handle variables raised to an exponent */
+      dependentIntegral = Product(Product::pow(Number(exponent+1), -1), Product::pow(s, exponent+1));
+    }
+    else if (exponent == 0)
     {
       /* Integral of f^0 (if we've failed to eliminate them for some reason)*/
       dependentIntegral = s;
@@ -107,7 +112,6 @@ Expr Product::integrate(const Symbol& s) const
       /* Integration of f^n where n>1 */
       const int exp1 = exponent / 2;
       const int exp2 = exponent - exp1;
-
       dependentIntegral = integrate(pow(expr, exp1), pow(expr, exp2), s);
     }
   }
@@ -127,7 +131,22 @@ Expr Product::integrate(const Symbol& s) const
 
 Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 {
-  return Number(0);
+  const Number zero(0);
+  int sign = 1.0;
+  Expr result = zero;
+
+  Expr u = a;
+  Expr v = b.integrate(s);
+
+  while (u != zero)
+  {
+    result = Sum(result, Product(Sum::multiplier(sign), Product(u, v)));
+    u = u.derivative(s);
+    v = v.integrate(s);
+    sign *= -1;
+  }
+
+  return result.simplify();
 }
 
 Expr Product::simplify() const

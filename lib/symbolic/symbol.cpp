@@ -79,7 +79,7 @@ Expr Symbol::integrate(const Symbol& s) const
   if (serial != s.serial)
     return Product(*this, s);
   else
-    return Product::pow(s, 2);
+    return Product(Product::pow(Number(2), -1), Product::pow(s, 2));
 }
 
 }
