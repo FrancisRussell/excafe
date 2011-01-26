@@ -37,10 +37,10 @@ public:
     return Sum(terms);
   }
 
-  static Sum multiplier(const int n)
+  static Sum integer_multiple(const Expr& e, const int n)
   {
     TermMap terms;
-    terms[Expr(new Number(1))]+=n;
+    terms[e]+=n;
     return Sum(terms);
   }
 

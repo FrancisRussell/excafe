@@ -30,16 +30,20 @@ public:
   bool operator<(const Expr& e) const;
   bool operator==(const Expr& e) const;
   bool operator!=(const Expr& e) const;
+  Expr operator-() const;
   bool has(const Expr& e) const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
   Expr integrate(const Symbol& s) const;
+  Expr integrate(const Symbol& s, const Number& a, const Number& b) const;
   const Basic& internal() const;
   Expr subs(const subst_map& map) const;
-  virtual void accept(Visitor& v) const;
-  virtual Expr expand() const;
+  void accept(Visitor& v) const;
+  void traverse(Visitor& v) const;
+  void swap(Expr& e);
+  Expr expand() const;
 };
 
 std::size_t hash_value(const Expr& e);

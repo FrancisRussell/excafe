@@ -15,7 +15,7 @@ void ExpandVisitor::accept(const Sum& s)
   BOOST_FOREACH(const Sum::value_type& term, std::make_pair(s.begin(), s.end()))
   {
     term.first.accept(*this);
-    stack.push(Sum::multiplier(term.second));
+    stack.push(Sum(term.second));
 
     const Sum a = stack.top(); stack.pop();
     const Sum b = stack.top(); stack.pop();
@@ -27,8 +27,8 @@ void ExpandVisitor::accept(const Sum& s)
 
 void ExpandVisitor::accept(const Product& p)
 {
-  Sum dividend = Sum::multiplier(1);
-  Sum divisor = Sum::multiplier(1);
+  Sum dividend(Number(1));
+  Sum divisor(Number(1));
 
   BOOST_FOREACH(const Product::value_type& term, std::make_pair(p.begin(), p.end()))
   {

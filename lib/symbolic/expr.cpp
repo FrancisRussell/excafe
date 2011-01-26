@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/number.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <ostream>
 
@@ -76,6 +77,11 @@ bool Expr::operator!=(const Expr& e) const
   return !(*this == e);
 }
 
+Expr Expr::operator-() const
+{
+  return Sum::integer_multiple(*this, -1);
+}
+
 bool Expr::has(const Expr& e) const
 {
   return expr->has(e);
@@ -115,6 +121,17 @@ Expr Expr::derivative(const Symbol& s) const
 Expr Expr::integrate(const Symbol& s) const
 {
   return expr->integrate(s).simplify();
+}
+
+Expr Expr::integrate(const Symbol& s, const Number& a, const Number& b) const
+{
+  const Expr integrated = expr->integrate(s);
+
+  subst_map aMap, bMap;
+  aMap[s] = a;
+  bMap[s] = b;
+
+  return (integrated.subs(bMap) - integrated.subs(aMap)).simplify();
 }
 
 void Expr::accept(Visitor& v) const

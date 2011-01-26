@@ -132,7 +132,7 @@ Expr Product::integrate(const Symbol& s) const
 Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 {
   const Number zero(0);
-  int sign = 1.0;
+  int sign = 1;
   Expr result = zero;
 
   Expr u = a;
@@ -140,7 +140,7 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 
   while (u != zero)
   {
-    result = Sum(result, Product(Sum::multiplier(sign), Product(u, v)));
+    result = result + Sum::integer_multiple(Product(u, v), sign);
     u = u.derivative(s);
     v = v.integrate(s);
     sign *= -1;
