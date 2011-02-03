@@ -8,6 +8,7 @@
 #include "symbolic_fwd.hpp"
 #include "expr.hpp"
 #include <simple_cfd/util/type_info.hpp>
+#include <simple_cfd/numeric/expression_visitor.hpp>
 
 namespace cfd
 {
@@ -32,6 +33,7 @@ public:
   virtual Expr subs(const Expr::subst_map& map) const = 0;
   virtual bool has(const Expr& e) const = 0;
   virtual void accept(Visitor& v) const = 0;
+  virtual void accept(NumericExpressionVisitor<Symbol>& v) const = 0;
   virtual ~Basic() {}
 };
 

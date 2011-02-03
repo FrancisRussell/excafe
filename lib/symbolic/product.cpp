@@ -170,6 +170,18 @@ Expr Product::simplify() const
   return simplified;
 }
 
+void Product::accept(NumericExpressionVisitor<Symbol>& v) const
+{
+  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  {
+    d.first.accept(v);
+    if (d.second != 1)
+      v.visitExponent(d.second);
+  }
+
+  v.postProduct(terms.size());
+}
+
 }
 
 }

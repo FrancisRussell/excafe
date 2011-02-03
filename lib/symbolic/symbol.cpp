@@ -82,6 +82,11 @@ Expr Symbol::integrate(const Symbol& s) const
     return Product(Product::pow(Number(2), -1), Product::pow(s, 2));
 }
 
+void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const
+{
+  v.visitVariable(*this);
+}
+
 }
 
 }

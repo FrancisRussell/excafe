@@ -30,6 +30,7 @@ public:
   bool operator==(const Number& n) const;
   bool operator<(const Number& n) const;
   std::size_t untypedHash() const;
+  void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 
 }

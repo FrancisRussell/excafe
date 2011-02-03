@@ -64,6 +64,11 @@ Expr Number::subs(const Expr::subst_map& map) const
   return clone();
 }
 
+void Number::accept(NumericExpressionVisitor<Symbol>& v) const
+{
+  v.visitConstant(value);
+}
+
 }
 
 }

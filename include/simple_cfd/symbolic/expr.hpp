@@ -4,6 +4,8 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include "symbolic_fwd.hpp"
+#include <simple_cfd/numeric/expression.hpp>
+#include <simple_cfd/numeric/expression_visitor.hpp>
 
 namespace cfd
 {
@@ -11,7 +13,7 @@ namespace cfd
 namespace symbolic
 {
 
-class Expr
+class Expr : public NumericExpression<Symbol>
 {
 public:
   typedef boost::shared_ptr<const Basic> ref_t;
@@ -41,6 +43,7 @@ public:
   const Basic& internal() const;
   Expr subs(const subst_map& map) const;
   void accept(Visitor& v) const;
+  void accept(NumericExpressionVisitor<Symbol>& v) const;
   void traverse(Visitor& v) const;
   void swap(Expr& e);
   Expr expand() const;

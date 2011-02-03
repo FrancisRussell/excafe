@@ -146,6 +146,11 @@ Expr Expr::expand() const
   return v.getResult().simplify();
 }
 
+void Expr::accept(NumericExpressionVisitor<Symbol>& v) const
+{
+  expr->accept(v);
+}
+
 Expr Expr::subs(const subst_map& map) const
 {
   return expr->subs(map).simplify();

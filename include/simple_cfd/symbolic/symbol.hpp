@@ -34,6 +34,7 @@ public:
  Expr integrate(const Symbol& s) const;
  Expr subs(const Expr::subst_map& map) const;
  std::size_t untypedHash() const;
+ void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 
 }

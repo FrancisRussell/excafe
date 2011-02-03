@@ -85,6 +85,22 @@ Sum Sum::expandedProduct(const Sum& s) const
   return Sum(newTerms);
 }
 
+void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
+{
+  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  {
+    d.first.accept(v);
+    if (d.second != 1)
+    {
+      v.visitConstant(static_cast<double>(d.second));
+      v.postProduct(2);
+    }
+  }
+
+  v.postSummation(terms.size());
+}
+
+
 }
 
 }

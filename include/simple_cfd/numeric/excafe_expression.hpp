@@ -40,100 +40,60 @@ public:
     return symbols;
   }
 };
-/*
+
 template<typename V>
-class GinacVisitorAdapter : public GiNaC::visitor, 
-                            public GiNaC::mul::visitor, 
-                            public GiNaC::add::visitor, 
-                            public GiNaC::power::visitor, 
-                            public GiNaC::symbol::visitor,
-                            public GiNaC::numeric::visitor,
-                            public GiNaC::basic::visitor
+class ExcafeVisitorAdapter : public NumericExpressionVisitor<symbolic::Symbol>
 {
 private:
-  typedef V variable_t;
-  NumericExpressionVisitor<variable_t>& visitor;
-
-  void visitChildren(const GiNaC::expairseq& e)
-  {
-    for(std::size_t index=0; index<e.nops(); ++index)
-      e.op(index).accept(*this);
-  }
+   typedef NumericExpressionVisitor<symbolic::Symbol> parent_t;
+   typedef V variable_t;
+   NumericExpressionVisitor<variable_t>& visitor;
 
 public:
-  GinacVisitorAdapter(NumericExpressionVisitor<variable_t>& v) : visitor(v)
-  {
-  }
+   ExcafeVisitorAdapter(NumericExpressionVisitor<variable_t>& v) : visitor(v)
+   {
+   }
 
-  void visit(const GiNaC::mul& b)
-  {
-    visitChildren(b);
-    visitor.postProduct(b.nops());
-  }
+   void visitConstant(const parent_t::value_t& value)
+   {
+     visitor.visitConstant(value);
+   }
 
-  void visit(const GiNaC::add& a)
-  {
-    visitChildren(a);
-    visitor.postSummation(a.nops());
-  }
+   void visitExponent(const int n)
+   {
+     visitor.visitExponent(n);
+   }
 
-  void visit(const GiNaC::symbol& s)
-  {
-    detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
-    visitor.visitVariable(mapper.getKey(s));
-  }
+   void postSummation(const std::size_t n)
+   {
+     visitor.postSummation(n);
+   }
 
-  void visit(const GiNaC::numeric& n)
-  {
-    const cln::cl_F value = cln::cl_float(cln::realpart(n.to_cl_N()));
-    visitor.visitConstant(value);
-  }
+   void postProduct(const std::size_t n)
+   {
+     visitor.postProduct(n);
+   }
 
-  void visit(const GiNaC::power& p)
-  {
-    p.op(0).accept(*this);
-    const GiNaC::ex exponent = p.op(1);
-
-    if (!GiNaC::is_a<GiNaC::numeric>(exponent))
-    {
-      CFD_EXCEPTION("NumericExpressionVisitor interface cannot handle non-numeric exponent.");
-    }
-    else
-    {
-      const GiNaC::numeric exponentNumeric = GiNaC::ex_to<GiNaC::numeric>(exponent);
-      if (!exponentNumeric.is_integer())
-      {
-        CFD_EXCEPTION("NumericExpressionVisitor interface cannot handle non-integer exponent.");
-      }
-      else
-      {
-        visitor.visitExponent(exponentNumeric.to_long());
-      }
-    }
-  }
-
-  void visit(const GiNaC::basic& b)
-  {
-    std::ostringstream error;
-    error << "Cannot handle " << b << " using NumericExpressionVisitor interface.";
-    CFD_EXCEPTION(error.str());
-  }
+   void visitVariable(const symbolic::Symbol& v)
+   {
+     detail::ExcafeMapper<variable_t>& mapper(detail::ExcafeMapper<variable_t>::instance());
+     visitor.visitVariable(mapper.getKey(v));
+   }
 };
-*/
 
 }
 template<typename V>
-class ExcafeExpression /*: public NumericExpression<V>,
+class ExcafeExpression : public NumericExpression<V>,
                         boost::arithmetic<ExcafeExpression<V>, double,
                         boost::arithmetic<ExcafeExpression<V>
-                        > >*/
+                        > >
 {
 public:
   typedef double                                                value_type;
   typedef V                                                     variable_t;
-//  typedef OptimisedPolynomialFraction<variable_t>             optimised_t;
+  typedef ExcafeExpression<variable_t>                          optimised_t;
   typedef detail::ExcafeValueMap<variable_t, ExcafeExpression>  value_map;
-//  friend class detail::GinacValueMap<variable_t, ExcafeExpression>;
+  friend class detail::ExcafeValueMap<variable_t, ExcafeExpression>;
 
 private:
   typedef symbolic::Expr    expr_t;
@@ -241,13 +201,13 @@ public:
     expr /= e.expr;
     return *this;
   }
-/*
+
   void accept(NumericExpressionVisitor<variable_t>& v) const
   {
-    GinacVisitorAdapter<variable_t> adapter(v);
+    ExcafeVisitorAdapter<variable_t> adapter(v);
     expr.accept(adapter);
   }
-*/
+
   ExcafeExpression derivative(const variable_t& variable) const
   {
     return ExcafeExpression(expr.derivative(getSymbol(variable)));
@@ -270,16 +230,11 @@ public:
     return ExcafeExpression(expr.subs(valueMap.getReference()));
   }
 
-/*
   optimised_t optimise() const
   {
-    const ExcafeExpression normalised(expr.normal());
-    const PolynomialFraction<variable_t> polyFraction = 
-      cfd::detail::convert_expression< PolynomialFraction<variable_t> >(normalised);
-
-    return optimised_t(polyFraction);
+    return ExcafeExpression(expr.simplify());
   }
-*/
+
   ExcafeExpression normalised() const
   {
     return *this;
@@ -288,7 +243,7 @@ public:
   std::set<variable_t> getVariables() const
   {
     ExcafeSymbolCollector collector;
-    //expr.traverse(collector);
+    expr.traverse(collector);
 
     const std::set<symbolic::Symbol> symbols(collector.getSymbols());
     std::set<variable_t> variables;
