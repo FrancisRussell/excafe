@@ -88,11 +88,6 @@ public:
     return terms.size();
   }
 
-  virtual bool isNumber() const
-  {
-    return false;
-  }
-
   bool operator<(const child_type& s) const
   {
     return terms < s.terms;

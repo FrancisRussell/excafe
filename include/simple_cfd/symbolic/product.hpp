@@ -54,6 +54,7 @@ public:
   Expr integrate(const Symbol& s) const;
   Expr simplify() const;
   Expr expand() const;
+  Expr eval() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 

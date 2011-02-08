@@ -83,7 +83,7 @@ public:
 
   void visit(const GiNaC::numeric& n)
   {
-    const cln::cl_F value = cln::cl_float(cln::realpart(n.to_cl_N()));
+    const cln::cl_R value = cln::realpart(n.to_cl_N());
     visitor.visitConstant(value);
   }
 

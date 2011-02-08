@@ -2,6 +2,7 @@
 #include <string>
 #include <simple_cfd/numeric/polynomial.hpp>
 #include <simple_cfd/numeric/ginac_expression.hpp>
+#include <simple_cfd/numeric/excafe_expression.hpp>
 
 template<typename polynomial_t>
 void testPolynomial()
@@ -47,4 +48,9 @@ int main(int argc, char** argv)
 
   std::cout << "Testing cfd::GinacExpression<std::string>:" << std::endl;
   testPolynomial< cfd::GinacExpression<std::string> >();
+
+  std::cout << std::endl << std::endl;
+
+  std::cout << "Testing cfd::GinacExpression<std::string>:" << std::endl;
+  testPolynomial< cfd::ExcafeExpression<std::string> >();
 }

@@ -8,8 +8,6 @@
 #include <vector>
 #include "pair_seq.hpp"
 #include "expr.hpp"
-#include "number.hpp"
-#include <iostream>
 
 namespace cfd
 {
@@ -62,6 +60,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
   Sum expandedProduct(const Sum& s) const;
+  Expr eval() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 

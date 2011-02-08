@@ -2,6 +2,7 @@
 #include <cassert>
 #include <boost/foreach.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
 
 namespace cfd
 {
@@ -17,8 +18,8 @@ void ExpandVisitor::accept(const Sum& s)
     term.first.accept(*this);
     stack.push(Sum(term.second));
 
-    const Sum a = stack.top(); stack.pop();
-    const Sum b = stack.top(); stack.pop();
+    const Expr a = stack.top(); stack.pop();
+    const Expr b = stack.top(); stack.pop();
     reduction = reduction + a*b;
   }
 
@@ -27,8 +28,8 @@ void ExpandVisitor::accept(const Sum& s)
 
 void ExpandVisitor::accept(const Product& p)
 {
-  Sum dividend(Number(1));
-  Sum divisor(Number(1));
+  Sum dividend(Rational(1));
+  Sum divisor(Rational(1));
 
   BOOST_FOREACH(const Product::value_type& term, std::make_pair(p.begin(), p.end()))
   {

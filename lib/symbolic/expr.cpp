@@ -1,6 +1,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/basic.hpp>
-#include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/float.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
@@ -21,32 +22,40 @@ Expr::Expr(ref_t& e) : expr(e)
 {
 }
 
-Expr::Expr(const double s) : expr(new Number(s))
+Expr::Expr(const double s) : expr(new Float(s))
 {
 }
 
-Expr::Expr() : expr(new Number(0))
+Expr::Expr() : expr(new Rational(0))
 {
 }
 
-Expr operator+(const Expr& a, const Expr& b)
+Expr& Expr::operator+=(const Expr& e)
 {
-  return Sum(a, b).simplify();
+  Expr newExpr = Sum(*this, e).simplify();
+  std::swap(newExpr, *this);
+  return *this;
 }
 
-Expr operator-(const Expr& a, const Expr& b)
+Expr& Expr::operator-=(const Expr& e)
 {
-  return Sum::sub(a, b).simplify();
+  Expr newExpr = Sum::sub(*this, e).simplify();
+  std::swap(newExpr, *this);
+  return *this;
 }
 
-Expr operator*(const Expr& a, const Expr& b)
+Expr& Expr::operator*=(const Expr& e)
 {
-  return Product(a, b).simplify();
+  Expr newExpr = Product(*this, e).simplify();
+  std::swap(newExpr, *this);
+  return *this;
 }
 
-Expr operator/(const Expr& a, const Expr& b)
+Expr& Expr::operator/=(const Expr& e)
 {
-  return Product::div(a, b).simplify();
+  Expr newExpr = Product::div(*this, e).simplify();
+  std::swap(newExpr, *this);
+  return *this;
 }
 
 Expr& Expr::operator=(const Expr& e)
@@ -123,7 +132,7 @@ Expr Expr::integrate(const Symbol& s) const
   return expr->integrate(s).simplify();
 }
 
-Expr Expr::integrate(const Symbol& s, const Number& a, const Number& b) const
+Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
 {
   const Expr integrated = expr->integrate(s);
 
@@ -159,6 +168,11 @@ Expr Expr::subs(const subst_map& map) const
 Expr pow(const Expr& e, const int power)
 {
   return Product::pow(e, power).simplify();
+}
+
+Expr Expr::eval() const
+{
+  return expr->eval();
 }
 
 }

@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_SYMBOLIC_EXPR_HPP
 
 #include <boost/shared_ptr.hpp>
+#include <boost/operators.hpp>
 #include <map>
 #include "symbolic_fwd.hpp"
 #include <simple_cfd/numeric/expression.hpp>
@@ -13,7 +14,8 @@ namespace cfd
 namespace symbolic
 {
 
-class Expr : public NumericExpression<Symbol>
+class Expr : public NumericExpression<Symbol>, 
+                    boost::arithmetic<Expr>
 {
 public:
   typedef boost::shared_ptr<const Basic> ref_t;
@@ -32,6 +34,10 @@ public:
   bool operator<(const Expr& e) const;
   bool operator==(const Expr& e) const;
   bool operator!=(const Expr& e) const;
+  Expr& operator+=(const Expr& e);
+  Expr& operator-=(const Expr& e);
+  Expr& operator/=(const Expr& e);
+  Expr& operator*=(const Expr& e);
   Expr operator-() const;
   bool has(const Expr& e) const;
   void write(std::ostream& o) const;
@@ -39,7 +45,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
   Expr integrate(const Symbol& s) const;
-  Expr integrate(const Symbol& s, const Number& a, const Number& b) const;
+  Expr integrate(const Symbol& s, const Float& a, const Float& b) const;
   const Basic& internal() const;
   Expr subs(const subst_map& map) const;
   void accept(Visitor& v) const;
@@ -47,13 +53,10 @@ public:
   void traverse(Visitor& v) const;
   void swap(Expr& e);
   Expr expand() const;
+  Expr eval() const;
 };
 
 std::size_t hash_value(const Expr& e);
-Expr operator+(const Expr& a, const Expr& b);
-Expr operator-(const Expr& a, const Expr& b);
-Expr operator*(const Expr& a, const Expr& b);
-Expr operator/(const Expr& a, const Expr& b);
 Expr pow(const Expr& e, int power);
 std::ostream& operator<<(std::ostream& o, const Expr& e);
 

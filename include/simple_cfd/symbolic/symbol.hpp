@@ -27,7 +27,7 @@ public:
  std::size_t nops() const;
  void write(std::ostream& o) const;
  Expr derivative(const Symbol& s) const;
- bool isNumber() const;
+ Expr eval() const;
  bool operator==(const Symbol& s) const;
  bool operator<(const Symbol& s) const;
  bool has(const Expr& e) const;

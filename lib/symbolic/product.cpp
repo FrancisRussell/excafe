@@ -1,6 +1,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
+#include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/exception.hpp>
 #include <map>
@@ -17,7 +18,7 @@ namespace symbolic
 
 Expr Product::null() const
 {
-  return Expr(new Number(1));
+  return Expr(new Rational(1));
 }
 
 void Product::write(std::ostream& o) const
@@ -55,7 +56,7 @@ Expr Product::derivative(const Symbol& s) const
   {
     TermMap newTerm(begin(), end());
     newTerm.erase(d.first);
-    ++newTerm[Number(d.second)];
+    ++newTerm[Rational(d.second)];
     ++newTerm[d.first.derivative(s)];
     newTerm[d.first]+=d.second-1;
     summation = summation + Product(newTerm);
@@ -95,7 +96,7 @@ Expr Product::integrate(const Symbol& s) const
     if (expr == s)
     {
       /* Directly handle variables raised to an exponent */
-      dependentIntegral = Product(Product::pow(Number(exponent+1), -1), Product::pow(s, exponent+1));
+      dependentIntegral = Product(Rational(1, exponent+1), Product::pow(s, exponent+1));
     }
     else if (exponent == 0)
     {
@@ -131,7 +132,7 @@ Expr Product::integrate(const Symbol& s) const
 
 Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 {
-  const Number zero(0);
+  const Rational zero(0);
   int sign = 1;
   Expr result = zero;
 
@@ -151,7 +152,7 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 
 Expr Product::simplify() const
 {
-  const Number zero(0);
+  const Rational zero(0);
   const Expr simplified = PairSeq<Product>::simplify();
   const Basic& basic = simplified.internal();
 
@@ -163,7 +164,7 @@ Expr Product::simplify() const
     {
       // Eliminate 0^n where n>0.
       if (termPair.first == zero && termPair.second > 0)
-        return Number(0);
+        return Rational(0);
     }
   }
   
@@ -180,6 +181,45 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
   }
 
   v.postProduct(terms.size());
+}
+
+Expr Product::eval() const
+{
+  Float floatPart(1.0);
+  TermMap prod;
+
+  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  {
+    const Expr evaluated = d.first.eval();
+    const Basic& value = evaluated.internal();
+    if (getType(value) == getType(floatPart))
+    {
+      if (d.second > 0)
+      {
+        for (int i=0; i<d.second; ++i)
+          floatPart *= static_cast<const Float&>(value);
+      }
+      else
+      {
+        for (int i=0; i<-d.second; ++i)
+          floatPart /= static_cast<const Float&>(value);
+      }
+    }
+    else
+    {
+      prod[d.first] += d.second;
+    }
+  }
+  
+  if (prod.empty())
+  {
+    return floatPart;
+  }
+  else
+  {
+    ++prod[floatPart];
+    return Product(prod);
+  }
 }
 
 }

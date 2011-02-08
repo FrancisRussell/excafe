@@ -14,7 +14,7 @@
 #include "excafe_value_map.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 
 namespace cfd
@@ -98,7 +98,7 @@ public:
 private:
   typedef symbolic::Expr    expr_t;
   typedef symbolic::Symbol  symbol_t;
-  typedef symbolic::Number  numeric_t;
+  typedef symbolic::Float   numeric_t;
   
   expr_t expr;
 
@@ -131,7 +131,7 @@ public:
   {
   }
 
-  ExcafeExpression(const value_type c, const variable_t& v) : expr(c * getSymbol(v)) 
+  ExcafeExpression(const value_type c, const variable_t& v) : expr(expr_t(c) * getSymbol(v)) 
   {
   }
 
@@ -266,22 +266,20 @@ public:
     expr.swap(e.expr);
   }
 
-/*
   value_type evaluate(const value_map& variableValues) const
   {
-    const ginac_expr_t evaluated = GiNaC::evalf(expr.subs(variableValues.getReference()));
+    const expr_t evaluated = expr.subs(variableValues.getReference());
+    const symbolic::Float* const f = dynamic_cast<const symbolic::Float*>(&expr.internal());
 
-    if (GiNaC::is_a<GiNaC::numeric>(evaluated))
+    if (f!=NULL)
     {
-      const GiNaC::numeric numericValue = GiNaC::ex_to<GiNaC::numeric>(evaluated);
-      return cfd::numeric_cast<value_type>(cln::cl_float(cln::realpart(numericValue.to_cl_N())));
+      return f->toDouble();
     }
     else
     {
-      CFD_EXCEPTION("Evaluation of GiNaC expression failed to produce a numeric value.");
+      CFD_EXCEPTION("Evaluation of Excafe expression failed to produce a numeric value.");
     }
   }
-*/
 };
 
 template<typename V>

@@ -10,7 +10,8 @@ namespace symbolic
 class Expr;
 class Basic;
 class Symbol;
-class Number;
+class Float;
+class Rational;
 class Visitor;
 template<typename T> class AbstractBasic;
 template<typename T> class PairSeq;

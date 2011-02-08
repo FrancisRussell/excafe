@@ -1,6 +1,6 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/number.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <boost/functional/hash.hpp>
 #include <iostream>
@@ -30,14 +30,9 @@ void Symbol::write(std::ostream& o) const
 Expr Symbol::derivative(const Symbol& s) const
 {
   if (serial == s.serial)
-    return Expr(new Number(1));
+    return Expr(new Rational(1));
   else
-    return Expr(new Number(0));
-}
-
-bool Symbol::isNumber() const
-{
-  return false;
+    return Expr(new Rational(0));
 }
 
 bool Symbol::operator==(const Symbol& s) const
@@ -74,12 +69,17 @@ Expr Symbol::subs(const Expr::subst_map& map) const
   }
 }
 
+Expr Symbol::eval() const
+{
+  return clone();
+}
+
 Expr Symbol::integrate(const Symbol& s) const
 {
   if (serial != s.serial)
     return Product(*this, s);
   else
-    return Product(Product::pow(Number(2), -1), Product::pow(s, 2));
+    return Product(Rational(1,2), Product::pow(s, 2));
 }
 
 void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const
