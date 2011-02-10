@@ -21,9 +21,9 @@ private:
   std::stack<Sum> stack;
 
 public:
-  void accept(const Sum& s);
-  void accept(const Product& p);
-  void accept(const Basic& b);
+  void visit(const Sum& s);
+  void visit(const Product& p);
+  void visit(const Basic& b);
   Sum getResult() const;
 };
 

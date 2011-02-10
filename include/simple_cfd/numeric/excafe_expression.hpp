@@ -30,6 +30,10 @@ private:
   std::set<symbolic::Symbol> symbols;
 
 public:
+  void visit(const symbolic::Basic& b)
+  {
+  }
+
   void visit(const symbolic::Symbol& s) 
   {
     symbols.insert(s);

@@ -43,7 +43,7 @@ public:
   class Visitor
   {
   public:
-    virtual void accept(const child_type& c) = 0;
+    virtual void visit(const child_type& c) = 0;
   };
 
   bool operator==(const Basic& b) const
@@ -112,9 +112,9 @@ public:
   void accept(symbolic::Visitor& v) const
   {
     if (Visitor* s = dynamic_cast<Visitor*>(&v))
-      s->accept(asChild(*this));
+      s->visit(asChild(*this));
     else
-      v.accept(*this);
+      v.visit(*this);
   }
 };
 

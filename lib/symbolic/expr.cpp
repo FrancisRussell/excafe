@@ -135,7 +135,6 @@ Expr Expr::integrate(const Symbol& s) const
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
 {
   const Expr integrated = expr->integrate(s);
-
   subst_map aMap, bMap;
   aMap[s] = a;
   bMap[s] = b;
@@ -153,6 +152,11 @@ Expr Expr::expand() const
   ExpandVisitor v;
   expr->accept(v);
   return v.getResult().simplify();
+}
+
+void Expr::traverse(Visitor& v) const
+{
+  expr->accept(v);
 }
 
 void Expr::accept(NumericExpressionVisitor<Symbol>& v) const

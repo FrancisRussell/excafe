@@ -10,7 +10,7 @@ namespace cfd
 namespace symbolic
 {
 
-void ExpandVisitor::accept(const Sum& s)
+void ExpandVisitor::visit(const Sum& s)
 {
   Sum reduction;
   BOOST_FOREACH(const Sum::value_type& term, std::make_pair(s.begin(), s.end()))
@@ -26,7 +26,7 @@ void ExpandVisitor::accept(const Sum& s)
   stack.push(reduction);
 }
 
-void ExpandVisitor::accept(const Product& p)
+void ExpandVisitor::visit(const Product& p)
 {
   Sum dividend(Rational(1));
   Sum divisor(Rational(1));
@@ -47,7 +47,7 @@ void ExpandVisitor::accept(const Product& p)
   stack.push(Sum(quotient));
 }
 
-void ExpandVisitor::accept(const Basic& b)
+void ExpandVisitor::visit(const Basic& b)
 {
   stack.push(Sum(b.clone()));
 }

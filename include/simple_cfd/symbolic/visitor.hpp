@@ -11,7 +11,7 @@ namespace symbolic
 // Base class for acyclic visitor pattern
 class Visitor {
 public:
-  virtual void accept(const Basic& b) = 0;
+  virtual void visit(const Basic& b) = 0;
 };
 
 
