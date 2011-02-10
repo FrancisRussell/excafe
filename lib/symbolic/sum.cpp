@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
@@ -63,12 +64,16 @@ Expr Sum::derivative(const Symbol& s) const
 
 Expr Sum::integrate(const Symbol& s) const
 {
-  TermMap newTerms;
+  TermMap dependentTerms;
+  TermMap independentTerms;
   BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
   {
-    newTerms.insert(std::make_pair(e.first.integrate(s), e.second));
+    if (e.first.has(s))
+      dependentTerms.insert(std::make_pair(e.first.integrate(s), e.second));
+    else
+      independentTerms.insert(e);
   }
-  return Sum(newTerms);
+  return Sum(dependentTerms) + Product(Sum(independentTerms), s);
 }
 
 Sum Sum::expandedProduct(const Sum& s) const
