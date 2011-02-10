@@ -23,27 +23,31 @@ namespace cfd
 namespace 
 {
 
-class ExcafeSymbolCollector : public symbolic::Visitor, 
-                              public symbolic::Symbol::Visitor
+template<typename V>
+class ExcafeSymbolCollector : public NumericExpressionVisitor<V>
 {
 private:
-  std::set<symbolic::Symbol> symbols;
+  typedef V variable_t;
+  typedef NumericExpressionVisitor<variable_t> parent_t;
+  std::set<variable_t> symbols;
 
 public:
-  void visit(const symbolic::Basic& b)
+  void visitConstant(const typename parent_t::value_t& value) {}
+  void visitExponent(const int n) {}
+  void postSummation(const std::size_t n) {}
+  void postProduct(const std::size_t n) {}
+
+  void visitVariable(const variable_t& v)
   {
+    symbols.insert(v);
   }
 
-  void visit(const symbolic::Symbol& s) 
-  {
-    symbols.insert(s);
-  }
-
-  std::set<symbolic::Symbol> getSymbols() const
+  std::set<variable_t> getSymbols() const
   {
     return symbols;
   }
 };
+
 
 template<typename V>
 class ExcafeVisitorAdapter : public NumericExpressionVisitor<symbolic::Symbol>
@@ -246,18 +250,9 @@ public:
 
   std::set<variable_t> getVariables() const
   {
-    ExcafeSymbolCollector collector;
-    expr.traverse(collector);
-
-    const std::set<symbolic::Symbol> symbols(collector.getSymbols());
-    std::set<variable_t> variables;
-
-    BOOST_FOREACH(const symbolic::Symbol& s, symbols)
-    {
-      variables.insert(getVariable(s));
-    }
-
-    return variables;
+    ExcafeSymbolCollector<variable_t> collector;
+    accept(collector);
+    return collector.getSymbols();
   }
 
   void write(std::ostream& o) const
@@ -272,8 +267,9 @@ public:
 
   value_type evaluate(const value_map& variableValues) const
   {
-    const expr_t evaluated = expr.subs(variableValues.getReference());
-    const symbolic::Float* const f = dynamic_cast<const symbolic::Float*>(&expr.internal());
+    const expr_t substituted = expr.subs(variableValues.getReference());
+    const expr_t evaluated = substituted.eval();
+    const symbolic::Float* const f = dynamic_cast<const symbolic::Float*>(&evaluated.internal());
 
     if (f!=NULL)
     {
