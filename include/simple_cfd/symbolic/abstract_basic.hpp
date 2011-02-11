@@ -15,6 +15,10 @@ namespace symbolic
 template<typename T>
 class AbstractBasic : public Basic
 {
+private:
+  mutable bool isHashed;
+  mutable std::size_t hash;
+
 protected:
   typedef T child_type;
 
@@ -62,24 +66,8 @@ public:
     }
   }
 
-  bool operator<(const Basic& b) const
+  AbstractBasic() : isHashed(false)
   {
-    if (this == &b)
-    {
-      return false;
-    }
-    else if (getType(*this) < getType(b))
-    {
-      return true;
-    }
-    else if (getType(*this) == getType(b))
-    {
-      return asChild(*this) < asChild(b);
-    }
-    else
-    {
-      return false;
-    }
   }
 
   Expr clone() const
@@ -99,8 +87,13 @@ public:
 
   std::size_t hashValue() const
   {
-    std::size_t hash = getTypeHash();
-    boost::hash_combine(hash, asChild(*this).untypedHash());
+    if (!isHashed)
+    {
+      hash = 0;
+      boost::hash_combine(hash, getTypeHash());
+      boost::hash_combine(hash, asChild(*this).untypedHash());
+      isHashed=true;
+    }
     return hash;
   }
 

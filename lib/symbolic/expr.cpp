@@ -69,12 +69,6 @@ void Expr::write(std::ostream& o) const
   o << *expr;
 }
 
-bool Expr::operator<(const Expr& e) const
-{
-  const bool result = *expr < *e.expr;
-  return result;
-}
-
 bool Expr::operator==(const Expr& e) const
 {
   const bool result = *expr == *e.expr;

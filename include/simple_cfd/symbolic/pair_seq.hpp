@@ -2,7 +2,7 @@
 #define SIMPLE_CFD_SYMBOLIC_PAIR_SEQ_HPP
 
 #include <cstddef>
-#include <map>
+#include <boost/unordered_map.hpp>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -21,7 +21,7 @@ template<typename T>
 class PairSeq : public AbstractBasic<T>
 {
 protected:
-  typedef std::map<Expr, int> TermMap;
+  typedef boost::unordered_map<Expr, int> TermMap;
 
 protected:
   typedef T child_type;
@@ -86,11 +86,6 @@ public:
   virtual std::size_t nops() const
   {
     return terms.size();
-  }
-
-  bool operator<(const child_type& s) const
-  {
-    return terms < s.terms;
   }
 
   bool operator==(const child_type& s) const

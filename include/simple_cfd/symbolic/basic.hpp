@@ -28,7 +28,6 @@ public:
   virtual Expr eval() const = 0;
   virtual std::size_t hashValue() const = 0;
   virtual bool operator==(const Basic& b) const = 0;
-  virtual bool operator<(const Basic& b) const = 0;
   virtual operator Expr() const = 0;
   virtual Expr subs(const Expr::subst_map& map) const = 0;
   virtual bool has(const Expr& e) const = 0;

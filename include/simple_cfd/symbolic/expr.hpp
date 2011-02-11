@@ -31,7 +31,6 @@ public:
   Expr();
   Expr(const double s);
   Expr& operator=(const Expr& e);
-  bool operator<(const Expr& e) const;
   bool operator==(const Expr& e) const;
   bool operator!=(const Expr& e) const;
   Expr& operator+=(const Expr& e);
