@@ -45,6 +45,18 @@ protected:
     return static_cast<child_type&>(b);
   }
 
+  bool operator==(const AbstractBasic& b) const
+  {
+    return true;
+  }
+
+  AbstractBasic& operator=(const AbstractBasic& a)
+  {
+    isHashed = a.isHashed;
+    hash = a.hash;
+    return *this;
+  }
+
 public:
   class Visitor
   {
@@ -57,6 +69,10 @@ public:
     if (this == &b)
     {
       return true;
+    }
+    else if (hashValue() != b.hashValue())
+    {
+      return false;
     }
     else if (getType(*this) == getType(b))
     {
@@ -75,13 +91,6 @@ public:
   AbstractBasic(const AbstractBasic& a) : 
     isHashed(a.isHashed), hash(a.hash), heapAllocated(false)
   {
-  }
-
-  AbstractBasic& operator=(const AbstractBasic& a)
-  {
-    isHashed = a.isHashed;
-    hash = a.hash;
-    return *this;
   }
 
   void markHeapAllocated()
