@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_SYMBOLIC_ABSTRACT_BASIC_HPP
 
 #include <boost/functional/hash.hpp>
+#include <boost/shared_ptr.hpp>
 #include <simple_cfd/util/type_info.hpp>
 #include "basic.hpp"
 #include "visitor.hpp"
@@ -18,6 +19,7 @@ class AbstractBasic : public Basic
 private:
   mutable bool isHashed;
   mutable std::size_t hash;
+  bool heapAllocated;
 
 protected:
   typedef T child_type;
@@ -66,13 +68,39 @@ public:
     }
   }
 
-  AbstractBasic() : isHashed(false)
+  AbstractBasic() : isHashed(false), heapAllocated(false)
   {
+  }
+
+  AbstractBasic(const AbstractBasic& a) : 
+    isHashed(a.isHashed), hash(a.hash), heapAllocated(false)
+  {
+  }
+
+  AbstractBasic& operator=(const AbstractBasic& a)
+  {
+    isHashed = a.isHashed;
+    hash = a.hash;
+    return *this;
+  }
+
+  void markHeapAllocated()
+  {
+    heapAllocated = true;
   }
 
   Expr clone() const
   {
-    return Expr(new child_type(asChild(*this)));
+    if (heapAllocated)
+    {
+      Expr::ref_t ref = this->shared_from_this();
+      return Expr(ref);
+    }
+    else
+    {
+      child_type* const cloned = new child_type(asChild(*this));
+      return Expr(cloned);
+    }
   }
 
   Expr simplify() const

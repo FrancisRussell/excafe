@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <ostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include "symbolic_fwd.hpp"
 #include "expr.hpp"
 #include <simple_cfd/util/type_info.hpp>
@@ -16,9 +17,10 @@ namespace cfd
 namespace symbolic
 {
 
-class Basic
+class Basic : public boost::enable_shared_from_this<Basic>
 {
 public:
+  virtual void markHeapAllocated() = 0;
   virtual std::size_t nops() const = 0;
   virtual void write(std::ostream& o) const = 0;
   virtual Expr clone() const = 0;

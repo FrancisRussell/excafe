@@ -7,6 +7,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <ostream>
+#include <cassert>
 
 namespace cfd
 {
@@ -16,18 +17,22 @@ namespace symbolic
 
 Expr::Expr(Basic* e) : expr(e)
 {
+  e->markHeapAllocated();
 }
 
 Expr::Expr(ref_t& e) : expr(e)
 {
+  // Hopefully, e has already been marked as heap allocated. We cannot set it since e is const.
 }
 
 Expr::Expr(const double s) : expr(new Float(s))
 {
+  //TODO: mark as heap allocated
 }
 
 Expr::Expr() : expr(new Rational(0))
 {
+  //TODO: mark as heap allocated
 }
 
 Expr& Expr::operator+=(const Expr& e)
