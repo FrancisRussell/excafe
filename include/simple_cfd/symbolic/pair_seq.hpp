@@ -55,7 +55,7 @@ protected:
 
       if (AbstractBasic<T>::getType(simplified.internal()) == AbstractBasic<T>::getType(*this))
       {
-        const child_type& child(static_cast<const child_type&>(simplified.internal()));
+        const child_type& child = static_cast<const child_type&>(simplified.internal());
         addSimplifiedTerms(multiplier*term.second, newTermMap, child);
       }
       else if (simplified != nullExpr)

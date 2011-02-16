@@ -18,12 +18,12 @@ void ExpandVisitor::visit(const Sum& s)
     term.first.accept(*this);
     stack.push(Sum(term.second));
 
-    const Expr a = stack.top(); stack.pop();
-    const Expr b = stack.top(); stack.pop();
-    reduction = reduction + a*b;
+    const Sum a = stack.top(); stack.pop();
+    const Sum b = stack.top(); stack.pop();
+    reduction = reduction + a.expandedProduct(b);
   }
 
-  stack.push(reduction);
+  stack.push(reduction.simplify());
 }
 
 void ExpandVisitor::visit(const Product& p)
@@ -44,12 +44,17 @@ void ExpandVisitor::visit(const Product& p)
   }
 
   const Product quotient(dividend, Product::pow(divisor, -1));
-  stack.push(Sum(quotient));
+  const Expr simplifiedQuotient = quotient.simplify();
+  
+  if (is_a<Sum>(simplifiedQuotient))
+    stack.push(convert_to<Sum>(simplifiedQuotient));
+  else
+    stack.push(Sum(simplifiedQuotient));
 }
 
 void ExpandVisitor::visit(const Basic& b)
 {
-  stack.push(Sum(b.clone()));
+  stack.push(Sum(b.simplify()));
 }
 
 Sum ExpandVisitor::getResult() const

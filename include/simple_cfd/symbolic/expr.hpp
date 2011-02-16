@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/operators.hpp>
 #include <map>
+#include <cassert>
 #include "symbolic_fwd.hpp"
 #include <simple_cfd/numeric/expression.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
@@ -21,6 +22,8 @@ public:
   typedef boost::shared_ptr<const Basic> ref_t;
 
 private:
+  template<typename T> friend bool is_a(const Expr&);
+  template<typename T> friend const T& convert_to(const Expr&);
   ref_t expr;
 
 public:
@@ -54,6 +57,19 @@ public:
   Expr expand() const;
   Expr eval() const;
 };
+
+template<typename T>
+inline bool is_a(const Expr& e)
+{
+  return dynamic_cast<const T*>(e.expr.get()) != NULL;
+}
+
+template<typename T>
+inline const T& convert_to(const Expr& e)
+{
+  assert(is_a<T>(e));
+  return static_cast<const T&>(*e.expr);
+}
 
 std::size_t hash_value(const Expr& e);
 Expr pow(const Expr& e, int power);
