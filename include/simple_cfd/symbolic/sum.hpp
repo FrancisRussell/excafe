@@ -46,7 +46,7 @@ public:
   {
   }
   
-  Sum(const Expr& a)
+  explicit Sum(const Expr& a)
   {
     ++terms[a];
   }
