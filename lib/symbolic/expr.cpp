@@ -87,7 +87,7 @@ bool Expr::operator!=(const Expr& e) const
 
 Expr Expr::operator-() const
 {
-  return Sum::integer_multiple(*this, -1);
+  return Sum::integer_multiple(*this, -1).simplify();
 }
 
 bool Expr::has(const Expr& e) const

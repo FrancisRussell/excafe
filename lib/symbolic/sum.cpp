@@ -88,7 +88,7 @@ Sum Sum::expandedProduct(const Sum& s) const
     }
   }
 
-  return Sum(newTerms);
+  return Sum(newTerms).simplify();
 }
 
 void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
