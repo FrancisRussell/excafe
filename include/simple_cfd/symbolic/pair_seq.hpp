@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <boost/unordered_map.hpp>
+#include <boost/utility.hpp>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -26,17 +27,18 @@ protected:
 protected:
   typedef T child_type;
   TermMap terms;
+  bool simplified;
 
 protected:
-  PairSeq()
+  PairSeq() : simplified(false)
   {
   }
 
-  PairSeq(const TermMap& _terms): terms(_terms)
+  PairSeq(const TermMap& _terms): terms(_terms), simplified(false)
   {
   }
 
-  PairSeq(const Expr& a, const Expr& b) 
+  PairSeq(const Expr& a, const Expr& b) : simplified(false)
   {
     ++terms[a];
     ++terms[b];
@@ -49,22 +51,30 @@ protected:
     const Expr nullExpr = null();
     BOOST_FOREACH(const TermMap::value_type term, std::make_pair(seq.begin(), seq.end()))
     {
-      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
-      if (term.second != 0)
-      {
-        const Expr simplified = term.first.simplify();
+      const Expr simplified = term.first.simplify();
 
-        if (AbstractBasic<T>::getType(simplified.internal()) == AbstractBasic<T>::getType(*this))
-        {
-          const child_type& child(static_cast<const child_type&>(simplified.internal()));
-          addSimplifiedTerms(multiplier*term.second, newTermMap, child);
-        }
-        else if (simplified != nullExpr)
-        {
-          // Terms equal that are 0 in a sum, or 1 in a product can be removed
-          newTermMap[simplified] += multiplier*term.second;
-        }
+      if (AbstractBasic<T>::getType(simplified.internal()) == AbstractBasic<T>::getType(*this))
+      {
+        const child_type& child(static_cast<const child_type&>(simplified.internal()));
+        addSimplifiedTerms(multiplier*term.second, newTermMap, child);
       }
+      else if (simplified != nullExpr)
+      {
+        // Terms equal that are 0 in a sum, or 1 in a product can be removed
+        newTermMap[simplified] += multiplier*term.second;
+      }
+    }
+
+    TermMap::iterator newIter(newTermMap.begin());
+    while(newIter != newTermMap.end())
+    {
+      const TermMap::iterator nextIter = boost::next(newIter);
+
+      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
+      if (newIter->second == 0)
+        newTermMap.erase(newIter);
+
+      newIter = nextIter;
     }
   }
 
@@ -95,6 +105,9 @@ public:
 
   Expr simplify() const
   {
+    if (simplified)
+      return this->clone();
+
     const Expr nullExpr = null();
     TermMap newTermMap;
     addSimplifiedTerms(1, newTermMap, static_cast<const child_type&>(*this));
@@ -109,7 +122,9 @@ public:
     }
     else
     {
-      return child_type(newTermMap);
+      child_type result(newTermMap);
+      result.simplified = true;
+      return result;
     }
   }
 
