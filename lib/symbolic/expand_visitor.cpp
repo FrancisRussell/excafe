@@ -10,6 +10,16 @@ namespace cfd
 namespace symbolic
 {
 
+void ExpandVisitor::push(const Expr& e)
+{
+  const Expr simplified = e.simplify();
+  
+  if (is_a<Sum>(simplified))
+    stack.push(convert_to<Sum>(simplified));
+  else
+    stack.push(Sum(simplified));
+}
+
 void ExpandVisitor::visit(const Sum& s)
 {
   Sum reduction;
@@ -22,8 +32,7 @@ void ExpandVisitor::visit(const Sum& s)
     const Sum b = stack.top(); stack.pop();
     reduction = reduction + a.expandedProduct(b);
   }
-
-  stack.push(reduction.simplify());
+  push(reduction);
 }
 
 void ExpandVisitor::visit(const Product& p)
@@ -44,17 +53,12 @@ void ExpandVisitor::visit(const Product& p)
   }
 
   const Product quotient(dividend, Product::pow(divisor, -1));
-  const Expr simplifiedQuotient = quotient.simplify();
-  
-  if (is_a<Sum>(simplifiedQuotient))
-    stack.push(convert_to<Sum>(simplifiedQuotient));
-  else
-    stack.push(Sum(simplifiedQuotient));
+  push(quotient);
 }
 
 void ExpandVisitor::visit(const Basic& b)
 {
-  stack.push(Sum(b.simplify()));
+  push(b);
 }
 
 Sum ExpandVisitor::getResult() const

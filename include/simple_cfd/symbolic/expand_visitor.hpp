@@ -19,6 +19,7 @@ class ExpandVisitor : public Visitor,
 {
 private:
   std::stack<Sum> stack;
+  void push(const Expr& e);
 
 public:
   void visit(const Sum& s);
