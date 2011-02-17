@@ -47,24 +47,28 @@ bool Float::operator==(const Float& n) const
 
 Float& Float::operator+=(const Float& n)
 {
+  invalidateHash();
   value += n.value;
   return *this;
 }
 
 Float& Float::operator-=(const Float& n)
 {
+  invalidateHash();
   value -= n.value;
   return *this;
 }
 
 Float& Float::operator/=(const Float& n)
 {
+  invalidateHash();
   value /= n.value;
   return *this;
 }
 
 Float& Float::operator*=(const Float& n)
 {
+  invalidateHash();
   value *= n.value;
   return *this;
 }

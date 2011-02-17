@@ -57,6 +57,11 @@ protected:
     return *this;
   }
 
+  void invalidateHash()
+  {
+    isHashed = false;
+  }
+
 public:
   class Visitor
   {
