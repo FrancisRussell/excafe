@@ -24,6 +24,7 @@ private:
   int denominator;
 
   void normalise();
+  static unsigned gcd(unsigned a, unsigned b);
 
 public:
   Rational(int value);

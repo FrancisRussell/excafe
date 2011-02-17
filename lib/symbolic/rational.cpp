@@ -152,11 +152,49 @@ void Rational::normalise()
     numerator = -numerator;
     denominator = -denominator;
   }
+
+  const unsigned factor = gcd(std::abs(numerator), std::abs(denominator));
+  numerator /= static_cast<int>(factor);
+  denominator /= static_cast<int>(factor);
 }
 
 Float Rational::toFloat() const
 {
   return Float::fromFraction(numerator, denominator);
+}
+
+unsigned Rational::gcd(unsigned u, unsigned v)
+{
+  if (u == 0 || v == 0)
+    return u | v;
+
+  unsigned shift;
+  for(shift=0; ((u | v) & 1) == 0; ++shift)
+  {
+    u >>= 1;
+    v >>= 1;
+  }
+
+  while ((u & 1) == 0)
+    u >>= 1;
+
+  do
+  {
+    while ((v & 1) == 0)
+      v >>= 1;
+
+    if (u > v)
+    {
+      u ^= v;
+      v ^= u;
+    }
+
+    v -= u;
+    v >>= 1;
+  }
+  while (v != 0);
+
+  return u << shift;
 }
 
 }
