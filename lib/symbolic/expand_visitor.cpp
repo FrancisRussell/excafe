@@ -22,7 +22,7 @@ void ExpandVisitor::push(const Expr& e)
 
 void ExpandVisitor::visit(const Sum& s)
 {
-  Sum reduction;
+  Sum reduction(s.getOverall());
   BOOST_FOREACH(const Sum::value_type& term, std::make_pair(s.begin(), s.end()))
   {
     term.first.accept(*this);
@@ -37,7 +37,7 @@ void ExpandVisitor::visit(const Sum& s)
 
 void ExpandVisitor::visit(const Product& p)
 {
-  Sum dividend(Rational(1));
+  Sum dividend(p.getOverall());
   Sum divisor(Rational(1));
 
   BOOST_FOREACH(const Product::value_type& term, std::make_pair(p.begin(), p.end()))

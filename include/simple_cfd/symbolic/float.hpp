@@ -14,12 +14,16 @@ namespace cfd
 namespace symbolic
 {
 
-class Float : public AbstractBasic<Float>, boost::arithmetic<Float>
+class Float : public AbstractBasic<Float>, 
+              boost::arithmetic<Float>,
+              boost::equality_comparable<Float>
 {
 private:
   double value;
 
 public:
+  static Float fromFraction(long numerator, long denominator);
+
   Float(const double _value);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;

@@ -14,11 +14,13 @@ namespace symbolic
 
 Rational::Rational(const int _value) : numerator(_value), denominator(1)
 {
+  normalise();
 }
 
 Rational::Rational(const int num, const int denom) : 
   numerator(num), denominator(denom)
 {
+  normalise();
 }
 
 std::size_t Rational::nops() const
@@ -87,7 +89,7 @@ Expr Rational::subs(const Expr::subst_map& map) const
 
 Expr Rational::eval() const
 {
-  return Float(numerator)/Float(denominator);
+  return toFloat().clone();
 }
 
 void Rational::accept(NumericExpressionVisitor<Symbol>& v) const
@@ -100,6 +102,61 @@ void Rational::accept(NumericExpressionVisitor<Symbol>& v) const
     v.visitExponent(-1);
     v.postProduct(2);
   }
+}
+
+Rational Rational::operator-() const
+{
+  return Rational(-numerator, denominator);
+}
+
+Rational& Rational::operator+=(const Rational& r)
+{
+  numerator = numerator * r.denominator + r.numerator * denominator;
+  denominator *= r.denominator;
+  normalise();
+  return *this;
+}
+
+Rational& Rational::operator-=(const Rational& r)
+{
+  *this += -r;
+  return *this;
+}
+
+Rational& Rational::operator*=(const Rational& r)
+{
+  numerator *= r.numerator;
+  denominator *= r.denominator;
+  normalise();
+  return *this;
+}
+
+
+Rational& Rational::operator/=(const Rational& r)
+{
+  numerator *= r.denominator;
+  denominator *= r.numerator;
+  normalise();
+  return *this;
+}
+
+void Rational::normalise()
+{
+  invalidateHash();
+
+  if (numerator == 0)
+    denominator = 1;
+
+  if (denominator < 0)
+  {
+    numerator = -numerator;
+    denominator = -denominator;
+  }
+}
+
+Float Rational::toFloat() const
+{
+  return Float::fromFraction(numerator, denominator);
 }
 
 }

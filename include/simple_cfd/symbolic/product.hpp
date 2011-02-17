@@ -27,7 +27,9 @@ private:
   {
   }
 
-  Expr null() const;
+  static Rational null();
+  static void combineOverall(Rational& overall, const Rational& other);
+  static Rational applyCoefficient(const Rational& t, const int coefficient);
 
 public:
   static Product pow(const Expr& base, const int exponent)

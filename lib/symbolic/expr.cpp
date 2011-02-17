@@ -133,7 +133,8 @@ Expr Expr::integrate(const Symbol& s) const
 
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
 {
-  const Expr integrated = expr->integrate(s);
+  std::cout << "expanded: " << expand() << std::endl << std::endl;
+  const Expr integrated = expand().integrate(s);
   subst_map aMap, bMap;
   aMap[s] = a;
   bMap[s] = b;

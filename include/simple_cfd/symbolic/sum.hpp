@@ -24,7 +24,9 @@ protected:
   {
   }
 
-  Expr null() const;
+  static Rational null();
+  static void combineOverall(Rational& overall, const Rational& other);
+  static Rational applyCoefficient(const Rational& t, const int coefficient);
   
 public:
   static Sum sub(const Expr& a, const Expr& b)

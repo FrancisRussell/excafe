@@ -16,22 +16,26 @@ namespace cfd
 namespace symbolic
 {
 
-Expr Product::null() const
+Rational Product::null()
 {
-  return Expr(new Rational(1));
+  return Rational(1);
 }
 
 void Product::write(std::ostream& o) const
 {
   if (begin() == end())
   {
-    o << "1.0";
+    o << getOverall();
     return;
   }
 
   const_iterator current(begin());
 
   o << "(";
+
+  if (getOverall() != null())
+    o << getOverall() << "*";
+
   while(current != end())
   {
     const bool expIsOne = current->second == 1;
@@ -160,12 +164,8 @@ Expr Product::simplify() const
   {
     const Product& p = static_cast<const Product&>(basic);
 
-    BOOST_FOREACH(const TermMap::value_type termPair, std::make_pair(p.begin(), p.end()))
-    {
-      // Eliminate 0^n where n>0.
-      if (termPair.first == zero && termPair.second > 0)
-        return Rational(0);
-    }
+    if (p.getOverall() == zero)
+      return zero;
   }
   
   return simplified;
@@ -173,6 +173,7 @@ Expr Product::simplify() const
 
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
 {
+  getOverall().accept(v);
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
     d.first.accept(v);
@@ -180,12 +181,12 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
       v.visitExponent(d.second);
   }
 
-  v.postProduct(terms.size());
+  v.postProduct(terms.size()+1);
 }
 
 Expr Product::eval() const
 {
-  Float floatPart(1.0);
+  Float floatPart(getOverall().toFloat());
   TermMap prod;
 
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
@@ -220,6 +221,23 @@ Expr Product::eval() const
     ++prod[floatPart];
     return Product(prod);
   }
+}
+
+void Product::combineOverall(Rational& overall, const Rational& other)
+{
+  overall *= other;
+}
+
+Rational Product::applyCoefficient(const Rational& value, const int coefficient)
+{
+  Rational result(1);
+
+  for(std::size_t i=0; i<std::abs(coefficient); ++i)
+  {
+    result = (coefficient<0) ? result / value : result * value;
+  }
+
+  return result;
 }
 
 }

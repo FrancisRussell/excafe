@@ -13,22 +13,26 @@ namespace cfd
 namespace symbolic
 {
 
-Expr Sum::null() const
+Rational Sum::null()
 {
-  return Expr(new Rational(0));
+  return Rational(0);
 }
 
 void Sum::write(std::ostream& o) const
 {
   if (begin() == end())
   {
-    o << "0.0";
+    o << getOverall();
     return;
   }
 
   const_iterator current(begin());
 
   o << "(";
+
+  if (getOverall() != null())
+    o << getOverall() << "+";
+
   while(current != end())
   {
     o << (current->second < 0 ? "-" : "");
@@ -76,15 +80,17 @@ Expr Sum::integrate(const Symbol& s) const
   return Sum(dependentTerms) + Product(Sum(independentTerms), s);
 }
 
-Sum Sum::expandedProduct(const Sum& s) const
+Sum Sum::expandedProduct(const Sum& other) const
 {
-  TermMap newTerms;
+  const Sum withoutOverallThis = this->withoutOverall();
+  const Sum withoutOverallOther = other.withoutOverall();
 
-  BOOST_FOREACH(const TermMap::value_type& a, std::make_pair(begin(), end()))
+  TermMap newTerms;
+  BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)
   {
-    BOOST_FOREACH(const TermMap::value_type& b, std::make_pair(s.begin(), s.end()))
+    BOOST_FOREACH(const TermMap::value_type& b, withoutOverallOther)
     {
-      newTerms[Product(a.first, b.first)] += a.second*b.second;
+      newTerms[Product(a.first, b.first).simplify()] += a.second*b.second;
     }
   }
 
@@ -93,6 +99,8 @@ Sum Sum::expandedProduct(const Sum& s) const
 
 void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
 {
+  getOverall().accept(v);
+
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
     d.first.accept(v);
@@ -103,12 +111,12 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
     }
   }
 
-  v.postSummation(terms.size());
+  v.postSummation(terms.size()+1);
 }
 
 Expr Sum::eval() const
 {
-  Float floatPart(0.0);
+  Float floatPart(getOverall().toFloat());
   TermMap sum;
 
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
@@ -136,6 +144,15 @@ Expr Sum::eval() const
   }
 }
 
+void Sum::combineOverall(Rational& overall, const Rational& other)
+{
+  overall += other;
+}
+
+Rational Sum::applyCoefficient(const Rational& value, const int coefficient)
+{
+  return value * Rational(coefficient);
+}
 
 
 }

@@ -11,6 +11,11 @@ namespace cfd
 namespace symbolic
 {
 
+Float Float::fromFraction(const long numerator, const long denominator)
+{
+  return Float(static_cast<double>(numerator)/denominator);
+}
+
 Float::Float(const double _value) : value(_value)
 {
 }

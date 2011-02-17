@@ -8,6 +8,7 @@
 #include "abstract_basic.hpp"
 #include "basic.hpp"
 #include "expr.hpp"
+#include <boost/operators.hpp>
 
 namespace cfd
 {
@@ -15,7 +16,8 @@ namespace cfd
 namespace symbolic
 {
 
-class Symbol : public AbstractBasic<Symbol>
+class Symbol : public AbstractBasic<Symbol>,
+               boost::equality_comparable<Symbol>
 {
 private:
   static int nextSerial;
