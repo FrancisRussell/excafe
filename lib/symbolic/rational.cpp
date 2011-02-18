@@ -12,12 +12,12 @@ namespace cfd
 namespace symbolic
 {
 
-Rational::Rational(const int _value) : numerator(_value), denominator(1)
+Rational::Rational(const long _value) : numerator(_value), denominator(1)
 {
   normalise();
 }
 
-Rational::Rational(const int num, const int denom) : 
+Rational::Rational(const long num, const long denom) : 
   numerator(num), denominator(denom)
 {
   normalise();
@@ -153,9 +153,9 @@ void Rational::normalise()
     denominator = -denominator;
   }
 
-  const unsigned factor = gcd(std::abs(numerator), std::abs(denominator));
-  numerator /= static_cast<int>(factor);
-  denominator /= static_cast<int>(factor);
+  const unsigned long factor = gcd(std::abs(numerator), std::abs(denominator));
+  numerator /= static_cast<long>(factor);
+  denominator /= static_cast<long>(factor);
 }
 
 Float Rational::toFloat() const
@@ -163,7 +163,7 @@ Float Rational::toFloat() const
   return Float::fromFraction(numerator, denominator);
 }
 
-unsigned Rational::gcd(unsigned u, unsigned v)
+unsigned long Rational::gcd(unsigned long u, unsigned long v)
 {
   if (u == 0 || v == 0)
     return u | v;

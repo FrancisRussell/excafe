@@ -20,15 +20,15 @@ class Rational : public AbstractBasic<Rational>,
                  boost::equality_comparable<Rational>
 {
 private:
-  int numerator;
-  int denominator;
+  long numerator;
+  long denominator;
 
   void normalise();
-  static unsigned gcd(unsigned a, unsigned b);
+  static unsigned long gcd(unsigned long a, unsigned long b);
 
 public:
-  Rational(int value);
-  Rational(int numerator, int denominator);
+  Rational(long value);
+  Rational(long numerator, long denominator);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
