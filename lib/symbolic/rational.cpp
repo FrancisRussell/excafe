@@ -188,9 +188,9 @@ unsigned long Rational::gcd(unsigned long u, unsigned long v)
 
     if (u > v)
     {
-      u ^= v;
-      v ^= u;
-      u ^= v;
+      const unsigned tmp = u;
+      u = v;
+      v = tmp;
     }
 
     v -= u;
