@@ -61,7 +61,7 @@ public:
   Expr integrate(const Symbol& s) const;
   Expr simplify() const;
   Expr expand() const;
-  Expr eval() const;
+  Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 

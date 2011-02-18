@@ -32,7 +32,7 @@ public:
   Expr subs(const Expr::subst_map& map) const;
   Expr integrate(const Symbol& s) const;
   Expr simplify() const;
-  Expr eval() const;
+  Float eval(const Expr::subst_map& map) const;
   bool operator==(const Float& n) const;
   bool operator<(const Float& n) const;
   Float& operator+=(const Float& n);

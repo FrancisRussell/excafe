@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/exception.hpp>
 #include <boost/functional/hash.hpp>
 #include <iostream>
 
@@ -69,9 +70,18 @@ Expr Symbol::subs(const Expr::subst_map& map) const
   }
 }
 
-Expr Symbol::eval() const
+Float Symbol::eval(const Expr::subst_map& map) const
 {
-  return clone();
+  const Expr::subst_map::const_iterator iter = map.find(*this);
+
+  if (iter != map.end() && is_a<Float>(iter->second))
+  {
+    return convert_to<Float>(iter->second);
+  }
+  else
+  {
+    CFD_EXCEPTION("Missing value in evaluation map.");
+  }
 }
 
 Expr Symbol::integrate(const Symbol& s) const

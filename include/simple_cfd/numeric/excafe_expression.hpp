@@ -267,18 +267,8 @@ public:
 
   value_type evaluate(const value_map& variableValues) const
   {
-    const expr_t substituted = expr.subs(variableValues.getReference());
-    const expr_t evaluated = substituted.eval();
-    const symbolic::Float* const f = dynamic_cast<const symbolic::Float*>(&evaluated.internal());
-
-    if (f!=NULL)
-    {
-      return f->toDouble();
-    }
-    else
-    {
-      CFD_EXCEPTION("Evaluation of Excafe expression failed to produce a numeric value.");
-    }
+    const symbolic::Float evaluated = expr.eval(variableValues.getReference());
+    return evaluated.toDouble();
   }
 };
 

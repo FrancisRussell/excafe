@@ -21,6 +21,7 @@ Rational::Rational(const long _value) : numerator(_value), denominator(1)
 Rational::Rational(const long num, const long denom) : 
   numerator(num), denominator(denom)
 {
+  assert(denominator != 0);
   normalise();
 }
 
@@ -88,9 +89,9 @@ Expr Rational::subs(const Expr::subst_map& map) const
   return clone();
 }
 
-Expr Rational::eval() const
+Float Rational::eval(const Expr::subst_map& map) const
 {
-  return toFloat().clone();
+  return toFloat();
 }
 
 void Rational::accept(NumericExpressionVisitor<Symbol>& v) const

@@ -35,7 +35,7 @@ public:
   virtual bool has(const Expr& e) const;
   Expr subs(const Expr::subst_map& map) const;
   Expr integrate(const Symbol& s) const;
-  Expr eval() const;
+  Float eval(const Expr::subst_map& map) const;
   Float toFloat() const;
   bool operator==(const Rational& n) const;
   bool operator<(const Rational& n) const;

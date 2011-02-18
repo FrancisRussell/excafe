@@ -66,7 +66,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
   Sum expandedProduct(const Sum& s) const;
-  Expr eval() const;
+  Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 

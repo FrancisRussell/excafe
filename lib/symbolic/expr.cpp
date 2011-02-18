@@ -133,8 +133,7 @@ Expr Expr::integrate(const Symbol& s) const
 
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
 {
-  std::cout << "expanded: " << expand() << std::endl << std::endl;
-  const Expr integrated = expand().integrate(s);
+  const Expr integrated = integrate(s);
   subst_map aMap, bMap;
   aMap[s] = a;
   bMap[s] = b;
@@ -174,9 +173,9 @@ Expr pow(const Expr& e, const int power)
   return Product::pow(e, power).simplify();
 }
 
-Expr Expr::eval() const
+Float Expr::eval(const subst_map& map) const
 {
-  return expr->eval();
+  return expr->eval(map);
 }
 
 }

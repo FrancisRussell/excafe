@@ -93,9 +93,9 @@ Expr Float::subs(const Expr::subst_map& map) const
   return clone();
 }
 
-Expr Float::eval() const
+Float Float::eval(const Expr::subst_map& map) const
 {
-  return clone();
+  return *this;
 }
 
 Expr Float::simplify() const

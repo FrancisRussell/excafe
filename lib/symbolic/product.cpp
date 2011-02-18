@@ -184,43 +184,26 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
   v.postProduct(terms.size()+1);
 }
 
-Expr Product::eval() const
+Float Product::eval(const Expr::subst_map& map) const
 {
-  Float floatPart(getOverall().toFloat());
-  TermMap prod;
+  Float result(getOverall().toFloat());
 
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
-    const Expr evaluated = d.first.eval();
-    const Basic& value = evaluated.internal();
-    if (getType(value) == getType(floatPart))
+    const Float evaluated = d.first.eval(map);
+    if (d.second > 0)
     {
-      if (d.second > 0)
-      {
-        for (int i=0; i<d.second; ++i)
-          floatPart *= static_cast<const Float&>(value);
-      }
-      else
-      {
-        for (int i=0; i<-d.second; ++i)
-          floatPart /= static_cast<const Float&>(value);
-      }
+      for (int i=0; i<d.second; ++i)
+        result *= evaluated;
     }
     else
     {
-      prod[d.first] += d.second;
+      for (int i=0; i<-d.second; ++i)
+        result /= evaluated;
     }
   }
-  
-  if (prod.empty())
-  {
-    return floatPart;
-  }
-  else
-  {
-    ++prod[floatPart];
-    return Product(null(), prod);
-  }
+
+  return result;
 }
 
 void Product::combineOverall(Rational& overall, const Rational& other)

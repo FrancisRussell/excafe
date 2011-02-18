@@ -25,18 +25,18 @@ private:
   int serial;
   
 public:
- Symbol(const std::string& _name);
- std::size_t nops() const;
- void write(std::ostream& o) const;
- Expr derivative(const Symbol& s) const;
- Expr eval() const;
- bool operator==(const Symbol& s) const;
- bool operator<(const Symbol& s) const;
- bool has(const Expr& e) const;
- Expr integrate(const Symbol& s) const;
- Expr subs(const Expr::subst_map& map) const;
- std::size_t untypedHash() const;
- void accept(NumericExpressionVisitor<Symbol>& v) const;
+  Symbol(const std::string& _name);
+  std::size_t nops() const;
+  void write(std::ostream& o) const;
+  Expr derivative(const Symbol& s) const;
+  Float eval(const Expr::subst_map& map) const;
+  bool operator==(const Symbol& s) const;
+  bool operator<(const Symbol& s) const;
+  bool has(const Expr& e) const;
+  Expr integrate(const Symbol& s) const;
+  Expr subs(const Expr::subst_map& map) const;
+  std::size_t untypedHash() const;
+  void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
 
 }

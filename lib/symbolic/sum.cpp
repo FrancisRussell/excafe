@@ -115,34 +115,16 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
   v.postSummation(terms.size()+1);
 }
 
-Expr Sum::eval() const
+Float Sum::eval(const Expr::subst_map& map) const
 {
-  Float floatPart(getOverall().toFloat());
-  TermMap sum;
+  Float result(getOverall().toFloat());
 
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
-    const Expr evaluated = d.first.eval();
-    const Basic& value = evaluated.internal();
-    if (getType(value) == getType(floatPart))
-    {
-      floatPart += Float(d.second) * static_cast<const Float&>(value);
-    }
-    else
-    {
-      sum[d.first] += d.second;
-    }
+    const Float evaluated = d.first.eval(map);
+    result += evaluated * Float(d.second);;
   }
-  
-  if (sum.empty())
-  {
-    return floatPart;
-  }
-  else
-  {
-    ++sum[floatPart];
-    return Sum(null(), sum);
-  }
+  return result;
 }
 
 void Sum::combineOverall(Rational& overall, const Rational& other)
