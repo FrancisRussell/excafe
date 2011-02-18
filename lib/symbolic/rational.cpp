@@ -187,6 +187,7 @@ unsigned long Rational::gcd(unsigned long u, unsigned long v)
     {
       u ^= v;
       v ^= u;
+      u ^= v;
     }
 
     v -= u;
