@@ -52,7 +52,7 @@ void ExpandVisitor::visit(const Product& p)
     }
   }
 
-  const Product quotient(dividend, Product::pow(divisor, -1));
+  const Product quotient = Product::mul(dividend, Product::pow(divisor, -1));
   push(quotient);
 }
 

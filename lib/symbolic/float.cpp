@@ -80,7 +80,7 @@ Float& Float::operator*=(const Float& n)
 
 Expr Float::integrate(const Symbol& s) const
 {
-  return Expr(new Product(*this, s));
+  return Product::mul(*this, s);
 }
 
 std::size_t Float::untypedHash() const
@@ -100,7 +100,7 @@ Expr Float::eval() const
 
 Expr Float::simplify() const
 {
-  const long multiplier = 2 << 10;
+  const long multiplier = 2 << 6;
   const long truncated = static_cast<long>(multiplier * value);
   if (multiplier * value == truncated)
     return Rational(truncated, multiplier);

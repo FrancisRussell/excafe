@@ -77,9 +77,9 @@ Expr Symbol::eval() const
 Expr Symbol::integrate(const Symbol& s) const
 {
   if (serial != s.serial)
-    return Product(*this, s);
+    return Product::mul(*this, s);
   else
-    return Product(Rational(1,2), Product::pow(s, 2));
+    return Product::mul(Rational(1,2), Product::pow(s, 2));
 }
 
 void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const

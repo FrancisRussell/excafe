@@ -25,37 +25,47 @@ class PairSeq : public AbstractBasic<T>
 protected:
   typedef boost::unordered_map<Expr, int> TermMap;
 
-protected:
   typedef T child_type;
   Rational overall;
   TermMap terms;
   bool simplified;
+
+private:
+  static void removeZeros(TermMap& map)
+  {
+    TermMap::iterator iter(map.begin());
+    while(iter != map.end())
+    {
+      const TermMap::iterator nextIter = boost::next(iter);
+
+      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
+      if (iter->second == 0)
+        map.erase(iter);
+
+      iter = nextIter;
+    }
+  }
 
 protected:
   PairSeq() : overall(child_type::null()), simplified(false)
   {
   }
 
-  PairSeq(const TermMap& _terms): overall(child_type::null()), terms(_terms), simplified(false)
+  PairSeq(const Rational& _overall, const TermMap& _terms): overall(_overall), terms(_terms), simplified(false)
   {
+    removeZeros(terms);
   }
 
-  PairSeq(const Expr& a, const Expr& b) : overall(child_type::null()), simplified(false)
-  {
-    ++terms[a];
-    ++terms[b];
-  }
-  
   void addSimplifiedTerms(const int multiplier, TermMap& newTermMap, const child_type& seq) const
   {
     const Expr nullExpr = child_type::null();
-    BOOST_FOREACH(const TermMap::value_type term, std::make_pair(seq.begin(), seq.end()))
+    BOOST_FOREACH(const TermMap::value_type term, seq)
     {
       const Expr simplified = term.first.simplify();
 
-      if (AbstractBasic<T>::getType(simplified.internal()) == AbstractBasic<T>::getType(*this))
+      if (is_a<child_type>(simplified.internal()))
       {
-        const child_type& child = static_cast<const child_type&>(simplified.internal());
+        const child_type& child = convert_to<child_type>(simplified.internal());
         newTermMap[child.getOverall()] += multiplier;
         addSimplifiedTerms(multiplier*term.second, newTermMap, child);
       }
@@ -66,17 +76,7 @@ protected:
       }
     }
 
-    TermMap::iterator newIter(newTermMap.begin());
-    while(newIter != newTermMap.end())
-    {
-      const TermMap::iterator nextIter = boost::next(newIter);
-
-      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
-      if (newIter->second == 0)
-        newTermMap.erase(newIter);
-
-      newIter = nextIter;
-    }
+    removeZeros(newTermMap);
   }
 
   static void updateOverall(Rational& overall, TermMap& termMap)
@@ -149,7 +149,7 @@ public:
 
     TermMap newTermMap;
     Rational newOverall(overall);
-    addSimplifiedTerms(1, newTermMap, static_cast<const child_type&>(*this));
+    addSimplifiedTerms(1, newTermMap, asChild(*this));
     updateOverall(newOverall, newTermMap);
 
     const Expr nullExpr = child_type::null();
@@ -163,8 +163,7 @@ public:
     }
     else
     {
-      child_type result(newTermMap);
-      result.overall = newOverall;
+      child_type result(newOverall, newTermMap);
       result.simplified = true;
       return result;
     }
@@ -177,7 +176,7 @@ public:
     {
       newTermMap[term.first.subs(map)] += term.second;
     }
-    return child_type(newTermMap);
+    return child_type(overall, newTermMap);
   }
 
   bool has(const Expr& e) const

@@ -53,7 +53,7 @@ Sum Sum::operator+(const Expr& e) const
 {
   TermMap map(begin(), end());
   ++map[e];
-  return Sum(map);
+  return Sum(overall, map);
 }
 
 Expr Sum::derivative(const Symbol& s) const
@@ -63,21 +63,22 @@ Expr Sum::derivative(const Symbol& s) const
   {
     newTerms.insert(std::make_pair(e.first.derivative(s), e.second));
   }
-  return Sum(newTerms);
+  return Sum(null(), newTerms);
 }
 
 Expr Sum::integrate(const Symbol& s) const
 {
   TermMap dependentTerms;
   TermMap independentTerms;
+
   BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
   {
     if (e.first.has(s))
-      dependentTerms.insert(std::make_pair(e.first.integrate(s), e.second));
+      dependentTerms[e.first.integrate(s)] += e.second;
     else
-      independentTerms.insert(e);
+      independentTerms[e.first] += e.second;
   }
-  return Sum(dependentTerms) + Product(Sum(independentTerms), s);
+  return Sum(null(), dependentTerms) + Product::mul(Sum(overall, independentTerms), s);
 }
 
 Sum Sum::expandedProduct(const Sum& other) const
@@ -90,11 +91,11 @@ Sum Sum::expandedProduct(const Sum& other) const
   {
     BOOST_FOREACH(const TermMap::value_type& b, withoutOverallOther)
     {
-      newTerms[Product(a.first, b.first).simplify()] += a.second*b.second;
+      newTerms[Product::mul(a.first, b.first).simplify()] += a.second*b.second;
     }
   }
 
-  return Sum(newTerms);
+  return Sum(null(), newTerms);
 }
 
 void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
@@ -140,7 +141,7 @@ Expr Sum::eval() const
   else
   {
     ++sum[floatPart];
-    return Sum(sum);
+    return Sum(null(), sum);
   }
 }
 

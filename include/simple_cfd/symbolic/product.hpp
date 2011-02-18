@@ -23,7 +23,8 @@ private:
 
   static Expr integrate(const Expr& a, const Expr& b, const Symbol& s);
 
-  Product(const TermMap& _terms): PairSeq<Product>(_terms)
+  Product(const Rational& _overall, const TermMap& _terms): 
+    PairSeq<Product>(_overall, _terms)
   {
   }
 
@@ -36,7 +37,7 @@ public:
   {
     TermMap terms;
     terms[base] += exponent;
-    return Product(terms);
+    return Product(null(), terms);
   }
 
   static Product div(const Expr& a, const Expr& b)
@@ -44,11 +45,15 @@ public:
     TermMap terms;
     ++terms[a];
     --terms[b];
-    return Product(terms);
+    return Product(null(), terms);
   }
 
-  Product(const Expr& a, const Expr& b) : PairSeq<Product>(a, b)
+  static Product mul(const Expr& a, const Expr& b)
   {
+    TermMap terms;
+    ++terms[a];
+    ++terms[b];
+    return Product(null(), terms);
   }
 
   void write(std::ostream& o) const;

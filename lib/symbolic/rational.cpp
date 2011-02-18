@@ -5,6 +5,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <boost/functional/hash.hpp>
 #include <ostream>
+#include <cassert>
 
 namespace cfd
 {
@@ -71,7 +72,7 @@ bool Rational::operator==(const Rational& n) const
 
 Expr Rational::integrate(const Symbol& s) const
 {
-  return Expr(new Product(*this, s));
+  return Product::mul(*this, s).clone();
 }
 
 std::size_t Rational::untypedHash() const
@@ -156,6 +157,8 @@ void Rational::normalise()
   const unsigned long factor = gcd(std::abs(numerator), std::abs(denominator));
   numerator /= static_cast<long>(factor);
   denominator /= static_cast<long>(factor);
+
+  assert(denominator != 0);
 }
 
 Float Rational::toFloat() const

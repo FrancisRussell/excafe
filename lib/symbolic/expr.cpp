@@ -37,7 +37,7 @@ Expr::Expr() : expr(new Rational(0))
 
 Expr& Expr::operator+=(const Expr& e)
 {
-  Expr newExpr = Sum(*this, e).simplify();
+  Expr newExpr = Sum::add(*this, e).simplify();
   std::swap(newExpr, *this);
   return *this;
 }
@@ -51,7 +51,7 @@ Expr& Expr::operator-=(const Expr& e)
 
 Expr& Expr::operator*=(const Expr& e)
 {
-  Expr newExpr = Product(*this, e).simplify();
+  Expr newExpr = Product::mul(*this, e).simplify();
   std::swap(newExpr, *this);
   return *this;
 }

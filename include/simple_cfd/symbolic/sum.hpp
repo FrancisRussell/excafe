@@ -20,7 +20,7 @@ class Sum : public PairSeq<Sum>
 protected:
   friend class PairSeq<Sum>;
 
-  Sum(const TermMap& _terms): PairSeq<Sum>(_terms)
+  Sum(const Rational& _overall, const TermMap& _terms): PairSeq<Sum>(_overall, _terms)
   {
   }
 
@@ -34,14 +34,22 @@ public:
     TermMap terms;
     ++terms[a];
     --terms[b];
-    return Sum(terms);
+    return Sum(null(), terms);
   }
 
   static Sum integer_multiple(const Expr& e, const int n)
   {
     TermMap terms;
     terms[e]+=n;
-    return Sum(terms);
+    return Sum(null(), terms);
+  }
+
+  static Sum add(const Expr& a, const Expr& b)
+  {
+    TermMap terms;
+    ++terms[a];
+    ++terms[b];
+    return Sum(null(), terms);
   }
 
   Sum()
@@ -51,10 +59,6 @@ public:
   explicit Sum(const Expr& a)
   {
     ++terms[a];
-  }
-
-  Sum(const Expr& a, const Expr& b) : PairSeq<Sum>(a, b)
-  {
   }
 
   Sum operator+(const Expr& e) const;

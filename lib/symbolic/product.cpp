@@ -63,7 +63,7 @@ Expr Product::derivative(const Symbol& s) const
     ++newTerm[Rational(d.second)];
     ++newTerm[d.first.derivative(s)];
     newTerm[d.first]+=d.second-1;
-    summation = summation + Product(newTerm);
+    summation = summation + Product(getOverall(), newTerm);
   }
   
   return summation;
@@ -100,7 +100,7 @@ Expr Product::integrate(const Symbol& s) const
     if (expr == s)
     {
       /* Directly handle variables raised to an exponent */
-      dependentIntegral = Product(Rational(1, exponent+1), Product::pow(s, exponent+1));
+      dependentIntegral = Product::mul(Rational(1, exponent+1), Product::pow(s, exponent+1));
     }
     else if (exponent == 0)
     {
@@ -128,10 +128,10 @@ Expr Product::integrate(const Symbol& s) const
     const TermMap first(dependent.begin(), pivot);
     const TermMap second(pivot, dependent.end());
 
-    dependentIntegral = integrate(Product(first), Product(second), s);
+    dependentIntegral = integrate(Product(null(), first), Product(null(), second), s);
   }
 
-  return Product(independent) * dependentIntegral;
+  return Product(getOverall(), independent) * dependentIntegral;
 }
 
 Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
@@ -145,7 +145,7 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 
   while (u != zero)
   {
-    result = result + Sum::integer_multiple(Product(u, v), sign);
+    result = result + Sum::integer_multiple(Product::mul(u, v), sign);
     u = u.derivative(s);
     v = v.integrate(s);
     sign *= -1;
@@ -219,7 +219,7 @@ Expr Product::eval() const
   else
   {
     ++prod[floatPart];
-    return Product(prod);
+    return Product(null(), prod);
   }
 }
 
