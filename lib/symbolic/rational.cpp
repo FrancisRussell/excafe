@@ -13,6 +13,11 @@ namespace cfd
 namespace symbolic
 {
 
+Rational::Rational() : numerator(0), denominator(1)
+{
+  normalise();
+}
+
 Rational::Rational(const long _value) : numerator(_value), denominator(1)
 {
   normalise();
@@ -142,6 +147,16 @@ Rational& Rational::operator/=(const Rational& r)
   return *this;
 }
 
+long Rational::getNumerator() const
+{
+  return numerator;
+}
+
+long Rational::getDenominator() const
+{
+  return denominator;
+}
+
 void Rational::normalise()
 {
   invalidateHash();
@@ -200,6 +215,28 @@ unsigned long Rational::gcd(unsigned long u, unsigned long v)
   while (v != 0);
 
   return u << shift;
+}
+
+Rational& Rational::operator++()
+{
+  numerator+=denominator;
+  normalise();
+  return *this;
+}
+
+Rational& Rational::operator--()
+{
+  numerator-=denominator;
+  normalise();
+  return *this;
+}
+
+Rational abs(const Rational& r)
+{
+  if (r.getNumerator() < 0)
+    return -r;
+  else
+    return r;
 }
 
 }

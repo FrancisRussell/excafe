@@ -16,15 +16,15 @@ namespace cfd
 namespace symbolic
 {
 
-class Product : public PairSeq<Product>
+class Product : public PairSeq<Product, int>
 {
 private:
-  friend class PairSeq<Product>;
+  friend class PairSeq<Product, int>;
 
   static Expr integrate(const Expr& a, const Expr& b, const Symbol& s);
 
   Product(const Rational& _overall, const TermMap& _terms): 
-    PairSeq<Product>(_overall, _terms)
+    PairSeq<Product, int>(_overall, _terms)
   {
   }
 

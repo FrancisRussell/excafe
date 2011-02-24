@@ -157,10 +157,10 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 Expr Product::simplify() const
 {
   const Rational zero(0);
-  const Expr simplified = PairSeq<Product>::simplify();
+  const Expr simplified = PairSeq<Product, int>::simplify();
   const Basic& basic = simplified.internal();
 
-  if (PairSeq<Product>::getType(basic) == PairSeq<Product>::getType(*this))
+  if (PairSeq<Product, int>::getType(basic) == PairSeq<Product, int>::getType(*this))
   {
     const Product& p = static_cast<const Product&>(basic);
 

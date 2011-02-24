@@ -14,7 +14,7 @@ class Float;
 class Rational;
 class Visitor;
 template<typename T> class AbstractBasic;
-template<typename T> class PairSeq;
+template<typename T, typename C> class PairSeq;
 
 }
 

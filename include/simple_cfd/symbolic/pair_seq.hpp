@@ -19,13 +19,14 @@ namespace cfd
 namespace symbolic
 {
 
-template<typename T>
+template<typename T, typename C>
 class PairSeq : public AbstractBasic<T>
 {
 protected:
-  typedef boost::unordered_map<Expr, int> TermMap;
-
   typedef T child_type;
+  typedef C coeff_type;
+  typedef boost::unordered_map<Expr, coeff_type> TermMap;
+
   Rational overall;
   TermMap terms;
   bool simplified;
@@ -33,10 +34,10 @@ protected:
 private:
   static void removeZeros(TermMap& map)
   {
-    TermMap::iterator iter(map.begin());
+    typename TermMap::iterator iter(map.begin());
     while(iter != map.end())
     {
-      const TermMap::iterator nextIter = boost::next(iter);
+      const typename TermMap::iterator nextIter = boost::next(iter);
 
       // Terms multiplied by 0 or raised to 0 can be removed from the sequence
       if (iter->second == 0)
@@ -56,10 +57,10 @@ protected:
     removeZeros(terms);
   }
 
-  void addSimplifiedTerms(const int multiplier, TermMap& newTermMap, const child_type& seq) const
+  void addSimplifiedTerms(const coeff_type& multiplier, TermMap& newTermMap, const child_type& seq) const
   {
     const Expr nullExpr = child_type::null();
-    BOOST_FOREACH(const TermMap::value_type term, seq)
+    BOOST_FOREACH(const typename TermMap::value_type term, seq)
     {
       const Expr simplified = term.first.simplify();
 
@@ -81,16 +82,16 @@ protected:
 
   static void updateOverall(Rational& overall, TermMap& termMap)
   {
-    TermMap::iterator iter(termMap.begin());
+    typename TermMap::iterator iter(termMap.begin());
     while(iter != termMap.end())
     {
-      const TermMap::iterator nextIter = boost::next(iter);
+      const typename TermMap::iterator nextIter = boost::next(iter);
 
       // Terms multiplied by 0 or raised to 0 can be removed from the sequence
       if (is_a<Rational>(iter->first))
       {
         const Rational value = convert_to<Rational>(iter->first);
-        const int coefficient = iter->second;
+        const coeff_type coefficient = iter->second;
         child_type::combineOverall(overall, child_type::applyCoefficient(value, coefficient));
         termMap.erase(iter);
       }
@@ -112,9 +113,9 @@ protected:
   }
 
 public:
-  typedef TermMap::value_type value_type;
-  typedef TermMap::const_iterator iterator;
-  typedef TermMap::const_iterator const_iterator;
+  typedef typename TermMap::value_type value_type;
+  typedef typename TermMap::const_iterator iterator;
+  typedef typename TermMap::const_iterator const_iterator;
 
   const_iterator begin() const
   {
@@ -172,7 +173,7 @@ public:
   Expr subs(const Expr::subst_map& map) const
   {
     TermMap newTermMap;
-    BOOST_FOREACH(const TermMap::value_type term, std::make_pair(begin(), end()))
+    BOOST_FOREACH(const typename TermMap::value_type term, std::make_pair(begin(), end()))
     {
       newTermMap[term.first.subs(map)] += term.second;
     }
@@ -184,7 +185,7 @@ public:
     if (e == *this)
       return true;
 
-    BOOST_FOREACH(const TermMap::value_type term, std::make_pair(begin(), end()))
+    BOOST_FOREACH(const typename TermMap::value_type term, std::make_pair(begin(), end()))
     {
       if (term.first.has(e))
         return true;

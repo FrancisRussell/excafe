@@ -15,18 +15,18 @@ namespace cfd
 namespace symbolic
 {
 
-class Sum : public PairSeq<Sum>
+class Sum : public PairSeq<Sum, Rational>
 {
 protected:
-  friend class PairSeq<Sum>;
+  friend class PairSeq<Sum, Rational>;
 
-  Sum(const Rational& _overall, const TermMap& _terms): PairSeq<Sum>(_overall, _terms)
+  Sum(const Rational& _overall, const TermMap& _terms): PairSeq<Sum, Rational>(_overall, _terms)
   {
   }
 
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
-  static Rational applyCoefficient(const Rational& t, const int coefficient);
+  static Rational applyCoefficient(const Rational& t, const Rational& coefficient);
   
 public:
   static Sum sub(const Expr& a, const Expr& b)

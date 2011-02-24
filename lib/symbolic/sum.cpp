@@ -37,8 +37,8 @@ void Sum::write(std::ostream& o) const
   {
     o << (current->second < 0 ? "-" : "");
 
-    if (std::abs(current->second) != 1)
-      o << std::abs(current->second) << "*";
+    if (abs(current->second) != 1)
+      o << abs(current->second) << "*";
 
     o << current->first;
     ++current;
@@ -107,7 +107,7 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
     d.first.accept(v);
     if (d.second != 1)
     {
-      v.visitConstant(d.second);
+      d.second.accept(v);
       v.postProduct(2);
     }
   }
@@ -122,7 +122,7 @@ Float Sum::eval(const Expr::subst_map& map) const
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
     const Float evaluated = d.first.eval(map);
-    result += evaluated * Float(d.second);;
+    result += evaluated * d.second.toFloat();
   }
   return result;
 }
@@ -132,7 +132,7 @@ void Sum::combineOverall(Rational& overall, const Rational& other)
   overall += other;
 }
 
-Rational Sum::applyCoefficient(const Rational& value, const int coefficient)
+Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficient)
 {
   return value * Rational(coefficient);
 }

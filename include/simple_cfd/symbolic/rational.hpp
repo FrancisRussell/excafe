@@ -27,6 +27,7 @@ private:
   static unsigned long gcd(unsigned long a, unsigned long b);
 
 public:
+  Rational();
   Rational(long value);
   Rational(long numerator, long denominator);
   virtual std::size_t nops() const;
@@ -37,6 +38,8 @@ public:
   Expr integrate(const Symbol& s) const;
   Float eval(const Expr::subst_map& map) const;
   Float toFloat() const;
+  long getNumerator() const;
+  long getDenominator() const;
   bool operator==(const Rational& n) const;
   bool operator<(const Rational& n) const;
   Rational operator-() const;
@@ -44,9 +47,13 @@ public:
   Rational& operator-=(const Rational& r);
   Rational& operator/=(const Rational& r);
   Rational& operator*=(const Rational& r);
+  Rational& operator++();
+  Rational& operator--();
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };
+
+Rational abs(const Rational& r);
 
 }
 
