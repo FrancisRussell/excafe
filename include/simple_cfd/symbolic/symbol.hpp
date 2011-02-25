@@ -4,10 +4,12 @@
 #include <string>
 #include <cstddef>
 #include <ostream>
+#include <utility>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 #include "basic.hpp"
 #include "expr.hpp"
+#include "rational.hpp"
 #include <boost/operators.hpp>
 
 namespace cfd

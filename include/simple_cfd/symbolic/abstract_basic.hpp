@@ -4,6 +4,8 @@
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <simple_cfd/util/type_info.hpp>
+#include <utility>
+#include "symbolic_fwd.hpp"
 #include "basic.hpp"
 #include "visitor.hpp"
 
@@ -150,6 +152,11 @@ public:
       s->visit(asChild(*this));
     else
       v.visit(*this);
+  }
+
+  Expr extractMultiplier(Rational& r) const
+  {
+    return this->simplify();
   }
 };
 

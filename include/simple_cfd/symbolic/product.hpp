@@ -63,6 +63,7 @@ public:
   Expr expand() const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 }

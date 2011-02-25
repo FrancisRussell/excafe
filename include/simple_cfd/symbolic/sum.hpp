@@ -6,8 +6,10 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+#include <utility>
 #include "pair_seq.hpp"
 #include "expr.hpp"
+#include "rational.hpp"
 
 namespace cfd
 {
@@ -27,6 +29,7 @@ protected:
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
   static Rational applyCoefficient(const Rational& t, const Rational& coefficient);
+  static Rational findMultiplier(const TermMap& terms);
   
 public:
   static Sum sub(const Expr& a, const Expr& b)
@@ -68,6 +71,7 @@ public:
   Sum expandedProduct(const Sum& s) const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 }

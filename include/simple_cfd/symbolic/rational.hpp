@@ -4,6 +4,7 @@
 #include <string>
 #include <cstddef>
 #include <ostream>
+#include <utility>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 #include "float.hpp"
@@ -27,6 +28,8 @@ private:
   static unsigned long gcd(unsigned long a, unsigned long b);
 
 public:
+  static Rational gcd(const Rational& a, const Rational& b);
+
   Rational();
   Rational(long value);
   Rational(long numerator, long denominator);

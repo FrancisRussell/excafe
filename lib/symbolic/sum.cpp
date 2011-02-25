@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/expr.hpp>
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
@@ -102,7 +103,7 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   getOverall().accept(v);
 
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     d.first.accept(v);
     if (d.second != 1)
@@ -119,7 +120,7 @@ Float Sum::eval(const Expr::subst_map& map) const
 {
   Float result(getOverall().toFloat());
 
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     const Float evaluated = d.first.eval(map);
     result += evaluated * d.second.toFloat();
@@ -136,6 +137,57 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
 {
   return value * Rational(coefficient);
 }
+
+Rational Sum::findMultiplier(const TermMap& terms)
+{
+  if (terms.empty())
+  {
+    return Rational(1);
+  }
+  else 
+  {
+    Rational result = terms.begin()->second;
+    BOOST_FOREACH(const TermMap::value_type& d, terms)
+    {
+      result = Rational::gcd(result, d.second);
+    }
+    return result;
+  }
+}
+
+Expr Sum::extractMultiplier(Rational& coeff) const
+{
+  const Expr simplified = this->simplify();
+  const Basic& basic = simplified.internal();
+
+  if (PairSeq<Sum, Rational>::getType(basic) == PairSeq<Sum, Rational>::getType(*this))
+  {
+    const Sum& p = convert_to<Sum>(basic);
+    const Rational multiplier = findMultiplier(terms);
+
+    if (multiplier == 1)
+    {
+      return simplified;
+    }
+    else
+    {
+      coeff *= multiplier;
+
+      TermMap newTerms(terms);
+      BOOST_FOREACH(TermMap::value_type& d, newTerms)
+      {
+        d.second /= multiplier;
+      }
+
+      return Sum(null(), newTerms).clone();
+    }
+  }
+  else
+  {
+    return basic.extractMultiplier(coeff);
+  }
+}
+
 
 
 }

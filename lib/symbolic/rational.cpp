@@ -220,6 +220,13 @@ unsigned long Rational::gcd(unsigned long u, unsigned long v)
   return u << shift;
 }
 
+Rational Rational::gcd(const Rational& a, const Rational& b)
+{
+  const long numerator = gcd(a.numerator, b.numerator);
+  const long denominator = gcd(a.denominator, b.denominator);
+  return Rational(numerator, denominator);
+}
+
 Rational& Rational::operator++()
 {
   numerator+=denominator;

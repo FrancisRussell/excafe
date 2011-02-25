@@ -56,7 +56,7 @@ Expr Product::derivative(const Symbol& s) const
 {
   Sum summation;
 
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     TermMap newTerm(begin(), end());
     newTerm.erase(d.first);
@@ -75,7 +75,7 @@ Expr Product::integrate(const Symbol& s) const
   TermMap dependent;
 
   /* We factor into products dependent and not dependent on s */
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     if (d.first.has(s))
       dependent.insert(d);
@@ -162,7 +162,7 @@ Expr Product::simplify() const
 
   if (PairSeq<Product, int>::getType(basic) == PairSeq<Product, int>::getType(*this))
   {
-    const Product& p = static_cast<const Product&>(basic);
+    const Product& p = convert_to<Product>(basic);
 
     if (p.getOverall() == zero)
       return zero;
@@ -174,7 +174,7 @@ Expr Product::simplify() const
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   getOverall().accept(v);
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     d.first.accept(v);
     if (d.second != 1)
@@ -188,7 +188,7 @@ Float Product::eval(const Expr::subst_map& map) const
 {
   Float result(getOverall().toFloat());
 
-  BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     const Float evaluated = d.first.eval(map);
     result *= symbolic::pow(evaluated, d.second);
@@ -205,6 +205,30 @@ void Product::combineOverall(Rational& overall, const Rational& other)
 Rational Product::applyCoefficient(const Rational& value, const int coefficient)
 {
   return symbolic::pow(value, coefficient);
+}
+
+Expr Product::extractMultiplier(Rational& coeff) const
+{
+  const Expr simplified = this->simplify();
+  const Basic& basic = simplified.internal();
+
+  if (PairSeq<Product, int>::getType(basic) == PairSeq<Product, int>::getType(*this))
+  {
+    const Product& p = convert_to<Product>(basic);
+    if (p.getOverall() == null())
+    {
+      return simplified;
+    }
+    else
+    {
+      coeff *= p.getOverall();
+      return Product(null(), p.terms).clone();
+    }
+  }
+  else
+  {
+    return basic.extractMultiplier(coeff);
+  }
 }
 
 }

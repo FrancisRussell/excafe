@@ -76,8 +76,6 @@ protected:
         newTermMap[simplified] += multiplier*term.second;
       }
     }
-
-    removeZeros(newTermMap);
   }
 
   static void updateOverall(Rational& overall, TermMap& termMap)
@@ -152,6 +150,7 @@ public:
     Rational newOverall(overall);
     addSimplifiedTerms(1, newTermMap, asChild(*this));
     updateOverall(newOverall, newTermMap);
+    removeZeros(newTermMap);
 
     const Expr nullExpr = child_type::null();
     if (newTermMap.empty())

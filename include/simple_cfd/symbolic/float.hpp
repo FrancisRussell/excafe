@@ -4,6 +4,7 @@
 #include <string>
 #include <cstddef>
 #include <ostream>
+#include <utility>
 #include <boost/operators.hpp>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
