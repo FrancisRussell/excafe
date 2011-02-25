@@ -191,16 +191,7 @@ Float Product::eval(const Expr::subst_map& map) const
   BOOST_FOREACH(const TermMap::value_type d, std::make_pair(begin(), end()))
   {
     const Float evaluated = d.first.eval(map);
-    if (d.second > 0)
-    {
-      for (int i=0; i<d.second; ++i)
-        result *= evaluated;
-    }
-    else
-    {
-      for (int i=0; i<-d.second; ++i)
-        result /= evaluated;
-    }
+    result *= symbolic::pow(evaluated, d.second);
   }
 
   return result;

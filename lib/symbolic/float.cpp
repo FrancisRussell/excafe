@@ -4,6 +4,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <boost/functional/hash.hpp>
+#include <cmath>
 
 namespace cfd
 {
@@ -116,6 +117,16 @@ void Float::accept(NumericExpressionVisitor<Symbol>& v) const
 double Float::toDouble() const
 {
   return value;
+}
+
+Float Float::pow(const int exponent) const
+{
+  return Float(std::pow(value, exponent));
+}
+
+Float pow(const Float& f, const int exponent)
+{
+  return f.pow(exponent);
 }
 
 }
