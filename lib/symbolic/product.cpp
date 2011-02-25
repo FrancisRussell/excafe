@@ -213,14 +213,7 @@ void Product::combineOverall(Rational& overall, const Rational& other)
 
 Rational Product::applyCoefficient(const Rational& value, const int coefficient)
 {
-  Rational result(1);
-
-  for(std::size_t i=0; i<std::abs(coefficient); ++i)
-  {
-    result = (coefficient<0) ? result / value : result * value;
-  }
-
-  return result;
+  return symbolic::pow(value, coefficient);
 }
 
 }

@@ -6,6 +6,7 @@
 #include <boost/functional/hash.hpp>
 #include <ostream>
 #include <cassert>
+#include <cmath>
 
 namespace cfd
 {
@@ -60,14 +61,11 @@ bool Rational::has(const Expr& e) const
 
 bool Rational::operator<(const Rational& n) const
 {
-  if (numerator < n.numerator)
-    return true;
-    
-  if (numerator == n.numerator
-      && denominator < n.denominator)
-    return true;
-
-  return false;
+  if (*this == n)
+    return false;
+  else
+    return numerator*n.denominator 
+           < n.numerator*denominator;
 }
 
 bool Rational::operator==(const Rational& n) const
@@ -182,6 +180,11 @@ Float Rational::toFloat() const
   return Float::fromFraction(numerator, denominator);
 }
 
+Rational Rational::reciprocal() const
+{
+  return Rational(denominator, numerator);
+}
+
 unsigned long Rational::gcd(unsigned long u, unsigned long v)
 {
   if (u == 0 || v == 0)
@@ -237,6 +240,18 @@ Rational abs(const Rational& r)
     return -r;
   else
     return r;
+}
+
+Rational pow(const Rational& r, const int exponent)
+{
+  const Rational multiplier = exponent >=0 ? r : r.reciprocal();
+  const int repetitions = std::abs(exponent);
+
+  Rational result(1);
+  for(int i=0; i<repetitions; ++i)
+    result *= multiplier;
+
+  return result;
 }
 
 }

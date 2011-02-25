@@ -42,6 +42,7 @@ public:
   long getDenominator() const;
   bool operator==(const Rational& n) const;
   bool operator<(const Rational& n) const;
+  Rational reciprocal() const;
   Rational operator-() const;
   Rational& operator+=(const Rational& r);
   Rational& operator-=(const Rational& r);
@@ -54,6 +55,7 @@ public:
 };
 
 Rational abs(const Rational& r);
+Rational pow(const Rational& r, int exponent);
 
 }
 
