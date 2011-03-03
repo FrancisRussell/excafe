@@ -168,9 +168,9 @@ void Rational::normalise()
     denominator = -denominator;
   }
 
-  const unsigned long factor = gcd(std::abs(numerator), std::abs(denominator));
-  numerator /= static_cast<long>(factor);
-  denominator /= static_cast<long>(factor);
+  const long factor = gcd(std::abs(numerator), std::abs(denominator));
+  numerator /= factor;
+  denominator /= factor;
 
   assert(denominator != 0);
 }
