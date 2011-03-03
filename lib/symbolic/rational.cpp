@@ -185,8 +185,11 @@ Rational Rational::reciprocal() const
   return Rational(denominator, numerator);
 }
 
-unsigned long Rational::gcd(unsigned long u, unsigned long v)
+long Rational::gcd(long u, long v)
 {
+  u = std::abs(u);
+  v = std::abs(v);
+
   if (u == 0 || v == 0)
     return u | v;
 

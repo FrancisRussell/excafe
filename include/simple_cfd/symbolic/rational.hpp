@@ -25,7 +25,7 @@ private:
   long denominator;
 
   void normalise();
-  static unsigned long gcd(unsigned long a, unsigned long b);
+  static long gcd(long a, long b);
 
 public:
   static Rational gcd(const Rational& a, const Rational& b);
