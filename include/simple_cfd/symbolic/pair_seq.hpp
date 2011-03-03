@@ -57,9 +57,11 @@ protected:
     removeZeros(terms);
   }
 
-  void addSimplifiedTerms(const coeff_type& multiplier, TermMap& newTermMap, const child_type& seq) const
+  void addSimplifiedTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
   {
     const Expr nullExpr = child_type::null();
+
+    child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
     BOOST_FOREACH(const typename TermMap::value_type term, seq)
     {
       const Expr simplified = term.first.simplify();
@@ -68,7 +70,7 @@ protected:
       {
         const child_type& child = convert_to<child_type>(simplified.internal());
         newTermMap[child.getOverall()] += multiplier;
-        addSimplifiedTerms(multiplier*term.second, newTermMap, child);
+        addSimplifiedTerms(overall, newTermMap, multiplier*term.second, child);
       }
       else if (simplified != nullExpr)
       {
@@ -147,8 +149,8 @@ public:
       return this->clone();
 
     TermMap newTermMap;
-    Rational newOverall(overall);
-    addSimplifiedTerms(1, newTermMap, asChild(*this));
+    Rational newOverall = child_type::null();
+    addSimplifiedTerms(newOverall, newTermMap, 1, asChild(*this));
     updateOverall(newOverall, newTermMap);
     removeZeros(newTermMap);
 
