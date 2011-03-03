@@ -69,7 +69,6 @@ protected:
       if (is_a<child_type>(simplified.internal()))
       {
         const child_type& child = convert_to<child_type>(simplified.internal());
-        newTermMap[child.getOverall()] += multiplier;
         addSimplifiedTerms(overall, newTermMap, multiplier*term.second, child);
       }
       else if (simplified != nullExpr)
@@ -148,9 +147,13 @@ public:
     if (simplified)
       return this->clone();
 
+    // The null co-efficient for products and sums. This is 1 for both
+    // products and sums, unlike the null value, which is 0 for sums.
+    const coeff_type defaultCoefficient(1);
+
     TermMap newTermMap;
     Rational newOverall = child_type::null();
-    addSimplifiedTerms(newOverall, newTermMap, 1, asChild(*this));
+    addSimplifiedTerms(newOverall, newTermMap, defaultCoefficient, asChild(*this));
     updateOverall(newOverall, newTermMap);
     removeZeros(newTermMap);
 
