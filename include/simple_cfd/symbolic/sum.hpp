@@ -29,7 +29,8 @@ protected:
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
   static Rational applyCoefficient(const Rational& t, const Rational& coefficient);
-  static Rational findMultiplier(const TermMap& terms);
+  Rational findMultiplier() const;
+  static void extractMultipliers(Rational& overall, TermMap& map);
   
 public:
   static Sum sub(const Expr& a, const Expr& b)

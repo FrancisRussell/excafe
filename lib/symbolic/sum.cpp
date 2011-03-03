@@ -138,34 +138,40 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
   return value * Rational(coefficient);
 }
 
-Rational Sum::findMultiplier(const TermMap& terms)
+Rational Sum::findMultiplier() const
 {
-  if (terms.empty())
+  Rational result = this->getOverall();
+  BOOST_FOREACH(const TermMap::value_type& d, terms)
   {
-    return Rational(1);
+    result = Rational::gcd(result, d.second);
   }
-  else 
-  {
-    Rational result = terms.begin()->second;
-    BOOST_FOREACH(const TermMap::value_type& d, terms)
-    {
-      result = Rational::gcd(result, d.second);
-    }
-    return result;
-  }
+  return result;
 }
+
+void Sum::extractMultipliers(Rational& overall, TermMap& map)
+{
+  TermMap newTermMap;
+  BOOST_FOREACH(const TermMap::value_type& term, map)
+  {
+    Rational coefficient = term.second;
+    const Expr e = term.first.internal().extractMultiplier(coefficient);
+    newTermMap[e] += coefficient;
+  }
+  map.swap(newTermMap);
+}
+
 
 Expr Sum::extractMultiplier(Rational& coeff) const
 {
   const Expr simplified = this->simplify();
   const Basic& basic = simplified.internal();
 
-  if (PairSeq<Sum, Rational>::getType(basic) == PairSeq<Sum, Rational>::getType(*this))
+  if (is_a<Sum>(basic))
   {
-    const Sum& p = convert_to<Sum>(basic);
-    const Rational multiplier = findMultiplier(terms);
+    const Sum& sum = convert_to<Sum>(basic);
+    const Rational multiplier = sum.findMultiplier();
 
-    if (multiplier == 1)
+    if (multiplier == Rational(1))
     {
       return simplified;
     }
@@ -173,13 +179,13 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     {
       coeff *= multiplier;
 
-      TermMap newTerms(terms);
+      TermMap newTerms(sum.terms);
       BOOST_FOREACH(TermMap::value_type& d, newTerms)
       {
         d.second /= multiplier;
       }
 
-      return Sum(null(), newTerms).clone();
+      return Sum(sum.overall / multiplier, newTerms).clone();
     }
   }
   else
@@ -187,8 +193,6 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     return basic.extractMultiplier(coeff);
   }
 }
-
-
 
 }
 

@@ -62,7 +62,7 @@ protected:
     const Expr nullExpr = child_type::null();
 
     child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
-    BOOST_FOREACH(const typename TermMap::value_type term, seq)
+    BOOST_FOREACH(const typename TermMap::value_type& term, seq)
     {
       const Expr simplified = term.first.simplify();
 
@@ -155,6 +155,7 @@ public:
     Rational newOverall = child_type::null();
     addSimplifiedTerms(newOverall, newTermMap, defaultCoefficient, asChild(*this));
     updateOverall(newOverall, newTermMap);
+    child_type::extractMultipliers(newOverall, newTermMap);
     removeZeros(newTermMap);
 
     const Expr nullExpr = child_type::null();
@@ -177,7 +178,7 @@ public:
   Expr subs(const Expr::subst_map& map) const
   {
     TermMap newTermMap;
-    BOOST_FOREACH(const typename TermMap::value_type term, std::make_pair(begin(), end()))
+    BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
       newTermMap[term.first.subs(map)] += term.second;
     }
@@ -189,7 +190,7 @@ public:
     if (e == *this)
       return true;
 
-    BOOST_FOREACH(const typename TermMap::value_type term, std::make_pair(begin(), end()))
+    BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
       if (term.first.has(e))
         return true;

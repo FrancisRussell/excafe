@@ -160,7 +160,7 @@ Expr Product::simplify() const
   const Expr simplified = PairSeq<Product, int>::simplify();
   const Basic& basic = simplified.internal();
 
-  if (PairSeq<Product, int>::getType(basic) == PairSeq<Product, int>::getType(*this))
+  if (is_a<Product>(basic))
   {
     const Product& p = convert_to<Product>(basic);
 
@@ -207,22 +207,35 @@ Rational Product::applyCoefficient(const Rational& value, const int coefficient)
   return symbolic::pow(value, coefficient);
 }
 
+void Product::extractMultipliers(Rational& overall, TermMap& map)
+{
+  TermMap newTermMap;
+  BOOST_FOREACH(const TermMap::value_type& term, map)
+  {
+    Rational multiplier = null();
+    const Expr newTerm = term.first.internal().extractMultiplier(multiplier);
+    newTermMap[newTerm] += term.second;
+    overall *= symbolic::pow(multiplier, term.second);
+  }
+  map.swap(newTermMap);
+}
+
 Expr Product::extractMultiplier(Rational& coeff) const
 {
   const Expr simplified = this->simplify();
   const Basic& basic = simplified.internal();
 
-  if (PairSeq<Product, int>::getType(basic) == PairSeq<Product, int>::getType(*this))
+  if (is_a<Product>(basic))
   {
-    const Product& p = convert_to<Product>(basic);
-    if (p.getOverall() == null())
+    const Product& product = convert_to<Product>(basic);
+    if (product.getOverall() == null())
     {
       return simplified;
     }
     else
     {
-      coeff *= p.getOverall();
-      return Product(null(), p.terms).clone();
+      coeff *= product.overall;
+      return Product(null(), product.terms).clone();
     }
   }
   else
