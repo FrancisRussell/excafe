@@ -19,12 +19,12 @@ Rational::Rational() : numerator(0), denominator(1)
   normalise();
 }
 
-Rational::Rational(const long _value) : numerator(_value), denominator(1)
+Rational::Rational(const value_type _value) : numerator(_value), denominator(1)
 {
   normalise();
 }
 
-Rational::Rational(const long num, const long denom) : 
+Rational::Rational(const value_type num, const value_type denom) : 
   numerator(num), denominator(denom)
 {
   assert(denominator != 0);
@@ -116,7 +116,7 @@ Rational Rational::operator-() const
 
 Rational& Rational::operator+=(const Rational& r)
 {
-  const long lcd = lcm(denominator, r.denominator);
+  const value_type lcd = lcm(denominator, r.denominator);
   numerator = numerator * (lcd/denominator) + r.numerator * (lcd/r.denominator);
   denominator = lcd;
   normalise();
@@ -131,8 +131,8 @@ Rational& Rational::operator-=(const Rational& r)
 
 Rational& Rational::operator*=(const Rational& r)
 {
-  const long gcd1 = gcd(numerator, r.denominator);
-  const long gcd2 = gcd(r.numerator, denominator);
+  const value_type gcd1 = gcd(numerator, r.denominator);
+  const value_type gcd2 = gcd(r.numerator, denominator);
 
   numerator = (numerator/gcd1)*(r.numerator/gcd2);
   denominator = (denominator/gcd2)*(r.denominator/gcd1);
@@ -146,12 +146,12 @@ Rational& Rational::operator/=(const Rational& r)
   return *this;
 }
 
-long Rational::getNumerator() const
+Rational::value_type Rational::getNumerator() const
 {
   return numerator;
 }
 
-long Rational::getDenominator() const
+Rational::value_type Rational::getDenominator() const
 {
   return denominator;
 }
@@ -169,7 +169,7 @@ void Rational::normalise()
     denominator = -denominator;
   }
 
-  const long factor = gcd(std::abs(numerator), std::abs(denominator));
+  const value_type factor = gcd(numerator, denominator);
   numerator /= factor;
   denominator /= factor;
 
@@ -186,7 +186,7 @@ Rational Rational::reciprocal() const
   return Rational(denominator, numerator);
 }
 
-long Rational::gcd(long u, long v)
+Rational::value_type Rational::gcd(value_type u, value_type v)
 {
   u = std::abs(u);
   v = std::abs(v);
@@ -211,7 +211,7 @@ long Rational::gcd(long u, long v)
 
     if (u > v)
     {
-      const long tmp = u;
+      const value_type tmp = u;
       u = v;
       v = tmp;
     }
@@ -224,7 +224,7 @@ long Rational::gcd(long u, long v)
   return u << shift;
 }
 
-long Rational::lcm(const long a, const long b)
+Rational::value_type Rational::lcm(const value_type a, const value_type b)
 {
   // Performing the division first reduces the size of the intermediate
   // value when gcd(a,b) > 1.
@@ -234,8 +234,8 @@ long Rational::lcm(const long a, const long b)
 
 Rational Rational::gcd(const Rational& a, const Rational& b)
 {
-  const long numerator = gcd(a.numerator, b.numerator);
-  const long denominator = gcd(a.denominator, b.denominator);
+  const value_type numerator = gcd(a.numerator, b.numerator);
+  const value_type denominator = gcd(a.denominator, b.denominator);
   return Rational(numerator, denominator);
 }
 

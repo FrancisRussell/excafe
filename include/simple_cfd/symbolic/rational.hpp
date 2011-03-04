@@ -20,20 +20,23 @@ class Rational : public AbstractBasic<Rational>,
                  boost::arithmetic<Rational>,
                  boost::equality_comparable<Rational>
 {
+public:
+  typedef long value_type;
+
 private:
-  long numerator;
-  long denominator;
+  value_type numerator;
+  value_type denominator;
 
   void normalise();
-  static long gcd(long a, long b);
-  static long lcm(long a, long b);
+  static value_type gcd(value_type a, value_type b);
+  static value_type lcm(value_type a, value_type b);
 
 public:
   static Rational gcd(const Rational& a, const Rational& b);
 
   Rational();
-  Rational(long value);
-  Rational(long numerator, long denominator);
+  Rational(value_type value);
+  Rational(value_type numerator, value_type denominator);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
@@ -42,8 +45,8 @@ public:
   Expr integrate(const Symbol& s) const;
   Float eval(const Expr::subst_map& map) const;
   Float toFloat() const;
-  long getNumerator() const;
-  long getDenominator() const;
+  value_type getNumerator() const;
+  value_type getDenominator() const;
   bool operator==(const Rational& n) const;
   bool operator<(const Rational& n) const;
   Rational reciprocal() const;
