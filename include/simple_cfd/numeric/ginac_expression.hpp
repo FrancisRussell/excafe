@@ -157,6 +157,11 @@ private:
   }
 
 public:
+  static GinacExpression group(const GinacExpression& e)
+  {
+    return e;
+  }
+
   GinacExpression() : expr(ginac_numeric_t(0.0))
   {
   }

@@ -127,6 +127,11 @@ private:
   }
 
 public:
+  static ExcafeExpression group(const ExcafeExpression& e)
+  {
+    return ExcafeExpression(Group(e.expr).clone());
+  }
+
   ExcafeExpression() : expr(numeric_t(0.0))
   {
   }

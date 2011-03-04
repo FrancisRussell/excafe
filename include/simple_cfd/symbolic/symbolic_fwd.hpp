@@ -12,6 +12,7 @@ class Basic;
 class Symbol;
 class Float;
 class Rational;
+class Group;
 class Visitor;
 template<typename T> class AbstractBasic;
 template<typename T, typename C> class PairSeq;

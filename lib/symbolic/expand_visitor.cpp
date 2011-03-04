@@ -3,6 +3,11 @@
 #include <boost/foreach.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
+#include <simple_cfd/symbolic/group.hpp>
+#include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
+#include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/symbolic/basic.hpp>
 
 namespace cfd
 {
@@ -59,6 +64,13 @@ void ExpandVisitor::visit(const Product& p)
 void ExpandVisitor::visit(const Basic& b)
 {
   push(b);
+}
+
+void ExpandVisitor::visit(const Group& g)
+{
+  ExpandVisitor visitor;
+  g.getExpr().accept(visitor);
+  push(Group(visitor.getResult()).clone());
 }
 
 Sum ExpandVisitor::getResult() const
