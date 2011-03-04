@@ -116,8 +116,9 @@ Rational Rational::operator-() const
 
 Rational& Rational::operator+=(const Rational& r)
 {
-  numerator = numerator * r.denominator + r.numerator * denominator;
-  denominator *= r.denominator;
+  const long lcd = lcm(denominator, r.denominator);
+  numerator = numerator * (lcd/denominator) + r.numerator * (lcd/r.denominator);
+  denominator = lcd;
   normalise();
   return *this;
 }
@@ -210,7 +211,7 @@ long Rational::gcd(long u, long v)
 
     if (u > v)
     {
-      const unsigned tmp = u;
+      const long tmp = u;
       u = v;
       v = tmp;
     }
@@ -221,6 +222,14 @@ long Rational::gcd(long u, long v)
   while (v != 0);
 
   return u << shift;
+}
+
+long Rational::lcm(const long a, const long b)
+{
+  // Performing the division first reduces the size of the intermediate
+  // value when gcd(a,b) > 1.
+
+  return b*(a/gcd(a, b));
 }
 
 Rational Rational::gcd(const Rational& a, const Rational& b)

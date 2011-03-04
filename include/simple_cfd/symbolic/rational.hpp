@@ -26,6 +26,7 @@ private:
 
   void normalise();
   static long gcd(long a, long b);
+  static long lcm(long a, long b);
 
 public:
   static Rational gcd(const Rational& a, const Rational& b);
