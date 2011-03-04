@@ -131,18 +131,18 @@ Rational& Rational::operator-=(const Rational& r)
 
 Rational& Rational::operator*=(const Rational& r)
 {
-  numerator *= r.numerator;
-  denominator *= r.denominator;
+  const long gcd1 = gcd(numerator, r.denominator);
+  const long gcd2 = gcd(r.numerator, denominator);
+
+  numerator = (numerator/gcd1)*(r.numerator/gcd2);
+  denominator = (denominator/gcd2)*(r.denominator/gcd1);
   normalise();
   return *this;
 }
 
-
 Rational& Rational::operator/=(const Rational& r)
 {
-  numerator *= r.denominator;
-  denominator *= r.numerator;
-  normalise();
+  *this *= r.reciprocal();
   return *this;
 }
 
