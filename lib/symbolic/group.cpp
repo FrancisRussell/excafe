@@ -1,5 +1,6 @@
 #include <simple_cfd/symbolic/group.hpp>
 #include <simple_cfd/symbolic/float.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <ostream>
 #include <cstddef>
@@ -21,7 +22,7 @@ std::size_t Group::nops() const
 
 void Group::write(std::ostream& o) const
 {
-  o << expr;
+  o << "group(" << expr << ")";
 }
 
 Expr Group::derivative(const Symbol& s) const
@@ -46,7 +47,16 @@ Expr Group::integrate(const Symbol& s) const
 
 Expr Group::simplify() const
 {
-  return Group(expr.simplify()).clone();
+  const Expr simplified = expr.simplify();
+
+  if (!is_a<Rational>(expr.internal()) && !is_a<Float>(expr.internal()))
+  {
+    return Group(simplified).clone();
+  }
+  else
+  {
+    return simplified;
+  }
 }
 
 Float Group::eval(const Expr::subst_map& map) const
