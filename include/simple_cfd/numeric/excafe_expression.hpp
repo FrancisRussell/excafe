@@ -16,6 +16,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/group.hpp>
 
 namespace cfd
 {
@@ -129,7 +130,7 @@ private:
 public:
   static ExcafeExpression group(const ExcafeExpression& e)
   {
-    return ExcafeExpression(Group(e.expr).clone());
+    return ExcafeExpression(symbolic::Group(e.expr).clone());
   }
 
   ExcafeExpression() : expr(numeric_t(0.0))
@@ -250,7 +251,7 @@ public:
 
   ExcafeExpression normalised() const
   {
-    return *this;
+    return ExcafeExpression(expr.expand());
   }
 
   std::set<variable_t> getVariables() const
