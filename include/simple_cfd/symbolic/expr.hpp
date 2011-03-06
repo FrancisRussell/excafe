@@ -16,7 +16,8 @@ namespace symbolic
 {
 
 class Expr : public NumericExpression<Symbol>, 
-                    boost::arithmetic<Expr>
+                    boost::arithmetic<Expr>,
+                    boost::equality_comparable<Expr>
 {
 public:
   typedef boost::shared_ptr<const Basic> ref_t;
@@ -35,7 +36,6 @@ public:
   Expr(const double s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
-  bool operator!=(const Expr& e) const;
   Expr& operator+=(const Expr& e);
   Expr& operator-=(const Expr& e);
   Expr& operator/=(const Expr& e);

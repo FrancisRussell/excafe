@@ -15,7 +15,7 @@ namespace cfd
 namespace symbolic
 {
 
-Expr::Expr(Basic* e) : expr(e)
+Expr::Expr(Basic* const e) : expr(e)
 {
   e->markHeapAllocated();
 }
@@ -76,13 +76,10 @@ void Expr::write(std::ostream& o) const
 
 bool Expr::operator==(const Expr& e) const
 {
-  const bool result = *expr == *e.expr;
-  return result;
-}
-
-bool Expr::operator!=(const Expr& e) const
-{
-  return !(*this == e);
+  if (expr.get() == e.expr.get())
+    return true;
+  else
+    return *expr == *e.expr;
 }
 
 Expr Expr::operator-() const
