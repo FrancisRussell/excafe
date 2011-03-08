@@ -189,6 +189,11 @@ void Sum::extractMultipliers(Rational& overall, TermMap& map)
   map.swap(newTermMap);
 }
 
+Sum& Sum::operator+=(const Sum& s)
+{
+  this->combine(s);
+  return *this;
+}
 
 Expr Sum::extractMultiplier(Rational& coeff) const
 {

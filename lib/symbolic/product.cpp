@@ -220,6 +220,12 @@ void Product::extractMultipliers(Rational& overall, TermMap& map)
   map.swap(newTermMap);
 }
 
+Product& Product::operator*=(const Product& p)
+{
+  this->combine(p);
+  return *this;
+}
+
 Expr Product::extractMultiplier(Rational& coeff) const
 {
   const Expr simplified = this->simplify();

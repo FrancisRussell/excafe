@@ -99,16 +99,26 @@ protected:
     }
   }
 
-  child_type withoutOverall() const
+  void combine(const child_type& other)
   {
-    child_type result(asChild(*this));
+    this->invalidateHash();
 
-    if (overall != child_type::null())
+    if (this == &other)
     {
-      ++result.terms[result.overall];
-      result.overall = child_type::null();
+      child_type::combineOverall(overall, overall);
+      BOOST_FOREACH(typename TermMap::value_type& term, terms)
+      {
+        term.second *= 2;
+      }
     }
-    return result;
+    else
+    {
+      child_type::combineOverall(overall, other.overall);
+      BOOST_FOREACH(const typename TermMap::value_type& term, other.terms)
+      {
+        terms[term.first] += term.second;
+      }
+    }
   }
 
 public:
@@ -140,6 +150,18 @@ public:
   {
     return overall == s.overall
            && terms == s.terms;
+  }
+
+  child_type withoutOverall() const
+  {
+    child_type result(asChild(*this));
+
+    if (overall != child_type::null())
+    {
+      ++result.terms[result.overall];
+      result.overall = child_type::null();
+    }
+    return result;
   }
 
   Expr simplify() const

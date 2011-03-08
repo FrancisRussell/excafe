@@ -8,6 +8,7 @@
 #include <vector>
 #include <utility>
 #include <boost/function.hpp>
+#include <boost/operators.hpp>
 #include "pair_seq.hpp"
 #include "expr.hpp"
 #include "rational.hpp"
@@ -18,7 +19,8 @@ namespace cfd
 namespace symbolic
 {
 
-class Sum : public PairSeq<Sum, Rational>
+class Sum : public PairSeq<Sum, Rational>,
+                   boost::addable<Sum>
 {
 private:
   // Null predicate for expansion
@@ -73,6 +75,7 @@ public:
   }
 
   Sum operator+(const Expr& e) const;
+  Sum& operator+=(const Sum& s);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;

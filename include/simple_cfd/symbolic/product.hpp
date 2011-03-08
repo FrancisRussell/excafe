@@ -6,6 +6,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+#include <boost/operators.hpp>
 #include "pair_seq.hpp"
 #include "expr.hpp"
 #include <iostream>
@@ -16,7 +17,8 @@ namespace cfd
 namespace symbolic
 {
 
-class Product : public PairSeq<Product, int>
+class Product : public PairSeq<Product, int>,
+                       boost::multipliable<Product>
 {
 private:
   friend class PairSeq<Product, int>;
@@ -57,6 +59,7 @@ public:
     return Product(null(), terms);
   }
 
+  Product& operator*=(const Product& p);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
