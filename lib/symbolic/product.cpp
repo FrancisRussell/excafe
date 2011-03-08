@@ -145,7 +145,7 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 
   while (u != zero)
   {
-    result = result + Sum::integer_multiple(Product::mul(u, v), sign);
+    result = result + Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);
     v = v.integrate(s);
     sign *= -1;

@@ -41,7 +41,7 @@ public:
     return Sum(null(), terms);
   }
 
-  static Sum integer_multiple(const Expr& e, const int n)
+  static Sum rational_multiple(const Expr& e, const Rational& n)
   {
     TermMap terms;
     terms[e]+=n;

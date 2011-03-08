@@ -84,7 +84,7 @@ bool Expr::operator==(const Expr& e) const
 
 Expr Expr::operator-() const
 {
-  return Sum::integer_multiple(*this, -1).simplify();
+  return Sum::rational_multiple(*this, Rational(-1)).simplify();
 }
 
 bool Expr::has(const Expr& e) const
