@@ -7,12 +7,18 @@
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
+#include <boost/function.hpp>
 
 namespace cfd
 {
 
 namespace symbolic
 {
+
+bool Sum::AlwaysTrue(const Expr& e)
+{
+  return true;
+}
 
 Rational Sum::null()
 {
@@ -82,10 +88,33 @@ Expr Sum::integrate(const Symbol& s) const
   return Sum(null(), dependentTerms) + Product::mul(Sum(overall, independentTerms), s);
 }
 
-Sum Sum::expandedProduct(const Sum& other) const
+Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate)
 {
-  const Sum withoutOverallThis = this->withoutOverall();
-  const Sum withoutOverallOther = other.withoutOverall();
+  if (predicate != AlwaysTrue)
+  {
+    const Sum withoutOverall = sum.withoutOverall();
+    TermMap matching, nonMatching;
+  
+    BOOST_FOREACH(const TermMap::value_type& term, withoutOverall)
+    {
+      (predicate(term.first) ? matching : nonMatching)[term.first] += term.second;
+    }
+  
+    if (!nonMatching.empty())
+      ++matching[Sum(null(), nonMatching).clone()];
+  
+    return Sum(null(), matching);
+  }
+  else
+  {
+    return sum;
+  }
+}
+
+Sum Sum::expandedProduct(const Sum& other, const boost::function<bool (const Expr&)>& predicate) const
+{
+  const Sum withoutOverallThis = groupNonMatching(*this, predicate).withoutOverall();
+  const Sum withoutOverallOther = groupNonMatching(other, predicate).withoutOverall();
 
   TermMap newTerms;
   BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)

@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include <utility>
+#include <boost/function.hpp>
 #include "pair_seq.hpp"
 #include "expr.hpp"
 #include "rational.hpp"
@@ -19,6 +20,13 @@ namespace symbolic
 
 class Sum : public PairSeq<Sum, Rational>
 {
+private:
+  // Null predicate for expansion
+  static bool AlwaysTrue(const Expr& e);
+
+  static Sum groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate);
+  Rational findMultiplier() const;
+
 protected:
   friend class PairSeq<Sum, Rational>;
 
@@ -29,7 +37,6 @@ protected:
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
   static Rational applyCoefficient(const Rational& t, const Rational& coefficient);
-  Rational findMultiplier() const;
   static void extractMultipliers(Rational& overall, TermMap& map);
   
 public:
@@ -69,7 +76,7 @@ public:
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s) const;
-  Sum expandedProduct(const Sum& s) const;
+  Sum expandedProduct(const Sum& s, const boost::function<bool (const Expr&)>& predicate = AlwaysTrue) const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   virtual Expr extractMultiplier(Rational& coeff) const;
