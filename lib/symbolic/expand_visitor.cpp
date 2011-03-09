@@ -1,6 +1,7 @@
 #include <utility>
 #include <cassert>
 #include <boost/foreach.hpp>
+#include <boost/bind.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/group.hpp>
@@ -21,6 +22,19 @@ ExpandVisitor::ExpandVisitor()
 
 ExpandVisitor::ExpandVisitor(const Symbol& s) : symbol(s)
 {
+}
+
+bool ExpandVisitor::containsSymbolPredicate(const Expr& e) const
+{
+  return e.has(*symbol);
+}
+
+Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b) const
+{
+  if (symbol)
+    return a.expandedProduct(b, boost::bind(&ExpandVisitor::containsSymbolPredicate, this, _1));
+  else
+    return a.expandedProduct(b);
 }
 
 Sum ExpandVisitor::toExpr(const quotient_map_t& q)
@@ -48,8 +62,8 @@ ExpandVisitor::quotient_map_t ExpandVisitor::reciprocal(const quotient_map_t& q)
 
   BOOST_FOREACH(const quotient_map_t::value_type& qTerm, q)
   {
-    nominator = nominator.expandedProduct(qTerm.first) + denominator.expandedProduct(qTerm.second);
-    denominator = denominator.expandedProduct(qTerm.first);
+    nominator = expandedProduct(nominator, qTerm.first) + expandedProduct(denominator, qTerm.second);
+    denominator = expandedProduct(denominator, qTerm.first);
   }
 
   quotient_map_t result;
@@ -65,8 +79,8 @@ void ExpandVisitor::mul(quotient_map_t& q1, const quotient_map_t& q2) const
   {
     BOOST_FOREACH(const quotient_map_t::value_type& q2Term, q2)
     {
-      const Sum numerator = q1Term.second.expandedProduct(q2Term.second);
-      const Sum denominator = q1Term.first.expandedProduct(q2Term.first);
+      const Sum numerator = expandedProduct(q1Term.second, q2Term.second);
+      const Sum denominator = expandedProduct(q1Term.first, q2Term.first);
       result[denominator] += numerator;
     }
   }

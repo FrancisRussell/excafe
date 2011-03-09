@@ -34,6 +34,8 @@ private:
   std::stack<quotient_map_t> stack;
   void push(const quotient_map_t& e);
   void push(const Sum& s);
+  bool containsSymbolPredicate(const Expr& e) const;
+  Sum expandedProduct(const Sum& a, const Sum& b) const;
 
 public:
   ExpandVisitor();
