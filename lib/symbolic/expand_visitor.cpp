@@ -15,68 +15,148 @@ namespace cfd
 namespace symbolic
 {
 
-void ExpandVisitor::push(const Expr& e)
+ExpandVisitor::ExpandVisitor()
 {
-  const Expr simplified = e.simplify();
-  
-  if (is_a<Sum>(simplified))
-    stack.push(convert_to<Sum>(simplified));
-  else
-    stack.push(Sum(simplified));
+}
+
+ExpandVisitor::ExpandVisitor(const Symbol& s) : symbol(s)
+{
+}
+
+Sum ExpandVisitor::toExpr(const quotient_map_t& q)
+{
+  Sum result;
+  BOOST_FOREACH(const quotient_map_t::value_type& term, q)
+  {
+    result = result + Product::div(term.second, term.first);
+  }
+  return result;
+}
+
+ExpandVisitor::quotient_map_t ExpandVisitor::constructQuotientMap(const Rational& r)
+{
+  quotient_map_t result;
+  result.insert(std::make_pair(Sum(Rational(1)), Sum(r)));
+  return result;
+}
+
+ExpandVisitor::quotient_map_t ExpandVisitor::reciprocal(const quotient_map_t& q) const
+{
+  // If q has more than one term, this will involve a full expansion.
+  Sum nominator;
+  Sum denominator(Rational(1));
+
+  BOOST_FOREACH(const quotient_map_t::value_type& qTerm, q)
+  {
+    nominator = nominator.expandedProduct(qTerm.first) + denominator.expandedProduct(qTerm.second);
+    denominator = denominator.expandedProduct(qTerm.first);
+  }
+
+  quotient_map_t result;
+  // We flip the expanded nominator and denominator
+  result.insert(std::make_pair(nominator, denominator));
+  return result;
+}
+
+void ExpandVisitor::mul(quotient_map_t& q1, const quotient_map_t& q2) const
+{
+  quotient_map_t result;
+  BOOST_FOREACH(const quotient_map_t::value_type& q1Term, q1)
+  {
+    BOOST_FOREACH(const quotient_map_t::value_type& q2Term, q2)
+    {
+      const Sum numerator = q1Term.second.expandedProduct(q2Term.second);
+      const Sum denominator = q1Term.first.expandedProduct(q2Term.first);
+      result[denominator] += numerator;
+    }
+  }
+  std::swap(result, q1);
+}
+
+void ExpandVisitor::add(quotient_map_t& q1, const quotient_map_t& q2) const
+{
+  BOOST_FOREACH(const quotient_map_t::value_type& q2Term, q2)
+  {
+    q1[q2Term.first] += q2Term.second;
+  }
+}
+
+void ExpandVisitor::push(const quotient_map_t& q)
+{
+  stack.push(q);
+}
+
+void ExpandVisitor::push(const Sum& s)
+{
+  const Sum one = Sum(Rational(1));
+  quotient_map_t qMap;
+  qMap[one] = s;
+  push(qMap);
 }
 
 void ExpandVisitor::visit(const Sum& s)
 {
-  Sum reduction(s.getOverall());
-  BOOST_FOREACH(const Sum::value_type& term, std::make_pair(s.begin(), s.end()))
+  quotient_map_t qMap = constructQuotientMap(s.getOverall());
+  BOOST_FOREACH(const Sum::value_type& term, s)
   {
     term.first.accept(*this);
-    stack.push(Sum(term.second));
-
-    const Sum a = stack.top(); stack.pop();
-    const Sum b = stack.top(); stack.pop();
-    reduction = reduction + a.expandedProduct(b);
+    quotient_map_t newTerm(stack.top()); stack.pop();
+    mul(newTerm, constructQuotientMap(term.second));
+    add(qMap, newTerm);
   }
-  push(reduction);
+  push(qMap);
 }
 
 void ExpandVisitor::visit(const Product& p)
 {
-  Sum dividend(p.getOverall());
-  Sum divisor(Rational(1));
-
-  BOOST_FOREACH(const Product::value_type& term, std::make_pair(p.begin(), p.end()))
+  quotient_map_t qMap = constructQuotientMap(p.getOverall());
+  BOOST_FOREACH(const Product::value_type& term, p)
   {
     term.first.accept(*this);
-    const Sum multiplicand(stack.top()); stack.pop();
+    quotient_map_t multiplicand(stack.top()); stack.pop();
 
-    Sum& result = (term.second < 0) ? divisor : dividend;
-    for(int i=0; i<std::abs(term.second); ++i)
-    {
-      result = result.expandedProduct(multiplicand);
-    }
+    if (term.second < 0)
+      multiplicand = reciprocal(multiplicand);
+
+    for (int n=0; n < std::abs(term.second); ++n)
+      mul(qMap, multiplicand);
   }
 
-  const Product quotient = Product::mul(dividend, Product::pow(divisor, -1));
-  push(quotient);
+  push(qMap);
 }
 
 void ExpandVisitor::visit(const Basic& b)
 {
-  push(b);
+  push(Sum(b));
 }
 
 void ExpandVisitor::visit(const Group& g)
 {
-  ExpandVisitor visitor;
-  g.getExpr().accept(visitor);
-  push(Group(visitor.getResult()).clone());
+  const Expr e = g.getExpr();
+
+  if (!symbol)
+  {
+    // We are expanding everything. Expansion is done inside the group, but the group itself is preserved.
+    e.accept(*this);
+    const quotient_map_t qMap = stack.top(); stack.pop();
+    push(Sum(Group(toExpr(qMap)).clone()));
+  }
+  else if (e.has(*symbol))
+  {
+    // The group contains the variable we are expanding for. The group is lost.
+    e.accept(*this);
+  }
+  else
+  {
+    // The group does not contain the variable we are expanding for. The group is unchanged.
+    push(Sum(g.clone()));
+  }
 }
 
-Sum ExpandVisitor::getResult() const
+Expr ExpandVisitor::getResult() const
 {
   assert(stack.size() == 1);
-  return stack.top();
+  return toExpr(stack.top()).simplify();
 }
 
 }

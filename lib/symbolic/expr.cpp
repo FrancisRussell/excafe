@@ -125,7 +125,10 @@ Expr Expr::derivative(const Symbol& s) const
 
 Expr Expr::integrate(const Symbol& s) const
 {
-  return expr->integrate(s).simplify();
+  ExpandVisitor visitor(s);
+  expr->accept(visitor);
+  const Expr expanded = visitor.getResult();
+  return expanded.expr->integrate(s).simplify();
 }
 
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
