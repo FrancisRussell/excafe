@@ -3,7 +3,7 @@
 
 #include <stack>
 #include <boost/optional.hpp>
-#include <boost/tr1/unordered_map.hpp>
+#include <boost/unordered_map.hpp>
 #include "symbolic_fwd.hpp"
 #include "visitor.hpp"
 #include "sum.hpp"

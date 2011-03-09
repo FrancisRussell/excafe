@@ -58,7 +58,7 @@ void Sum::write(std::ostream& o) const
 
 Sum Sum::operator+(const Expr& e) const
 {
-  TermMap map(begin(), end());
+  TermMap map(getTerms());
   ++map[e];
   return Sum(overall, map);
 }
@@ -142,7 +142,7 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
     }
   }
 
-  v.postSummation(terms.size()+1);
+  v.postSummation(getTerms().size()+1);
 }
 
 Float Sum::eval(const Expr::subst_map& map) const
@@ -170,7 +170,7 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
 Rational Sum::findMultiplier() const
 {
   Rational result = this->getOverall();
-  BOOST_FOREACH(const TermMap::value_type& d, terms)
+  BOOST_FOREACH(const TermMap::value_type& d, getTerms())
   {
     result = Rational::gcd(result, d.second);
   }
@@ -213,7 +213,7 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     {
       coeff *= multiplier;
 
-      TermMap newTerms(sum.terms);
+      TermMap newTerms(sum.getTerms());
       BOOST_FOREACH(TermMap::value_type& d, newTerms)
       {
         d.second /= multiplier;

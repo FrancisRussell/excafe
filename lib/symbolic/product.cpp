@@ -181,7 +181,7 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
       v.visitExponent(d.second);
   }
 
-  v.postProduct(terms.size()+1);
+  v.postProduct(getTerms().size()+1);
 }
 
 Float Product::eval(const Expr::subst_map& map) const
@@ -241,7 +241,7 @@ Expr Product::extractMultiplier(Rational& coeff) const
     else
     {
       coeff *= product.overall;
-      return Product(null(), product.terms).clone();
+      return Product(null(), product.getTerms()).clone();
     }
   }
   else

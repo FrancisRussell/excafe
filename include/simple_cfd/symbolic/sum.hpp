@@ -71,7 +71,7 @@ public:
   
   explicit Sum(const Expr& a)
   {
-    ++terms[a];
+    ++getTerms()[a];
   }
 
   Sum operator+(const Expr& e) const;

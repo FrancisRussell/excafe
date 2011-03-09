@@ -2,16 +2,17 @@
 #define SIMPLE_CFD_SYMBOLIC_PAIR_SEQ_HPP
 
 #include <cstddef>
-#include <boost/unordered_map.hpp>
-#include <boost/utility.hpp>
 #include <ostream>
 #include <utility>
 #include <vector>
+#include <iostream>
+#include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/utility.hpp>
 #include "abstract_basic.hpp"
 #include "rational.hpp"
 #include "expr.hpp"
-#include <iostream>
-#include <boost/foreach.hpp>
+#include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
 {
@@ -28,10 +29,23 @@ protected:
   typedef boost::unordered_map<Expr, coeff_type> TermMap;
 
   Rational overall;
-  TermMap terms;
+  util::LazyCopy<TermMap> terms;
   bool simplified;
 
 private:
+  static bool hasZeros(const TermMap& map)
+  {
+    BOOST_FOREACH(const typename TermMap::value_type& term, map)
+    {
+      if (term.second == 0)
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   static void removeZeros(TermMap& map)
   {
     typename TermMap::iterator iter(map.begin());
@@ -54,7 +68,8 @@ protected:
 
   PairSeq(const Rational& _overall, const TermMap& _terms): overall(_overall), terms(_terms), simplified(false)
   {
-    removeZeros(terms);
+    if (hasZeros(terms.cref()))
+      removeZeros(getTerms());
   }
 
   void addSimplifiedTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
@@ -106,7 +121,7 @@ protected:
     if (this == &other)
     {
       child_type::combineOverall(overall, overall);
-      BOOST_FOREACH(typename TermMap::value_type& term, terms)
+      BOOST_FOREACH(typename TermMap::value_type& term, getTerms())
       {
         term.second *= 2;
       }
@@ -114,11 +129,21 @@ protected:
     else
     {
       child_type::combineOverall(overall, other.overall);
-      BOOST_FOREACH(const typename TermMap::value_type& term, other.terms)
+      BOOST_FOREACH(const typename TermMap::value_type& term, other.getTerms())
       {
-        terms[term.first] += term.second;
+        getTerms()[term.first] += term.second;
       }
     }
+  }
+
+  TermMap& getTerms()
+  {
+    return *terms;
+  }
+
+  const TermMap& getTerms() const
+  {
+    return *terms;
   }
 
 public:
@@ -128,12 +153,12 @@ public:
 
   const_iterator begin() const
   {
-    return terms.begin();
+    return getTerms().begin();
   }
 
   const_iterator end() const
   {
-    return terms.end();
+    return getTerms().end();
   }
 
   Rational getOverall() const
@@ -143,13 +168,13 @@ public:
 
   virtual std::size_t nops() const
   {
-    return terms.size();
+    return getTerms().size();
   }
 
   bool operator==(const child_type& s) const
   {
     return overall == s.overall
-           && terms == s.terms;
+           && getTerms() == s.getTerms();
   }
 
   child_type withoutOverall() const
@@ -158,7 +183,7 @@ public:
 
     if (overall != child_type::null())
     {
-      ++result.terms[result.overall];
+      ++result.getTerms()[result.overall];
       result.overall = child_type::null();
     }
     return result;
@@ -225,7 +250,7 @@ public:
   {
     std::size_t result = 0;
     boost::hash_combine(result, overall);
-    boost::hash_range(result, terms.begin(), terms.end());
+    boost::hash_range(result, getTerms().begin(), getTerms().end());
     return result;
   }
 };
