@@ -8,6 +8,7 @@
 #include "symbolic_fwd.hpp"
 #include "basic.hpp"
 #include "visitor.hpp"
+#include "make_expr_from.hpp"
 
 namespace cfd
 {
@@ -114,8 +115,7 @@ public:
     }
     else
     {
-      child_type* const cloned = new child_type(asChild(*this));
-      return Expr(cloned);
+      return make_expr_from(asChild(*this));
     }
   }
 

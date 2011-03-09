@@ -31,7 +31,7 @@ public:
   typedef std::map<Symbol, Expr> subst_map;
 
   explicit Expr(Basic* e);
-  explicit Expr(ref_t& e);
+  explicit Expr(const ref_t& e);
   Expr();
   Expr(const double s);
   Expr& operator=(const Expr& e);

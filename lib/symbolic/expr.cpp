@@ -20,7 +20,7 @@ Expr::Expr(Basic* const e) : expr(e)
   e->markHeapAllocated();
 }
 
-Expr::Expr(ref_t& e) : expr(e)
+Expr::Expr(const ref_t& e) : expr(e)
 {
   // Hopefully, e has already been marked as heap allocated. We cannot set it since e is const.
 }
