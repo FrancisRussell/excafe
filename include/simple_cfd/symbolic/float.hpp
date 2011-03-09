@@ -31,7 +31,7 @@ public:
   virtual Expr derivative(const Symbol& s) const;
   virtual bool has(const Expr& e) const;
   Expr subs(const Expr::subst_map& map) const;
-  Expr integrate(const Symbol& s) const;
+  Expr integrate_internal(const Symbol& s) const;
   Expr simplify() const;
   Float eval(const Expr::subst_map& map) const;
   bool operator==(const Float& n) const;

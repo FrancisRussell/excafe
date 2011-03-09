@@ -73,7 +73,7 @@ Expr Sum::derivative(const Symbol& s) const
   return Sum(null(), newTerms);
 }
 
-Expr Sum::integrate(const Symbol& s) const
+Expr Sum::integrate_internal(const Symbol& s) const
 {
   TermMap dependentTerms;
   TermMap independentTerms;
@@ -81,7 +81,7 @@ Expr Sum::integrate(const Symbol& s) const
   BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
   {
     if (e.first.has(s))
-      dependentTerms[e.first.integrate(s)] += e.second;
+      dependentTerms[e.first.integrate_internal(s)] += e.second;
     else
       independentTerms[e.first] += e.second;
   }

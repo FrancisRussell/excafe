@@ -40,7 +40,7 @@ Expr Group::subs(const Expr::subst_map& map) const
   return Group(expr.subs(map)).clone();
 }
 
-Expr Group::integrate(const Symbol& s) const
+Expr Group::integrate_internal(const Symbol& s) const
 {
   return Group(expr.integrate(s)).clone();
 }

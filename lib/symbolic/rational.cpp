@@ -74,7 +74,7 @@ bool Rational::operator==(const Rational& n) const
          && denominator == n.denominator;
 }
 
-Expr Rational::integrate(const Symbol& s) const
+Expr Rational::integrate_internal(const Symbol& s) const
 {
   return Product::mul(*this, s).clone();
 }

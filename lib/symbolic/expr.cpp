@@ -128,7 +128,12 @@ Expr Expr::integrate(const Symbol& s) const
   ExpandVisitor visitor(s);
   expr->accept(visitor);
   const Expr expanded = visitor.getResult();
-  return expanded.expr->integrate(s).simplify();
+  return expanded.integrate_internal(s).simplify();
+}
+
+Expr Expr::integrate_internal(const Symbol& s) const
+{
+  return expr->integrate_internal(s);
 }
 
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const

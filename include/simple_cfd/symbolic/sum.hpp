@@ -78,7 +78,7 @@ public:
   Sum& operator+=(const Sum& s);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
-  Expr integrate(const Symbol& s) const;
+  Expr integrate_internal(const Symbol& s) const;
   Sum expandedProduct(const Sum& s, const boost::function<bool (const Expr&)>& predicate = AlwaysTrue) const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;

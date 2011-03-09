@@ -79,7 +79,7 @@ Float& Float::operator*=(const Float& n)
   return *this;
 }
 
-Expr Float::integrate(const Symbol& s) const
+Expr Float::integrate_internal(const Symbol& s) const
 {
   return Product::mul(*this, s);
 }

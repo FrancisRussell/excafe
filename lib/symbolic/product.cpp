@@ -69,7 +69,7 @@ Expr Product::derivative(const Symbol& s) const
   return summation;
 }
 
-Expr Product::integrate(const Symbol& s) const
+Expr Product::integrate_internal(const Symbol& s) const
 {
   TermMap independent;
   TermMap dependent;
@@ -110,7 +110,7 @@ Expr Product::integrate(const Symbol& s) const
     else if (exponent == 1)
     {
       /* Integration of f^1*/
-      dependentIntegral = expr.integrate(s); 
+      dependentIntegral = expr.integrate_internal(s); 
     }
     else
     {

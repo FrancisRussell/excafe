@@ -84,7 +84,7 @@ Float Symbol::eval(const Expr::subst_map& map) const
   }
 }
 
-Expr Symbol::integrate(const Symbol& s) const
+Expr Symbol::integrate_internal(const Symbol& s) const
 {
   if (serial != s.serial)
     return Product::mul(*this, s);

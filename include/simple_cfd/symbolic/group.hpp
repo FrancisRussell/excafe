@@ -27,7 +27,7 @@ public:
   virtual bool has(const Expr& e) const;
   Expr getExpr() const;
   Expr subs(const Expr::subst_map& map) const;
-  Expr integrate(const Symbol& s) const;
+  Expr integrate_internal(const Symbol& s) const;
   Expr simplify() const;
   Float eval(const Expr::subst_map& map) const;
   bool operator==(const Group& g) const;
