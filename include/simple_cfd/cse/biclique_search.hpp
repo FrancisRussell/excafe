@@ -26,7 +26,7 @@ private:
   typedef typename base_t::vertex_descriptor vertex_descriptor;
   typedef typename base_t::edge_descriptor   edge_descriptor;
 
-  std::size_t depth;
+  long depth;
   std::size_t maximumCubes;
   std::size_t maximumNonOneCubes;
   int maximumCubeValueSum;
@@ -204,8 +204,8 @@ struct BicliqueSearchComparator
   template<typename graph_t>
   bool operator()(const BicliqueSearch<graph_t>& a, const BicliqueSearch<graph_t>& b) const
   {
-    return std::make_pair(a.getMaximalValue(), a.getDepth()) < 
-           std::make_pair(b.getMaximalValue(), b.getDepth());
+    return std::make_pair(a.getMaximalValue(), -a.getDepth()) < 
+           std::make_pair(b.getMaximalValue(), -b.getDepth());
   }
 };
 
