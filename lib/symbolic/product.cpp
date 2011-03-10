@@ -58,11 +58,11 @@ Expr Product::derivative(const Symbol& s) const
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    TermMap newTerm(begin(), end());
-    newTerm.erase(d.first);
-    ++newTerm[Rational(d.second)];
-    ++newTerm[d.first.derivative(s)];
-    newTerm[d.first]+=d.second-1;
+    LazyTermMap newTerm(getTerms());
+    newTerm->erase(d.first);
+    ++(*newTerm)[Rational(d.second)];
+    ++(*newTerm)[d.first.derivative(s)];
+    (*newTerm)[d.first]+=d.second-1;
     summation = summation + Product(getOverall(), newTerm);
   }
   
@@ -71,7 +71,7 @@ Expr Product::derivative(const Symbol& s) const
 
 Expr Product::integrate_internal(const Symbol& s) const
 {
-  TermMap independent;
+  LazyTermMap independent;
   TermMap dependent;
 
   /* We factor into products dependent and not dependent on s */
@@ -80,7 +80,7 @@ Expr Product::integrate_internal(const Symbol& s) const
     if (d.first.has(s))
       dependent.insert(d);
     else
-      independent.insert(d);
+      independent->insert(d);
   }
 
   Expr dependentIntegral;

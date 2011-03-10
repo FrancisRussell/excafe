@@ -58,32 +58,32 @@ void Sum::write(std::ostream& o) const
 
 Sum Sum::operator+(const Expr& e) const
 {
-  TermMap map(getTerms());
-  ++map[e];
+  LazyTermMap map(getTerms());
+  ++(*map)[e];
   return Sum(overall, map);
 }
 
 Expr Sum::derivative(const Symbol& s) const
 {
-  TermMap newTerms;
+  LazyTermMap newTerms;
   BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
   {
-    newTerms.insert(std::make_pair(e.first.derivative(s), e.second));
+    newTerms->insert(std::make_pair(e.first.derivative(s), e.second));
   }
   return Sum(null(), newTerms);
 }
 
 Expr Sum::integrate_internal(const Symbol& s) const
 {
-  TermMap dependentTerms;
-  TermMap independentTerms;
+  LazyTermMap dependentTerms;
+  LazyTermMap independentTerms;
 
   BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
   {
     if (e.first.has(s))
-      dependentTerms[e.first.integrate_internal(s)] += e.second;
+      (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
     else
-      independentTerms[e.first] += e.second;
+      (*independentTerms)[e.first] += e.second;
   }
   return Sum(null(), dependentTerms) + Product::mul(Sum(overall, independentTerms), s);
 }
@@ -93,15 +93,15 @@ Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr
   if (predicate != AlwaysTrue)
   {
     const Sum withoutOverall = sum.withoutOverall();
-    TermMap matching, nonMatching;
+    LazyTermMap matching, nonMatching;
   
     BOOST_FOREACH(const TermMap::value_type& term, withoutOverall)
     {
-      (predicate(term.first) ? matching : nonMatching)[term.first] += term.second;
+      (predicate(term.first) ? *matching : *nonMatching)[term.first] += term.second;
     }
   
-    if (!nonMatching.empty())
-      ++matching[Sum(null(), nonMatching).clone()];
+    if (!nonMatching->empty())
+      ++(*matching)[Sum(null(), nonMatching).clone()];
   
     return Sum(null(), matching);
   }
@@ -116,12 +116,12 @@ Sum Sum::expandedProduct(const Sum& other, const boost::function<bool (const Exp
   const Sum withoutOverallThis = groupNonMatching(*this, predicate).withoutOverall();
   const Sum withoutOverallOther = groupNonMatching(other, predicate).withoutOverall();
 
-  TermMap newTerms;
+  LazyTermMap newTerms;
   BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)
   {
     BOOST_FOREACH(const TermMap::value_type& b, withoutOverallOther)
     {
-      newTerms[Product::mul(a.first, b.first).simplify()] += a.second*b.second;
+      (*newTerms)[Product::mul(a.first, b.first).simplify()] += a.second*b.second;
     }
   }
 
@@ -213,8 +213,8 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     {
       coeff *= multiplier;
 
-      TermMap newTerms(sum.getTerms());
-      BOOST_FOREACH(TermMap::value_type& d, newTerms)
+      LazyTermMap newTerms(sum.getTerms());
+      BOOST_FOREACH(TermMap::value_type& d, *newTerms)
       {
         d.second /= multiplier;
       }

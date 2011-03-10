@@ -27,9 +27,10 @@ protected:
   typedef T child_type;
   typedef C coeff_type;
   typedef boost::unordered_map<Expr, coeff_type> TermMap;
+  typedef util::LazyCopy<TermMap> LazyTermMap;
 
   Rational overall;
-  util::LazyCopy<TermMap> terms;
+  LazyTermMap terms;
   bool simplified;
 
 private:
@@ -67,6 +68,12 @@ protected:
   }
 
   PairSeq(const Rational& _overall, const TermMap& _terms): overall(_overall), terms(_terms), simplified(false)
+  {
+    if (hasZeros(terms.cref()))
+      removeZeros(getTerms());
+  }
+
+  PairSeq(const Rational& _overall, const LazyTermMap& _terms): overall(_overall), terms(_terms), simplified(false)
   {
     if (hasZeros(terms.cref()))
       removeZeros(getTerms());
@@ -198,21 +205,21 @@ public:
     // products and sums, unlike the null value, which is 0 for sums.
     const coeff_type defaultCoefficient(1);
 
-    TermMap newTermMap;
+    LazyTermMap newTermMap;
     Rational newOverall = child_type::null();
-    addSimplifiedTerms(newOverall, newTermMap, defaultCoefficient, asChild(*this));
-    updateOverall(newOverall, newTermMap);
-    child_type::extractMultipliers(newOverall, newTermMap);
-    removeZeros(newTermMap);
+    addSimplifiedTerms(newOverall, *newTermMap, defaultCoefficient, asChild(*this));
+    updateOverall(newOverall, *newTermMap);
+    child_type::extractMultipliers(newOverall, *newTermMap);
+    removeZeros(*newTermMap);
 
     const Expr nullExpr = child_type::null();
-    if (newTermMap.empty())
+    if (newTermMap->empty())
     {
       return newOverall;
     }
-    else if (newTermMap.size() == 1 && newTermMap.begin()->second == 1 && newOverall == child_type::null())
+    else if (newTermMap->size() == 1 && newTermMap->begin()->second == 1 && newOverall == child_type::null())
     {
-      return newTermMap.begin()->first;
+      return newTermMap->begin()->first;
     }
     else
     {
@@ -224,10 +231,10 @@ public:
 
   Expr subs(const Expr::subst_map& map) const
   {
-    TermMap newTermMap;
+    LazyTermMap newTermMap;
     BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
-      newTermMap[term.first.subs(map)] += term.second;
+      (*newTermMap)[term.first.subs(map)] += term.second;
     }
     return child_type(overall, newTermMap);
   }

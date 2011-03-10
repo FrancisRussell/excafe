@@ -30,6 +30,11 @@ private:
   {
   }
 
+  Product(const Rational& _overall, const LazyTermMap& _terms): 
+    PairSeq<Product, int>(_overall, _terms)
+  {
+  }
+
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
   static Rational applyCoefficient(const Rational& t, const int coefficient);
