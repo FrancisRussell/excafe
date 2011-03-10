@@ -11,7 +11,7 @@ class NumericExpressionVisitor
 {
 public:
   typedef V         variable_t;
-  typedef cln::cl_F value_t;
+  typedef cln::cl_R value_t;
 
   virtual void visitConstant(const value_t& s) = 0;
   virtual void visitVariable(const variable_t& var) = 0;

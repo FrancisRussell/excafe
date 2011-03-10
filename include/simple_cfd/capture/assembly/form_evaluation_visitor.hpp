@@ -174,7 +174,7 @@ private:
       CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
     }
 
-    return det;
+    return expression_t::group(det);
   }
   
   static tensor_t gradToDiv(const tensor_t& operand)
