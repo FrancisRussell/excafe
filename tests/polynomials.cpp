@@ -51,6 +51,6 @@ int main(int argc, char** argv)
 
   std::cout << std::endl << std::endl;
 
-  std::cout << "Testing cfd::GinacExpression<std::string>:" << std::endl;
+  std::cout << "Testing cfd::ExcafeExpression<std::string>:" << std::endl;
   testPolynomial< cfd::ExcafeExpression<std::string> >();
 }
