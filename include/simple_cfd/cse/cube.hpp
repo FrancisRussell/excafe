@@ -6,7 +6,6 @@
 #include <utility>
 #include <algorithm>
 #include <boost/operators.hpp>
-#include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
 
 namespace cfd
@@ -27,12 +26,15 @@ namespace detail
 }
 
 class Cube : boost::totally_ordered<Cube,
-             boost::addable<Cube
+             boost::additive<Cube
              > >
 {
 private:
-  typedef std::map<unsigned, unsigned> exponent_map_t;
+  typedef std::map<unsigned, int> exponent_map_t;
   util::LazyCopy<exponent_map_t> literalExponents; 
+
+  Cube& merge(const Cube& c, bool negate);
+  static int minExponent(int a, int b);
 
 public:
   typedef exponent_map_t::value_type     value_type;
@@ -78,7 +80,6 @@ public:
     return *literalExponents == *c.literalExponents;
   }
 
-
   bool isOne() const
   {
     return literalExponents->empty();
@@ -89,9 +90,11 @@ public:
     literalExponents->insert(std::make_pair(literal, 1u));
   }
 
+  bool contains(const Cube& c) const;
+  Cube operator-() const;
   Cube& operator+=(const Cube& c);
+  Cube& operator-=(const Cube& c);
   Cube& operator&=(const Cube& c);
-  util::Maybe<Cube> operator/(const Cube& c) const;
   void incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const;
   std::size_t numMultiplies() const;
 

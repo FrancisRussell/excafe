@@ -47,10 +47,12 @@ SOP SOP::operator/(const Cube& cube) const
 
   for(std::size_t i=0; i<cubes->size(); ++i)
   {
-    const util::Maybe<Cube> dividedCube((*cubes)[i]/cube); 
+    const Cube& candidate = (*cubes)[i];
 
-    if (dividedCube.hasValue())
-      result.addCube((*termNumbers)[i], dividedCube.value());
+    if (candidate.contains(cube))
+    {
+      result.addCube((*termNumbers)[i], candidate-cube);
+    }
   }
   return result; 
 }

@@ -23,7 +23,6 @@ public:
   typedef std::vector< std::pair<SOP, Cube> > kernel_set_t;
 
 private:
-  friend class SOPRewrite;
   std::size_t nextTermNumber;
   util::LazyCopy< std::vector<unsigned> > termNumbers;
   util::LazyCopy< std::vector<Cube> > cubes;

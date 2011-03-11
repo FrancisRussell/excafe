@@ -7,8 +7,12 @@ namespace cfd
 namespace cse
 {
 
-template<typename B> class BicliqueSearchSpace;
-class SOPRewrite;
+template<typename G> class Biclique;
+template<typename G> class BicliqueSearch;
+template<typename V> class CSEOptimiser;
+class Cube;
+class KCM;
+class SOP;
 class PolynomialIndex;
 
 }
