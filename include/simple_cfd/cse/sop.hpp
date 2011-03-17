@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include "cse_fwd.hpp"
 #include "cube.hpp"
+#include "literal_info.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
 
@@ -102,7 +103,7 @@ public:
   SOP operator/(const Cube& cube) const;
 
   Cube maxDivisor() const;
-  std::map<unsigned, std::size_t> getLiteralUseCounts() const;
+  std::map<LiteralInfo, std::size_t> getLiteralUseCounts() const;
   kernel_set_t getKernels() const;
   std::size_t getTermNumber(const const_iterator i) const;
 

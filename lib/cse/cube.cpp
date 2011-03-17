@@ -5,6 +5,7 @@
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <simple_cfd/cse/cube.hpp>
+#include <simple_cfd/cse/literal_info.hpp>
 
 namespace cfd
 {
@@ -12,11 +13,11 @@ namespace cfd
 namespace cse
 {
 
-void Cube::incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const
+void Cube::incrementUseCounts(std::map<LiteralInfo, std::size_t>& freqs) const
 {
   BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
   {
-    ++freqs[lMapping.first];
+    ++freqs[LiteralInfo(lMapping.first, lMapping.second < 0)];
   }
 }
 

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
+#include "literal_info.hpp"
 
 namespace cfd
 {
@@ -44,6 +45,18 @@ public:
   Cube()
   {
   }
+
+  Cube(const unsigned literal)
+  {
+    literalExponents->insert(std::make_pair(literal, 1));
+  }
+
+  Cube(const unsigned literal, const int exponent)
+  {
+    literalExponents->insert(std::make_pair(literal, exponent));
+  }
+
+
 
   template<typename InputIterator>
   Cube(const InputIterator begin, const InputIterator end) : literalExponents(exponent_map_t(begin, end))
@@ -85,17 +98,12 @@ public:
     return literalExponents->empty();
   }
 
-  Cube(const unsigned literal)
-  {
-    literalExponents->insert(std::make_pair(literal, 1u));
-  }
-
   bool contains(const Cube& c) const;
   Cube operator-() const;
   Cube& operator+=(const Cube& c);
   Cube& operator-=(const Cube& c);
   Cube& operator&=(const Cube& c);
-  void incrementUseCounts(std::map<unsigned, std::size_t>& freqs) const;
+  void incrementUseCounts(std::map<LiteralInfo, std::size_t>& freqs) const;
   std::size_t numMultiplies() const;
 
   template<typename literal_writer>

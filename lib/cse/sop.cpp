@@ -5,6 +5,7 @@
 #include <simple_cfd/cse/sop.hpp>
 #include <simple_cfd/cse/cube.hpp>
 #include <simple_cfd/util/maybe.hpp>
+#include <simple_cfd/cse/literal_info.hpp>
 
 namespace cfd
 {
@@ -14,15 +15,16 @@ namespace cse
 
 void SOP::addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, const Cube& d)
 {
-  typedef std::map<unsigned, std::size_t> use_count_map;
+  typedef std::map<LiteralInfo, std::size_t> use_count_map;
   const use_count_map literalUseCounts = p.getLiteralUseCounts();
 
   BOOST_FOREACH(const use_count_map::value_type& useCountMapping, literalUseCounts)
   {
-    const unsigned j = useCountMapping.first;
+    const LiteralInfo jInfo = useCountMapping.first;
+    const unsigned j = jInfo.getLiteral();
     if (j>=i && useCountMapping.second>1)
     {
-      const Cube lj(j);
+      const Cube lj(j, jInfo.isReciprocal() ? -1 : 1);
       const SOP ft = p/lj;
       const Cube c = ft.maxDivisor();
 
@@ -74,9 +76,9 @@ Cube SOP::maxDivisor() const
   }
 }
 
-std::map<unsigned, std::size_t> SOP::getLiteralUseCounts() const
+std::map<LiteralInfo, std::size_t> SOP::getLiteralUseCounts() const
 {
-  std::map<unsigned, std::size_t> result;
+  std::map<LiteralInfo, std::size_t> result;
   BOOST_FOREACH(const Cube& c, *cubes)
   {
     c.incrementUseCounts(result);
