@@ -1,7 +1,10 @@
 CXX=${MPICXX}
 AM_CXXFLAGS=-I$(top_srcdir)/include -I/usr/include/petsc
 
-bin_PROGRAMS = tests polynomials legendre expression_conversion #forms
+bin_PROGRAMS = cse tests polynomials legendre expression_conversion #forms
+
+cse_SOURCES = cse.cpp
+cse_LDADD=$(top_srcdir)/lib/libsimplecfd.la
 
 tests_SOURCES = tests.cpp tester.cpp
 tests_LDADD=$(top_srcdir)/lib/libsimplecfd.la

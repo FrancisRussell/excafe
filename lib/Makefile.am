@@ -13,6 +13,7 @@ capture/evaluation/evaluation_strategy.cpp capture/solve_operation.cpp \
 capture/assembly/scalar_placeholder.cpp capture/assembly/position_component.cpp \
 capture/assembly/cell_vertex_component.cpp capture/assembly/basis_coefficient.cpp \
 capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propagation_rules.cpp \
+cse/cube.cpp cse/sop.cpp cse/polynomial_index.cpp \
 capture/assembly/scalar_constant.cpp symbolic/expr.cpp symbolic/symbol.cpp symbolic/float.cpp \
 util/type_info.cpp symbolic/basic.cpp symbolic/sum.cpp symbolic/product.cpp \
 symbolic/expand_visitor.cpp symbolic/rational.cpp symbolic/group.cpp
