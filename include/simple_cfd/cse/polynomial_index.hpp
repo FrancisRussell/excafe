@@ -2,6 +2,7 @@
 #define SIMPLE_CFD_CSE_POLYNOMIAL_INDEX_HPP
 
 #include <ostream>
+#include <limits>
 #include <boost/operators.hpp>
 
 namespace cfd
@@ -16,7 +17,11 @@ private:
   std::size_t index;
 
 public:
-  PolynomialIndex(const std::size_t _index) : index(_index)
+  PolynomialIndex() : index(std::numeric_limits<std::size_t>::max())
+  {
+  }
+
+  explicit PolynomialIndex(const std::size_t _index) : index(_index)
   {
   }
 

@@ -13,6 +13,7 @@ template<typename V> class CSEOptimiser;
 class Cube;
 class KCM;
 class SOP;
+class SOPMap;
 class PolynomialIndex;
 
 }

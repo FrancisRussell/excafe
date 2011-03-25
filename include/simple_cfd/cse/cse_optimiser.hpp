@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <cassert>
 #include <boost/variant.hpp>
 #include <boost/foreach.hpp>
 #include <boost/bimap.hpp>
@@ -14,6 +15,8 @@
 #include "cube.hpp"
 #include "sop.hpp"
 #include "kcm.hpp"
+#include "sop_builder.hpp"
+#include "sop_map.hpp"
 
 namespace cfd
 {
@@ -33,6 +36,8 @@ private:
   typedef typename Polynomial<variable_t>::monomial_t monomial_t;
   typedef typename polynomial_t::internal_value_t numeric_t;
   typedef boost::variant<variable_t, numeric_t, polynomial_index_t> literal_t;
+
+  SOPMap sops;
   boost::bimap<literal_t, unsigned> literalNumbering;
 
   class TranslatedLiteralWriter
@@ -84,11 +89,11 @@ private:
 
   Cube buildCube(const numeric_t& coefficient, const monomial_t& monomial)
   {
-    std::vector< std::pair<unsigned, unsigned> > exponentSeq;
+    std::vector< std::pair<unsigned, long> > exponentSeq;
     exponentSeq.reserve(monomial.size()+1);
 
     if (coefficient != 1.0)
-      exponentSeq.push_back(std::make_pair(getLiteralID(coefficient), 1u));
+      exponentSeq.push_back(std::make_pair(getLiteralID(coefficient), 1));
 
     BOOST_FOREACH(const typename monomial_t::value_type& exponent, monomial)
     {
@@ -115,19 +120,13 @@ public:
   CSEOptimiser(const InputIterator begin, const InputIterator end)
   {
     std::vector<polynomial_t> polynomials(begin, end);
-    std::vector<SOP> sops;
+    std::vector<PolynomialIndex> indices = sops.reserveIndices(polynomials.size());
+    assert(polynomials.size() == indices.size());
 
-    BOOST_FOREACH(const polynomial_t& p, polynomials)
-    {
-      sops.push_back(buildSOP(p));
-    }
+    for(std::size_t i=0; i<polynomials.size(); ++i)
+      sops[indices[i]] = buildSOP(polynomials[i]);
 
     KCM kcm(*this);
-    BOOST_FOREACH(const SOP& sop, sops)
-    {
-      kcm.addPolynomial(sop);
-    }
-
     std::cout << "Cube count: " << kcm.numCubes() << std::endl;
     std::cout << "Co-kernel count: " << kcm.numCoKernels() << std::endl;
     std::cout << "Edge count: " << kcm.numEdges() << std::endl;
@@ -141,14 +140,22 @@ public:
     std::cout << " (" << numAdditions << " additions, " << numMultiplies << " multiplies)" << std::endl;
 
     std::cout << "Factorized SOPs:" << std::endl;
-    std::size_t index =0;
-    BOOST_FOREACH(const SOP& sop, kcm)
+    BOOST_FOREACH(const SOPMap::value_type mapping, sops)
     {
-      std::cout << "var(" << index << "): ";
-      write(std::cout, sop);
+      std::cout << mapping.first << ": ";
+      write(std::cout, mapping.second);
       std::cout << std::endl;
-      ++index;
     }
+  }
+
+  SOPMap& getSOPMap()
+  {
+    return sops;
+  }
+
+  const SOPMap& getSOPMap() const
+  {
+    return sops;
   }
 
   unsigned getLiteralID(const variable_t& var)
@@ -165,6 +172,29 @@ public:
   {
     return getLiteralIDTemplated(i);
   }
+
+/*
+  PolynomialIndex addSOP(const SOP& sop)
+  {
+    const PolynomialIndex index(nextSOPIndex++);
+    sops[index] = sop;
+    return index;
+  }
+
+  SOP& operator[](const PolynomialIndex& index)
+  {
+    const std::map<PolynomialIndex, SOP>::iterator iter(sops.find(index));
+    assert(iter != sops.end());
+    return iter->second;
+  }
+
+  const SOP& operator[](const PolynomialIndex& index) const
+  {
+    const std::map<PolynomialIndex, SOP>::const_iterator iter(sops.find(index));
+    assert(iter != sops.end());
+    return iter->second;
+  }
+*/
 
   void write(std::ostream& o, const Cube& c) const
   {

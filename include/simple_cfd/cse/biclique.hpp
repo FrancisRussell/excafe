@@ -6,6 +6,8 @@
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include "properties.hpp"
+#include "sop_map.hpp"
+#include "polynomial_index.hpp"
 #include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/exception.hpp>
 
@@ -209,31 +211,31 @@ public:
     return result;
   }
 
-  std::set<std::size_t> getModifiedPolynomials() const
+  std::set<PolynomialIndex> getModifiedPolynomials() const
   {
-    std::set<std::size_t> polynomials;
+    std::set<PolynomialIndex> polynomials;
     BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
     {
-      const std::size_t polynomialID = get(polynomial_id(), *graph, coKernelVertex);
+      const PolynomialIndex polynomialID = get(polynomial_id(), *graph, coKernelVertex);
       polynomials.insert(polynomialID);
     }
     return polynomials;
   }
 
-  void rewritePolynomials(const vertex_descriptor& newCubeVertex, SOP* const sops) const
+  void rewritePolynomials(const vertex_descriptor& newCubeVertex, SOPMap& sops) const
   {
     const Cube newCube = get(term_cube(), *graph, newCubeVertex);
-    std::set<std::pair<std::size_t, std::size_t> > termIDs;
+    std::set<std::pair<PolynomialIndex, std::size_t> > termIDs;
 
     BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
     {
-      const std::size_t polynomialID = get(polynomial_id(), *graph, coKernelVertex);
+      const PolynomialIndex polynomialID = get(polynomial_id(), *graph, coKernelVertex);
       BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
       {
         const vertex_descriptor cubeVertex = target(edge, *graph);
         if (cubeVertices.find(cubeVertex) != cubeVertices.end())
         {
-          const std::pair<std::size_t, std::size_t> termID = get(term_id(), *graph, edge);
+          const std::pair<PolynomialIndex, std::size_t> termID = get(term_id(), *graph, edge);
 
           // If the polynomial ID of the term associated with this edge doesn't match
           // our co-kernel, something is badly wrong.

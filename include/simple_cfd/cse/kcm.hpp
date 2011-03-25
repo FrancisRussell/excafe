@@ -20,6 +20,7 @@
 #include "biclique.hpp"
 #include "biclique_search.hpp"
 #include "polynomial_index.hpp"
+#include "sop_map.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -36,12 +37,12 @@ private:
           boost::property<mul_count, int,
           boost::property<is_cube, bool,
           boost::property<is_one, bool,
-          boost::property<polynomial_id, std::size_t,
+          boost::property<polynomial_id, PolynomialIndex,
           boost::property<cube_ordering, std::pair<int, unsigned>
           > > > > > > > VertexProperty;
 
   // std::pair<polynomial_id, term_number>
-  typedef boost::property< term_id, std::pair<std::size_t, std::size_t> > EdgeProperty;
+  typedef boost::property< term_id, std::pair<PolynomialIndex, std::size_t> > EdgeProperty;
 
   typedef boost::adjacency_list<
     boost::vecS,
@@ -59,7 +60,7 @@ private:
   typedef BicliqueSearch<graph_t> biclique_search_t;
 
   NewLiteralCreator& literalCreator;
-  std::vector<SOP> polynomials;
+  SOPMap& sops;
   std::map<Cube, vertex_descriptor> cubeVertices;
   graph_t graph;
 
@@ -98,9 +99,16 @@ private:
     }
   }
 
-  void addPolynomial(const std::size_t polynomialID)
+  PolynomialIndex addPolynomial(const SOP& sop)
   {
-    const SOP& sop = polynomials[polynomialID];
+    const PolynomialIndex index = sops.addSOP(sop);
+    addPolynomial(index);
+    return index;
+  }
+
+  void addPolynomial(const PolynomialIndex& polynomialID)
+  {
+    const SOP& sop = sops[polynomialID];
     const SOP::kernel_set_t kernels = sop.getKernels();
     BOOST_FOREACH(const SOP::kernel_set_t::value_type kernel, kernels)
     {
@@ -127,29 +135,16 @@ public:
   typedef std::vector<SOP>::const_iterator iterator;
   typedef std::vector<SOP>::const_iterator const_iterator;
 
-  const_iterator begin() const
+  KCM(NewLiteralCreator& _literalCreator) : 
+  literalCreator(_literalCreator), sops(literalCreator.getSOPMap())
   {
-    return polynomials.begin();
+    BOOST_FOREACH(const SOPMap::value_type mapping, sops)
+    {
+      addPolynomial(mapping.first);
+    }
   }
 
-  const_iterator end() const
-  {
-    return polynomials.end();
-  }
-
-  KCM(NewLiteralCreator& _literalCreator) : literalCreator(_literalCreator)
-  {
-  }
-
-  std::size_t addPolynomial(const SOP& sop)
-  {
-    const std::size_t polynomialID = polynomials.size();
-    polynomials.push_back(sop);
-    addPolynomial(polynomialID);
-    return polynomialID;
-  }
-
-  vertex_descriptor addCoKernel(const std::size_t polynomialID, const Cube& cokernel)
+  vertex_descriptor addCoKernel(const PolynomialIndex& polynomialID, const Cube& cokernel)
   {
     const vertex_descriptor v = add_vertex(graph);
     put(is_cube(), graph, v, false);
@@ -256,9 +251,9 @@ public:
   std::size_t numAdditions() const
   {
     std::size_t result=0;
-    BOOST_FOREACH(const SOP& sop, polynomials)
+    BOOST_FOREACH(const SOPMap::value_type& mapping, sops)
     {
-      result += sop.numAdditions();
+      result += mapping.second.numAdditions();
     }
     return result;
   }
@@ -266,16 +261,16 @@ public:
   std::size_t numMultiplies() const
   {
     std::size_t result=0;
-    BOOST_FOREACH(const SOP& sop, polynomials)
+    BOOST_FOREACH(const SOPMap::value_type& mapping, sops)
     {
-      result += sop.numMultiplies();
+      result += mapping.second.numMultiplies();
     }
     return result;
   }
 
   void updateGraph(const Biclique<graph_t>& biclique)
   {
-    const std::set<std::size_t> modifiedPolynomials(biclique.getModifiedPolynomials());
+    const std::set<PolynomialIndex> modifiedPolynomials(biclique.getModifiedPolynomials());
 
     typedef boost::graph_traits<graph_t>::vertex_iterator vertex_iter;
     vertex_iter vi, viEnd;
@@ -296,7 +291,7 @@ public:
       vi = viNext;
     }
 
-    BOOST_FOREACH(const std::size_t polynomialID, modifiedPolynomials)
+    BOOST_FOREACH(const PolynomialIndex& polynomialID, modifiedPolynomials)
     {
       addPolynomial(polynomialID);
     }
@@ -305,11 +300,11 @@ public:
   void removeBiclique(const Biclique<graph_t>& biclique)
   {
     const SOP newSOP = biclique.getSOP();
-    const std::size_t newSOPIndex = addPolynomial(newSOP);
-    const unsigned literal = literalCreator.getLiteralID(PolynomialIndex(newSOPIndex));
+    const PolynomialIndex newSOPIndex = addPolynomial(newSOP);
+    const unsigned literal = literalCreator.getLiteralID(newSOPIndex);
 
     // Rewrite polynomials
-    biclique.rewritePolynomials(addCube(literal), &polynomials[0]);
+    biclique.rewritePolynomials(addCube(literal), sops);
 
     // Update graph
     updateGraph(biclique);
