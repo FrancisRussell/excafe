@@ -88,11 +88,17 @@ bool Cube::contains(const Cube& c) const
 Cube Cube::operator-() const
 {
   Cube result(*this);
-  BOOST_FOREACH(exponent_map_t::value_type& lMapping, *result.literalExponents)
-  {
-    lMapping.second = -lMapping.second;
-  }
+  result *= -1;
   return result;
+}
+
+Cube& Cube::operator*=(const int exponent)
+{
+  BOOST_FOREACH(exponent_map_t::value_type& lMapping, *literalExponents)
+  {
+    lMapping.second *= exponent;
+  }
+  return *this;
 }
 
 Cube& Cube::operator+=(const Cube& c)

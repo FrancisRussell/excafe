@@ -56,8 +56,6 @@ public:
     literalExponents->insert(std::make_pair(literal, exponent));
   }
 
-
-
   template<typename InputIterator>
   Cube(const InputIterator begin, const InputIterator end) : literalExponents(exponent_map_t(begin, end))
   {
@@ -103,6 +101,7 @@ public:
   Cube& operator+=(const Cube& c);
   Cube& operator-=(const Cube& c);
   Cube& operator&=(const Cube& c);
+  Cube& operator*=(const int exponent);
   void incrementUseCounts(std::map<LiteralInfo, std::size_t>& freqs) const;
   std::size_t numMultiplies() const;
 
