@@ -31,10 +31,8 @@ public:
   typedef V variable_t;
 
 private:
-  typedef Polynomial<variable_t> polynomial_t;
   typedef PolynomialIndex polynomial_index_t;
-  typedef typename Polynomial<variable_t>::monomial_t monomial_t;
-  typedef typename polynomial_t::internal_value_t numeric_t;
+  typedef typename NumericExpressionVisitor<variable_t>::value_t numeric_t;
   typedef boost::variant<variable_t, numeric_t, polynomial_index_t> literal_t;
 
   SOPMap sops;
@@ -87,44 +85,20 @@ private:
     }
   }
 
-  Cube buildCube(const numeric_t& coefficient, const monomial_t& monomial)
-  {
-    std::vector< std::pair<unsigned, long> > exponentSeq;
-    exponentSeq.reserve(monomial.size()+1);
-
-    if (coefficient != 1.0)
-      exponentSeq.push_back(std::make_pair(getLiteralID(coefficient), 1));
-
-    BOOST_FOREACH(const typename monomial_t::value_type& exponent, monomial)
-    {
-      exponentSeq.push_back(std::make_pair(getLiteralID(exponent.first), exponent.second));
-    }
-
-    return Cube(exponentSeq.begin(), exponentSeq.end());
-  }
-
-  SOP buildSOP(const polynomial_t& p)
-  {
-    typedef std::pair<monomial_t, numeric_t> monomial_coefficient;
-
-    SOP sop;
-    BOOST_FOREACH(const monomial_coefficient& monomialCoefficient, p)
-    {
-      sop.append(buildCube(monomialCoefficient.second, monomialCoefficient.first));
-    }
-    return sop;
-  }
-
 public:
   template<typename InputIterator>
   CSEOptimiser(const InputIterator begin, const InputIterator end)
   {
-    std::vector<polynomial_t> polynomials(begin, end);
+    std::vector<typename InputIterator::value_type> polynomials(begin, end);
     std::vector<PolynomialIndex> indices = sops.reserveIndices(polynomials.size());
     assert(polynomials.size() == indices.size());
 
     for(std::size_t i=0; i<polynomials.size(); ++i)
-      sops[indices[i]] = buildSOP(polynomials[i]);
+    {
+      SOPBuilder<variable_t> builder(*this);
+      polynomials[i].accept(builder);
+      sops[indices[i]] = builder.getResult();
+    }
 
     KCM kcm(*this);
     std::cout << "Cube count: " << kcm.numCubes() << std::endl;
