@@ -130,7 +130,9 @@ Sum Sum::expandedProduct(const Sum& other, const boost::function<bool (const Exp
 
 void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
 {
-  getOverall().accept(v);
+  const bool hasOverall = (getOverall() != null());
+  if (hasOverall)
+    getOverall().accept(v);
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
@@ -142,7 +144,7 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
     }
   }
 
-  v.postSummation(getTerms().size()+1);
+  v.postSummation(getTerms().size() + hasOverall ? 1 : 0);
 }
 
 Float Sum::eval(const Expr::subst_map& map) const
