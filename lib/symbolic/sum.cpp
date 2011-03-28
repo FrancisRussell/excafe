@@ -144,7 +144,7 @@ void Sum::accept(NumericExpressionVisitor<Symbol>& v) const
     }
   }
 
-  v.postSummation(getTerms().size() + hasOverall ? 1 : 0);
+  v.postSummation(getTerms().size() + (hasOverall ? 1 : 0));
 }
 
 Float Sum::eval(const Expr::subst_map& map) const

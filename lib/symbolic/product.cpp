@@ -184,7 +184,7 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
       v.visitExponent(d.second);
   }
 
-  v.postProduct(getTerms().size() + hasOverall ? 1 : 0);
+  v.postProduct(getTerms().size() + (hasOverall ? 1 : 0));
 }
 
 Float Product::eval(const Expr::subst_map& map) const
