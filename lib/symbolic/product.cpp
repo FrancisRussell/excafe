@@ -173,7 +173,10 @@ Expr Product::simplify() const
 
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
 {
-  getOverall().accept(v);
+  const bool hasOverall = (getOverall() != null());
+  if (hasOverall)
+    getOverall().accept(v);
+
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     d.first.accept(v);
@@ -181,7 +184,7 @@ void Product::accept(NumericExpressionVisitor<Symbol>& v) const
       v.visitExponent(d.second);
   }
 
-  v.postProduct(getTerms().size()+1);
+  v.postProduct(getTerms().size() + hasOverall ? 1 : 0);
 }
 
 Float Product::eval(const Expr::subst_map& map) const
