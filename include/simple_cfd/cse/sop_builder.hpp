@@ -2,10 +2,15 @@
 #define SIMPLE_CFD_CSE_SOP_BUILDER_HPP
 
 #include "cse_fwd.hpp"
+#include <simple_cfd/numeric/factoriser.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
 #include <simple_cfd/exception.hpp>
 #include <stack>
 #include <set>
+
+#include <cln/io.h>
+#include <cln/ring.h>
+#include <cln/integer_ring.h>
 
 namespace cfd
 {
@@ -21,6 +26,7 @@ private:
   typedef typename parent_t::variable_t variable_t;
   typedef typename parent_t::value_t    value_t;
 
+  Factoriser factoriser;
   CSEOptimiser<variable_t>& optimiser;
 
 private:
@@ -97,8 +103,28 @@ public:
 
   void visitConstant(const value_t& s)
   {
-    const unsigned literalID = optimiser.getLiteralID(s);
-    pushLiteral(literalID);
+    // Checks if s is an integer.
+    if (cln::instanceof(s, cln::cl_I_ring))
+    {
+      typedef Factoriser::power_t power_t;
+
+      const std::vector<power_t> factorMap = factoriser.factor(cln::the<cln::cl_I>(s));
+      BOOST_FOREACH(const power_t& power, factorMap)
+      {
+        const unsigned literalID = optimiser.getLiteralID(power.first);
+        pushLiteral(literalID);
+
+        if (power.second != 1)
+          visitExponent(cln::cl_I_to_int(power.second));
+      }
+
+      postProduct(factorMap.size());
+    }
+    else
+    {
+      const unsigned literalID = optimiser.getLiteralID(s);
+      pushLiteral(literalID);
+    }
   }
 
   void visitVariable(const variable_t& var)
