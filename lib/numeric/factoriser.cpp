@@ -27,6 +27,10 @@ std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
     result.push_back(power_t(-1, 1));
   }
 
+  // Compute upper bound on factors
+  cl_I sqrtFloor;
+  isqrt(value, &sqrtFloor);
+
   // Factorise using known primes from table, then revert to using odd numbers.
   std::size_t primeIndex = 0;
   cl_I factor = 0;
@@ -39,9 +43,16 @@ std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
 
     const cl_I exponent = removeFactor(value, factor);
     if (exponent > 0)
+    {
       result.push_back(power_t(factor, exponent));
+      isqrt(value, &sqrtFloor);
+    }
   }
-  while(value > 1);
+  while(value != 1 && factor <= sqrtFloor);
+
+  // value may still contain the final prime factor
+  if (value != 1)
+    result.push_back(power_t(value, 1));
 
   return result;
 }
