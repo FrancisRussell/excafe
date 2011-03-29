@@ -71,17 +71,11 @@ private:
     const sop_t terms = stack.top(); stack.pop();
 
     if (terms.empty())
-    {
       return Cube(optimiser.getLiteralID(value_t(0)));
-    }
     else if (terms.size() == 1)
-    {
       return *terms.begin();
-    }
     else
-    {
       return Cube(getCachedLiteral(terms));
-    }
   }
 
   void pushCube(const Cube& c)
@@ -99,6 +93,17 @@ private:
 public:
   SOPBuilder(CSEOptimiser<variable_t>& _optimiser) : optimiser(_optimiser)
   {
+  }
+
+  SOP getSOP(const NumericExpression<variable_t>& e)
+  {
+    assert(stack.empty());
+    e.accept(*this);
+    assert(stack.size() == 1);
+
+    const SOP result = buildSOP(stack.top());
+    stack.pop();
+    return result;
   }
 
   void visitConstant(const value_t& s)
@@ -165,12 +170,6 @@ public:
       result += popCube();
 
     pushCube(result);
-  }
-
-  SOP getResult() const
-  {
-    assert(stack.size() == 1);
-    return buildSOP(stack.top());
   }
 };
 

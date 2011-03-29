@@ -93,12 +93,9 @@ public:
     std::vector<PolynomialIndex> indices = sops.reserveIndices(polynomials.size());
     assert(polynomials.size() == indices.size());
 
+    SOPBuilder<variable_t> builder(*this);
     for(std::size_t i=0; i<polynomials.size(); ++i)
-    {
-      SOPBuilder<variable_t> builder(*this);
-      polynomials[i].accept(builder);
-      sops[indices[i]] = builder.getResult();
-    }
+      sops[indices[i]] = builder.getSOP(polynomials[i]);
 
     KCM kcm(*this);
     std::cout << "Cube count: " << kcm.numCubes() << std::endl;
@@ -146,29 +143,6 @@ public:
   {
     return getLiteralIDTemplated(i);
   }
-
-/*
-  PolynomialIndex addSOP(const SOP& sop)
-  {
-    const PolynomialIndex index(nextSOPIndex++);
-    sops[index] = sop;
-    return index;
-  }
-
-  SOP& operator[](const PolynomialIndex& index)
-  {
-    const std::map<PolynomialIndex, SOP>::iterator iter(sops.find(index));
-    assert(iter != sops.end());
-    return iter->second;
-  }
-
-  const SOP& operator[](const PolynomialIndex& index) const
-  {
-    const std::map<PolynomialIndex, SOP>::const_iterator iter(sops.find(index));
-    assert(iter != sops.end());
-    return iter->second;
-  }
-*/
 
   void write(std::ostream& o, const Cube& c) const
   {
