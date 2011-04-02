@@ -39,9 +39,7 @@ private:
     BOOST_FOREACH(const typename TermMap::value_type& term, map)
     {
       if (term.second == 0)
-      {
         return true;
-      }
     }
 
     return false;
@@ -63,6 +61,24 @@ private:
   }
 
 protected:
+  static Expr constructSimplifiedExpr(const Rational& overall, const LazyTermMap& map)
+  {
+    if (map->empty())
+    {
+      return overall;
+    }
+    else if (map->size() == 1 && map->begin()->second == 1 && overall == child_type::null())
+    {
+      return map->begin()->first;
+    }
+    else
+    {
+      child_type result(overall, map);
+      result.simplified = true;
+      return result;
+    }
+  }
+
   PairSeq() : overall(child_type::null()), simplified(false)
   {
   }
@@ -212,21 +228,7 @@ public:
     child_type::extractMultipliers(newOverall, *newTermMap);
     removeZeros(*newTermMap);
 
-    const Expr nullExpr = child_type::null();
-    if (newTermMap->empty())
-    {
-      return newOverall;
-    }
-    else if (newTermMap->size() == 1 && newTermMap->begin()->second == 1 && newOverall == child_type::null())
-    {
-      return newTermMap->begin()->first;
-    }
-    else
-    {
-      child_type result(newOverall, newTermMap);
-      result.simplified = true;
-      return result;
-    }
+    return constructSimplifiedExpr(newOverall, newTermMap);
   }
 
   Expr subs(const Expr::subst_map& map) const

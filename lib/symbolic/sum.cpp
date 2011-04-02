@@ -212,22 +212,15 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     const Sum& sum = convert_to<Sum>(basic);
     const Rational multiplier = sum.findMultiplier();
 
-    if (multiplier == Rational(1))
-    {
-      return simplified;
-    }
-    else
-    {
-      coeff *= multiplier;
+    coeff *= multiplier;
 
-      LazyTermMap newTerms(sum.getTerms());
-      BOOST_FOREACH(TermMap::value_type& d, *newTerms)
-      {
-        d.second /= multiplier;
-      }
-
-      return Sum(sum.overall / multiplier, newTerms).clone();
+    LazyTermMap newTerms(sum.getTerms());
+    BOOST_FOREACH(TermMap::value_type& d, *newTerms)
+    {
+      d.second /= multiplier;
     }
+
+    return constructSimplifiedExpr(sum.overall / multiplier, newTerms);
   }
   else
   {

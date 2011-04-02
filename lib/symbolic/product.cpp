@@ -237,15 +237,8 @@ Expr Product::extractMultiplier(Rational& coeff) const
   if (is_a<Product>(basic))
   {
     const Product& product = convert_to<Product>(basic);
-    if (product.getOverall() == null())
-    {
-      return simplified;
-    }
-    else
-    {
-      coeff *= product.overall;
-      return Product(null(), product.getTerms()).clone();
-    }
+    coeff *= product.overall;
+    return constructSimplifiedExpr(null(), product.getTerms());
   }
   else
   {
