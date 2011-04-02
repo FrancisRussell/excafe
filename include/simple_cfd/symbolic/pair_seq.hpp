@@ -220,12 +220,19 @@ public:
     // The null co-efficient for products and sums. This is 1 for both
     // products and sums, unlike the null value, which is 0 for sums.
     const coeff_type defaultCoefficient(1);
+    
+
+    // Ordering of these transformations is important. We extract
+    // multipliers first since this causes (possibly nested) single-term
+    // sums and products to be simplified to their singleton term. If we
+    // don't do this first, addSimplifiedTerms may miss incorporating
+    // child terms.
 
     LazyTermMap newTermMap;
     Rational newOverall = child_type::null();
+    child_type::extractMultipliers(newOverall, *newTermMap);
     addSimplifiedTerms(newOverall, *newTermMap, defaultCoefficient, asChild(*this));
     updateOverall(newOverall, *newTermMap);
-    child_type::extractMultipliers(newOverall, *newTermMap);
     removeZeros(*newTermMap);
 
     return constructSimplifiedExpr(newOverall, newTermMap);
