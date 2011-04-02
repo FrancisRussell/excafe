@@ -97,43 +97,27 @@ protected:
 
   void addSimplifiedTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
   {
-    const Expr nullExpr = child_type::null();
-
     child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
+
     BOOST_FOREACH(const typename TermMap::value_type& term, seq)
     {
       const Expr simplified = term.first.simplify();
+      const coeff_type localMultiplier = multiplier*term.second;
 
       if (is_a<child_type>(simplified.internal()))
       {
         const child_type& child = convert_to<child_type>(simplified.internal());
-        addSimplifiedTerms(overall, newTermMap, multiplier*term.second, child);
+        addSimplifiedTerms(overall, newTermMap, localMultiplier, child);
       }
-      else if (simplified != nullExpr)
+      else if (is_a<Rational>(simplified.internal()))
       {
-        // Terms equal that are 0 in a sum, or 1 in a product can be removed
-        newTermMap[simplified] += multiplier*term.second;
+        const Rational value = convert_to<Rational>(simplified.internal());
+        child_type::combineOverall(overall, child_type::applyCoefficient(value, localMultiplier));
       }
-    }
-  }
-
-  static void updateOverall(Rational& overall, TermMap& termMap)
-  {
-    typename TermMap::iterator iter(termMap.begin());
-    while(iter != termMap.end())
-    {
-      const typename TermMap::iterator nextIter = boost::next(iter);
-
-      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
-      if (is_a<Rational>(iter->first))
+      else
       {
-        const Rational value = convert_to<Rational>(iter->first);
-        const coeff_type coefficient = iter->second;
-        child_type::combineOverall(overall, child_type::applyCoefficient(value, coefficient));
-        termMap.erase(iter);
+        newTermMap[simplified] += localMultiplier;
       }
-
-      iter = nextIter;
     }
   }
 
@@ -232,7 +216,6 @@ public:
     Rational newOverall = child_type::null();
     child_type::extractMultipliers(newOverall, *newTermMap);
     addSimplifiedTerms(newOverall, *newTermMap, defaultCoefficient, asChild(*this));
-    updateOverall(newOverall, *newTermMap);
     removeZeros(*newTermMap);
 
     return constructSimplifiedExpr(newOverall, newTermMap);
