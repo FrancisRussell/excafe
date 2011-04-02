@@ -234,6 +234,11 @@ Rational::value_type Rational::lcm(const value_type a, const value_type b)
 
 Rational Rational::gcd(const Rational& a, const Rational& b)
 {
+  if (a.numerator == 0)
+    return abs(b);
+  else if (b.numerator == 0)
+    return abs(a);
+
   const value_type numerator = gcd(a.numerator, b.numerator);
   const value_type denominator = gcd(a.denominator, b.denominator);
   return Rational(numerator, denominator);

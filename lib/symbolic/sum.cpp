@@ -171,12 +171,7 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
 
 Rational Sum::findMultiplier() const
 {
-  // For our rational gcd to work usefully, we need to set result to the
-  // first non-zero value.
   Rational result = this->getOverall();
-  if (result == 0 && !getTerms().empty())
-    result = getTerms().begin()->second;
-
   BOOST_FOREACH(const TermMap::value_type& d, getTerms())
   {
     result = Rational::gcd(result, d.second);
