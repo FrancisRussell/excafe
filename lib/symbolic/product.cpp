@@ -234,19 +234,9 @@ Product& Product::operator*=(const Product& p)
 
 Expr Product::extractMultiplier(Rational& coeff) const
 {
-  const Expr simplified = this->simplify();
-  const Basic& basic = simplified.internal();
-
-  if (is_a<Product>(basic))
-  {
-    const Product& product = convert_to<Product>(basic);
-    coeff *= product.overall;
-    return constructSimplifiedExpr(null(), product.getTerms());
-  }
-  else
-  {
-    return basic.extractMultiplier(coeff);
-  }
+  const Product product = this->getNormalised();
+  coeff *= product.overall;
+  return constructSimplifiedExpr(null(), product.terms);
 }
 
 }

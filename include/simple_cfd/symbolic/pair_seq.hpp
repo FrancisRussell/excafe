@@ -155,6 +155,27 @@ protected:
     return *terms;
   }
 
+  child_type getNormalised() const
+  {
+    // The null co-efficient for products and sums. This is 1 for both
+    // products and sums, unlike the null value, which is 0 for sums.
+    const coeff_type defaultCoefficient(1);
+    
+    // Ordering of these transformations is important. We extract
+    // multipliers first since this causes (possibly nested) single-term
+    // sums and products to be simplified to their singleton term. If we
+    // don't do this first, mergeSubTerms may miss incorporating
+    // child terms.
+
+    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
+    LazyTermMap newTermMap;
+    Rational newOverall = child_type::null();
+    mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
+    removeZeros(*newTermMap);
+
+    return child_type(newOverall, newTermMap);
+  }
+
 public:
   typedef typename TermMap::value_type value_type;
   typedef typename TermMap::const_iterator iterator;
@@ -203,24 +224,8 @@ public:
     if (simplified)
       return this->clone();
 
-    // The null co-efficient for products and sums. This is 1 for both
-    // products and sums, unlike the null value, which is 0 for sums.
-    const coeff_type defaultCoefficient(1);
-    
-
-    // Ordering of these transformations is important. We extract
-    // multipliers first since this causes (possibly nested) single-term
-    // sums and products to be simplified to their singleton term. If we
-    // don't do this first, mergeSubTerms may miss incorporating
-    // child terms.
-
-    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
-    LazyTermMap newTermMap;
-    Rational newOverall = child_type::null();
-    mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
-    removeZeros(*newTermMap);
-
-    return constructSimplifiedExpr(newOverall, newTermMap);
+    const child_type normalised = getNormalised();
+    return constructSimplifiedExpr(normalised.overall, normalised.terms);
   }
 
   Expr subs(const Expr::subst_map& map) const

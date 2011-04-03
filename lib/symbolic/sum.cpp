@@ -176,7 +176,12 @@ Rational Sum::findMultiplier() const
   {
     result = Rational::gcd(result, d.second);
   }
-  return result;
+
+  // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
+  if (result == 0)
+    return Rational(1);
+  else
+    return result;
 }
 
 Sum Sum::extractMultipliers() const
@@ -201,28 +206,18 @@ Sum& Sum::operator+=(const Sum& s)
 
 Expr Sum::extractMultiplier(Rational& coeff) const
 {
-  const Expr simplified = this->simplify();
-  const Basic& basic = simplified.internal();
+  const Sum sum = this->getNormalised();
+  const Rational multiplier = sum.findMultiplier();
 
-  if (is_a<Sum>(basic))
+  coeff *= multiplier;
+
+  LazyTermMap newTerms(sum.getTerms());
+  BOOST_FOREACH(TermMap::value_type& d, *newTerms)
   {
-    const Sum& sum = convert_to<Sum>(basic);
-    const Rational multiplier = sum.findMultiplier();
-
-    coeff *= multiplier;
-
-    LazyTermMap newTerms(sum.getTerms());
-    BOOST_FOREACH(TermMap::value_type& d, *newTerms)
-    {
-      d.second /= multiplier;
-    }
-
-    return constructSimplifiedExpr(sum.overall / multiplier, newTerms);
+    d.second /= multiplier;
   }
-  else
-  {
-    return basic.extractMultiplier(coeff);
-  }
+
+  return constructSimplifiedExpr(sum.overall / multiplier, newTerms);
 }
 
 }
