@@ -9,6 +9,7 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
+#include <boost/functional/hash.hpp>
 #include "abstract_basic.hpp"
 #include "rational.hpp"
 #include "expr.hpp"
@@ -58,6 +59,22 @@ private:
 
       iter = nextIter;
     }
+  }
+
+  std::size_t getTermHash() const
+  {
+    std::size_t result = 0;
+    boost::hash_combine(result, getTerms().size());
+
+    BOOST_FOREACH(const typename TermMap::value_type& term, getTerms())
+    {
+      std::size_t termHash = 0;
+      boost::hash_combine(termHash, typename TermMap::hasher()(term.first));
+      boost::hash_combine(termHash, term.second);
+      result ^= termHash;
+    }
+
+    return result;
   }
 
 protected:
@@ -249,7 +266,7 @@ public:
   {
     std::size_t result = 0;
     boost::hash_combine(result, overall);
-    boost::hash_range(result, getTerms().begin(), getTerms().end());
+    boost::hash_combine(result, getTermHash());
     return result;
   }
 };
