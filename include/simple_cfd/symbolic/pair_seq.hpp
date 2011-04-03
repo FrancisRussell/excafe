@@ -64,8 +64,6 @@ private:
   std::size_t getTermHash() const
   {
     std::size_t result = 0;
-    boost::hash_combine(result, getTerms().size());
-
     BOOST_FOREACH(const typename TermMap::value_type& term, getTerms())
     {
       std::size_t termHash = 0;
@@ -74,6 +72,7 @@ private:
       result ^= termHash;
     }
 
+    boost::hash_combine(result, getTerms().size());
     return result;
   }
 
