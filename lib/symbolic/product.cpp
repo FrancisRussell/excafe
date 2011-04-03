@@ -210,17 +210,20 @@ Rational Product::applyCoefficient(const Rational& value, const int coefficient)
   return symbolic::pow(value, coefficient);
 }
 
-void Product::extractMultipliers(Rational& overall, TermMap& map)
+Product Product::extractMultipliers() const
 {
-  TermMap newTermMap;
-  BOOST_FOREACH(const TermMap::value_type& term, map)
+  Rational overall = getOverall();
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, getTerms())
   {
     Rational multiplier = null();
     const Expr newTerm = term.first.internal().extractMultiplier(multiplier);
-    newTermMap[newTerm] += term.second;
+    (*newTermMap)[newTerm] += term.second;
     overall *= symbolic::pow(multiplier, term.second);
   }
-  map.swap(newTermMap);
+  
+  return Product(overall, newTermMap);
 }
 
 Product& Product::operator*=(const Product& p)

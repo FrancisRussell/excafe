@@ -179,16 +179,18 @@ Rational Sum::findMultiplier() const
   return result;
 }
 
-void Sum::extractMultipliers(Rational& overall, TermMap& map)
+Sum Sum::extractMultipliers() const
 {
-  TermMap newTermMap;
-  BOOST_FOREACH(const TermMap::value_type& term, map)
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, getTerms())
   {
     Rational coefficient = term.second;
     const Expr e = term.first.internal().extractMultiplier(coefficient);
-    newTermMap[e] += coefficient;
+    (*newTermMap)[e] += coefficient;
   }
-  map.swap(newTermMap);
+
+  return Sum(getOverall(), newTermMap);
 }
 
 Sum& Sum::operator+=(const Sum& s)

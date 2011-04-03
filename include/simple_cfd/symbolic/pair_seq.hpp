@@ -97,28 +97,28 @@ protected:
       removeZeros(getTerms());
   }
 
-  void addSimplifiedTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
+  void mergeSubTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
   {
     child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
 
     BOOST_FOREACH(const typename TermMap::value_type& term, seq)
     {
-      const Expr simplified = term.first.simplify();
+      const Expr localTerm = term.first;
       const coeff_type localMultiplier = multiplier*term.second;
 
-      if (is_a<child_type>(simplified.internal()))
+      if (is_a<child_type>(localTerm.internal()))
       {
-        const child_type& child = convert_to<child_type>(simplified.internal());
-        addSimplifiedTerms(overall, newTermMap, localMultiplier, child);
+        const child_type& child = convert_to<child_type>(localTerm.internal());
+        mergeSubTerms(overall, newTermMap, localMultiplier, child);
       }
-      else if (is_a<Rational>(simplified.internal()))
+      else if (is_a<Rational>(localTerm.internal()))
       {
-        const Rational value = convert_to<Rational>(simplified.internal());
+        const Rational value = convert_to<Rational>(localTerm.internal());
         child_type::combineOverall(overall, child_type::applyCoefficient(value, localMultiplier));
       }
       else
       {
-        newTermMap[simplified] += localMultiplier;
+        newTermMap[localTerm] += localMultiplier;
       }
     }
   }
@@ -211,13 +211,13 @@ public:
     // Ordering of these transformations is important. We extract
     // multipliers first since this causes (possibly nested) single-term
     // sums and products to be simplified to their singleton term. If we
-    // don't do this first, addSimplifiedTerms may miss incorporating
+    // don't do this first, mergeSubTerms may miss incorporating
     // child terms.
 
+    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
     LazyTermMap newTermMap;
     Rational newOverall = child_type::null();
-    child_type::extractMultipliers(newOverall, *newTermMap);
-    addSimplifiedTerms(newOverall, *newTermMap, defaultCoefficient, asChild(*this));
+    mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
     removeZeros(*newTermMap);
 
     return constructSimplifiedExpr(newOverall, newTermMap);
