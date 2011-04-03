@@ -53,7 +53,9 @@ bool Symbol::has(const Expr& e) const
 
 std::size_t Symbol::untypedHash() const
 {
-  return boost::hash<int>()(serial);
+  std::size_t result = 50950;
+  boost::hash_combine(result, serial);
+  return result;
 }
 
 Expr Symbol::subs(const Expr::subst_map& map) const

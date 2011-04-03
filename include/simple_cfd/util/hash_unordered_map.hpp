@@ -13,7 +13,7 @@ namespace util
 template<typename Map>
 std::size_t hash_unordered_map(const Map& map)
 {
-  std::size_t result = 0;
+  std::size_t result = 23291;
   for(typename Map::const_iterator iter = map.begin();
       iter != map.end();
       ++iter)

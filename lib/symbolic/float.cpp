@@ -86,7 +86,9 @@ Expr Float::integrate_internal(const Symbol& s) const
 
 std::size_t Float::untypedHash() const
 {
-  return boost::hash<double>()(value);
+  std::size_t result = 63067;
+  boost::hash_combine(result, value);
+  return result;
 }
 
 Expr Float::subs(const Expr::subst_map& map) const
