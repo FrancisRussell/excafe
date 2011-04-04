@@ -82,8 +82,8 @@ Expr Rational::integrate_internal(const Symbol& s) const
 std::size_t Rational::untypedHash() const
 {
   std::size_t hash = 0x161f15c2;
-  cfd::hash_accum(hash, numerator);
-  cfd::hash_accum(hash, denominator);
+  cfd::util::hash_accum(hash, numerator);
+  cfd::util::hash_accum(hash, denominator);
   return hash;
 }
 

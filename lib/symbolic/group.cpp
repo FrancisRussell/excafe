@@ -78,7 +78,7 @@ bool Group::operator==(const Group& g) const
 std::size_t Group::untypedHash() const
 {
   std::size_t result = 0x2f33cf1c;
-  cfd::hash_accum(result, expr.hashValue());
+  cfd::util::hash_accum(result, expr.hashValue());
   return result;
 }
 

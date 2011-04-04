@@ -17,6 +17,9 @@
 namespace cfd
 {
 
+namespace util
+{
+
 namespace detail
 {
 
@@ -53,6 +56,7 @@ void hash_accum(std::size_t& seed, const T& value)
   }
 }
 
+}
 
 }
 

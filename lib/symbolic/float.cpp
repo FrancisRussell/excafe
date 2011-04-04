@@ -87,7 +87,7 @@ Expr Float::integrate_internal(const Symbol& s) const
 std::size_t Float::untypedHash() const
 {
   std::size_t result = 0x2c6831da;
-  cfd::hash_accum(result, value);
+  cfd::util::hash_accum(result, value);
   return result;
 }
 

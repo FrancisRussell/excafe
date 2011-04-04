@@ -255,8 +255,8 @@ public:
   std::size_t untypedHash() const
   {
     std::size_t result = 0x7730fe1a;
-    cfd::hash_accum(result, overall);
-    cfd::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
+    cfd::util::hash_accum(result, overall);
+    cfd::util::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
   }
 };

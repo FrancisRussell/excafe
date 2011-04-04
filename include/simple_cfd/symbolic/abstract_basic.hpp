@@ -134,8 +134,8 @@ public:
     if (!isHashed)
     {
       hash = 0x02c3866e;
-      cfd::hash_accum(hash, getTypeHash());
-      cfd::hash_accum(hash, asChild(*this).untypedHash());
+      cfd::util::hash_accum(hash, getTypeHash());
+      cfd::util::hash_accum(hash, asChild(*this).untypedHash());
       isHashed=true;
     }
     return hash;
