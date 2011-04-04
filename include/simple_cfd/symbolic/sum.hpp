@@ -46,28 +46,9 @@ protected:
   Sum extractMultipliers() const;
   
 public:
-  static Sum sub(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    --terms[b];
-    return Sum(null(), terms);
-  }
-
-  static Sum rational_multiple(const Expr& e, const Rational& n)
-  {
-    TermMap terms;
-    terms[e]+=n;
-    return Sum(null(), terms);
-  }
-
-  static Sum add(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    ++terms[b];
-    return Sum(null(), terms);
-  }
+  static Sum sub(const Expr& a, const Expr& b);
+  static Sum rational_multiple(const Expr& e, const Rational& n);
+  static Sum add(const Expr& a, const Expr& b);
 
   Sum()
   {

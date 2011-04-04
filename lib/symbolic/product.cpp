@@ -16,6 +16,29 @@ namespace cfd
 namespace symbolic
 {
 
+Product Product::pow(const Expr& base, const int exponent)
+{
+  LazyTermMap terms;
+  (*terms)[base] += exponent;
+  return Product(null(), terms);
+}
+
+Product Product::div(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  --(*terms)[b];
+  return Product(null(), terms);
+}
+
+Product Product::mul(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  ++(*terms)[b];
+  return Product(null(), terms);
+}
+
 Rational Product::null()
 {
   return Rational(1);

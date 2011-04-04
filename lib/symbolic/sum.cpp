@@ -15,6 +15,29 @@ namespace cfd
 namespace symbolic
 {
 
+Sum Sum::sub(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  --(*terms)[b];
+  return Sum(null(), terms);
+}
+
+Sum Sum::rational_multiple(const Expr& e, const Rational& n)
+{
+  LazyTermMap terms;
+  (*terms)[e]+=n;
+  return Sum(null(), terms);
+}
+
+Sum Sum::add(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  ++(*terms)[b];
+  return Sum(null(), terms);
+}
+
 bool Sum::AlwaysTrue(const Expr& e)
 {
   return true;

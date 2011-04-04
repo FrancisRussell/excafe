@@ -41,28 +41,9 @@ private:
   Product extractMultipliers() const;
 
 public:
-  static Product pow(const Expr& base, const int exponent)
-  {
-    TermMap terms;
-    terms[base] += exponent;
-    return Product(null(), terms);
-  }
-
-  static Product div(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    --terms[b];
-    return Product(null(), terms);
-  }
-
-  static Product mul(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    ++terms[b];
-    return Product(null(), terms);
-  }
+  static Product pow(const Expr& base, const int exponent);
+  static Product div(const Expr& a, const Expr& b);
+  static Product mul(const Expr& a, const Expr& b);
 
   Product& operator*=(const Product& p);
   void write(std::ostream& o) const;
