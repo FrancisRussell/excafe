@@ -23,15 +23,15 @@ struct fnv_traits
 template<>
 struct fnv_traits<32>
 {
-  static const std::size_t basis = 2166136261ul;
-  static const std::size_t prime = 16777619ul;
+  static const unsigned long basis = 2166136261ul;
+  static const unsigned long prime = 16777619ul;
 };
 
 template<>
 struct fnv_traits<64>
 {
-  static const std::size_t basis = 14695981039346656037ul;
-  static const std::size_t prime = 1099511628211ul;
+  static const unsigned long long basis = 14695981039346656037ull;
+  static const unsigned long long prime = 1099511628211ull;
 };
 
 }
