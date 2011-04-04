@@ -102,6 +102,11 @@ Expr Expr::simplify() const
   return expr->simplify();
 }
 
+std::size_t hash_value(const Basic& b)
+{
+  return b.hashValue();
+}
+
 std::size_t hash_value(const Expr& e)
 {
   return e.hashValue();

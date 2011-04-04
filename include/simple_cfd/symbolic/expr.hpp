@@ -96,6 +96,8 @@ inline const T& convert_to(const Expr& e)
 }
 
 std::size_t hash_value(const Expr& e);
+std::size_t hash_value(const Basic& b);
+
 Expr pow(const Expr& e, int power);
 std::ostream& operator<<(std::ostream& o, const Expr& e);
 
