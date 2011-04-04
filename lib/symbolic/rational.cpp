@@ -163,6 +163,10 @@ void Rational::normalise()
   if (numerator == 0)
     denominator = 1;
 
+  // Short circuit for efficiency.
+  if (denominator == 1)
+    return;
+
   if (denominator < 0)
   {
     numerator = -numerator;
