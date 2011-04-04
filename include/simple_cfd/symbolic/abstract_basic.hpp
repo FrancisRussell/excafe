@@ -133,7 +133,7 @@ public:
   {
     if (!isHashed)
     {
-      hash = 14643;
+      hash = 0x02c3866e;
       boost::hash_combine(hash, getTypeHash());
       boost::hash_combine(hash, asChild(*this).untypedHash());
       isHashed=true;

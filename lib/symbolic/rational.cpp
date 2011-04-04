@@ -81,7 +81,7 @@ Expr Rational::integrate_internal(const Symbol& s) const
 
 std::size_t Rational::untypedHash() const
 {
-  std::size_t hash = 52798;
+  std::size_t hash = 0x161f15c2;
   boost::hash_combine(hash, numerator);
   boost::hash_combine(hash, denominator);
   return hash;

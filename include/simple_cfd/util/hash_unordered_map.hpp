@@ -13,12 +13,12 @@ namespace util
 template<typename Map>
 std::size_t hash_unordered_map(const Map& map)
 {
-  std::size_t result = 23291;
+  std::size_t result = 0x2cb6bfcd;
   for(typename Map::const_iterator iter = map.begin();
       iter != map.end();
       ++iter)
   {   
-    std::size_t termHash = 0;
+    std::size_t termHash = 0x2b20b3a2;
     boost::hash_combine(termHash, *iter);
     result ^= termHash;
   }

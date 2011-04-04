@@ -86,7 +86,7 @@ Expr Float::integrate_internal(const Symbol& s) const
 
 std::size_t Float::untypedHash() const
 {
-  std::size_t result = 63067;
+  std::size_t result = 0x2c6831da;
   boost::hash_combine(result, value);
   return result;
 }

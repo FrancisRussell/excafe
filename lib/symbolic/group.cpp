@@ -76,7 +76,9 @@ bool Group::operator==(const Group& g) const
 
 std::size_t Group::untypedHash() const
 {
-  return expr.hashValue();
+  std::size_t result = 0x2f33cf1c;
+  boost::hash_combine(result, expr.hashValue());
+  return result;
 }
 
 void Group::accept(NumericExpressionVisitor<Symbol>& v) const

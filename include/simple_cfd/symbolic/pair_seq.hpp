@@ -254,7 +254,7 @@ public:
 
   std::size_t untypedHash() const
   {
-    std::size_t result = 39692;
+    std::size_t result = 0x7730fe1a;
     boost::hash_combine(result, overall);
     boost::hash_combine(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
