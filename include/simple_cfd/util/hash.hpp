@@ -6,8 +6,13 @@
 #include <boost/functional/hash.hpp>
 #include <boost/static_assert.hpp>
 
-// See http://www.isthe.com/chongo/tech/comp/fnv/index.html for details
-// on the hashing function used.
+/* Based on the FNV-1a mixing function[0]. Performing the XOR before the
+   multiply results in much better avalanche behaviour (apparently)
+   [1].
+
+   [0] http://www.isthe.com/chongo/tech/comp/fnv/index.html 
+   [1] https://sites.google.com/site/murmurhash/avalanche
+*/
 
 namespace cfd
 {
@@ -42,8 +47,8 @@ void hash_accum(std::size_t& seed, const T& value)
   std::size_t valueHash = boost::hash<T>()(value);
   for(std::size_t i=0; i<sizeof(std::size_t); ++i)
   {
-    seed *= detail::fnv_traits<sizeof(std::size_t)*CHAR_BIT>::prime;
     seed ^= valueHash & ((1 << CHAR_BIT) - 1);
+    seed *= detail::fnv_traits<sizeof(std::size_t)*CHAR_BIT>::prime;
     valueHash >>= CHAR_BIT;
   }
 }

@@ -19,7 +19,8 @@ std::size_t hash_unordered_map(const Map& map)
       ++iter)
   {   
     std::size_t termHash = 0x2b20b3a2;
-    cfd::hash_accum(termHash, *iter);
+    cfd::hash_accum(termHash, iter->first);
+    cfd::hash_accum(termHash, iter->second);
     result ^= termHash;
   }
 
