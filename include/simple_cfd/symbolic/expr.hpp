@@ -60,16 +60,39 @@ public:
 };
 
 template<typename T>
+inline bool is_a(const Basic& e)
+{
+  return dynamic_cast<const T*>(&e) != NULL;
+}
+
+template<typename T>
+inline bool is_exactly_a(const Basic& e)
+{
+  return typeid(e) == typeid(T);
+}
+
+template<typename T>
+inline const T& convert_to(const Basic& e)
+{
+  return static_cast<const T&>(e);
+}
+
+template<typename T>
 inline bool is_a(const Expr& e)
 {
-  return dynamic_cast<const T*>(e.expr.get()) != NULL;
+  return is_a<T>(e.internal());
+}
+
+template<typename T>
+inline bool is_exactly_a(const Expr& e)
+{
+  return is_exactly_a<T>(e.internal());
 }
 
 template<typename T>
 inline const T& convert_to(const Expr& e)
 {
-  assert(is_a<T>(e));
-  return static_cast<const T&>(*e.expr);
+  return convert_to<T>(e.internal());
 }
 
 std::size_t hash_value(const Expr& e);

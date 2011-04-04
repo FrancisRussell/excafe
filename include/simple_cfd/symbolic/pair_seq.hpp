@@ -106,14 +106,14 @@ protected:
       const Expr localTerm = term.first;
       const coeff_type localMultiplier = multiplier*term.second;
 
-      if (is_a<child_type>(localTerm.internal()))
+      if (is_exactly_a<child_type>(localTerm))
       {
         const child_type& child = convert_to<child_type>(localTerm.internal());
         mergeSubTerms(overall, newTermMap, localMultiplier, child);
       }
-      else if (is_a<Rational>(localTerm.internal()))
+      else if (is_exactly_a<Rational>(localTerm))
       {
-        const Rational value = convert_to<Rational>(localTerm.internal());
+        const Rational value = convert_to<Rational>(localTerm);
         child_type::combineOverall(overall, child_type::applyCoefficient(value, localMultiplier));
       }
       else

@@ -50,7 +50,7 @@ Expr Group::simplify() const
 {
   const Expr simplified = expr.simplify();
 
-  if (!is_a<Rational>(expr.internal()) && !is_a<Float>(expr.internal()))
+  if (!is_exactly_a<Rational>(expr) && !is_exactly_a<Float>(expr))
   {
     return Group(simplified).clone();
   }

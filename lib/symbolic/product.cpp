@@ -160,7 +160,7 @@ Expr Product::simplify() const
   const Expr simplified = PairSeq<Product, int>::simplify();
   const Basic& basic = simplified.internal();
 
-  if (is_a<Product>(basic))
+  if (is_exactly_a<Product>(basic))
   {
     const Product& p = convert_to<Product>(basic);
 

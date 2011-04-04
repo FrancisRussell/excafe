@@ -82,7 +82,7 @@ public:
     {
       return false;
     }
-    else if (getType(*this) == getType(b))
+    else if (is_exactly_a<child_type>(b))
     {
       return asChild(*this)==asChild(b);
     }
