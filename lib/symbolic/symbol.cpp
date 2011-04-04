@@ -2,9 +2,8 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
-#include <boost/functional/hash.hpp>
-#include <iostream>
 
 namespace cfd
 {
@@ -54,7 +53,7 @@ bool Symbol::has(const Expr& e) const
 std::size_t Symbol::untypedHash() const
 {
   std::size_t result = 0x2d3a117b;
-  boost::hash_combine(result, serial);
+  cfd::hash_accum(result, serial);
   return result;
 }
 

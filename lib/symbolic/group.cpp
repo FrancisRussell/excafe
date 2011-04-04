@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <ostream>
 #include <cstddef>
 
@@ -77,7 +78,7 @@ bool Group::operator==(const Group& g) const
 std::size_t Group::untypedHash() const
 {
   std::size_t result = 0x2f33cf1c;
-  boost::hash_combine(result, expr.hashValue());
+  cfd::hash_accum(result, expr.hashValue());
   return result;
 }
 

@@ -3,7 +3,7 @@
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
-#include <boost/functional/hash.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <ostream>
 #include <cassert>
 #include <cmath>
@@ -82,8 +82,8 @@ Expr Rational::integrate_internal(const Symbol& s) const
 std::size_t Rational::untypedHash() const
 {
   std::size_t hash = 0x161f15c2;
-  boost::hash_combine(hash, numerator);
-  boost::hash_combine(hash, denominator);
+  cfd::hash_accum(hash, numerator);
+  cfd::hash_accum(hash, denominator);
   return hash;
 }
 

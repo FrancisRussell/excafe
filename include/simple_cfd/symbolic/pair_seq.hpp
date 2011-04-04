@@ -9,11 +9,11 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
-#include <boost/functional/hash.hpp>
 #include "abstract_basic.hpp"
 #include "rational.hpp"
 #include "expr.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/util/hash_unordered_map.hpp>
 
 namespace cfd
@@ -255,8 +255,8 @@ public:
   std::size_t untypedHash() const
   {
     std::size_t result = 0x7730fe1a;
-    boost::hash_combine(result, overall);
-    boost::hash_combine(result, cfd::util::hash_unordered_map(getTerms()));
+    cfd::hash_accum(result, overall);
+    cfd::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
   }
 };

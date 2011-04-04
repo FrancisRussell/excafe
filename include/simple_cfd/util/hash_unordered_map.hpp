@@ -2,7 +2,7 @@
 #define SIMPLE_CFD_UTIL_HASH_UNORDERED_MAP_HPP
 
 #include <cstddef>
-#include <boost/functional/hash.hpp>
+#include <simple_cfd/util/hash.hpp>
 
 namespace cfd
 {
@@ -19,11 +19,11 @@ std::size_t hash_unordered_map(const Map& map)
       ++iter)
   {   
     std::size_t termHash = 0x2b20b3a2;
-    boost::hash_combine(termHash, *iter);
+    cfd::hash_accum(termHash, *iter);
     result ^= termHash;
   }
 
-  boost::hash_combine(result, map.size());
+  cfd::hash_accum(result, map.size());
   return result;
 }
 
