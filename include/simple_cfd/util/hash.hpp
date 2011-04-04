@@ -47,12 +47,12 @@ struct fnv_traits<64>
 template<typename T>
 void hash_accum(std::size_t& seed, const T& value)
 {
-  std::size_t valueHash = boost::hash<T>()(value);
+  const std::size_t valueHash = boost::hash<T>()(value);
   for(std::size_t i=0; i<sizeof(std::size_t); ++i)
   {
-    seed ^= valueHash & ((1 << CHAR_BIT) - 1);
+    const std::size_t shift = i*CHAR_BIT;
+    seed ^= (valueHash >> shift) & ((1 << CHAR_BIT) - 1);
     seed *= detail::fnv_traits<sizeof(std::size_t)*CHAR_BIT>::prime;
-    valueHash >>= CHAR_BIT;
   }
 }
 
