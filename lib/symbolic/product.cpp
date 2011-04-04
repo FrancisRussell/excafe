@@ -63,7 +63,7 @@ Expr Product::derivative(const Symbol& s) const
     ++(*newTerm)[Rational(d.second)];
     ++(*newTerm)[d.first.derivative(s)];
     (*newTerm)[d.first]+=d.second-1;
-    summation = summation + Product(getOverall(), newTerm);
+    summation += Product(getOverall(), newTerm);
   }
   
   return summation;
@@ -138,14 +138,14 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
 {
   const Rational zero(0);
   int sign = 1;
-  Expr result = zero;
+  Sum result;
 
   Expr u = a;
   Expr v = b.integrate(s);
 
   while (u != zero)
   {
-    result = result + Sum::rational_multiple(Product::mul(u, v), Rational(sign));
+    result += Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);
     v = v.integrate(s);
     sign *= -1;

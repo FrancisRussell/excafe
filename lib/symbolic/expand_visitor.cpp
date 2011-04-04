@@ -42,7 +42,7 @@ Sum ExpandVisitor::toExpr(const quotient_map_t& q)
   Sum result;
   BOOST_FOREACH(const quotient_map_t::value_type& term, q)
   {
-    result = result + Product::div(term.second, term.first);
+    result += Product::div(term.second, term.first);
   }
   return result;
 }

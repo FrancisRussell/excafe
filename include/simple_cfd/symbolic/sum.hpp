@@ -78,7 +78,7 @@ public:
     ++getTerms()[a];
   }
 
-  Sum operator+(const Expr& e) const;
+  Sum& operator+=(const Expr& e);
   Sum& operator+=(const Sum& s);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;

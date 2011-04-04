@@ -56,21 +56,21 @@ void Sum::write(std::ostream& o) const
   o << ")";
 }
 
-Sum Sum::operator+(const Expr& e) const
+Sum& Sum::operator+=(const Expr& e)
 {
-  LazyTermMap map(getTerms());
-  ++(*map)[e];
-  return Sum(overall, map);
+  this->invalidateHash();
+  ++getTerms()[e];
+  return *this;
 }
 
 Expr Sum::derivative(const Symbol& s) const
 {
-  LazyTermMap newTerms;
-  BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
+  Sum result;
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    newTerms->insert(std::make_pair(e.first.derivative(s), e.second));
+    result.getTerms()[e.first.derivative(s)] += e.second;
   }
-  return Sum(null(), newTerms);
+  return result;
 }
 
 Expr Sum::integrate_internal(const Symbol& s) const
@@ -78,14 +78,17 @@ Expr Sum::integrate_internal(const Symbol& s) const
   LazyTermMap dependentTerms;
   LazyTermMap independentTerms;
 
-  BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
     if (e.first.has(s))
       (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
     else
       (*independentTerms)[e.first] += e.second;
   }
-  return Sum(null(), dependentTerms) + Product::mul(Sum(overall, independentTerms), s);
+
+  Sum result(null(), dependentTerms);
+  result += Product::mul(Sum(overall, independentTerms), s);
+  return result;
 }
 
 Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate)
