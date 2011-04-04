@@ -75,7 +75,7 @@ Float Symbol::eval(const Expr::subst_map& map) const
 {
   const Expr::subst_map::const_iterator iter = map.find(*this);
 
-  if (iter != map.end() && is_a<Float>(iter->second))
+  if (iter != map.end() && is_exactly_a<Float>(iter->second))
   {
     return convert_to<Float>(iter->second);
   }
