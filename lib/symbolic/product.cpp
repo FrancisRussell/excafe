@@ -245,6 +245,10 @@ Product Product::extractMultipliers() const
     (*newTermMap)[newTerm] += term.second;
     overall *= symbolic::pow(multiplier, term.second);
   }
+
+  // Remove all terms if overall coefficient is zero.
+  if (overall == 0)
+    newTermMap->clear();
   
   return Product(overall, newTermMap);
 }
