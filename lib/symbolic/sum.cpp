@@ -235,7 +235,7 @@ Expr Sum::extractMultiplier(Rational& coeff) const
   if (this->getRewriteState() == NORMALISED_AND_EXTRACTED)
     return clone();
 
-  const Sum sum = this->getNormalised();
+  const Sum sum = (this->getRewriteState() == NORMALISED ? *this : this->getNormalised());
   const Rational multiplier = sum.findMultiplier();
 
   coeff *= multiplier;
