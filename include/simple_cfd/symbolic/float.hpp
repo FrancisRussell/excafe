@@ -22,6 +22,8 @@ class Float : public AbstractBasic<Float>,
 private:
   double value;
 
+  bool asRational(Rational& r) const;
+
 public:
   static Float fromFraction(long numerator, long denominator);
 
@@ -44,6 +46,7 @@ public:
   std::size_t untypedHash() const;
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 Float pow(const Float& f, int exponent);

@@ -103,12 +103,40 @@ Float Float::eval(const Expr::subst_map& map) const
 
 Expr Float::simplify() const
 {
-  const long multiplier = 2 << 6;
-  const long truncated = static_cast<long>(multiplier * value);
-  if (multiplier * value == truncated)
-    return Rational(truncated, multiplier);
+  Rational rational;
+  if (asRational(rational))
+    return rational;
   else
     return clone();
+}
+
+bool Float::asRational(Rational& r) const
+{
+  const long multiplier = 1 << 8;
+  const long truncated = static_cast<long>(multiplier * value);
+  if (multiplier * value == truncated)
+  {
+    r = Rational(truncated, multiplier);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+Expr Float::extractMultiplier(Rational& coeff) const
+{
+  Rational rational;
+  if (asRational(rational))
+  {
+    coeff *= rational;
+    return Rational(1);
+  }
+  else
+  {
+    return clone();
+  }
 }
 
 void Float::accept(NumericExpressionVisitor<Symbol>& v) const
