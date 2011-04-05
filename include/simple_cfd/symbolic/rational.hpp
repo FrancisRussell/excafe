@@ -59,6 +59,7 @@ public:
   Rational& operator--();
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 Rational abs(const Rational& r);

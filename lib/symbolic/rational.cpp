@@ -282,6 +282,19 @@ Rational pow(const Rational& r, const int exponent)
   return result;
 }
 
+Expr Rational::extractMultiplier(Rational& coeff) const
+{
+  if (*this == Rational(1))
+  {
+    return clone();
+  }
+  else
+  {
+    coeff *= *this;
+    return Rational(1);
+  }
+}
+
 }
 
 }
