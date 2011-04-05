@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <climits>
 #include <boost/functional/hash.hpp>
-#include <boost/static_assert.hpp>
 
 /* Based on the FNV-1a mixing function[0]. Performing the XOR before the
    multiply results in much better avalanche behaviour (apparently)
