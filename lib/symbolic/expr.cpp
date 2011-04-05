@@ -6,6 +6,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
+#include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <ostream>
 #include <cassert>
 
@@ -14,6 +15,8 @@ namespace cfd
 
 namespace symbolic
 {
+
+Expr Expr::initial = make_expr_from(Rational(0));
 
 Expr::Expr(Basic* const e) : expr(e)
 {
@@ -30,9 +33,10 @@ Expr::Expr(const double s) : expr(new Float(s))
   //TODO: mark as heap allocated
 }
 
-Expr::Expr() : expr(new Rational(0))
+// The default contructor uses a shared initial value to avoid invoking
+// malloc on each construction.
+Expr::Expr() : expr(initial.expr)
 {
-  //TODO: mark as heap allocated
 }
 
 Expr& Expr::operator+=(const Expr& e)

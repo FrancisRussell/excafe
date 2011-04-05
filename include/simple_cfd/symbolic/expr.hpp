@@ -25,6 +25,7 @@ public:
 private:
   template<typename T> friend bool is_a(const Expr&);
   template<typename T> friend const T& convert_to(const Expr&);
+  static Expr initial;
   ref_t expr;
 
 public:
