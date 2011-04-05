@@ -177,23 +177,6 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
   return result.simplify();
 }
 
-Expr Product::simplify() const
-{
-  const Rational zero(0);
-  const Expr simplified = PairSeq<Product, int>::simplify();
-  const Basic& basic = simplified.internal();
-
-  if (is_exactly_a<Product>(basic))
-  {
-    const Product& p = convert_to<Product>(basic);
-
-    if (p.getOverall() == zero)
-      return zero;
-  }
-  
-  return simplified;
-}
-
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   const bool hasOverall = (getOverall() != null());

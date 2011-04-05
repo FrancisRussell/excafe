@@ -49,7 +49,6 @@ public:
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate_internal(const Symbol& s) const;
-  Expr simplify() const;
   Expr expand() const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
