@@ -28,9 +28,8 @@ Expr::Expr(const ref_t& e) : expr(e)
   // Hopefully, e has already been marked as heap allocated. We cannot set it since e is const.
 }
 
-Expr::Expr(const double s) : expr(new Float(s))
+Expr::Expr(const double s) : expr(make_expr_from(Float(s)).expr)
 {
-  //TODO: mark as heap allocated
 }
 
 // The default contructor uses a shared initial value to avoid invoking
