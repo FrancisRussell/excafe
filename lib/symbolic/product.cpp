@@ -244,9 +244,12 @@ Product& Product::operator*=(const Product& p)
 
 Expr Product::extractMultiplier(Rational& coeff) const
 {
+  if (this->getRewriteState() == NORMALISED_AND_EXTRACTED)
+    return clone();
+
   const Product product = this->getNormalised();
   coeff *= product.overall;
-  return constructSimplifiedExpr(null(), product.terms);
+  return constructSimplifiedExpr(null(), product.terms, NORMALISED_AND_EXTRACTED);
 }
 
 }

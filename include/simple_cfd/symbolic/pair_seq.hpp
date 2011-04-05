@@ -31,9 +31,16 @@ protected:
   typedef boost::unordered_map<Expr, coeff_type> TermMap;
   typedef util::LazyCopy<TermMap> LazyTermMap;
 
+  enum RewriteState
+  {
+    NON_NORMALISED,
+    NORMALISED,
+    NORMALISED_AND_EXTRACTED
+  };
+
   Rational overall;
   LazyTermMap terms;
-  bool simplified;
+  RewriteState rewriteState;
 
 private:
   static bool hasZeros(const TermMap& map)
@@ -63,7 +70,8 @@ private:
   }
 
 protected:
-  static Expr constructSimplifiedExpr(const Rational& overall, const LazyTermMap& map)
+  static Expr constructSimplifiedExpr(const Rational& overall, const LazyTermMap& map, 
+                                      const RewriteState rewriteState)
   {
     if (map->empty())
     {
@@ -76,25 +84,32 @@ protected:
     else
     {
       child_type result(overall, map);
-      result.simplified = true;
+      result.rewriteState = rewriteState;
       return result;
     }
   }
 
-  PairSeq() : overall(child_type::null()), simplified(false)
+  PairSeq() : overall(child_type::null()), rewriteState(NON_NORMALISED)
   {
   }
 
-  PairSeq(const Rational& _overall, const TermMap& _terms): overall(_overall), terms(_terms), simplified(false)
+  PairSeq(const Rational& _overall, const TermMap& _terms) : 
+    overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
   {
     if (hasZeros(terms.cref()))
       removeZeros(getTerms());
   }
 
-  PairSeq(const Rational& _overall, const LazyTermMap& _terms): overall(_overall), terms(_terms), simplified(false)
+  PairSeq(const Rational& _overall, const LazyTermMap& _terms) : 
+    overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
   {
     if (hasZeros(terms.cref()))
       removeZeros(getTerms());
+  }
+
+  RewriteState getRewriteState() const
+  {
+    return rewriteState;
   }
 
   void mergeSubTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
@@ -221,11 +236,11 @@ public:
 
   Expr simplify() const
   {
-    if (simplified)
+    if (getRewriteState() == NORMALISED || getRewriteState() == NORMALISED_AND_EXTRACTED)
       return this->clone();
 
     const child_type normalised = getNormalised();
-    return constructSimplifiedExpr(normalised.overall, normalised.terms);
+    return constructSimplifiedExpr(normalised.overall, normalised.terms, NORMALISED);
   }
 
   Expr subs(const Expr::subst_map& map) const

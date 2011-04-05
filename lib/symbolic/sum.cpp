@@ -232,6 +232,9 @@ Sum& Sum::operator+=(const Sum& s)
 
 Expr Sum::extractMultiplier(Rational& coeff) const
 {
+  if (this->getRewriteState() == NORMALISED_AND_EXTRACTED)
+    return clone();
+
   const Sum sum = this->getNormalised();
   const Rational multiplier = sum.findMultiplier();
 
@@ -243,7 +246,7 @@ Expr Sum::extractMultiplier(Rational& coeff) const
     d.second /= multiplier;
   }
 
-  return constructSimplifiedExpr(sum.overall / multiplier, newTerms);
+  return constructSimplifiedExpr(sum.overall / multiplier, newTerms, NORMALISED_AND_EXTRACTED);
 }
 
 }
