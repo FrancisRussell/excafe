@@ -60,7 +60,6 @@ public:
   void swap(Expr& e);
   Expr expand() const;
   Float eval(const subst_map& map) const;
-  Expr retainOnly(const std::set<Symbol>& symbols, subst_map& map) const;
 };
 
 template<typename T>
