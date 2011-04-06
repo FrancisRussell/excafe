@@ -23,7 +23,7 @@ class Product : public PairSeq<Product, int>,
 private:
   friend class PairSeq<Product, int>;
 
-  static Expr integrate(const Expr& a, const Expr& b, const Symbol& s);
+  static Expr integrate(const Product& a, const Product& b, const Symbol& s);
 
   Product(const Rational& _overall, const TermMap& _terms): 
     PairSeq<Product, int>(_overall, _terms)

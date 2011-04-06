@@ -158,7 +158,7 @@ Expr Product::integrate_internal(const Symbol& s) const
   return Product(getOverall(), independent) * dependentIntegral;
 }
 
-Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
+Expr Product::integrate(const Product& a, const Product& b, const Symbol& s)
 {
   const Rational zero(0);
   int sign = 1;
