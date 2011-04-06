@@ -164,13 +164,13 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
   Sum result;
 
   Expr u = a;
-  Expr v = b.integrate(s);
+  Expr v = b.integrate_internal(s);
 
   while (u != zero)
   {
     result += Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);
-    v = v.integrate(s);
+    v = v.integrate_internal(s);
     sign *= -1;
   }
 

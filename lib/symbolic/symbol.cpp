@@ -2,6 +2,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
 #include <set>
@@ -91,7 +92,7 @@ Expr Symbol::integrate_internal(const Symbol& s) const
   if (serial != s.serial)
     return Product::mul(*this, s);
   else
-    return Product::mul(Rational(1,2), Product::pow(s, 2));
+    return Sum::rational_multiple(Product::pow(s, 2), Rational(1, 2));
 }
 
 void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const

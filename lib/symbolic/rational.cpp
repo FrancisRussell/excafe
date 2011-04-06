@@ -1,7 +1,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <ostream>
@@ -77,7 +77,7 @@ bool Rational::operator==(const Rational& n) const
 
 Expr Rational::integrate_internal(const Symbol& s) const
 {
-  return Product::mul(*this, s).clone();
+  return Sum::rational_multiple(s, *this).clone();
 }
 
 std::size_t Rational::untypedHash() const
