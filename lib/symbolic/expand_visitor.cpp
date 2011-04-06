@@ -26,7 +26,7 @@ ExpandVisitor::ExpandVisitor(const Symbol& s) : symbol(s)
 
 bool ExpandVisitor::containsSymbolPredicate(const Expr& e) const
 {
-  return e.has(*symbol);
+  return e.depends(*symbol);
 }
 
 Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b) const
@@ -155,7 +155,7 @@ void ExpandVisitor::visit(const Group& g)
     const quotient_map_t qMap = stack.top(); stack.pop();
     push(Sum(Group(toExpr(qMap)).clone()));
   }
-  else if (e.has(*symbol))
+  else if (e.depends(*symbol))
   {
     // The group contains the variable we are expanding for. The group is lost.
     e.accept(*this);

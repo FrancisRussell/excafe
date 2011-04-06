@@ -4,6 +4,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/util/hash.hpp>
+#include <set>
 #include <cmath>
 
 namespace cfd
@@ -36,9 +37,9 @@ Expr Float::derivative(const Symbol& s) const
   return Expr(new Rational(0));
 }
 
-bool Float::has(const Expr& e) const
+bool Float::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return false;
 }
 
 bool Float::operator<(const Float& n) const

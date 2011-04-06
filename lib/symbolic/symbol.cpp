@@ -4,6 +4,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
+#include <set>
 
 namespace cfd
 {
@@ -45,9 +46,9 @@ bool Symbol::operator<(const Symbol& s) const
   return serial < s.serial;
 }
 
-bool Symbol::has(const Expr& e) const
+bool Symbol::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return symbols.find(*this) != symbols.end();
 }
 
 std::size_t Symbol::untypedHash() const

@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/operators.hpp>
 #include <map>
+#include <set>
 #include <cassert>
 #include "symbolic_fwd.hpp"
 #include <simple_cfd/numeric/expression.hpp>
@@ -42,7 +43,8 @@ public:
   Expr& operator/=(const Expr& e);
   Expr& operator*=(const Expr& e);
   Expr operator-() const;
-  bool has(const Expr& e) const;
+  bool depends(const Symbol& s) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;
@@ -58,6 +60,7 @@ public:
   void swap(Expr& e);
   Expr expand() const;
   Float eval(const subst_map& map) const;
+  Expr retainOnly(const std::set<Symbol>& symbols, subst_map& map) const;
 };
 
 template<typename T>

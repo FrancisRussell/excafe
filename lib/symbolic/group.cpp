@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/util/hash.hpp>
+#include <set>
 #include <ostream>
 #include <cstddef>
 
@@ -31,9 +32,9 @@ Expr Group::derivative(const Symbol& s) const
   return Group(expr.derivative(s)).clone();
 }
 
-bool Group::has(const Expr& e) const
+bool Group::depends(const std::set<Symbol>& symbols) const
 {
-  return expr.has(e);
+  return expr.depends(symbols);
 }
 
 Expr Group::subs(const Expr::subst_map& map) const

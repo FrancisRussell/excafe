@@ -103,7 +103,7 @@ Expr Sum::integrate_internal(const Symbol& s) const
 
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    if (e.first.has(s))
+    if (e.first.depends(s))
       (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
     else
       (*independentTerms)[e.first] += e.second;

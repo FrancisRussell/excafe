@@ -100,7 +100,7 @@ Expr Product::integrate_internal(const Symbol& s) const
   /* We factor into products dependent and not dependent on s */
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    if (d.first.has(s))
+    if (d.first.depends(s))
       dependent.insert(d);
     else
       independent->insert(d);

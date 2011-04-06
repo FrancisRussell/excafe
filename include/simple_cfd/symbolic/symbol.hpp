@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <ostream>
 #include <utility>
+#include <set>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 #include "basic.hpp"
@@ -34,7 +35,7 @@ public:
   Float eval(const Expr::subst_map& map) const;
   bool operator==(const Symbol& s) const;
   bool operator<(const Symbol& s) const;
-  bool has(const Expr& e) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   Expr integrate_internal(const Symbol& s) const;
   Expr subs(const Expr::subst_map& map) const;
   std::size_t untypedHash() const;

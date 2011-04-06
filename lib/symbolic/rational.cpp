@@ -7,6 +7,7 @@
 #include <ostream>
 #include <cassert>
 #include <cmath>
+#include <set>
 
 namespace cfd
 {
@@ -54,9 +55,9 @@ Expr Rational::derivative(const Symbol& s) const
   return Expr(new Rational(0));
 }
 
-bool Rational::has(const Expr& e) const
+bool Rational::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return false;
 }
 
 bool Rational::operator<(const Rational& n) const

@@ -5,7 +5,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
-#include <iostream>
+#include <set>
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
@@ -253,14 +253,11 @@ public:
     return child_type(overall, newTermMap);
   }
 
-  bool has(const Expr& e) const
+  bool depends(const std::set<Symbol>& symbols) const
   {
-    if (e == *this)
-      return true;
-
     BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
-      if (term.first.has(e))
+      if (term.first.depends(symbols))
         return true;
     }
 

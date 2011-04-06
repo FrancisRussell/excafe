@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstddef>
+#include <set>
 #include <ostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -33,7 +34,7 @@ public:
   virtual bool operator==(const Basic& b) const = 0;
   virtual operator Expr() const = 0;
   virtual Expr subs(const Expr::subst_map& map) const = 0;
-  virtual bool has(const Expr& e) const = 0;
+  virtual bool depends(const std::set<Symbol>& e) const = 0;
   virtual void accept(Visitor& v) const = 0;
   virtual void accept(NumericExpressionVisitor<Symbol>& v) const = 0;
   virtual ~Basic() {}

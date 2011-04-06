@@ -90,9 +90,16 @@ Expr Expr::operator-() const
   return Sum::rational_multiple(*this, Rational(-1)).simplify();
 }
 
-bool Expr::has(const Expr& e) const
+bool Expr::depends(const std::set<Symbol>& symbols) const
 {
-  return expr->has(e);
+  return expr->depends(symbols);
+}
+
+bool Expr::depends(const Symbol& s) const
+{
+  std::set<Symbol> symbols;
+  symbols.insert(s);
+  return depends(symbols);
 }
 
 std::size_t Expr::hashValue() const
