@@ -148,8 +148,9 @@ Expr Product::integrate_internal(const Symbol& s) const
     const TermMap::iterator pivot = 
       boost::next(dependent.begin(), dependent.size()/2);
 
-    const TermMap first(dependent.begin(), pivot);
-    const TermMap second(pivot, dependent.end());
+    LazyTermMap first, second;
+    first->insert(dependent.begin(), pivot);
+    second->insert(pivot, dependent.end());
 
     dependentIntegral = integrate(Product(null(), first), Product(null(), second), s);
   }
@@ -174,7 +175,7 @@ Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
     sign *= -1;
   }
 
-  return result.simplify();
+  return result;
 }
 
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
