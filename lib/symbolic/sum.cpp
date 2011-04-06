@@ -197,11 +197,26 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
 
 Rational Sum::findMultiplier() const
 {
+  std::size_t negativeCount = 0;
+  if (this->getOverall() < 0) 
+    ++negativeCount;
+
   Rational result = this->getOverall();
   BOOST_FOREACH(const TermMap::value_type& d, getTerms())
   {
+    if (d.second < 0)
+      ++negativeCount;
+
     result = Rational::gcd(result, d.second);
   }
+
+  // If more than half of the terms in the sum have a negative
+  // co-efficient, we negate the extracted multiplier. This leads to a
+  // consistent normal form except when there are the same number of
+  // positive and negative terms.
+  const std::size_t numTerms = getTerms().size() + (getOverall() == 0 ? 0 : 1);
+  if (negativeCount > numTerms/2)
+    result = -result;
 
   // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
   if (result == 0)
