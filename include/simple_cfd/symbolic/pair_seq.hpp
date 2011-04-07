@@ -5,7 +5,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
-#include <iostream>
+#include <set>
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
@@ -13,6 +13,8 @@
 #include "rational.hpp"
 #include "expr.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
+#include <simple_cfd/util/hash.hpp>
+#include <simple_cfd/util/hash_unordered_map.hpp>
 
 namespace cfd
 {
@@ -29,9 +31,16 @@ protected:
   typedef boost::unordered_map<Expr, coeff_type> TermMap;
   typedef util::LazyCopy<TermMap> LazyTermMap;
 
+  enum RewriteState
+  {
+    NON_NORMALISED,
+    NORMALISED,
+    NORMALISED_AND_EXTRACTED
+  };
+
   Rational overall;
   LazyTermMap terms;
-  bool simplified;
+  RewriteState rewriteState;
 
 private:
   static bool hasZeros(const TermMap& map)
@@ -39,9 +48,7 @@ private:
     BOOST_FOREACH(const typename TermMap::value_type& term, map)
     {
       if (term.second == 0)
-      {
         return true;
-      }
     }
 
     return false;
@@ -63,61 +70,71 @@ private:
   }
 
 protected:
-  PairSeq() : overall(child_type::null()), simplified(false)
+  static Expr constructSimplifiedExpr(const Rational& overall, const LazyTermMap& map, 
+                                      const RewriteState rewriteState)
   {
-  }
-
-  PairSeq(const Rational& _overall, const TermMap& _terms): overall(_overall), terms(_terms), simplified(false)
-  {
-    if (hasZeros(terms.cref()))
-      removeZeros(getTerms());
-  }
-
-  PairSeq(const Rational& _overall, const LazyTermMap& _terms): overall(_overall), terms(_terms), simplified(false)
-  {
-    if (hasZeros(terms.cref()))
-      removeZeros(getTerms());
-  }
-
-  void addSimplifiedTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
-  {
-    const Expr nullExpr = child_type::null();
-
-    child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
-    BOOST_FOREACH(const typename TermMap::value_type& term, seq)
+    if (map->empty())
     {
-      const Expr simplified = term.first.simplify();
-
-      if (is_a<child_type>(simplified.internal()))
-      {
-        const child_type& child = convert_to<child_type>(simplified.internal());
-        addSimplifiedTerms(overall, newTermMap, multiplier*term.second, child);
-      }
-      else if (simplified != nullExpr)
-      {
-        // Terms equal that are 0 in a sum, or 1 in a product can be removed
-        newTermMap[simplified] += multiplier*term.second;
-      }
+      return overall;
+    }
+    else if (map->size() == 1 && map->begin()->second == 1 && overall == child_type::null())
+    {
+      return map->begin()->first;
+    }
+    else
+    {
+      child_type result(overall, map);
+      result.rewriteState = rewriteState;
+      return result;
     }
   }
 
-  static void updateOverall(Rational& overall, TermMap& termMap)
+  PairSeq() : overall(child_type::null()), rewriteState(NON_NORMALISED)
   {
-    typename TermMap::iterator iter(termMap.begin());
-    while(iter != termMap.end())
+  }
+
+  PairSeq(const Rational& _overall, const TermMap& _terms) : 
+    overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
+  {
+    if (hasZeros(terms.cref()))
+      removeZeros(getTerms());
+  }
+
+  PairSeq(const Rational& _overall, const LazyTermMap& _terms) : 
+    overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
+  {
+    if (hasZeros(terms.cref()))
+      removeZeros(getTerms());
+  }
+
+  RewriteState getRewriteState() const
+  {
+    return rewriteState;
+  }
+
+  void mergeSubTerms(Rational& overall, TermMap& newTermMap, const coeff_type& multiplier, const child_type& seq) const
+  {
+    child_type::combineOverall(overall, child_type::applyCoefficient(seq.overall, multiplier));
+
+    BOOST_FOREACH(const typename TermMap::value_type& term, seq)
     {
-      const typename TermMap::iterator nextIter = boost::next(iter);
+      const Expr localTerm = term.first;
+      const coeff_type localMultiplier = multiplier*term.second;
 
-      // Terms multiplied by 0 or raised to 0 can be removed from the sequence
-      if (is_a<Rational>(iter->first))
+      if (is_exactly_a<child_type>(localTerm))
       {
-        const Rational value = convert_to<Rational>(iter->first);
-        const coeff_type coefficient = iter->second;
-        child_type::combineOverall(overall, child_type::applyCoefficient(value, coefficient));
-        termMap.erase(iter);
+        const child_type& child = convert_to<child_type>(localTerm.internal());
+        mergeSubTerms(overall, newTermMap, localMultiplier, child);
       }
-
-      iter = nextIter;
+      else if (is_exactly_a<Rational>(localTerm))
+      {
+        const Rational value = convert_to<Rational>(localTerm);
+        child_type::combineOverall(overall, child_type::applyCoefficient(value, localMultiplier));
+      }
+      else
+      {
+        newTermMap[localTerm] += localMultiplier;
+      }
     }
   }
 
@@ -151,6 +168,27 @@ protected:
   const TermMap& getTerms() const
   {
     return *terms;
+  }
+
+  child_type getNormalised() const
+  {
+    // The null co-efficient for products and sums. This is 1 for both
+    // products and sums, unlike the null value, which is 0 for sums.
+    const coeff_type defaultCoefficient(1);
+    
+    // Ordering of these transformations is important. We extract
+    // multipliers first since this causes (possibly nested) single-term
+    // sums and products to be simplified to their singleton term. If we
+    // don't do this first, mergeSubTerms may miss incorporating
+    // child terms.
+
+    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
+    LazyTermMap newTermMap;
+    Rational newOverall = child_type::null();
+    mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
+    removeZeros(*newTermMap);
+
+    return child_type(newOverall, newTermMap);
   }
 
 public:
@@ -198,35 +236,11 @@ public:
 
   Expr simplify() const
   {
-    if (simplified)
+    if (getRewriteState() == NORMALISED || getRewriteState() == NORMALISED_AND_EXTRACTED)
       return this->clone();
 
-    // The null co-efficient for products and sums. This is 1 for both
-    // products and sums, unlike the null value, which is 0 for sums.
-    const coeff_type defaultCoefficient(1);
-
-    LazyTermMap newTermMap;
-    Rational newOverall = child_type::null();
-    addSimplifiedTerms(newOverall, *newTermMap, defaultCoefficient, asChild(*this));
-    updateOverall(newOverall, *newTermMap);
-    child_type::extractMultipliers(newOverall, *newTermMap);
-    removeZeros(*newTermMap);
-
-    const Expr nullExpr = child_type::null();
-    if (newTermMap->empty())
-    {
-      return newOverall;
-    }
-    else if (newTermMap->size() == 1 && newTermMap->begin()->second == 1 && newOverall == child_type::null())
-    {
-      return newTermMap->begin()->first;
-    }
-    else
-    {
-      child_type result(newOverall, newTermMap);
-      result.simplified = true;
-      return result;
-    }
+    const child_type normalised = getNormalised();
+    return constructSimplifiedExpr(normalised.overall, normalised.terms, NORMALISED);
   }
 
   Expr subs(const Expr::subst_map& map) const
@@ -239,14 +253,11 @@ public:
     return child_type(overall, newTermMap);
   }
 
-  bool has(const Expr& e) const
+  bool depends(const std::set<Symbol>& symbols) const
   {
-    if (e == *this)
-      return true;
-
     BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
-      if (term.first.has(e))
+      if (term.first.depends(symbols))
         return true;
     }
 
@@ -255,9 +266,9 @@ public:
 
   std::size_t untypedHash() const
   {
-    std::size_t result = 0;
-    boost::hash_combine(result, overall);
-    boost::hash_range(result, getTerms().begin(), getTerms().end());
+    std::size_t result = 0x7730fe1a;
+    cfd::util::hash_accum(result, overall);
+    cfd::util::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
   }
 };

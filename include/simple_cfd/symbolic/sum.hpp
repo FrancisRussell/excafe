@@ -43,31 +43,12 @@ protected:
   static Rational null();
   static void combineOverall(Rational& overall, const Rational& other);
   static Rational applyCoefficient(const Rational& t, const Rational& coefficient);
-  static void extractMultipliers(Rational& overall, TermMap& map);
+  Sum extractMultipliers() const;
   
 public:
-  static Sum sub(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    --terms[b];
-    return Sum(null(), terms);
-  }
-
-  static Sum rational_multiple(const Expr& e, const Rational& n)
-  {
-    TermMap terms;
-    terms[e]+=n;
-    return Sum(null(), terms);
-  }
-
-  static Sum add(const Expr& a, const Expr& b)
-  {
-    TermMap terms;
-    ++terms[a];
-    ++terms[b];
-    return Sum(null(), terms);
-  }
+  static Sum sub(const Expr& a, const Expr& b);
+  static Sum rational_multiple(const Expr& e, const Rational& n);
+  static Sum add(const Expr& a, const Expr& b);
 
   Sum()
   {
@@ -78,7 +59,7 @@ public:
     ++getTerms()[a];
   }
 
-  Sum operator+(const Expr& e) const;
+  Sum& operator+=(const Expr& e);
   Sum& operator+=(const Sum& s);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;

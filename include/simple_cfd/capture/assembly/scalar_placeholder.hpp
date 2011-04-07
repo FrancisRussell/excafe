@@ -14,6 +14,7 @@
 #include "basis_coefficient.hpp"
 #include "scalar_placeholder_operators.hpp"
 #include <simple_cfd/numeric/ginac_expression.hpp>
+#include <simple_cfd/numeric/excafe_expression.hpp>
 
 namespace cfd
 {
@@ -26,7 +27,7 @@ namespace
 
 struct ScalarPlaceholderExpression
 {
-  typedef GinacExpression<ScalarPlaceholder> type;
+  typedef ExcafeExpression<ScalarPlaceholder> type;
 };
 
 }

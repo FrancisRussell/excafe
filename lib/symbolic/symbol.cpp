@@ -2,9 +2,10 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
-#include <boost/functional/hash.hpp>
-#include <iostream>
+#include <set>
 
 namespace cfd
 {
@@ -46,14 +47,16 @@ bool Symbol::operator<(const Symbol& s) const
   return serial < s.serial;
 }
 
-bool Symbol::has(const Expr& e) const
+bool Symbol::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return symbols.find(*this) != symbols.end();
 }
 
 std::size_t Symbol::untypedHash() const
 {
-  return boost::hash<int>()(serial);
+  std::size_t result = 0x2d3a117b;
+  cfd::util::hash_accum(result, serial);
+  return result;
 }
 
 Expr Symbol::subs(const Expr::subst_map& map) const
@@ -74,7 +77,7 @@ Float Symbol::eval(const Expr::subst_map& map) const
 {
   const Expr::subst_map::const_iterator iter = map.find(*this);
 
-  if (iter != map.end() && is_a<Float>(iter->second))
+  if (iter != map.end() && is_exactly_a<Float>(iter->second))
   {
     return convert_to<Float>(iter->second);
   }
@@ -89,7 +92,7 @@ Expr Symbol::integrate_internal(const Symbol& s) const
   if (serial != s.serial)
     return Product::mul(*this, s);
   else
-    return Product::mul(Rational(1,2), Product::pow(s, 2));
+    return Sum::rational_multiple(Product::pow(s, 2), Rational(1, 2));
 }
 
 void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const

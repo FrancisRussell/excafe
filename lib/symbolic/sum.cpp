@@ -15,6 +15,29 @@ namespace cfd
 namespace symbolic
 {
 
+Sum Sum::sub(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  --(*terms)[b];
+  return Sum(null(), terms);
+}
+
+Sum Sum::rational_multiple(const Expr& e, const Rational& n)
+{
+  LazyTermMap terms;
+  (*terms)[e]+=n;
+  return Sum(null(), terms);
+}
+
+Sum Sum::add(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  ++(*terms)[b];
+  return Sum(null(), terms);
+}
+
 bool Sum::AlwaysTrue(const Expr& e)
 {
   return true;
@@ -56,21 +79,21 @@ void Sum::write(std::ostream& o) const
   o << ")";
 }
 
-Sum Sum::operator+(const Expr& e) const
+Sum& Sum::operator+=(const Expr& e)
 {
-  LazyTermMap map(getTerms());
-  ++(*map)[e];
-  return Sum(overall, map);
+  this->invalidateHash();
+  ++getTerms()[e];
+  return *this;
 }
 
 Expr Sum::derivative(const Symbol& s) const
 {
-  LazyTermMap newTerms;
-  BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
+  Sum result;
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    newTerms->insert(std::make_pair(e.first.derivative(s), e.second));
+    result.getTerms()[e.first.derivative(s)] += e.second;
   }
-  return Sum(null(), newTerms);
+  return result;
 }
 
 Expr Sum::integrate_internal(const Symbol& s) const
@@ -78,14 +101,17 @@ Expr Sum::integrate_internal(const Symbol& s) const
   LazyTermMap dependentTerms;
   LazyTermMap independentTerms;
 
-  BOOST_FOREACH(const TermMap::value_type& e, std::make_pair(begin(), end()))
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    if (e.first.has(s))
+    if (e.first.depends(s))
       (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
     else
       (*independentTerms)[e.first] += e.second;
   }
-  return Sum(null(), dependentTerms) + Product::mul(Sum(overall, independentTerms), s);
+
+  Sum result(null(), dependentTerms);
+  result += Product::mul(Sum(overall, independentTerms), s);
+  return result;
 }
 
 Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate)
@@ -171,24 +197,46 @@ Rational Sum::applyCoefficient(const Rational& value, const Rational& coefficien
 
 Rational Sum::findMultiplier() const
 {
+  std::size_t negativeCount = 0;
+  if (this->getOverall() < 0) 
+    ++negativeCount;
+
   Rational result = this->getOverall();
   BOOST_FOREACH(const TermMap::value_type& d, getTerms())
   {
+    if (d.second < 0)
+      ++negativeCount;
+
     result = Rational::gcd(result, d.second);
   }
-  return result;
+
+  // If more than half of the terms in the sum have a negative
+  // co-efficient, we negate the extracted multiplier. This leads to a
+  // consistent normal form except when there are the same number of
+  // positive and negative terms.
+  const std::size_t numTerms = getTerms().size() + (getOverall() == 0 ? 0 : 1);
+  if (negativeCount > numTerms/2)
+    result = -result;
+
+  // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
+  if (result == 0)
+    return Rational(1);
+  else
+    return result;
 }
 
-void Sum::extractMultipliers(Rational& overall, TermMap& map)
+Sum Sum::extractMultipliers() const
 {
-  TermMap newTermMap;
-  BOOST_FOREACH(const TermMap::value_type& term, map)
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, getTerms())
   {
     Rational coefficient = term.second;
     const Expr e = term.first.internal().extractMultiplier(coefficient);
-    newTermMap[e] += coefficient;
+    (*newTermMap)[e] += coefficient;
   }
-  map.swap(newTermMap);
+
+  return Sum(getOverall(), newTermMap);
 }
 
 Sum& Sum::operator+=(const Sum& s)
@@ -199,35 +247,21 @@ Sum& Sum::operator+=(const Sum& s)
 
 Expr Sum::extractMultiplier(Rational& coeff) const
 {
-  const Expr simplified = this->simplify();
-  const Basic& basic = simplified.internal();
+  if (this->getRewriteState() == NORMALISED_AND_EXTRACTED)
+    return clone();
 
-  if (is_a<Sum>(basic))
+  const Sum sum = (this->getRewriteState() == NORMALISED ? *this : this->getNormalised());
+  const Rational multiplier = sum.findMultiplier();
+
+  coeff *= multiplier;
+
+  LazyTermMap newTerms(sum.getTerms());
+  BOOST_FOREACH(TermMap::value_type& d, *newTerms)
   {
-    const Sum& sum = convert_to<Sum>(basic);
-    const Rational multiplier = sum.findMultiplier();
-
-    if (multiplier == Rational(1))
-    {
-      return simplified;
-    }
-    else
-    {
-      coeff *= multiplier;
-
-      LazyTermMap newTerms(sum.getTerms());
-      BOOST_FOREACH(TermMap::value_type& d, *newTerms)
-      {
-        d.second /= multiplier;
-      }
-
-      return Sum(sum.overall / multiplier, newTerms).clone();
-    }
+    d.second /= multiplier;
   }
-  else
-  {
-    return basic.extractMultiplier(coeff);
-  }
+
+  return constructSimplifiedExpr(sum.overall / multiplier, newTerms, NORMALISED_AND_EXTRACTED);
 }
 
 }

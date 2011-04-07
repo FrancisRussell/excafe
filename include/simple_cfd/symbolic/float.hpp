@@ -4,6 +4,7 @@
 #include <string>
 #include <cstddef>
 #include <ostream>
+#include <set>
 #include <utility>
 #include <boost/operators.hpp>
 #include "symbolic_fwd.hpp"
@@ -22,6 +23,8 @@ class Float : public AbstractBasic<Float>,
 private:
   double value;
 
+  bool asRational(Rational& r) const;
+
 public:
   static Float fromFraction(long numerator, long denominator);
 
@@ -29,7 +32,7 @@ public:
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
-  virtual bool has(const Expr& e) const;
+  virtual bool depends(const std::set<Symbol>& symbols) const;
   Expr subs(const Expr::subst_map& map) const;
   Expr integrate_internal(const Symbol& s) const;
   Expr simplify() const;
@@ -44,6 +47,7 @@ public:
   std::size_t untypedHash() const;
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 Float pow(const Float& f, int exponent);

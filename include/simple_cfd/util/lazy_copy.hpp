@@ -33,7 +33,7 @@ public:
   {
   }
 
-  LazyCopy(const value_type& v) : value(boost::make_shared<value_type>(v))
+  explicit LazyCopy(const value_type& v) : value(boost::make_shared<value_type>(v))
   {
   }
 

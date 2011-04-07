@@ -6,6 +6,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
+#include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <ostream>
 #include <cassert>
 
@@ -14,6 +15,8 @@ namespace cfd
 
 namespace symbolic
 {
+
+Expr Expr::initial = make_expr_from(Rational(0));
 
 Expr::Expr(Basic* const e) : expr(e)
 {
@@ -25,14 +28,14 @@ Expr::Expr(const ref_t& e) : expr(e)
   // Hopefully, e has already been marked as heap allocated. We cannot set it since e is const.
 }
 
-Expr::Expr(const double s) : expr(new Float(s))
+Expr::Expr(const double s) : expr(make_expr_from(Float(s)).expr)
 {
-  //TODO: mark as heap allocated
 }
 
-Expr::Expr() : expr(new Rational(0))
+// The default contructor uses a shared initial value to avoid invoking
+// malloc on each construction.
+Expr::Expr() : expr(initial.expr)
 {
-  //TODO: mark as heap allocated
 }
 
 Expr& Expr::operator+=(const Expr& e)
@@ -87,9 +90,16 @@ Expr Expr::operator-() const
   return Sum::rational_multiple(*this, Rational(-1)).simplify();
 }
 
-bool Expr::has(const Expr& e) const
+bool Expr::depends(const std::set<Symbol>& symbols) const
 {
-  return expr->has(e);
+  return expr->depends(symbols);
+}
+
+bool Expr::depends(const Symbol& s) const
+{
+  std::set<Symbol> symbols;
+  symbols.insert(s);
+  return depends(symbols);
 }
 
 std::size_t Expr::hashValue() const
@@ -100,6 +110,11 @@ std::size_t Expr::hashValue() const
 Expr Expr::simplify() const
 {
   return expr->simplify();
+}
+
+std::size_t hash_value(const Basic& b)
+{
+  return b.hashValue();
 }
 
 std::size_t hash_value(const Expr& e)

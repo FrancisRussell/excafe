@@ -16,6 +16,29 @@ namespace cfd
 namespace symbolic
 {
 
+Product Product::pow(const Expr& base, const int exponent)
+{
+  LazyTermMap terms;
+  (*terms)[base] += exponent;
+  return Product(null(), terms);
+}
+
+Product Product::div(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  --(*terms)[b];
+  return Product(null(), terms);
+}
+
+Product Product::mul(const Expr& a, const Expr& b)
+{
+  LazyTermMap terms;
+  ++(*terms)[a];
+  ++(*terms)[b];
+  return Product(null(), terms);
+}
+
 Rational Product::null()
 {
   return Rational(1);
@@ -63,7 +86,7 @@ Expr Product::derivative(const Symbol& s) const
     ++(*newTerm)[Rational(d.second)];
     ++(*newTerm)[d.first.derivative(s)];
     (*newTerm)[d.first]+=d.second-1;
-    summation = summation + Product(getOverall(), newTerm);
+    summation += Product(getOverall(), newTerm);
   }
   
   return summation;
@@ -77,7 +100,7 @@ Expr Product::integrate_internal(const Symbol& s) const
   /* We factor into products dependent and not dependent on s */
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    if (d.first.has(s))
+    if (d.first.depends(s))
       dependent.insert(d);
     else
       independent->insert(d);
@@ -125,8 +148,9 @@ Expr Product::integrate_internal(const Symbol& s) const
     const TermMap::iterator pivot = 
       boost::next(dependent.begin(), dependent.size()/2);
 
-    const TermMap first(dependent.begin(), pivot);
-    const TermMap second(pivot, dependent.end());
+    LazyTermMap first, second;
+    first->insert(dependent.begin(), pivot);
+    second->insert(pivot, dependent.end());
 
     dependentIntegral = integrate(Product(null(), first), Product(null(), second), s);
   }
@@ -134,41 +158,24 @@ Expr Product::integrate_internal(const Symbol& s) const
   return Product(getOverall(), independent) * dependentIntegral;
 }
 
-Expr Product::integrate(const Expr& a, const Expr& b, const Symbol& s)
+Expr Product::integrate(const Product& a, const Product& b, const Symbol& s)
 {
   const Rational zero(0);
   int sign = 1;
-  Expr result = zero;
+  Sum result;
 
   Expr u = a;
-  Expr v = b.integrate(s);
+  Expr v = b.integrate_internal(s);
 
   while (u != zero)
   {
-    result = result + Sum::rational_multiple(Product::mul(u, v), Rational(sign));
+    result += Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);
-    v = v.integrate(s);
+    v = v.integrate_internal(s);
     sign *= -1;
   }
 
-  return result.simplify();
-}
-
-Expr Product::simplify() const
-{
-  const Rational zero(0);
-  const Expr simplified = PairSeq<Product, int>::simplify();
-  const Basic& basic = simplified.internal();
-
-  if (is_a<Product>(basic))
-  {
-    const Product& p = convert_to<Product>(basic);
-
-    if (p.getOverall() == zero)
-      return zero;
-  }
-  
-  return simplified;
+  return result;
 }
 
 void Product::accept(NumericExpressionVisitor<Symbol>& v) const
@@ -210,17 +217,24 @@ Rational Product::applyCoefficient(const Rational& value, const int coefficient)
   return symbolic::pow(value, coefficient);
 }
 
-void Product::extractMultipliers(Rational& overall, TermMap& map)
+Product Product::extractMultipliers() const
 {
-  TermMap newTermMap;
-  BOOST_FOREACH(const TermMap::value_type& term, map)
+  Rational overall = getOverall();
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, getTerms())
   {
     Rational multiplier = null();
     const Expr newTerm = term.first.internal().extractMultiplier(multiplier);
-    newTermMap[newTerm] += term.second;
+    (*newTermMap)[newTerm] += term.second;
     overall *= symbolic::pow(multiplier, term.second);
   }
-  map.swap(newTermMap);
+
+  // Remove all terms if overall coefficient is zero.
+  if (overall == 0)
+    newTermMap->clear();
+  
+  return Product(overall, newTermMap);
 }
 
 Product& Product::operator*=(const Product& p)
@@ -231,26 +245,12 @@ Product& Product::operator*=(const Product& p)
 
 Expr Product::extractMultiplier(Rational& coeff) const
 {
-  const Expr simplified = this->simplify();
-  const Basic& basic = simplified.internal();
+  if (this->getRewriteState() == NORMALISED_AND_EXTRACTED)
+    return clone();
 
-  if (is_a<Product>(basic))
-  {
-    const Product& product = convert_to<Product>(basic);
-    if (product.getOverall() == null())
-    {
-      return simplified;
-    }
-    else
-    {
-      coeff *= product.overall;
-      return Product(null(), product.getTerms()).clone();
-    }
-  }
-  else
-  {
-    return basic.extractMultiplier(coeff);
-  }
+  const Product product  = (this->getRewriteState() == NORMALISED ? *this : this->getNormalised());
+  coeff *= product.overall;
+  return constructSimplifiedExpr(null(), product.terms, NORMALISED_AND_EXTRACTED);
 }
 
 }

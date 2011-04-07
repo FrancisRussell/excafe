@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/operators.hpp>
 #include <map>
+#include <set>
 #include <cassert>
 #include "symbolic_fwd.hpp"
 #include <simple_cfd/numeric/expression.hpp>
@@ -25,6 +26,7 @@ public:
 private:
   template<typename T> friend bool is_a(const Expr&);
   template<typename T> friend const T& convert_to(const Expr&);
+  static Expr initial;
   ref_t expr;
 
 public:
@@ -41,7 +43,8 @@ public:
   Expr& operator/=(const Expr& e);
   Expr& operator*=(const Expr& e);
   Expr operator-() const;
-  bool has(const Expr& e) const;
+  bool depends(const Symbol& s) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;
@@ -60,19 +63,44 @@ public:
 };
 
 template<typename T>
+inline bool is_a(const Basic& e)
+{
+  return dynamic_cast<const T*>(&e) != NULL;
+}
+
+template<typename T>
+inline bool is_exactly_a(const Basic& e)
+{
+  return typeid(e) == typeid(T);
+}
+
+template<typename T>
+inline const T& convert_to(const Basic& e)
+{
+  return static_cast<const T&>(e);
+}
+
+template<typename T>
 inline bool is_a(const Expr& e)
 {
-  return dynamic_cast<const T*>(e.expr.get()) != NULL;
+  return is_a<T>(e.internal());
+}
+
+template<typename T>
+inline bool is_exactly_a(const Expr& e)
+{
+  return is_exactly_a<T>(e.internal());
 }
 
 template<typename T>
 inline const T& convert_to(const Expr& e)
 {
-  assert(is_a<T>(e));
-  return static_cast<const T&>(*e.expr);
+  return convert_to<T>(e.internal());
 }
 
 std::size_t hash_value(const Expr& e);
+std::size_t hash_value(const Basic& b);
+
 Expr pow(const Expr& e, int power);
 std::ostream& operator<<(std::ostream& o, const Expr& e);
 

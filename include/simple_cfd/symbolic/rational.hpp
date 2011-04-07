@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <ostream>
 #include <utility>
+#include <set>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 #include "float.hpp"
@@ -40,7 +41,7 @@ public:
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
-  virtual bool has(const Expr& e) const;
+  virtual bool depends(const std::set<Symbol>& symbols) const;
   Expr subs(const Expr::subst_map& map) const;
   Expr integrate_internal(const Symbol& s) const;
   Float eval(const Expr::subst_map& map) const;
@@ -59,6 +60,7 @@ public:
   Rational& operator--();
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  virtual Expr extractMultiplier(Rational& coeff) const;
 };
 
 Rational abs(const Rational& r);

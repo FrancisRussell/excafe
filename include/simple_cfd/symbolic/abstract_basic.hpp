@@ -1,9 +1,9 @@
 #ifndef SIMPLE_CFD_SYMBOLIC_ABSTRACT_BASIC_HPP
 #define SIMPLE_CFD_SYMBOLIC_ABSTRACT_BASIC_HPP
 
-#include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <simple_cfd/util/type_info.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <utility>
 #include "symbolic_fwd.hpp"
 #include "basic.hpp"
@@ -82,7 +82,7 @@ public:
     {
       return false;
     }
-    else if (getType(*this) == getType(b))
+    else if (is_exactly_a<child_type>(b))
     {
       return asChild(*this)==asChild(b);
     }
@@ -133,9 +133,9 @@ public:
   {
     if (!isHashed)
     {
-      hash = 0;
-      boost::hash_combine(hash, getTypeHash());
-      boost::hash_combine(hash, asChild(*this).untypedHash());
+      hash = 0x02c3866e;
+      cfd::util::hash_accum(hash, getTypeHash());
+      cfd::util::hash_accum(hash, asChild(*this).untypedHash());
       isHashed=true;
     }
     return hash;

@@ -2,6 +2,8 @@
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/util/hash.hpp>
+#include <set>
 #include <ostream>
 #include <cstddef>
 
@@ -30,9 +32,9 @@ Expr Group::derivative(const Symbol& s) const
   return Group(expr.derivative(s)).clone();
 }
 
-bool Group::has(const Expr& e) const
+bool Group::depends(const std::set<Symbol>& symbols) const
 {
-  return expr.has(e);
+  return expr.depends(symbols);
 }
 
 Expr Group::subs(const Expr::subst_map& map) const
@@ -49,7 +51,7 @@ Expr Group::simplify() const
 {
   const Expr simplified = expr.simplify();
 
-  if (!is_a<Rational>(expr.internal()) && !is_a<Float>(expr.internal()))
+  if (!is_exactly_a<Rational>(expr) && !is_exactly_a<Float>(expr))
   {
     return Group(simplified).clone();
   }
@@ -76,7 +78,9 @@ bool Group::operator==(const Group& g) const
 
 std::size_t Group::untypedHash() const
 {
-  return expr.hashValue();
+  std::size_t result = 0x2f33cf1c;
+  cfd::util::hash_accum(result, expr.hashValue());
+  return result;
 }
 
 void Group::accept(NumericExpressionVisitor<Symbol>& v) const

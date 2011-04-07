@@ -1,12 +1,13 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
-#include <boost/functional/hash.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <ostream>
 #include <cassert>
 #include <cmath>
+#include <set>
 
 namespace cfd
 {
@@ -54,9 +55,9 @@ Expr Rational::derivative(const Symbol& s) const
   return Expr(new Rational(0));
 }
 
-bool Rational::has(const Expr& e) const
+bool Rational::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return false;
 }
 
 bool Rational::operator<(const Rational& n) const
@@ -76,14 +77,14 @@ bool Rational::operator==(const Rational& n) const
 
 Expr Rational::integrate_internal(const Symbol& s) const
 {
-  return Product::mul(*this, s).clone();
+  return Sum::rational_multiple(s, *this).clone();
 }
 
 std::size_t Rational::untypedHash() const
 {
-  std::size_t hash = 0;
-  boost::hash_combine(hash, numerator);
-  boost::hash_combine(hash, denominator);
+  std::size_t hash = 0x161f15c2;
+  cfd::util::hash_accum(hash, numerator);
+  cfd::util::hash_accum(hash, denominator);
   return hash;
 }
 
@@ -163,6 +164,10 @@ void Rational::normalise()
   if (numerator == 0)
     denominator = 1;
 
+  // Short circuit for efficiency.
+  if (denominator == 1)
+    return;
+
   if (denominator < 0)
   {
     numerator = -numerator;
@@ -234,6 +239,11 @@ Rational::value_type Rational::lcm(const value_type a, const value_type b)
 
 Rational Rational::gcd(const Rational& a, const Rational& b)
 {
+  if (a.numerator == 0)
+    return abs(b);
+  else if (b.numerator == 0)
+    return abs(a);
+
   const value_type numerator = gcd(a.numerator, b.numerator);
   const value_type denominator = gcd(a.denominator, b.denominator);
   return Rational(numerator, denominator);
@@ -271,6 +281,19 @@ Rational pow(const Rational& r, const int exponent)
     result *= multiplier;
 
   return result;
+}
+
+Expr Rational::extractMultiplier(Rational& coeff) const
+{
+  if (*this == Rational(1))
+  {
+    return clone();
+  }
+  else
+  {
+    coeff *= *this;
+    return Rational(1);
+  }
 }
 
 }

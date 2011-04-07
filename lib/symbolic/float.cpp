@@ -3,7 +3,8 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
-#include <boost/functional/hash.hpp>
+#include <simple_cfd/util/hash.hpp>
+#include <set>
 #include <cmath>
 
 namespace cfd
@@ -36,9 +37,9 @@ Expr Float::derivative(const Symbol& s) const
   return Expr(new Rational(0));
 }
 
-bool Float::has(const Expr& e) const
+bool Float::depends(const std::set<Symbol>& symbols) const
 {
-  return e == *this;
+  return false;
 }
 
 bool Float::operator<(const Float& n) const
@@ -86,7 +87,9 @@ Expr Float::integrate_internal(const Symbol& s) const
 
 std::size_t Float::untypedHash() const
 {
-  return boost::hash<double>()(value);
+  std::size_t result = 0x2c6831da;
+  cfd::util::hash_accum(result, value);
+  return result;
 }
 
 Expr Float::subs(const Expr::subst_map& map) const
@@ -101,12 +104,40 @@ Float Float::eval(const Expr::subst_map& map) const
 
 Expr Float::simplify() const
 {
-  const long multiplier = 2 << 6;
-  const long truncated = static_cast<long>(multiplier * value);
-  if (multiplier * value == truncated)
-    return Rational(truncated, multiplier);
+  Rational rational;
+  if (asRational(rational))
+    return rational;
   else
     return clone();
+}
+
+bool Float::asRational(Rational& r) const
+{
+  const long multiplier = 1 << 8;
+  const long truncated = static_cast<long>(multiplier * value);
+  if (multiplier * value == truncated)
+  {
+    r = Rational(truncated, multiplier);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+Expr Float::extractMultiplier(Rational& coeff) const
+{
+  Rational rational;
+  if (asRational(rational))
+  {
+    coeff *= rational;
+    return Rational(1);
+  }
+  else
+  {
+    return clone();
+  }
 }
 
 void Float::accept(NumericExpressionVisitor<Symbol>& v) const
