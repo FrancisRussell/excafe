@@ -6,6 +6,7 @@
 #include <boost/utility.hpp>
 #include <simple_cfd/cse/cube.hpp>
 #include <simple_cfd/cse/literal_info.hpp>
+#include <simple_cfd/cse/new_literal_creator.hpp>
 
 namespace cfd
 {
@@ -135,13 +136,53 @@ Cube& Cube::operator&=(const Cube& c)
   return *this;
 }
 
-std::size_t Cube::numMultiplies() const
+bool Cube::isUnit(const NewLiteralCreator& creator) const
 {
-  std::size_t result = 0;
+  if (literalExponents->empty())
+  {
+    return true;
+  }
+  else if (literalExponents->size() == 1 
+           && creator.isUnit(literalExponents->begin()->first))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool Cube::isNumeric(const NewLiteralCreator& creator) const
+{
   BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
   {
-    result += std::abs(lMapping.second);
+    if (!creator.isNumeric(lMapping.first))
+      return false;
   }
+
+  return true;
+}
+
+std::size_t Cube::numMultiplies(const NewLiteralCreator& creator) const
+{
+  std::size_t result = 0;
+  bool hasNumeric = false;
+
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
+  {
+    if (!creator.isUnit(lMapping.first))
+    {
+      if (creator.isNumeric(lMapping.first))
+        hasNumeric = true;
+      else
+        result += std::abs(lMapping.second);
+    }
+  }
+
+  if (hasNumeric)
+    ++result;
+
   return result > 0 ? result-1 : 0;
 }
 

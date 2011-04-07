@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 #include <simple_cfd/util/lazy_copy.hpp>
+#include "cse_fwd.hpp"
 #include "literal_info.hpp"
 
 namespace cfd
@@ -91,10 +92,6 @@ public:
     return *literalExponents == *c.literalExponents;
   }
 
-  bool isOne() const
-  {
-    return literalExponents->empty();
-  }
 
   bool contains(const Cube& c) const;
   Cube operator-() const;
@@ -103,12 +100,15 @@ public:
   Cube& operator&=(const Cube& c);
   Cube& operator*=(const int exponent);
   void incrementUseCounts(std::map<LiteralInfo, std::size_t>& freqs) const;
-  std::size_t numMultiplies() const;
+
+  bool isUnit(const NewLiteralCreator& creator) const;
+  bool isNumeric(const NewLiteralCreator& creator) const;
+  std::size_t numMultiplies(const NewLiteralCreator& creator) const;
 
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const
   {
-    if (isOne())
+    if (literalExponents->empty())
     {
       o << "1.0";
     }

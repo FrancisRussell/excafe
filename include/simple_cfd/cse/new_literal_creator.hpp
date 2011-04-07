@@ -16,6 +16,8 @@ public:
   virtual unsigned getLiteralID(const PolynomialIndex& i) = 0;
   virtual SOPMap& getSOPMap() = 0;
   virtual const SOPMap& getSOPMap() const = 0;
+  virtual bool isUnit(const unsigned literal) const = 0;
+  virtual bool isNumeric(const unsigned literal) const = 0;
 };
 
 }

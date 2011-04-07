@@ -153,6 +153,28 @@ public:
   {
     sop.write(o, TranslatedLiteralWriter(*this));
   }
+
+  bool isUnit(const unsigned literal) const
+  {
+    const literal_t value = getLiteral(literal);
+    const numeric_t* const numeric = boost::get<numeric_t>(&value);
+
+    if (numeric == NULL)
+    {
+      return false;
+    }
+    else
+    {
+      const numeric_t one(1), minusOne(-1);
+      return (*numeric) == one || (*numeric) == minusOne;
+    }
+  }
+
+  bool isNumeric(const unsigned literal) const
+  {
+    const literal_t value = getLiteral(literal);
+    return (boost::get<numeric_t>(&value) != NULL);
+  }
 };
 
 }

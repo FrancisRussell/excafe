@@ -92,12 +92,8 @@ public:
     return addCube(cube);
   }
 
-  std::size_t numAdditions() const
-  {
-    return cubes->empty() ? 0 : cubes->size()-1;
-  }
-
-  std::size_t numMultiplies() const;
+  std::size_t numAdditions(const NewLiteralCreator& creator) const;
+  std::size_t numMultiplies(const NewLiteralCreator& creator) const;
   bool deleteTerm(const std::size_t termID);
 
   SOP operator/(const Cube& cube) const;

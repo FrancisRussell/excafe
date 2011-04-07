@@ -83,7 +83,10 @@ private:
           if (id(candidateCube) > id(oldSplitPoint))
           {
             ++currentCandidateCubes;
-            if (!get(is_one(), this->getGraph(), candidateCube)) ++currentCandidateNonOneCubes;
+
+            if (!get(is_unit(), this->getGraph(), candidateCube)) 
+              ++currentCandidateNonOneCubes;
+
             currentCandidateCubesValueSum += get(mul_count(), this->getGraph(), candidateCube);
 
             if (nextSplitPoint == nullVertex || id(candidateCube) < id(nextSplitPoint))

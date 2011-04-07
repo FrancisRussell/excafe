@@ -28,7 +28,7 @@ void SOP::addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, cons
       const SOP ft = p/lj;
       const Cube c = ft.maxDivisor();
 
-      if (c.isOne() || c.begin()->first >= j)
+      if (c.begin() == c.end() || c.begin()->first >= j)
       {
         const SOP f1 = ft/c;
         const Cube d1 = merge(d, c, lj);
@@ -86,12 +86,31 @@ std::map<LiteralInfo, std::size_t> SOP::getLiteralUseCounts() const
   return result;
 }
 
-std::size_t SOP::numMultiplies() const
+std::size_t SOP::numAdditions(const NewLiteralCreator& creator) const
+{
+  std::size_t termCount = 0;
+  bool hasNumeric = false;
+
+  BOOST_FOREACH(const Cube& c, *cubes)
+  {
+    if (c.isNumeric(creator))
+      hasNumeric = true;
+    else
+      ++termCount;
+  }
+
+  if (hasNumeric)
+    ++termCount;
+
+  return termCount > 0 ? termCount-1 : 0;
+}
+
+std::size_t SOP::numMultiplies(const NewLiteralCreator& creator) const
 {
   std::size_t result = 0;
   BOOST_FOREACH(const Cube& c, *cubes)
   {
-    result += c.numMultiplies();
+    result += c.numMultiplies(creator);
   }
   return result;
 }

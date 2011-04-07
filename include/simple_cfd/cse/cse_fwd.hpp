@@ -15,6 +15,7 @@ class KCM;
 class SOP;
 class SOPMap;
 class PolynomialIndex;
+class NewLiteralCreator;
 
 }
 

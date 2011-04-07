@@ -42,7 +42,9 @@ protected:
 
     BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
     {
-      if (!get(is_one(), graph, v)) ++nonOneCount;
+      if (!get(is_unit(), graph, v)) 
+        ++nonOneCount;
+
       value += get(mul_count(), graph, v);
     }
 

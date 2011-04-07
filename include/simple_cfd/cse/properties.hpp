@@ -25,8 +25,8 @@ struct mul_count     { typedef boost::vertex_property_tag kind; };
 // Is this a cube? Otherwise, it's a co-kernel.
 struct is_cube       { typedef boost::vertex_property_tag kind; };
 
-// Is this cube/co-kernel 1.0?
-struct is_one       { typedef boost::vertex_property_tag kind; };
+// Is this cube/co-kernel 1.0 or -1.0?
+struct is_unit       { typedef boost::vertex_property_tag kind; };
 
 // This value represents a heuristic about which cubes to try to grow with first.
 // It *must* have a unique value for each cube, hence the form (score, vertex_id).
