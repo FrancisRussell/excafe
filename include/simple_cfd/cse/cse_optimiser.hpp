@@ -165,7 +165,8 @@ public:
     }
     else
     {
-      const numeric_t one(1), minusOne(-1);
+      static const numeric_t one(1);
+      static const numeric_t minusOne(-1);
       return (*numeric) == one || (*numeric) == minusOne;
     }
   }
