@@ -19,7 +19,7 @@ namespace symbolic
 
 class Rational : public AbstractBasic<Rational>, 
                  boost::arithmetic<Rational>,
-                 boost::equality_comparable<Rational>
+                 boost::totally_ordered<Rational>
 {
 public:
   typedef long value_type;

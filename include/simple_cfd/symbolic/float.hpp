@@ -18,7 +18,7 @@ namespace symbolic
 
 class Float : public AbstractBasic<Float>, 
               boost::arithmetic<Float>,
-              boost::equality_comparable<Float>
+              boost::totally_ordered<Float>
 {
 private:
   double value;
