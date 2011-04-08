@@ -18,17 +18,16 @@ namespace symbolic
 
 Expr Expr::initial = make_expr_from(Rational(0));
 
-Expr::Expr(Basic* const e) : expr(e)
-{
-  e->markHeapAllocated();
-}
-
 Expr::Expr(const ref_t& e) : expr(e)
 {
-  // Hopefully, e has already been marked as heap allocated. We cannot set it since e is const.
+  // e should already been marked as heap allocated. We cannot set it since e is const.
 }
 
 Expr::Expr(const double s) : expr(make_expr_from(Float(s)).expr)
+{
+}
+
+Expr::Expr(const long s) : expr(make_expr_from(Rational(s)).expr)
 {
 }
 

@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <set>
 #include <cmath>
@@ -34,7 +35,7 @@ void Float::write(std::ostream& o) const
 
 Expr Float::derivative(const Symbol& s) const
 {
-  return Expr(new Rational(0));
+  return make_expr_from(Rational(0));
 }
 
 bool Float::depends(const std::set<Symbol>& symbols) const

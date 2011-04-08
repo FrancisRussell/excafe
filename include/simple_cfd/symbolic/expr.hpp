@@ -24,18 +24,16 @@ public:
   typedef boost::shared_ptr<const Basic> ref_t;
 
 private:
-  template<typename T> friend bool is_a(const Expr&);
-  template<typename T> friend const T& convert_to(const Expr&);
   static Expr initial;
   ref_t expr;
 
 public:
   typedef std::map<Symbol, Expr> subst_map;
 
-  explicit Expr(Basic* e);
   explicit Expr(const ref_t& e);
   Expr();
   Expr(const double s);
+  Expr(const long s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
   Expr& operator+=(const Expr& e);

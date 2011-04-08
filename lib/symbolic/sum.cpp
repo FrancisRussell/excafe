@@ -218,11 +218,7 @@ Rational Sum::findMultiplier() const
   if (negativeCount > numTerms/2)
     result = -result;
 
-  // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
-  if (result == 0)
-    return Rational(1);
-  else
-    return result;
+  return result;
 }
 
 Sum Sum::extractMultipliers() const
@@ -254,6 +250,10 @@ Expr Sum::extractMultiplier(Rational& coeff) const
   const Rational multiplier = sum.findMultiplier();
 
   coeff *= multiplier;
+
+  // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
+  if (multiplier == 0)
+    return Rational(1);
 
   LazyTermMap newTerms(sum.getTerms());
   BOOST_FOREACH(TermMap::value_type& d, *newTerms)

@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <ostream>
 #include <cassert>
@@ -52,7 +53,7 @@ void Rational::write(std::ostream& o) const
 
 Expr Rational::derivative(const Symbol& s) const
 {
-  return Expr(new Rational(0));
+  return make_expr_from(Rational(0));
 }
 
 bool Rational::depends(const std::set<Symbol>& symbols) const

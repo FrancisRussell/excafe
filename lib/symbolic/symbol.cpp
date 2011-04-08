@@ -3,6 +3,7 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/sum.hpp>
+#include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
 #include <set>
@@ -32,9 +33,9 @@ void Symbol::write(std::ostream& o) const
 Expr Symbol::derivative(const Symbol& s) const
 {
   if (serial == s.serial)
-    return Expr(new Rational(1));
+    return make_expr_from(Rational(1));
   else
-    return Expr(new Rational(0));
+    return make_expr_from(Rational(0));
 }
 
 bool Symbol::operator==(const Symbol& s) const
