@@ -33,6 +33,7 @@ public:
   explicit Expr(const ref_t& e);
   Expr();
   Expr(const double s);
+  Expr(const long s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
   Expr& operator+=(const Expr& e);

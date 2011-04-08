@@ -27,6 +27,10 @@ Expr::Expr(const double s) : expr(make_expr_from(Float(s)).expr)
 {
 }
 
+Expr::Expr(const long s) : expr(make_expr_from(Rational(s)).expr)
+{
+}
+
 // The default contructor uses a shared initial value to avoid invoking
 // malloc on each construction.
 Expr::Expr() : expr(initial.expr)
