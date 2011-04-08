@@ -4,7 +4,7 @@
 #include <set>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <boost/operators.hpp>
 #include "properties.hpp"
 #include "sop_map.hpp"
 #include "polynomial_index.hpp"
@@ -26,29 +26,83 @@ public:
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
 protected:
-  graph_t* graph;
-  std::set<vertex_descriptor> cubeVertices;
-  std::set<vertex_descriptor> coKernelVertices;
-  std::size_t nonOneCubes;
-  std::size_t nonOneCoKernels;
-  int cubeValueSum;
-  int coKernelValueSum;
-
-  template<typename InputIterator>
-  static std::pair<std::size_t, int> getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
+  class VertexInfo : boost::addable<VertexInfo>
   {
-    std::size_t nonOneCount = 0;
-    int value = 0;
+  private:
+    std::size_t count;
+    std::size_t numeric;
+    std::size_t unit;
+    int value;
 
-    BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
+  public:
+    VertexInfo() : count(0), numeric(0), unit(0), value(0)
     {
-      if (!get(is_unit(), graph, v)) 
-        ++nonOneCount;
+    }
 
+    void addVertex(const graph_t& graph, const vertex_descriptor& v)
+    {
+      ++count;
+      numeric += (get(is_numeric(), graph, v) ? 1 : 0);
+      unit += (get(is_unit(), graph, v) ? 1 : 0);
       value += get(mul_count(), graph, v);
     }
 
-    return std::make_pair(nonOneCount, value);
+    VertexInfo& operator+=(const VertexInfo& v)
+    {
+      count += v.count;
+      numeric += v.numeric;
+      unit += v.unit;
+      value += v.value;
+      return *this;
+    }
+
+    std::size_t num() const
+    {
+      return count;
+    }
+
+    std::size_t numNumeric() const
+    {
+      return numeric;
+    }
+
+    std::size_t numUnit() const
+    {
+      return unit;
+    }
+
+    std::size_t numNonUnit() const
+    {
+      return count - unit;
+    }
+
+    std::size_t numNonUnitNumeric() const
+    {
+      return numeric - unit;
+    }
+
+    int getValue() const
+    {
+      return value;
+    }
+  };
+
+  graph_t* graph;
+  std::set<vertex_descriptor> cubeVertices;
+  std::set<vertex_descriptor> coKernelVertices;
+  VertexInfo cubeInfo;
+  VertexInfo coKernelInfo;
+
+  template<typename InputIterator>
+  static VertexInfo getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
+  {
+    VertexInfo result;
+    BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
+    {
+      result.addVertex(graph, v);
+    }
+
+    return result;
   }
 
   void removeUnconnected(const vertex_descriptor& v, std::set<vertex_descriptor>& vertices)
@@ -67,19 +121,23 @@ protected:
     std::swap(vertices, newVertices);
   }
 
-  static int getValue(const int cubeValueSum, const std::size_t numNonOneCubes, const std::size_t numCubes, 
-    const int coKernelValueSum, const std::size_t numNonOneCoKernels, const std::size_t numCoKernels)
+  static int getValue(const VertexInfo& cubeInfo, const VertexInfo& coKernelInfo)
   {
     const int multiplyWeight = 1;
 
-    if (numCubes == 0 || numCoKernels == 0)
+    if (cubeInfo.num() == 0 || coKernelInfo.num() == 0)
       return 0;
 
-    const int origAdds = (numCubes - 1) * numCoKernels;
-    const int origMuls = cubeValueSum * numCoKernels + coKernelValueSum * numCubes + numNonOneCubes*numNonOneCoKernels;
+    const int origAdds = (cubeInfo.num() - 1) * coKernelInfo.num();
+    const int origMuls = cubeInfo.getValue() * coKernelInfo.num() +
+                         coKernelInfo.getValue() * cubeInfo.num() +
+                         coKernelInfo.numNonUnit() * cubeInfo.numNonUnit() -
+                         coKernelInfo.numNonUnitNumeric() * cubeInfo.numNonUnitNumeric();
 
-    const int rectAdds = numCubes - 1;
-    const int rectMuls = cubeValueSum + coKernelValueSum + numNonOneCoKernels;
+    const int rectAdds = cubeInfo.num() - 1;
+    const int rectMuls = cubeInfo.getValue() + 
+                         coKernelInfo.getValue() + 
+                         coKernelInfo.numNonUnit();
 
     const int savedAdds = origAdds - rectAdds;
     const int savedMuls = origMuls - rectMuls;
@@ -117,13 +175,12 @@ protected:
 
   void calculateValue()
   {
-    boost::tie(nonOneCubes, cubeValueSum) = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
-    boost::tie(nonOneCoKernels, coKernelValueSum) = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
+    cubeInfo = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
+    coKernelInfo = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
   }
 
 public:
-  Biclique(graph_t& _graph) : graph(&_graph), nonOneCubes(0), nonOneCoKernels(0), 
-    cubeValueSum(0), coKernelValueSum(0)
+  Biclique(graph_t& _graph) : graph(&_graph)
   {
   }
 
@@ -134,7 +191,7 @@ public:
 
   void print() const
   {
-    std::cout << "num_cubes=" << cubeVertices.size() << ", num_cokernels=" << coKernelVertices.size();
+    std::cout << "num_cubes=" << numCubes() << ", num_cokernels=" << numCoKernels();
     std::cout << ", value=" << getValue() << std::endl;
   }
 
@@ -145,8 +202,7 @@ public:
 
   int getValue() const
   {
-    return getValue(cubeValueSum, nonOneCubes, cubeVertices.size(), 
-                    coKernelValueSum, nonOneCoKernels, coKernelVertices.size());
+    return getValue(cubeInfo, coKernelInfo);
   }
 
   std::size_t numCubes() const
@@ -154,29 +210,19 @@ public:
     return cubeVertices.size();
   }
 
-  std::size_t numNonOneCubes() const
-  {
-    return nonOneCubes;
-  }
-
   std::size_t numCoKernels() const
   {
     return coKernelVertices.size();
   }
 
-  std::size_t numNonOneCoKernels() const
-  {
-    return nonOneCoKernels;
-  }
-
   int getCubeValueSum() const
   {
-    return cubeValueSum;
+    return cubeInfo.getValue();
   }
 
   int getCoKernelValueSum() const
   {
-    return coKernelValueSum;
+    return coKernelInfo.getValue();
   }
 
   std::set<vertex_descriptor> getCubeVertices() const
@@ -199,8 +245,8 @@ public:
     std::swap(graph, b.graph);
     std::swap(cubeVertices, b.cubeVertices);
     std::swap(coKernelVertices, b.coKernelVertices);
-    std::swap(cubeValueSum, b.cubeValueSum);
-    std::swap(coKernelValueSum, b.coKernelValueSum);
+    std::swap(cubeInfo, b.cubeInfo);
+    std::swap(coKernelInfo, b.coKernelInfo);
   }
 
   SOP getSOP() const

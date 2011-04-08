@@ -27,9 +27,7 @@ private:
   typedef typename base_t::edge_descriptor   edge_descriptor;
 
   long depth;
-  std::size_t maximumCubes;
-  std::size_t maximumNonOneCubes;
-  int maximumCubeValueSum;
+  typename base_t::VertexInfo maxCubeInfo;
   vertex_descriptor nextSplitPoint;
   bool finished;
 
@@ -42,9 +40,7 @@ private:
   void calculateValues(const vertex_descriptor& oldSplitPoint)
   {
     const vertex_descriptor nullVertex = boost::graph_traits<graph_t>::null_vertex();
-    std::size_t candidateCubes = 0;
-    std::size_t candidateNonOneCubes = 0;
-    int candidateCubesValueSum = 0;
+    typename base_t::VertexInfo candidateCubeInfo;
     nextSplitPoint = nullVertex;
 
     // nextSplitPoint is the lexicographically next cube vertex after the old split point
@@ -61,8 +57,7 @@ private:
           if (lowerThanNextSplit)
             nextSplitPoint = v;
 
-          ++candidateCubes;
-          candidateCubesValueSum += get(mul_count(), this->getGraph(), v);
+          candidateCubeInfo.addVertex(this->getGraph(), v);
         }
       }
     }
@@ -73,50 +68,32 @@ private:
 
       BOOST_FOREACH(const vertex_descriptor& coKernel, this->coKernelVertices)
       {
-        std::size_t currentCandidateCubes = 0;
-        std::size_t currentCandidateNonOneCubes = 0;
-        int currentCandidateCubesValueSum = 0;
+        typename base_t::VertexInfo currentCandidateInfo;
 
         BOOST_FOREACH(const edge_descriptor& e, out_edges(coKernel, this->getGraph()))
         {
           const vertex_descriptor candidateCube = target(e, this->getGraph());
           if (id(candidateCube) > id(oldSplitPoint))
           {
-            ++currentCandidateCubes;
-
-            if (!get(is_unit(), this->getGraph(), candidateCube)) 
-              ++currentCandidateNonOneCubes;
-
-            currentCandidateCubesValueSum += get(mul_count(), this->getGraph(), candidateCube);
+            currentCandidateInfo.addVertex(this->getGraph(), candidateCube);
 
             if (nextSplitPoint == nullVertex || id(candidateCube) < id(nextSplitPoint))
               nextSplitPoint = candidateCube;
           }
         }
 
-        const int currentScore = base_t::getValue(this->getCubeValueSum() + currentCandidateCubesValueSum,
-          this->numNonOneCubes() + currentCandidateNonOneCubes,
-          this->numCubes() + currentCandidateCubes, 
-          this->getCoKernelValueSum(), 
-          this->numNonOneCoKernels(), 
-          this->numCoKernels());
-
+        const int currentScore = base_t::getValue(this->cubeInfo + currentCandidateInfo, this->coKernelInfo);
         if (currentScore > topScore)
         {
           topScore = currentScore;
-          candidateCubes = currentCandidateCubes;
-          candidateNonOneCubes = currentCandidateNonOneCubes;
-          candidateCubesValueSum = currentCandidateCubesValueSum;
+          candidateCubeInfo = currentCandidateInfo;
         }
       }
     }
 
     // Find next split point
     finished = (nextSplitPoint == nullVertex);
-
-    maximumCubes = this->numCubes() + candidateCubes;
-    maximumNonOneCubes = this->numNonOneCubes() + candidateNonOneCubes;
-    maximumCubeValueSum = this->getCubeValueSum() + candidateCubesValueSum;
+    maxCubeInfo = this->cubeInfo + candidateCubeInfo;
   }
 
   // This constructs really large sets, so keep it private.
@@ -146,8 +123,7 @@ public:
 
   int getMaximalValue() const
   {
-    return base_t::getValue(maximumCubeValueSum, maximumNonOneCubes, maximumCubes, 
-      this->getCoKernelValueSum(), this->numNonOneCoKernels(), this->numCoKernels());
+    return base_t::getValue(maxCubeInfo, this->coKernelInfo);
   }
 
   std::pair<BicliqueSearch, BicliqueSearch> split() const
@@ -178,7 +154,7 @@ public:
     std::cout << "num_cubes=" << this->numCubes() << ", num_cokernels=" << this->numCoKernels();
     std::cout << ", value=" << this->getValue() << ", maximal_value=" << getMaximalValue();
     std::cout << ", depth=" << depth << ", split_vertex=" << nextSplitPoint;
-    std::cout << ", candidate_cubes=" << maximumCubes;
+    std::cout << ", candidate_cubes=" << maxCubeInfo.getCount();
   }
 
   bool isFinished() const
@@ -195,8 +171,7 @@ public:
   {
     base_t::swap(b);
     std::swap(depth, b.depth);
-    std::swap(maximumCubes, b.maximumCubes);
-    std::swap(maximumCubeValueSum, b.maximumCubeValueSum);
+    std::swap(maxCubeInfo, b.maxCubeInfo);
     std::swap(nextSplitPoint, b.nextSplitPoint);
     std::swap(finished, b.finished);
   }

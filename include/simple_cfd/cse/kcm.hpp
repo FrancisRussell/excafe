@@ -37,9 +37,10 @@ private:
           boost::property<mul_count, int,
           boost::property<is_cube, bool,
           boost::property<is_unit, bool,
+          boost::property<is_numeric, bool,
           boost::property<polynomial_id, PolynomialIndex,
           boost::property<cube_ordering, std::pair<int, unsigned>
-          > > > > > > > VertexProperty;
+          > > > > > > > > VertexProperty;
 
   // std::pair<polynomial_id, term_number>
   typedef boost::property< term_id, std::pair<PolynomialIndex, std::size_t> > EdgeProperty;
@@ -152,6 +153,7 @@ public:
     put(term_cokernel(), graph, v, cokernel);
     put(mul_count(), graph, v, cokernel.numMultiplies(literalCreator));
     put(is_unit(), graph, v, cokernel.isUnit(literalCreator));
+    put(is_numeric(), graph, v, cokernel.isNumeric(literalCreator));
     return v;
   }
 
@@ -171,6 +173,7 @@ public:
       put(term_cube(), graph, v, c);
       put(mul_count(), graph, v, c.numMultiplies(literalCreator));
       put(is_unit(), graph, v, c.isUnit(literalCreator));
+      put(is_numeric(), graph, v, c.isNumeric(literalCreator));
       return v;
     }
   }
