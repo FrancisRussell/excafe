@@ -25,11 +25,6 @@ private:
 
   static Expr integrate(const Product& a, const Product& b, const Symbol& s);
 
-  Product(const Rational& _overall, const TermMap& _terms): 
-    PairSeq<Product, int>(_overall, _terms)
-  {
-  }
-
   Product(const Rational& _overall, const LazyTermMap& _terms): 
     PairSeq<Product, int>(_overall, _terms)
   {

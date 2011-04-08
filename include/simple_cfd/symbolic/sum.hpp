@@ -32,10 +32,6 @@ private:
 protected:
   friend class PairSeq<Sum, Rational>;
 
-  Sum(const Rational& _overall, const TermMap& _terms): PairSeq<Sum, Rational>(_overall, _terms)
-  {
-  }
-
   Sum(const Rational& _overall, const LazyTermMap& _terms): PairSeq<Sum, Rational>(_overall, _terms)
   {
   }

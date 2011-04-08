@@ -93,13 +93,6 @@ protected:
   {
   }
 
-  PairSeq(const Rational& _overall, const TermMap& _terms) : 
-    overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
-  {
-    if (hasZeros(terms.cref()))
-      removeZeros(getTerms());
-  }
-
   PairSeq(const Rational& _overall, const LazyTermMap& _terms) : 
     overall(_overall), terms(_terms), rewriteState(NON_NORMALISED)
   {
