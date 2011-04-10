@@ -88,10 +88,15 @@ Sum& Sum::operator+=(const Expr& e)
 
 Expr Sum::derivative(const Symbol& s) const
 {
+  const Rational zero(0);
   Sum result;
+
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    result.getTerms()[e.first.derivative(s)] += e.second;
+    const Expr d = e.first.derivative(s);
+
+    if (d != zero)
+      result.getTerms()[d] += e.second;
   }
   return result;
 }
@@ -255,10 +260,15 @@ Expr Sum::extractMultiplier(Rational& coeff) const
   if (multiplier == 0)
     return Rational(1);
 
-  LazyTermMap newTerms(sum.getTerms());
-  BOOST_FOREACH(TermMap::value_type& d, *newTerms)
+  LazyTermMap newTerms = sum.terms;
+
+  // We can avoid forcing a copy of the TermMap if multiplier==1.
+  if (multiplier != 1)
   {
-    d.second /= multiplier;
+    BOOST_FOREACH(TermMap::value_type& d, *newTerms)
+    {
+      d.second /= multiplier;
+    }
   }
 
   return constructSimplifiedExpr(sum.overall / multiplier, newTerms, NORMALISED_AND_EXTRACTED);
