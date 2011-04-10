@@ -89,16 +89,17 @@ Sum& Sum::operator+=(const Expr& e)
 Expr Sum::derivative(const Symbol& s) const
 {
   const Rational zero(0);
-  Sum result;
+  LazyTermMap newTerms;
 
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
     const Expr d = e.first.derivative(s);
 
     if (d != zero)
-      result.getTerms()[d] += e.second;
+      (*newTerms)[d] += e.second;
   }
-  return result;
+
+  return constructSimplifiedExpr(zero, newTerms, NON_NORMALISED);
 }
 
 Expr Sum::integrate_internal(const Symbol& s) const
