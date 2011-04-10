@@ -75,18 +75,28 @@ void Product::write(std::ostream& o) const
   o << ")";
 }
 
+/*
+  Generalised power rule: (f^g)' (e^(g*ln f))' = f^g * (f'gf^-1 + g'ln f)
+  Product rule (for 3 functions): (fgh)' = f'gh + fg'h + fgh'
+*/
+
 Expr Product::derivative(const Symbol& s) const
 {
+  const Rational zero(0);
   Sum summation;
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    LazyTermMap newTerm(getTerms());
-    newTerm->erase(d.first);
-    ++(*newTerm)[Rational(d.second)];
-    ++(*newTerm)[d.first.derivative(s)];
-    (*newTerm)[d.first]+=d.second-1;
-    summation += Product(getOverall(), newTerm);
+    const Expr termDerivative = d.first.derivative(s);
+
+    if (termDerivative != zero)
+    {
+      const Rational termOverall = getOverall() * d.second;
+      LazyTermMap newTerm(getTerms());
+      --(*newTerm)[d.first];
+      ++(*newTerm)[termDerivative];
+      summation += constructSimplifiedExpr(termOverall, newTerm, NON_NORMALISED);
+    }
   }
   
   return summation;
