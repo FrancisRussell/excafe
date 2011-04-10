@@ -93,7 +93,12 @@ Expr Product::derivative(const Symbol& s) const
     {
       const Rational termOverall = getOverall() * d.second;
       LazyTermMap newTerm(getTerms());
-      --(*newTerm)[d.first];
+
+      if (d.second == 1)
+        newTerm->erase(d.first);
+      else
+        --(*newTerm)[d.first];
+
       ++(*newTerm)[termDerivative];
       summation += constructSimplifiedExpr(termOverall, newTerm, NON_NORMALISED);
     }
