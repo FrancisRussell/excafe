@@ -36,6 +36,7 @@ private:
   Product extractMultipliers() const;
 
 public:
+  static Product constant(const Rational& r);
   static Product pow(const Expr& base, const int exponent);
   static Product div(const Expr& a, const Expr& b);
   static Product mul(const Expr& a, const Expr& b);

@@ -38,6 +38,12 @@ Sum Sum::add(const Expr& a, const Expr& b)
   return Sum(null(), terms);
 }
 
+Sum Sum::constant(const Rational& r)
+{
+  LazyTermMap terms;
+  return Sum(r, terms);
+}
+
 bool Sum::AlwaysTrue(const Expr& e)
 {
   return true;

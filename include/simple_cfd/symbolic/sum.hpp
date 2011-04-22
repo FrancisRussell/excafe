@@ -42,6 +42,7 @@ protected:
   Sum extractMultipliers() const;
   
 public:
+  static Sum constant(const Rational& r);
   static Sum sub(const Expr& a, const Expr& b);
   static Sum rational_multiple(const Expr& e, const Rational& n);
   static Sum add(const Expr& a, const Expr& b);

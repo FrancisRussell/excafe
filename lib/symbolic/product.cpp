@@ -39,6 +39,12 @@ Product Product::mul(const Expr& a, const Expr& b)
   return Product(null(), terms);
 }
 
+Product Product::constant(const Rational& r)
+{
+  LazyTermMap terms;
+  return Product(r, terms);
+}
+
 Rational Product::null()
 {
   return Rational(1);
