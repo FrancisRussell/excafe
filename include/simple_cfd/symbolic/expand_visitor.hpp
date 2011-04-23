@@ -2,7 +2,6 @@
 #define SIMPLE_CFD_SYMBOLIC_EXPAND_VISITOR_HPP
 
 #include <stack>
-#include <boost/optional.hpp>
 #include <boost/unordered_map.hpp>
 #include "symbolic_fwd.hpp"
 #include "visitor.hpp"
@@ -30,17 +29,13 @@ private:
   void add(quotient_map_t& q1, const quotient_map_t& q2) const;
   void mul(quotient_map_t& q1, const quotient_map_t& q2) const;
 
-  boost::optional<Symbol> symbol;
   std::stack<quotient_map_t> stack;
   void push(const quotient_map_t& e);
   void push(const Sum& s);
-  bool containsSymbolPredicate(const Expr& e) const;
   Sum expandedProduct(const Sum& a, const Sum& b) const;
 
 public:
   ExpandVisitor();
-  ExpandVisitor(const Symbol& s);
-
   void visit(const Sum& s);
   void visit(const Product& p);
   void visit(const Basic& b);

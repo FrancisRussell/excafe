@@ -20,21 +20,9 @@ ExpandVisitor::ExpandVisitor()
 {
 }
 
-ExpandVisitor::ExpandVisitor(const Symbol& s) : symbol(s)
-{
-}
-
-bool ExpandVisitor::containsSymbolPredicate(const Expr& e) const
-{
-  return e.depends(*symbol);
-}
-
 Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b) const
 {
-  if (symbol)
-    return a.expandedProduct(b, boost::bind(&ExpandVisitor::containsSymbolPredicate, this, _1));
-  else
-    return a.expandedProduct(b);
+  return a.expandedProduct(b);
 }
 
 Sum ExpandVisitor::toExpr(const quotient_map_t& q)
@@ -146,25 +134,7 @@ void ExpandVisitor::visit(const Basic& b)
 
 void ExpandVisitor::visit(const Group& g)
 {
-  const Expr e = g.getExpr();
-
-  if (!symbol)
-  {
-    // We are expanding everything. Expansion is done inside the group, but the group itself is preserved.
-    e.accept(*this);
-    const quotient_map_t qMap = stack.top(); stack.pop();
-    push(Sum(Group(toExpr(qMap)).clone()));
-  }
-  else if (e.depends(*symbol))
-  {
-    // The group contains the variable we are expanding for. The group is lost.
-    e.accept(*this);
-  }
-  else
-  {
-    // The group does not contain the variable we are expanding for. The group is unchanged.
-    push(Sum(g.clone()));
-  }
+  push(Sum(g.clone()));
 }
 
 Expr ExpandVisitor::getResult() const
