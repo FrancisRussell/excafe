@@ -130,7 +130,9 @@ Expr Sum::integrate(const Symbol& s, const unsigned flags) const
   }
 
   Sum result(null(), dependentTerms);
-  result += Product::mul(Sum(overall, independentTerms), s);
+  if (!independentTerms->empty())
+    result += Product::mul(Sum(overall, independentTerms), s);
+
   return result;
 }
 
