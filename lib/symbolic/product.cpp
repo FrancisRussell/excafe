@@ -204,7 +204,8 @@ Expr Product::integrate(const Symbol& s, const unsigned flags) const
     dependentIntegral = integrateComplex(dependent, s, flags);
   }
 
-  return Product(getOverall(), independent) * dependentIntegral;
+  ++(*independent)[dependentIntegral];
+  return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
 Expr Product::integrate(const Product& a, const Product& b, const Symbol& s, const unsigned flags)
