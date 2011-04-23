@@ -6,6 +6,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
+#include <simple_cfd/symbolic/collect_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <ostream>
 #include <cassert>
@@ -139,10 +140,10 @@ Expr Expr::derivative(const Symbol& s) const
 
 Expr Expr::integrate(const Symbol& s) const
 {
-  ExpandVisitor visitor(s);
+  CollectVisitor visitor(s);
   expr->accept(visitor);
-  const Expr expanded = visitor.getResult();
-  return expanded.integrate_internal(s).simplify();
+  const Expr collected = visitor.getResult();
+  return collected.expr->integrate_internal(s).simplify();
 }
 
 Expr Expr::integrate_internal(const Symbol& s) const
