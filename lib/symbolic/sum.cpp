@@ -7,7 +7,6 @@
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <boost/function.hpp>
 
 namespace cfd
 {
@@ -42,11 +41,6 @@ Sum Sum::constant(const Rational& r)
 {
   LazyTermMap terms;
   return Sum(r, terms);
-}
-
-bool Sum::AlwaysTrue(const Expr& e)
-{
-  return true;
 }
 
 Rational Sum::null()
@@ -140,33 +134,10 @@ Expr Sum::integrate(const Symbol& s, const unsigned flags) const
   return result;
 }
 
-Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate)
+Sum Sum::expandedProduct(const Sum& other) const
 {
-  if (predicate != AlwaysTrue)
-  {
-    const Sum withoutOverall = sum.withoutOverall();
-    LazyTermMap matching, nonMatching;
-  
-    BOOST_FOREACH(const TermMap::value_type& term, withoutOverall)
-    {
-      (predicate(term.first) ? *matching : *nonMatching)[term.first] += term.second;
-    }
-  
-    if (!nonMatching->empty())
-      ++(*matching)[Sum(null(), nonMatching).clone()];
-  
-    return Sum(null(), matching);
-  }
-  else
-  {
-    return sum;
-  }
-}
-
-Sum Sum::expandedProduct(const Sum& other, const boost::function<bool (const Expr&)>& predicate) const
-{
-  const Sum withoutOverallThis = groupNonMatching(*this, predicate).withoutOverall();
-  const Sum withoutOverallOther = groupNonMatching(other, predicate).withoutOverall();
+  const Sum withoutOverallThis = this->withoutOverall();
+  const Sum withoutOverallOther = other.withoutOverall();
 
   LazyTermMap newTerms;
   BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)
