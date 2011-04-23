@@ -133,8 +133,12 @@ private:
   typedef boost::multi_index_container<
     CollectTerm,
     boost::multi_index::indexed_by<
-      boost::multi_index::hashed_non_unique<boost::multi_index::tag<poly_tag>, BOOST_MULTI_INDEX_CONST_MEM_FUN(CollectTerm, const Sum&, poly)>,
-      boost::multi_index::hashed_non_unique<boost::multi_index::tag<expr_tag>, BOOST_MULTI_INDEX_CONST_MEM_FUN(CollectTerm, const Expr&, expr)>
+      boost::multi_index::hashed_non_unique<
+        boost::multi_index::tag<poly_tag>, 
+        BOOST_MULTI_INDEX_CONST_MEM_FUN(CollectTerm, const Sum&, poly)>,
+      boost::multi_index::hashed_non_unique<
+        boost::multi_index::tag<expr_tag>,
+        BOOST_MULTI_INDEX_CONST_MEM_FUN(CollectTerm, const Expr&, expr)>
     >
   > TermSet;
 
@@ -145,7 +149,6 @@ private:
   template<typename Tag>
   static bool addTermTagged(TermSet& termSet, const CollectTerm& term)
   {
-    // Broken??
     typedef typename TermSet::index<Tag>::type TaggedTermSet;
     typename TaggedTermSet::key_from_value keyExtractor;
     TaggedTermSet& taggedTermSet = termSet.get<Tag>();
@@ -156,16 +159,15 @@ private:
       CollectTerm newTerm = *termIter;
       newTerm += term;
 
-      /*
-      taggedTermSet.erase(termIter);
-      addTerm(termSet, newTerm);
-      */
-      ///*
       if (newTerm.isZero())
+      {
         taggedTermSet.erase(termIter);
+      }
       else
-        taggedTermSet.replace(termIter, newTerm);
-      //*/
+      {
+        const bool replaced = replace(taggedTermSet, termIter, newTerm);
+        assert(replaced);
+      }
 
       return true;
     }
@@ -173,6 +175,17 @@ private:
     {
       return false;
     }
+  }
+
+  template<typename Set>
+  static bool replace(Set& set, const typename Set::iterator& iterator, const typename Set::value_type& value)
+  {
+    // Asserts that when we replace a value, we replace it with one with the same key. Otherwise, we might
+    // encounter the same key again, if using a sorted or hashed data structure.
+    typename Set::key_from_value keyExtractor;
+    assert(keyExtractor(*iterator) == keyExtractor(value));
+
+    return set.replace(iterator, value);
   }
 
   static void addTerm(TermSet& termSet, const CollectTerm& term)
@@ -233,13 +246,21 @@ public:
     return *this;
   }
 
-  CollectedTerms& operator*=(const Rational& r)
+  CollectedTerms& operator*=(const Rational& r) 
   {
-    for (TermSet::iterator termIter = termSet->begin(); termIter != termSet->end(); ++termIter)
+    // Since multiplication changes the expression but not the
+    // polynomial, we use the polynomial index.
+
+    typedef typename TermSet::index<poly_tag>::type PolyTermSet;
+    PolyTermSet& polyTermSet = termSet->get<poly_tag>();
+
+    for (PolyTermSet::iterator termIter = polyTermSet.begin(); termIter != polyTermSet.end(); ++termIter)
     {
       CollectTerm term = *termIter;
       term *= r;
-      termSet->replace(termIter, term);
+
+      const bool replaced = replace(polyTermSet, termIter, term);
+      assert(replaced);
     }
 
     return *this;
