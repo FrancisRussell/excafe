@@ -40,26 +40,7 @@ private:
     normalise();
   }
 
-  CollectTerm& normalise()
-  {
-    return *this;
-
-    const Rational content = polynomial.findMultiplier();
-
-    if (content == 0)
-    {
-      polynomial = Sum::constant(0);
-      expression = Rational(0);
-    }
-    else if (content != 1)
-    {
-      polynomial /= content;
-      expression *= content;
-    }
-
-    expression = expression.simplify();
-    return *this;
-  }
+  CollectTerm& normalise();
 
 public:
   static CollectTerm poly(const Symbol& s) 
@@ -165,7 +146,7 @@ private:
       }
       else
       {
-        const bool replaced = replace(taggedTermSet, termIter, newTerm);
+        const bool replaced = taggedTermSet.replace(termIter, newTerm);
         assert(replaced);
       }
 
@@ -178,7 +159,9 @@ private:
   }
 
   template<typename Set>
-  static bool replace(Set& set, const typename Set::iterator& iterator, const typename Set::value_type& value)
+  static bool replacePreservingIter(Set& set, 
+                                    const typename Set::iterator& iterator, 
+                                    const typename Set::value_type& value)
   {
     // Asserts that when we replace a value, we replace it with one with the same key. Otherwise, we might
     // encounter the same key again, if using a sorted or hashed data structure.
@@ -188,92 +171,19 @@ private:
     return set.replace(iterator, value);
   }
 
-  static void addTerm(TermSet& termSet, const CollectTerm& term)
-  {
-    if (term.isZero())
-      return;
-
-    // Add for matching polynomial.
-    if (addTermTagged<poly_tag>(termSet, term))
-      return;
-
-    // Add for matching expression.
-    if (addTermTagged<expr_tag>(termSet, term))
-      return;
-
-    // If all else fails, create a new term.
-    termSet.insert(term);
-  }
+  static void addTerm(TermSet& termSet, const CollectTerm& term);
 
 public:
   CollectedTerms()
   {
   }
 
-  CollectedTerms(const CollectTerm& t)
-  {
-    *this += t;
-  }
-
-  CollectedTerms& operator+=(const CollectedTerms& c)
-  {
-    BOOST_FOREACH(const TermSet::value_type& term, *c.termSet)
-      *this += term;
-
-    return *this;
-  }
-
-  CollectedTerms& operator+=(const CollectTerm& t)
-  {
-    addTerm(*termSet, t);
-    return *this;
-  }
-
-  CollectedTerms& operator*=(const CollectedTerms& c)
-  {
-    LazyTermSet resultSet;
-    BOOST_FOREACH(const TermSet::value_type& aTerm, *termSet)
-    {
-      BOOST_FOREACH(const TermSet::value_type& bTerm, *c.termSet)
-      {
-        CollectTerm newTerm = aTerm;
-        newTerm *= bTerm;
-        addTerm(*resultSet, newTerm);
-      }
-    }
-
-    std::swap(resultSet, termSet);
-    return *this;
-  }
-
-  CollectedTerms& operator*=(const Rational& r) 
-  {
-    // Since multiplication changes the expression but not the
-    // polynomial, we use the polynomial index.
-
-    typedef typename TermSet::index<poly_tag>::type PolyTermSet;
-    PolyTermSet& polyTermSet = termSet->get<poly_tag>();
-
-    for (PolyTermSet::iterator termIter = polyTermSet.begin(); termIter != polyTermSet.end(); ++termIter)
-    {
-      CollectTerm term = *termIter;
-      term *= r;
-
-      const bool replaced = replace(polyTermSet, termIter, term);
-      assert(replaced);
-    }
-
-    return *this;
-  }
-
-  Expr toExpr() const
-  {
-    Sum result;
-    BOOST_FOREACH(const TermSet::value_type& aTerm, *termSet)
-      result += aTerm.toExpr();
-
-    return result.simplify();
-  }
+  CollectedTerms(const CollectTerm& t);
+  CollectedTerms& operator+=(const CollectedTerms& c);
+  CollectedTerms& operator+=(const CollectTerm& t);
+  CollectedTerms& operator*=(const CollectedTerms& c);
+  CollectedTerms& operator*=(const Rational& r);
+  Expr toExpr() const;
 };
 
 class CollectVisitor : public Visitor, 
