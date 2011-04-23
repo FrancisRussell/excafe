@@ -6,8 +6,8 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
-#include <simple_cfd/symbolic/collect_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
+#include <simple_cfd/symbolic/flags.hpp>
 #include <ostream>
 #include <cassert>
 
@@ -138,17 +138,10 @@ Expr Expr::derivative(const Symbol& s) const
   return expr->derivative(s).simplify();
 }
 
-Expr Expr::integrate(const Symbol& s) const
+Expr Expr::integrate(const Symbol& s, const unsigned flags) const
 {
-  CollectVisitor visitor(s);
-  expr->accept(visitor);
-  const Expr collected = visitor.getResult();
-  return collected.expr->integrate_internal(s).simplify();
-}
-
-Expr Expr::integrate_internal(const Symbol& s) const
-{
-  return expr->integrate_internal(s);
+  const Expr integrated = expr->integrate(s, flags);
+  return integrated.simplify();
 }
 
 Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
@@ -183,9 +176,10 @@ void Expr::accept(NumericExpressionVisitor<Symbol>& v) const
   expr->accept(v);
 }
 
-Expr Expr::subs(const subst_map& map) const
+Expr Expr::subs(const subst_map& map, const unsigned flags) const
 {
-  return expr->subs(map).simplify();
+  const Expr substituted = expr->subs(map, flags);
+  return substituted.simplify();
 }
 
 Expr pow(const Expr& e, const int power)

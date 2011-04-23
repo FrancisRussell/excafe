@@ -76,7 +76,7 @@ bool Rational::operator==(const Rational& n) const
          && denominator == n.denominator;
 }
 
-Expr Rational::integrate_internal(const Symbol& s) const
+Expr Rational::integrate(const Symbol& s, const unsigned flags) const
 {
   return Sum::rational_multiple(s, *this).clone();
 }
@@ -89,7 +89,7 @@ std::size_t Rational::untypedHash() const
   return hash;
 }
 
-Expr Rational::subs(const Expr::subst_map& map) const
+Expr Rational::subs(const Expr::subst_map& map, const unsigned flags) const
 {
   return clone();
 }

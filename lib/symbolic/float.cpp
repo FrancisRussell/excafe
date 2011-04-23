@@ -81,7 +81,7 @@ Float& Float::operator*=(const Float& n)
   return *this;
 }
 
-Expr Float::integrate_internal(const Symbol& s) const
+Expr Float::integrate(const Symbol& s, const unsigned flags) const
 {
   return Product::mul(*this, s);
 }
@@ -93,7 +93,7 @@ std::size_t Float::untypedHash() const
   return result;
 }
 
-Expr Float::subs(const Expr::subst_map& map) const
+Expr Float::subs(const Expr::subst_map& map, const unsigned flags) const
 {
   return clone();
 }

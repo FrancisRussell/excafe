@@ -36,8 +36,8 @@ public:
   bool operator==(const Symbol& s) const;
   bool operator<(const Symbol& s) const;
   bool depends(const std::set<Symbol>& symbols) const;
-  Expr integrate_internal(const Symbol& s) const;
-  Expr subs(const Expr::subst_map& map) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
+  Expr subs(const Expr::subst_map& map, unsigned flags) const;
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
 };

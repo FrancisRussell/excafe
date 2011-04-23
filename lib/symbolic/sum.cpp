@@ -122,7 +122,7 @@ Expr Sum::derivative(const Symbol& s) const
   return constructSimplifiedExpr(zero, newTerms, NON_NORMALISED);
 }
 
-Expr Sum::integrate_internal(const Symbol& s) const
+Expr Sum::integrate(const Symbol& s, const unsigned flags) const
 {
   LazyTermMap dependentTerms;
   LazyTermMap independentTerms;
@@ -130,7 +130,7 @@ Expr Sum::integrate_internal(const Symbol& s) const
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
     if (e.first.depends(s))
-      (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
+      (*dependentTerms)[e.first.integrate(s, flags)] += e.second;
     else
       (*independentTerms)[e.first] += e.second;
   }

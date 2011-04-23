@@ -60,7 +60,7 @@ std::size_t Symbol::untypedHash() const
   return result;
 }
 
-Expr Symbol::subs(const Expr::subst_map& map) const
+Expr Symbol::subs(const Expr::subst_map& map, const unsigned flags) const
 {
   const Expr::subst_map::const_iterator iter = map.find(*this);
 
@@ -88,7 +88,7 @@ Float Symbol::eval(const Expr::subst_map& map) const
   }
 }
 
-Expr Symbol::integrate_internal(const Symbol& s) const
+Expr Symbol::integrate(const Symbol& s, const unsigned flags) const
 {
   if (serial != s.serial)
     return Product::mul(*this, s);

@@ -47,11 +47,10 @@ public:
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
-  Expr integrate(const Symbol& s) const;
-  Expr integrate_internal(const Symbol& s) const;
+  Expr integrate(const Symbol& s, unsigned flags = 0) const;
   Expr integrate(const Symbol& s, const Float& a, const Float& b) const;
   const Basic& internal() const;
-  Expr subs(const subst_map& map) const;
+  Expr subs(const subst_map& map, unsigned flags = 0) const;
   void accept(Visitor& v) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   void traverse(Visitor& v) const;

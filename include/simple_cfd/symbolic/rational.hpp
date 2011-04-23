@@ -42,8 +42,8 @@ public:
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
   virtual bool depends(const std::set<Symbol>& symbols) const;
-  Expr subs(const Expr::subst_map& map) const;
-  Expr integrate_internal(const Symbol& s) const;
+  Expr subs(const Expr::subst_map& map, unsigned flags) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
   Float eval(const Expr::subst_map& map) const;
   Float toFloat() const;
   value_type getNumerator() const;

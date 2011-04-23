@@ -236,12 +236,12 @@ public:
     return constructSimplifiedExpr(normalised.overall, normalised.terms, NORMALISED);
   }
 
-  Expr subs(const Expr::subst_map& map) const
+  Expr subs(const Expr::subst_map& map, const unsigned flags) const
   {
     LazyTermMap newTermMap;
     BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
-      (*newTermMap)[term.first.subs(map)] += term.second;
+      (*newTermMap)[term.first.subs(map, flags)] += term.second;
     }
     return child_type(overall, newTermMap);
   }

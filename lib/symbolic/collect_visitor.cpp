@@ -98,7 +98,7 @@ CollectedTerms& CollectedTerms::operator*=(const Rational& r)
   // Since multiplication changes the expression but not the
   // polynomial, we use the polynomial index.
 
-  typedef typename TermSet::index<poly_tag>::type PolyTermSet;
+  typedef TermSet::index<poly_tag>::type PolyTermSet;
   PolyTermSet& polyTermSet = termSet->get<poly_tag>();
 
   for (PolyTermSet::iterator termIter = polyTermSet.begin(); termIter != polyTermSet.end(); ++termIter)
