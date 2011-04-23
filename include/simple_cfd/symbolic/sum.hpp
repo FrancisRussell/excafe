@@ -25,9 +25,7 @@ class Sum : public PairSeq<Sum, Rational>,
 private:
   // Null predicate for expansion
   static bool AlwaysTrue(const Expr& e);
-
   static Sum groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate);
-  Rational findMultiplier() const;
 
 protected:
   friend class PairSeq<Sum, Rational>;
@@ -56,8 +54,10 @@ public:
     ++getTerms()[a];
   }
 
+  Rational findMultiplier() const;
   Sum& operator+=(const Expr& e);
   Sum& operator+=(const Sum& s);
+  Sum& operator/=(const Rational& r);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Expr integrate_internal(const Symbol& s) const;

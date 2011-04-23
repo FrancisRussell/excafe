@@ -92,6 +92,20 @@ Sum& Sum::operator+=(const Expr& e)
   return *this;
 }
 
+Sum& Sum::operator/=(const Rational& r)
+{
+  if (r == 1)
+    return *this;
+
+  this->invalidateHash();
+  this->overall /= r;
+
+  BOOST_FOREACH(TermMap::value_type& e, getTerms())
+    e.second /= r;
+
+  return *this;
+}
+
 Expr Sum::derivative(const Symbol& s) const
 {
   const Rational zero(0);
