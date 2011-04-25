@@ -23,6 +23,8 @@ class Rational : public AbstractBasic<Rational>,
 {
 public:
   typedef long value_type;
+  static const Expr zero();
+  static const Expr one();
 
 private:
   value_type numerator;

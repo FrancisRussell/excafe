@@ -102,18 +102,17 @@ Sum& Sum::operator/=(const Rational& r)
 
 Expr Sum::derivative(const Symbol& s) const
 {
-  const Rational zero(0);
   LazyTermMap newTerms;
 
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
     const Expr d = e.first.derivative(s);
 
-    if (d != zero)
+    if (d != Rational::zero())
       (*newTerms)[d] += e.second;
   }
 
-  return constructSimplifiedExpr(zero, newTerms, NON_NORMALISED);
+  return constructSimplifiedExpr(Rational(0), newTerms, NON_NORMALISED);
 }
 
 Expr Sum::integrate(const Symbol& s, const unsigned flags) const
@@ -252,7 +251,7 @@ Expr Sum::extractMultiplier(Rational& coeff) const
 
   // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
   if (multiplier == 0)
-    return Rational(1);
+    return Rational::one();
 
   LazyTermMap newTerms = sum.terms;
 

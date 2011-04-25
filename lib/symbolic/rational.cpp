@@ -16,6 +16,18 @@ namespace cfd
 namespace symbolic
 {
 
+const Expr Rational::zero()
+{
+  static const Expr value = make_expr_from(Rational(0));
+  return value;
+}
+
+const Expr Rational::one()
+{
+  static const Expr value = make_expr_from(Rational(1));
+  return value;
+}
+
 Rational::Rational() : numerator(0), denominator(1)
 {
   normalise();
@@ -53,7 +65,7 @@ void Rational::write(std::ostream& o) const
 
 Expr Rational::derivative(const Symbol& s) const
 {
-  return make_expr_from(Rational(0));
+  return zero();
 }
 
 bool Rational::depends(const std::set<Symbol>& symbols) const

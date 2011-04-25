@@ -90,14 +90,13 @@ void Product::write(std::ostream& o) const
 
 Expr Product::derivative(const Symbol& s) const
 {
-  const Rational zero(0);
   Sum summation;
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
     const Expr termDerivative = d.first.derivative(s);
 
-    if (termDerivative != zero)
+    if (termDerivative != Rational::zero())
     {
       const Rational termOverall = getOverall() * d.second;
       LazyTermMap newTerm(getTerms());
@@ -210,14 +209,13 @@ Expr Product::integrate(const Symbol& s, const unsigned flags) const
 
 Expr Product::integrate(const Product& a, const Product& b, const Symbol& s, const unsigned flags)
 {
-  const Rational zero(0);
   int sign = 1;
   Sum result;
 
   Expr u = a;
   Expr v = b.integrate(s, flags);
 
-  while (u != zero)
+  while (u != Rational::zero())
   {
     result += Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);

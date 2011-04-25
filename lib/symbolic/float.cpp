@@ -35,7 +35,7 @@ void Float::write(std::ostream& o) const
 
 Expr Float::derivative(const Symbol& s) const
 {
-  return make_expr_from(Rational(0));
+  return Rational::zero();
 }
 
 bool Float::depends(const std::set<Symbol>& symbols) const
@@ -133,7 +133,7 @@ Expr Float::extractMultiplier(Rational& coeff) const
   if (asRational(rational))
   {
     coeff *= rational;
-    return Rational(1);
+    return Rational::one();
   }
   else
   {
