@@ -30,6 +30,7 @@ public:
   virtual Expr simplify() const = 0;
   virtual Expr extractMultiplier(Rational& coeff) const = 0;
   virtual Float eval(const Expr::subst_map& map) const = 0;
+  virtual std::size_t typeHash() const = 0;
   virtual std::size_t hashValue() const = 0;
   virtual bool operator==(const Basic& b) const = 0;
   virtual operator Expr() const = 0;

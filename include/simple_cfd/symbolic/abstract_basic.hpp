@@ -32,12 +32,6 @@ protected:
     return util::TypeInfo(typeid(b));
   }
 
-  static std::size_t getTypeHash()
-  {
-    static std::size_t typeHash = util::TypeInfo(typeid(child_type)).hashValue();
-    return typeHash;
-  }
-
   static const child_type& asChild(const Basic& b)
   {
     return static_cast<const child_type&>(b);
@@ -78,6 +72,10 @@ public:
     {
       return true;
     }
+    else if (typeHash() != b.typeHash())
+    {
+      return false;
+    }
     else if (hashValue() != b.hashValue())
     {
       return false;
@@ -99,6 +97,12 @@ public:
   AbstractBasic(const AbstractBasic& a) : 
     isHashed(a.isHashed), hash(a.hash), heapAllocated(false)
   {
+  }
+
+  std::size_t typeHash() const
+  {
+    static std::size_t typeHash = util::TypeInfo(typeid(child_type)).hashValue();
+    return typeHash;
   }
 
   void markHeapAllocated()
@@ -134,7 +138,7 @@ public:
     if (!isHashed)
     {
       hash = 0x02c3866e;
-      cfd::util::hash_accum(hash, getTypeHash());
+      cfd::util::hash_accum(hash, typeHash());
       cfd::util::hash_accum(hash, asChild(*this).untypedHash());
       isHashed=true;
     }
