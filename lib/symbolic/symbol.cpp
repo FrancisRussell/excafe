@@ -33,9 +33,9 @@ void Symbol::write(std::ostream& o) const
 Expr Symbol::derivative(const Symbol& s) const
 {
   if (serial == s.serial)
-    return make_expr_from(Rational(1));
+    return Rational::one();
   else
-    return make_expr_from(Rational(0));
+    return Rational::zero();
 }
 
 bool Symbol::operator==(const Symbol& s) const
