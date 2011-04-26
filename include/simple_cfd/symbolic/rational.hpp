@@ -50,6 +50,7 @@ public:
   Float toFloat() const;
   value_type getNumerator() const;
   value_type getDenominator() const;
+  bool operator==(long n) const;
   bool operator==(const Rational& n) const;
   bool operator<(const Rational& n) const;
   Rational reciprocal() const;

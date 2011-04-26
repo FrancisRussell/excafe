@@ -82,6 +82,11 @@ bool Rational::operator<(const Rational& n) const
            < n.numerator*denominator;
 }
 
+bool Rational::operator==(const long n) const
+{
+  return denominator == 1 && numerator == n;
+}
+
 bool Rational::operator==(const Rational& n) const
 {
   return numerator == n.numerator
