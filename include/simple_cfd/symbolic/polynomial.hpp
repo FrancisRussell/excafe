@@ -4,6 +4,7 @@
 #include <utility>
 #include <algorithm>
 #include <vector>
+#include <set>
 #include <ostream>
 #include <cassert>
 #include <iterator>
@@ -13,6 +14,7 @@
 #include <boost/foreach.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/symbolic/abstract_basic.hpp>
 
 namespace cfd
 {
@@ -20,13 +22,14 @@ namespace cfd
 namespace symbolic
 {
 
-class Polynomial
+class Polynomial : public AbstractBasic<Polynomial>,
+                   boost::equality_comparable<Polynomial>
 {
 private:
   class Monomial;
   class MonomialProduct;
 
-  typedef std::pair<Symbol, std::size_t> exponent_t;
+  typedef std::pair<Symbol, long> exponent_t;
   std::vector<exponent_t> exponents;
   std::vector<std::size_t> monomialOffsets;
   std::vector<Rational> coefficients;
@@ -75,6 +78,19 @@ private:
       return end() - begin();
     }
 
+    long getExponent(const Symbol& s) const
+    {
+      const_iterator iter = begin();
+
+      while(iter != end() && iter->first != s)
+        ++iter;
+
+      if (iter != end())
+        return iter->second;
+      else
+        return 0;
+    }
+
     bool operator<(const Monomial& m) const
     {
       return std::lexicographical_compare(begin(), end(), m.begin(),
@@ -108,11 +124,47 @@ private:
     Monomial::iterator firstIter, firstEnd;
     Monomial::iterator secondIter, secondEnd;
 
+    bool isZeroExponent() const
+    {
+      return firstIter != firstEnd && secondIter != secondEnd
+             && firstIter->first == secondIter->first
+             && firstIter->second + secondIter->second == 0;
+    }
+
+    void incrementInternal()
+    {
+      if (firstIter == firstEnd)
+      {
+        ++secondIter;
+      }
+      else if (secondIter == secondEnd)
+      {
+        ++firstIter;
+      }
+      else if (firstIter->first == secondIter->first)
+      {
+        ++firstIter;
+        ++secondIter;
+      }
+      else
+      {
+        const bool firstIsSmaller = firstIter->first < secondIter->first;
+        ++(firstIsSmaller ? firstIter : secondIter); 
+      }
+    }
+
+    void skipZeros()
+    {
+      while(isZeroExponent())
+        incrementInternal();
+    }
+
   public:
     MonomialProductIter(const Monomial& first, const Monomial& second, const bool begin) :
       firstIter(begin ? first.begin() : first.end()), firstEnd(first.end()), 
       secondIter(begin ? second.begin() : second.end()), secondEnd(second.end())
     {
+      skipZeros();
     }
 
     reference dereference() const
@@ -138,24 +190,8 @@ private:
 
     void increment()
     {
-      if (firstIter == firstEnd)
-      {
-        ++secondIter;
-      }
-      else if (secondIter == secondEnd)
-      {
-        ++firstIter;
-      }
-      else if (firstIter->first == secondIter->first)
-      {
-        ++firstIter;
-        ++secondIter;
-      }
-      else
-      {
-        const bool firstIsSmaller = firstIter->first < secondIter->first;
-        ++(firstIsSmaller ? firstIter : secondIter); 
-      }
+      incrementInternal();
+      skipZeros();
     }
 
     bool equal(const MonomialProductIter& i) const
@@ -318,6 +354,7 @@ private:
     {
       coefficients[numTerms()-1] += c;
 
+      // Detect cancellation of coefficients.
       if (coefficients[numTerms()-1] == 0)
       {
         exponents.erase(exponents.begin() + monomialOffsets[numTerms()-1], exponents.end());
@@ -347,10 +384,21 @@ public:
     return coefficients.size();
   }
 
+  Expr derivative(const Symbol& s) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
+  Float eval(const Expr::subst_map& map) const;
+  Expr subs(const Expr::subst_map& map, unsigned flags) const;
+  void accept(NumericExpressionVisitor<Symbol>& v) const;
+  std::size_t nops() const;
+  std::size_t untypedHash() const;
+  bool depends(const std::set<Symbol>& symbols) const;
+  bool operator==(const Polynomial& b) const;
   Polynomial operator+(const Polynomial& b) const;
   Polynomial operator*(const Polynomial& b) const;
+  Polynomial& operator/=(const Rational& r);
+  Polynomial& operator*=(const Rational& r);
   void write(std::ostream& out) const;
-  Expr toExpr() const;
+  Expr toSum() const;
 };
 
 std::ostream& operator<<(std::ostream& o, const Polynomial& p);
