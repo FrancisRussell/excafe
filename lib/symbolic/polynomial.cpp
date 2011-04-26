@@ -19,8 +19,11 @@ Polynomial::Polynomial()
 
 Polynomial::Polynomial(const Rational& r)
 {
-  coefficients.push_back(r);
-  monomialOffsets.push_back(0);
+  if (r != 0)
+  {
+    coefficients.push_back(r);
+    monomialOffsets.push_back(0);
+  }
   monomialOffsets.push_back(0);
 }
 
@@ -160,6 +163,9 @@ bool Polynomial::operator==(const Polynomial& b) const
 
 Polynomial& Polynomial::operator/=(const Rational& r)
 {
+  if (r == 1)
+    return *this;
+
   this->invalidateHash();
 
   BOOST_FOREACH(Rational& c, coefficients)
@@ -168,8 +174,26 @@ Polynomial& Polynomial::operator/=(const Rational& r)
   return *this;
 }
 
+Rational Polynomial::findMultiplier() const
+{
+  Rational result = 0;
+
+  BOOST_FOREACH(const Rational& c, coefficients)
+  {
+    result = Rational::gcd(result, c);
+
+    if (result == 1)
+      break;
+  }
+
+  return result;
+}
+
 Polynomial& Polynomial::operator*=(const Rational& r)
 {
+  if (r == 1)
+    return *this;
+
   this->invalidateHash();
 
   BOOST_FOREACH(Rational& c, coefficients)
