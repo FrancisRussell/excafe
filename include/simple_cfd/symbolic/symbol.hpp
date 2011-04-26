@@ -12,6 +12,8 @@
 #include "expr.hpp"
 #include "rational.hpp"
 #include <boost/operators.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace cfd
 {
@@ -24,7 +26,7 @@ class Symbol : public AbstractBasic<Symbol>,
 {
 private:
   static int nextSerial;
-  std::string name;
+  boost::shared_ptr<const std::string> name;
   int serial;
   
 public:

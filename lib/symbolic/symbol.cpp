@@ -16,7 +16,8 @@ namespace symbolic
 
 int Symbol::nextSerial = 0;
 
-Symbol::Symbol(const std::string& _name) : name(_name), serial(nextSerial++)
+Symbol::Symbol(const std::string& _name) : 
+  name(boost::make_shared<const std::string>(_name)), serial(nextSerial++)
 {
 }
 
@@ -27,7 +28,7 @@ std::size_t Symbol::nops() const
 
 void Symbol::write(std::ostream& o) const
 {
-  o << name;
+  o << *name;
 }
 
 Expr Symbol::derivative(const Symbol& s) const
