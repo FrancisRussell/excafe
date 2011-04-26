@@ -14,6 +14,9 @@
 #include <boost/operators.hpp>
 #include <boost/foreach.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/sum.hpp>
+#include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/expr.hpp>
 
 namespace cfd
 {
@@ -228,7 +231,6 @@ private:
     {
       return this->less(m);
     }
-
   };
   
   class PolyIter : public boost::iterator_facade<PolyIter, 
@@ -415,6 +417,22 @@ public:
     }
 
     return result;
+  }
+
+  Expr toExpr() const
+  {
+    Sum result;
+    for(const_iterator polyIter = begin(); polyIter != end(); ++polyIter)
+    {
+      Product term = Product::constant(polyIter.coefficient());
+
+      BOOST_FOREACH(const exponent_t& exponent, *polyIter)
+        term *= Product::pow(exponent.first, exponent.second);
+
+      result += term;
+    }
+
+    return result.simplify();
   }
 
   std::size_t numTerms() const
