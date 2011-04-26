@@ -206,8 +206,8 @@ Rational Rational::reciprocal() const
 
 Rational::value_type Rational::gcd(value_type u, value_type v)
 {
-  u = std::abs(u);
-  v = std::abs(v);
+  u = (u < 0 ? -u : u);
+  v = (v < 0 ? -v : v);
 
   if (u == 0 || v == 0)
     return u | v;
