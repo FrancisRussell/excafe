@@ -20,7 +20,7 @@ namespace symbolic
 {
 
 class Symbol : public AbstractBasic<Symbol>,
-               boost::equality_comparable<Symbol>
+               boost::totally_ordered<Symbol>
 {
 private:
   static int nextSerial;
