@@ -104,7 +104,7 @@ private:
 
     MonomialProduct operator*(const Monomial& m) const;
 
-    void write(std::ostream& out)
+    void write(std::ostream& out) const
     {
       BOOST_FOREACH(const exponent_t& e, *this)
       {
@@ -384,8 +384,10 @@ public:
     return coefficients.size();
   }
 
+  Rational findMultiplier() const;
   Expr derivative(const Symbol& s) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
+  Expr simplify() const;
   Float eval(const Expr::subst_map& map) const;
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;

@@ -35,6 +35,22 @@ Polynomial::Polynomial(const Symbol& s)
   exponents.push_back(exponent_t(s, 1));
 }
 
+Expr Polynomial::simplify() const
+{
+  if (monomialOffsets.size() == 2)
+  {
+    if (monomialOffsets[1] == 0)
+      return coefficients[0];
+
+    if (monomialOffsets[1] == 1
+        && coefficients[0] == 1
+        && exponents[0].second == 1)
+      return exponents[0].first;
+  }
+  
+  return toSum();
+}
+
 std::size_t Polynomial::nops() const
 {
   return numTerms();
@@ -292,7 +308,48 @@ Expr Polynomial::toSum() const
 
 Expr Polynomial::subs(const Expr::subst_map& map, const unsigned flags) const
 {
-  return toSum().subs(map, flags);
+  bool hasNonRationals = false;
+
+  BOOST_FOREACH(const Expr::subst_map::value_type& sub, map)
+  {
+    if (!is_exactly_a<Rational>(sub.second))
+    {
+      hasNonRationals = true;
+      break;
+    }
+  }
+
+  if (hasNonRationals)
+  {
+    return toSum().subs(map, flags);
+  }
+  else
+  {
+    Polynomial result;
+    for(const_iterator polyIter = begin(); polyIter != end(); ++polyIter)
+    {
+      Rational newCoeff = polyIter.coefficient();
+      std::vector<exponent_t> exponents;
+
+      for(Monomial::const_iterator powerIter = polyIter->begin(); powerIter != polyIter->end(); ++powerIter)
+      {
+        const Expr::subst_map::const_iterator subIter = map.find(powerIter->first);
+        if (subIter != map.end())
+        {
+          const Rational& r = convert_to<Rational>(subIter->second);
+          newCoeff *= pow(r, powerIter->second);
+        }
+        else
+        {
+          exponents.push_back(*powerIter);
+        }
+      }
+
+      const Monomial newMonomial(&(*exponents.begin()), &(*exponents.end()));
+      result.pushMonomial(newCoeff, newMonomial);
+    }
+    return result;
+  }
 }
 
 void Polynomial::write(std::ostream& out) const
