@@ -75,7 +75,7 @@ private:
 
     std::size_t size() const
     {
-      return end() - begin();
+      return endExponent - beginExponent;
     }
 
     long getExponent(const Symbol& s) const
@@ -373,6 +373,18 @@ private:
   {
     pushMonomialTemplated(c, m);
   }
+
+  struct MultiplyComparator
+  {
+    bool operator()(const std::pair<const_iterator, const_iterator>& a,
+                    const std::pair<const_iterator, const_iterator>& b) const
+    {
+      if (a.first >= b.first && a.second >= b.second && a != b)
+        return true;
+  
+      return (*a.first * *a.second) > (*b.first * *b.second);
+    }
+  };
       
 public:
   Polynomial();

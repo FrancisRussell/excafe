@@ -260,31 +260,29 @@ Polynomial::MonomialProduct Polynomial::Monomial::operator*(const Monomial& m) c
 
 Polynomial Polynomial::operator*(const Polynomial& b) const
 {
-  typedef std::pair<MonomialProduct, std::size_t> state_t;
+  typedef std::pair<const_iterator, const_iterator> state_t;
 
   Polynomial result;
-  std::vector<const_iterator> positions(numTerms(), b.begin());
   std::priority_queue<state_t, 
                       std::vector<state_t>,
-                      std::greater<state_t> > queue;
+                      MultiplyComparator> queue;
 
   if (b.begin() != b.end())
   {
-    for(std::size_t i=0; i<numTerms(); ++i)
-      queue.push(std::make_pair((*this)[i]*(*positions[i]), i));
+    for(const_iterator iter=begin(); iter != end(); ++iter)
+      queue.push(state_t(iter, b.begin()));
   }
 
   while(!queue.empty())
   {
-    const std::pair<MonomialProduct, std::size_t> top = queue.top();
+    state_t top = queue.top();
     queue.pop();
 
-    const int position = top.second;
-    result.pushMonomial(positions[position].coefficient() * coefficients[position], top.first);
-    ++positions[position];
+    result.pushMonomial(top.first.coefficient() * top.second.coefficient(), *top.first * *top.second);
+    ++top.second;
 
-    if (positions[position] != b.end())
-      queue.push(std::make_pair((*this)[top.second]*(*positions[top.second]), top.second));
+    if (top.second != b.end())
+      queue.push(top);
   }
 
   return result;
