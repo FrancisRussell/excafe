@@ -39,16 +39,6 @@ Expr Symbol::derivative(const Symbol& s) const
     return Rational::zero();
 }
 
-bool Symbol::operator==(const Symbol& s) const
-{
-  return serial == s.serial;
-}
-
-bool Symbol::operator<(const Symbol& s) const
-{
-  return serial < s.serial;
-}
-
 bool Symbol::depends(const std::set<Symbol>& symbols) const
 {
   return symbols.find(*this) != symbols.end();

@@ -35,13 +35,21 @@ public:
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Float eval(const Expr::subst_map& map) const;
-  bool operator==(const Symbol& s) const;
-  bool operator<(const Symbol& s) const;
   bool depends(const std::set<Symbol>& symbols) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+
+  bool operator==(const Symbol& s) const
+  {
+    return serial == s.serial;
+  }
+
+  bool operator<(const Symbol& s) const
+  {
+    return serial < s.serial;
+  }
 };
 
 }
