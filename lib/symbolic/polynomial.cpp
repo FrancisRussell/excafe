@@ -44,8 +44,8 @@ Expr Polynomial::simplify() const
 
     if (monomialOffsets[1] == 1
         && coefficients[0] == 1
-        && exponents[0].second == 1)
-      return exponents[0].first;
+        && exponents[0].exp() == 1)
+      return exponents[0].sym();
   }
   
   return toSum();
@@ -60,7 +60,7 @@ bool Polynomial::depends(const std::set<Symbol>& symbols) const
 {
   BOOST_FOREACH(const exponent_t& exponent, exponents)
   {
-    if (symbols.find(exponent.first) != symbols.end())
+    if (symbols.find(exponent.sym()) != symbols.end())
       return true;
   }
 
@@ -73,8 +73,8 @@ std::size_t Polynomial::untypedHash() const
 
   BOOST_FOREACH(const exponent_t& exponent, exponents)
   {
-    util::hash_accum(result, exponent.first);
-    util::hash_accum(result, exponent.second);
+    util::hash_accum(result, exponent.sym());
+    util::hash_accum(result, exponent.exp());
   }
 
   BOOST_FOREACH(const std::size_t offset, monomialOffsets)
@@ -101,7 +101,7 @@ Expr Polynomial::derivative(const Symbol& s) const
     {
       const Rational coefficient = iter.coefficient() * exponent;
       const exponent_t decrement(s, -1);
-      const Monomial decrementMonomial(&decrement, &decrement + 1);
+      const detail::Monomial decrementMonomial(&decrement, &decrement + 1);
       result.pushMonomial(coefficient, decrementMonomial * (*iter));
     }
   }
@@ -118,7 +118,7 @@ Expr Polynomial::integrate(const Symbol& s, const unsigned flags) const
 
     const Rational coefficient = iter.coefficient() / (exponent+1);
     const exponent_t increment(s, 1);
-    const Monomial incrementMonomial(&increment, &increment + 1);
+    const detail::Monomial incrementMonomial(&increment, &increment + 1);
     result.pushMonomial(coefficient, incrementMonomial * (*iter));
   }
 
@@ -132,10 +132,10 @@ Float Polynomial::eval(const Expr::subst_map& map) const
   for(const_iterator iter = begin(); iter != end(); ++iter)
   {
     Float term = iter.coefficient().toFloat();
-    for(Monomial::const_iterator powerIter = iter->begin(); powerIter != iter->end(); ++powerIter)
+    for(detail::Monomial::const_iterator powerIter = iter->begin(); powerIter != iter->end(); ++powerIter)
     {
-      const Float symbolValue = powerIter->first.eval(map);
-      const long exponent = powerIter->second;
+      const Float symbolValue = powerIter->sym().eval(map);
+      const long exponent = powerIter->exp();
 
       term *= pow(symbolValue, exponent);
     }
@@ -156,12 +156,12 @@ void Polynomial::accept(NumericExpressionVisitor<Symbol>& v) const
     if (hasCoefficient)
       coefficient.accept(v);
 
-    for(Monomial::const_iterator powerIter = iter->begin(); powerIter != iter->end(); ++powerIter)
+    for(detail::Monomial::const_iterator powerIter = iter->begin(); powerIter != iter->end(); ++powerIter)
     {
-      v.visitVariable(powerIter->first);
+      v.visitVariable(powerIter->sym());
 
-      if (powerIter->second != 1)
-        v.visitExponent(powerIter->second);
+      if (powerIter->exp() != 1)
+        v.visitExponent(powerIter->exp());
     }
 
     v.postProduct(iter->size() + (hasCoefficient ? 1 : 0));
@@ -253,7 +253,7 @@ Polynomial Polynomial::operator+(const Polynomial& b) const
   return result;
 }
 
-Polynomial::MonomialProduct Polynomial::Monomial::operator*(const Monomial& m) const
+detail::MonomialProduct detail::Monomial::operator*(const detail::Monomial& m) const
 {
   return MonomialProduct(*this, m);
 }
@@ -296,7 +296,7 @@ Expr Polynomial::toSum() const
     Product term = Product::constant(polyIter.coefficient());
 
     BOOST_FOREACH(const exponent_t& exponent, *polyIter)
-      term *= Product::pow(exponent.first, exponent.second);
+      term *= Product::pow(exponent.sym(), exponent.exp());
 
     result += term;
   }
@@ -329,13 +329,13 @@ Expr Polynomial::subs(const Expr::subst_map& map, const unsigned flags) const
       Rational newCoeff = polyIter.coefficient();
       std::vector<exponent_t> exponents;
 
-      for(Monomial::const_iterator powerIter = polyIter->begin(); powerIter != polyIter->end(); ++powerIter)
+      for(detail::Monomial::const_iterator powerIter = polyIter->begin(); powerIter != polyIter->end(); ++powerIter)
       {
-        const Expr::subst_map::const_iterator subIter = map.find(powerIter->first);
+        const Expr::subst_map::const_iterator subIter = map.find(powerIter->sym());
         if (subIter != map.end())
         {
           const Rational& r = convert_to<Rational>(subIter->second);
-          newCoeff *= pow(r, powerIter->second);
+          newCoeff *= pow(r, powerIter->exp());
         }
         else
         {
@@ -343,7 +343,7 @@ Expr Polynomial::subs(const Expr::subst_map& map, const unsigned flags) const
         }
       }
 
-      const Monomial newMonomial(&(*exponents.begin()), &(*exponents.end()));
+      const detail::Monomial newMonomial(&(*exponents.begin()), &(*exponents.end()));
       result.pushMonomial(newCoeff, newMonomial);
     }
     return result;

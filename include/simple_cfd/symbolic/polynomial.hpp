@@ -12,6 +12,8 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/operators.hpp>
 #include <boost/foreach.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/bool.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/abstract_basic.hpp>
@@ -22,251 +24,309 @@ namespace cfd
 namespace symbolic
 {
 
+
+namespace detail
+{
+
+template<bool is_value> class Exponent;
+class Monomial;
+class MonomialProduct;
+class MonomialProductIter;
+
+template<bool is_value>
+class Exponent
+{
+private:
+  typedef typename boost::mpl::if_<boost::mpl::bool_<is_value>,
+                                   Symbol,
+                                   const Symbol&>::type symbol_t;
+
+  symbol_t symbol;
+  long exponent;
+
+public:
+  Exponent(const Symbol& _symbol, const long _exponent) :
+    symbol(_symbol), exponent(_exponent)
+  {
+  }
+
+  Exponent(const Exponent<true>& value) :
+    symbol(value.sym()), exponent(value.exp())
+  {
+  }
+
+  Exponent(const Exponent<false>& ref) :
+    symbol(ref.sym()), exponent(ref.exp())
+  {
+  }
+
+  bool operator==(const Exponent<true>& value) const
+  {
+    return exponent == value.exp() &&
+           symbol == value.sym();
+  }
+
+  bool operator==(const Exponent<false>& ref) const
+  {
+    return exponent == ref.exp() &&
+           symbol == ref.sym();
+  }
+
+  const Symbol& sym() const
+  {
+    return symbol;
+  }
+
+  const long exp() const
+  {
+    return exponent;
+  }
+};
+
+/* This implementation is counter-intuitive. "b" is actually less than
+   "a" since they are actually "a^0*b^1" and "a^1", respectively.
+*/
+struct ExponentComparator
+{
+  template<bool a_is_value, bool b_is_value>
+  bool operator()(const Exponent<a_is_value>& a, const Exponent<b_is_value>& b) const
+  {
+    if (a.sym() == b.sym())
+      return a.exp() < b.exp();
+    else
+      return a.sym() > b.sym();
+  }
+};
+
+class Monomial : public boost::totally_ordered<Monomial>
+{
+private:
+  const Exponent<true>* beginExponent;
+  const Exponent<true>* endExponent;
+
+public:
+  typedef const Exponent<true>* iterator;
+  typedef const Exponent<true>* const_iterator;
+
+  Monomial(const Exponent<true>* _begin, const Exponent<true>* _end) : 
+    beginExponent(_begin), endExponent(_end)
+  {
+  }
+
+  const_iterator begin() const
+  {
+    return beginExponent;
+  }
+
+  const_iterator end() const
+  {
+    return endExponent;
+  }
+
+  std::size_t size() const
+  {
+    return endExponent - beginExponent;
+  }
+
+  long getExponent(const Symbol& s) const
+  {
+    const_iterator iter = begin();
+
+    while(iter != end() && iter->sym() != s)
+      ++iter;
+
+    if (iter != end())
+      return iter->exp();
+    else
+      return 0;
+  }
+
+  bool operator<(const Monomial& m) const
+  {
+    return std::lexicographical_compare(begin(), end(), m.begin(),
+      m.end(), detail::ExponentComparator());
+  }
+
+  bool operator==(const Monomial& m) const
+  {
+    return size() == m.size() && std::equal(begin(), end(), m.begin());
+  }
+
+  MonomialProduct operator*(const Monomial& m) const;
+
+  void write(std::ostream& out) const
+  {
+    BOOST_FOREACH(const Exponent<true>& e, *this)
+    {
+      out << e.sym();
+      
+      if (e.exp() != 1)
+        out << "^{" << e.exp() << "}";
+    }
+  }
+};
+
+class MonomialProductIter : public boost::iterator_facade<MonomialProductIter, Exponent<true>, 
+                                     std::forward_iterator_tag, Exponent<false> >
+{
+private:
+  Monomial::iterator firstIter, firstEnd;
+  Monomial::iterator secondIter, secondEnd;
+
+  bool isZeroExponent() const
+  {
+    return firstIter != firstEnd && secondIter != secondEnd
+           && firstIter->sym() == secondIter->sym()
+           && firstIter->exp() + secondIter->exp() == 0;
+  }
+
+  void incrementInternal()
+  {
+    if (firstIter == firstEnd)
+    {
+      ++secondIter;
+    }
+    else if (secondIter == secondEnd)
+    {
+      ++firstIter;
+    }
+    else if (firstIter->sym() == secondIter->sym())
+    {
+      ++firstIter;
+      ++secondIter;
+    }
+    else
+    {
+      const bool firstIsSmaller = firstIter->sym() < secondIter->sym();
+      ++(firstIsSmaller ? firstIter : secondIter); 
+    }
+  }
+
+  void skipZeros()
+  {
+    while(isZeroExponent())
+      incrementInternal();
+  }
+
+public:
+  MonomialProductIter(const Monomial& first, const Monomial& second, const bool begin) :
+    firstIter(begin ? first.begin() : first.end()), firstEnd(first.end()), 
+    secondIter(begin ? second.begin() : second.end()), secondEnd(second.end())
+  {
+    skipZeros();
+  }
+
+  reference dereference() const
+  {
+    if (firstIter == firstEnd)
+    {
+      return *secondIter;
+    }
+    else if (secondIter == secondEnd)
+    {
+      return *firstIter;
+    }
+    else if (firstIter->sym() == secondIter->sym())
+    {
+      return reference(firstIter->sym(), firstIter->exp() + secondIter->exp());
+    }
+    else
+    {
+      const bool firstIsSmaller = firstIter->sym() < secondIter->sym();
+      return *(firstIsSmaller ? firstIter : secondIter);
+    }
+  }
+
+  void increment()
+  {
+    incrementInternal();
+    skipZeros();
+  }
+
+  bool equal(const MonomialProductIter& i) const
+  {
+    return firstIter == i.firstIter && secondIter == i.secondIter;
+  }
+};
+
+class MonomialProduct : public boost::totally_ordered<MonomialProduct>,
+                        public boost::totally_ordered<MonomialProduct, Monomial>
+{
+private:
+  Monomial first;
+  Monomial second;
+
+  template<typename monomial_t>
+  bool equal(const monomial_t& m) const
+  {
+    return size() == m.size()
+           && std::equal(begin(), end(), m.begin());
+  }
+
+  template<typename monomial_t>
+  bool less(const monomial_t& m) const
+  {
+    return std::lexicographical_compare(begin(), end(), m.begin(),
+      m.end(), detail::ExponentComparator());
+  }
+
+public:
+  typedef MonomialProductIter iterator;
+  typedef MonomialProductIter const_iterator;
+
+  MonomialProduct(const Monomial& _first, const Monomial& _second) : first(_first), second(_second)
+  {
+  }
+
+  iterator begin() const
+  {
+    return iterator(first, second, true);
+  }
+
+  iterator end() const
+  {
+    return iterator(first, second, false);
+  }
+
+  std::size_t size() const
+  {
+    return std::distance(begin(), end());
+  }
+
+  bool operator==(const MonomialProduct& p) const
+  {
+    return this->equal(p);
+  }
+
+  bool operator<(const MonomialProduct& p) const
+  {
+    return this->less(p);
+  }
+
+  bool operator==(const Monomial& m) const
+  {
+    return this->equal(m);
+  }
+
+  bool operator<(const Monomial& m) const
+  {
+    return this->less(m);
+  }
+};
+
+}
+
 class Polynomial : public AbstractBasic<Polynomial>,
                    boost::equality_comparable<Polynomial>
 {
 private:
-  class Monomial;
-  class MonomialProduct;
-
-  typedef std::pair<Symbol, long> exponent_t;
+  typedef detail::Exponent<true> exponent_t;
   std::vector<exponent_t> exponents;
   std::vector<std::size_t> monomialOffsets;
   std::vector<Rational> coefficients;
-
-  /* This implementation is counter-intuitive. "b" is actually less than
-     "a" since they are actually "a^0*b^1" and "a^1", respectively.
-  */
-  struct ExponentComparator
-  {
-    bool operator()(const exponent_t& a, const exponent_t& b) const
-    {
-      if (a.first == b.first)
-        return a.second < b.second;
-      else
-        return a.first > b.first;
-    }
-  };
-
-  class Monomial : public boost::totally_ordered<Monomial>
-  {
-  private:
-    const exponent_t* beginExponent;
-    const exponent_t* endExponent;
-
-  public:
-    typedef const exponent_t* iterator;
-    typedef const exponent_t* const_iterator;
-
-    Monomial(const exponent_t* _begin, const exponent_t* _end) : 
-      beginExponent(_begin), endExponent(_end)
-    {
-    }
-
-    const_iterator begin() const
-    {
-      return beginExponent;
-    }
-
-    const_iterator end() const
-    {
-      return endExponent;
-    }
-
-    std::size_t size() const
-    {
-      return endExponent - beginExponent;
-    }
-
-    long getExponent(const Symbol& s) const
-    {
-      const_iterator iter = begin();
-
-      while(iter != end() && iter->first != s)
-        ++iter;
-
-      if (iter != end())
-        return iter->second;
-      else
-        return 0;
-    }
-
-    bool operator<(const Monomial& m) const
-    {
-      return std::lexicographical_compare(begin(), end(), m.begin(),
-        m.end(), ExponentComparator());
-    }
-
-    bool operator==(const Monomial& m) const
-    {
-      return size() == m.size() && std::equal(begin(), end(), m.begin());
-    }
-
-    MonomialProduct operator*(const Monomial& m) const;
-
-    void write(std::ostream& out) const
-    {
-      BOOST_FOREACH(const exponent_t& e, *this)
-      {
-        out << e.first;
-        
-        if (e.second != 1)
-          out << "^{" << e.second << "}";
-      }
-    }
-  };
-
-  class MonomialProductIter : public boost::iterator_facade<MonomialProductIter, const Polynomial::exponent_t, 
-                                       std::forward_iterator_tag, const Polynomial::exponent_t>
-  {
-  private:
-    bool smaller;
-    Monomial::iterator firstIter, firstEnd;
-    Monomial::iterator secondIter, secondEnd;
-
-    bool isZeroExponent() const
-    {
-      return firstIter != firstEnd && secondIter != secondEnd
-             && firstIter->first == secondIter->first
-             && firstIter->second + secondIter->second == 0;
-    }
-
-    void incrementInternal()
-    {
-      if (firstIter == firstEnd)
-      {
-        ++secondIter;
-      }
-      else if (secondIter == secondEnd)
-      {
-        ++firstIter;
-      }
-      else if (firstIter->first == secondIter->first)
-      {
-        ++firstIter;
-        ++secondIter;
-      }
-      else
-      {
-        const bool firstIsSmaller = firstIter->first < secondIter->first;
-        ++(firstIsSmaller ? firstIter : secondIter); 
-      }
-    }
-
-    void skipZeros()
-    {
-      while(isZeroExponent())
-        incrementInternal();
-    }
-
-  public:
-    MonomialProductIter(const Monomial& first, const Monomial& second, const bool begin) :
-      firstIter(begin ? first.begin() : first.end()), firstEnd(first.end()), 
-      secondIter(begin ? second.begin() : second.end()), secondEnd(second.end())
-    {
-      skipZeros();
-    }
-
-    reference dereference() const
-    {
-      if (firstIter == firstEnd)
-      {
-        return *secondIter;
-      }
-      else if (secondIter == secondEnd)
-      {
-        return *firstIter;
-      }
-      else if (firstIter->first == secondIter->first)
-      {
-        return reference(firstIter->first, firstIter->second + secondIter->second);
-      }
-      else
-      {
-        const bool firstIsSmaller = firstIter->first < secondIter->first;
-        return *(firstIsSmaller ? firstIter : secondIter);
-      }
-    }
-
-    void increment()
-    {
-      incrementInternal();
-      skipZeros();
-    }
-
-    bool equal(const MonomialProductIter& i) const
-    {
-      return firstIter == i.firstIter && secondIter == i.secondIter;
-    }
-  };
-
-  class MonomialProduct : public boost::totally_ordered<MonomialProduct>,
-                          public boost::totally_ordered<MonomialProduct, Monomial>
-  {
-  private:
-    Monomial first;
-    Monomial second;
-
-    template<typename monomial_t>
-    bool equal(const monomial_t& m) const
-    {
-      return size() == m.size()
-             && std::equal(begin(), end(), m.begin());
-    }
-
-    template<typename monomial_t>
-    bool less(const monomial_t& m) const
-    {
-      return std::lexicographical_compare(begin(), end(), m.begin(),
-        m.end(), ExponentComparator());
-    }
-
-  public:
-    typedef MonomialProductIter iterator;
-    typedef MonomialProductIter const_iterator;
-
-    MonomialProduct(const Monomial& _first, const Monomial& _second) : first(_first), second(_second)
-    {
-    }
-
-    iterator begin() const
-    {
-      return iterator(first, second, true);
-    }
-
-    iterator end() const
-    {
-      return iterator(first, second, false);
-    }
-
-    std::size_t size() const
-    {
-      return std::distance(begin(), end());
-    }
-
-    bool operator==(const MonomialProduct& p) const
-    {
-      return this->equal(p);
-    }
-
-    bool operator<(const MonomialProduct& p) const
-    {
-      return this->less(p);
-    }
-
-    bool operator==(const Monomial& m) const
-    {
-      return this->equal(m);
-    }
-
-    bool operator<(const Monomial& m) const
-    {
-      return this->less(m);
-    }
-  };
-  
+ 
   class PolyIter : public boost::iterator_facade<PolyIter, 
-                            const Monomial, std::random_access_iterator_tag, const Monomial>
+                          detail::Monomial, std::random_access_iterator_tag, const detail::Monomial>
   {
   private:
     const Polynomial* polynomial;
@@ -327,10 +387,10 @@ private:
     return PolyIter(*this, numTerms());
   }
 
-  const Monomial operator[](const std::size_t index) const
+  const detail::Monomial operator[](const std::size_t index) const
   {
-    return Monomial(&exponents[monomialOffsets[index]], 
-                    &exponents[monomialOffsets[index+1]]); 
+    return detail::Monomial(&exponents[monomialOffsets[index]], 
+                            &exponents[monomialOffsets[index+1]]); 
   }
 
   const Rational coefficient(std::size_t index) const
@@ -364,12 +424,12 @@ private:
     }
   }
 
-  void pushMonomial(const Rational& c, const Monomial& m)
+  void pushMonomial(const Rational& c, const detail::Monomial& m)
   {
     pushMonomialTemplated(c, m);
   }
 
-  void pushMonomial(const Rational& c, const MonomialProduct& m)
+  void pushMonomial(const Rational& c, const detail::MonomialProduct& m)
   {
     pushMonomialTemplated(c, m);
   }
