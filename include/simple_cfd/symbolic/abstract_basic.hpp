@@ -1,13 +1,15 @@
 #ifndef SIMPLE_CFD_SYMBOLIC_ABSTRACT_BASIC_HPP
 #define SIMPLE_CFD_SYMBOLIC_ABSTRACT_BASIC_HPP
 
+#include <utility>
+#include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <simple_cfd/util/type_info.hpp>
 #include <simple_cfd/util/hash.hpp>
-#include <utility>
 #include "symbolic_fwd.hpp"
 #include "basic.hpp"
 #include "visitor.hpp"
+#include "expr.hpp"
 #include "make_expr_from.hpp"
 
 namespace cfd
@@ -15,6 +17,17 @@ namespace cfd
 
 namespace symbolic
 {
+
+namespace detail
+{
+
+class AbstractBasicHelper
+{
+public:
+  static Expr integrate(const Expr& e, const Expr::region_t& region, const unsigned flags);
+};
+
+}
 
 template<typename T>
 class AbstractBasic : public Basic
@@ -161,6 +174,11 @@ public:
   Expr extractMultiplier(Rational& r) const
   {
     return this->simplify();
+  }
+
+  Expr integrate(const Expr::region_t& region, const unsigned flags) const
+  {
+    return detail::AbstractBasicHelper::integrate(clone(), region, flags);
   }
 };
 

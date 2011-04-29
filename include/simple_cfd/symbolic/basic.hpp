@@ -27,6 +27,7 @@ public:
   virtual Expr clone() const = 0;
   virtual Expr derivative(const Symbol& s) const = 0;
   virtual Expr integrate(const Symbol& s, unsigned flags) const = 0;
+  virtual Expr integrate(const Expr::region_t& region, unsigned flags) const = 0;
   virtual Expr simplify() const = 0;
   virtual Expr extractMultiplier(Rational& coeff) const = 0;
   virtual Float eval(const Expr::subst_map& map) const = 0;
