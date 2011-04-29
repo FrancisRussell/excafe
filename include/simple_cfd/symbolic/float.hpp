@@ -28,6 +28,7 @@ private:
 public:
   static Float fromFraction(long numerator, long denominator);
 
+  Float();
   Float(const double _value);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;

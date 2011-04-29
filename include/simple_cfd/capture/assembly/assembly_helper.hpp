@@ -55,10 +55,12 @@ public:
   ScalarPlaceholder::expression_t operator()(const ScalarPlaceholder::expression_t& p) const
   {
     expression_t integrand = p.substituteValues(valueMap)*jacobian;
+    expression_t::region_t region;
 
     for(std::size_t d=0; d<dimension; ++d)
-      integrand = integrand.integrate(ScalarPlaceholder(PositionComponent(d)), -1, 1);
+      region.setInterval(ScalarPlaceholder(PositionComponent(d)), -1, 1);
 
+    integrand = integrand.integrate(region);
     return integrand.normalised();
   }
 };

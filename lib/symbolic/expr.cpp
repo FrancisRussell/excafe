@@ -144,14 +144,17 @@ Expr Expr::integrate(const Symbol& s, const unsigned flags) const
   return integrated.simplify();
 }
 
-Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
+Expr Expr::integrate(const region_t& region, const unsigned flags) const
 {
-  const Expr integrated = integrate(s);
-  subst_map aMap, bMap;
-  aMap[s] = a;
-  bMap[s] = b;
+  const Expr integrated = expr->integrate(region, flags);
+  return integrated.simplify();
+}
 
-  return (integrated.subs(bMap) - integrated.subs(aMap)).simplify();
+Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b, const unsigned flags) const
+{
+  region_t region;
+  region.setInterval(s, a, b);
+  return this->integrate(region, flags);
 }
 
 void Expr::accept(Visitor& v) const

@@ -7,6 +7,7 @@
 #include <boost/operators.hpp>
 #include <boost/foreach.hpp>
 #include "expression.hpp"
+#include "orthotope.hpp"
 #include "expression_visitor.hpp"
 #include "convert_expression.hpp"
 #include "optimised_polynomial_fraction.hpp"
@@ -102,6 +103,8 @@ public:
   typedef V                                                     variable_t;
   typedef ExcafeExpression<variable_t>                          optimised_t;
   typedef detail::ExcafeValueMap<variable_t, ExcafeExpression>  value_map;
+  typedef numeric::Orthotope<variable_t, value_type>            region_t;
+
   friend class detail::ExcafeValueMap<variable_t, ExcafeExpression>;
 
 private:
@@ -230,6 +233,20 @@ public:
   ExcafeExpression integrate(const variable_t& variable, const value_type a, const value_type b) const
   {
     return expr.integrate(getSymbol(variable), a, b);
+  }
+
+  ExcafeExpression integrate(const region_t& region) const
+  {
+    expr_t::region_t symbolicRegion;
+    BOOST_FOREACH(const typename region_t::value_type& interval, region)
+    {
+      symbolicRegion.setInterval(getSymbol(interval.first), 
+                                 numeric_t(interval.second.first), 
+                                 numeric_t(interval.second.second));
+    }
+
+    const expr_t integrated = expr.integrate(symbolicRegion);
+    return ExcafeExpression(integrated);
   }
 
 /*
