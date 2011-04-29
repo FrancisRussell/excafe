@@ -173,13 +173,6 @@ private:
   Monomial::iterator firstIter, firstEnd;
   Monomial::iterator secondIter, secondEnd;
 
-  bool isZeroExponent() const
-  {
-    return firstIter != firstEnd && secondIter != secondEnd
-           && firstIter->sym() == secondIter->sym()
-           && firstIter->exp() + secondIter->exp() == 0;
-  }
-
   void incrementInternal()
   {
     if (firstIter == firstEnd)
@@ -204,8 +197,14 @@ private:
 
   void skipZeros()
   {
-    while(isZeroExponent())
-      incrementInternal();
+    while(firstIter != firstEnd 
+          && secondIter != secondEnd
+          && firstIter->sym() == secondIter->sym() 
+          && firstIter->exp() + secondIter->exp() == 0)
+    {
+      ++firstIter;
+      ++secondIter;
+    }
   }
 
 public:
