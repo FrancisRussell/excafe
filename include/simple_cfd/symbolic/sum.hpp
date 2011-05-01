@@ -58,7 +58,8 @@ public:
   Sum expandedProduct(const Sum& s) const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
-  virtual Expr extractMultiplier(Rational& coeff) const;
+  Expr extractMultiplier(Rational& coeff) const;
+  Expr integrate(const Expr::region_t& region, const unsigned flags) const;
 };
 
 }

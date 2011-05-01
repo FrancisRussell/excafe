@@ -267,6 +267,17 @@ Expr Sum::extractMultiplier(Rational& coeff) const
   return constructSimplifiedExpr(sum.overall / multiplier, newTerms, NORMALISED_AND_EXTRACTED);
 }
 
+Expr Sum::integrate(const Expr::region_t& region, const unsigned flags) const
+{
+  LazyTermMap resultTerms;
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
+  {
+    (*resultTerms)[e.first.integrate(region, flags)] += e.second;
+  }
+
+  return constructSimplifiedExpr(getOverall() * region.getVolume(), resultTerms, NON_NORMALISED);
+}
+
 }
 
 }
