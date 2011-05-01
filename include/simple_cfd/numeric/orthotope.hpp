@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 #include <utility>
 #include <boost/foreach.hpp>
 
@@ -19,9 +20,9 @@ private:
   typedef V variable_t;
   typedef N numeric_t;
 
-  typedef std::map< variable_t, std::pair<numeric_t, numeric_t> > range_map_t;
+  typedef std::vector<std::pair<variable_t, std::pair<numeric_t, numeric_t> > > range_map_t;
 
-  std::map< variable_t, std::pair<numeric_t, numeric_t> > ranges;
+  range_map_t ranges;
 
 public:
   typedef typename range_map_t::iterator       iterator;
@@ -63,7 +64,13 @@ public:
 
   void setInterval(const variable_t& v, const numeric_t lower, const numeric_t upper)
   {
-    ranges[v] = std::make_pair(lower, upper);
+    ranges.push_back(std::make_pair(v, std::make_pair(lower, upper)));
+  }
+
+  numeric_t getVolume() const
+  {
+    numeric_t result = 1;
+    BOOST_FOREACH(const typename range_map_t::value_type& range, ranges)
   }
 };
 
