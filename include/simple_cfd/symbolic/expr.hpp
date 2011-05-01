@@ -30,7 +30,7 @@ private:
 
 public:
   typedef std::map<Symbol, Expr> subst_map;
-  typedef numeric::Orthotope<Symbol, Float> region_t;
+  typedef numeric::Orthotope<Symbol, Rational> region_t;
 
   explicit Expr(const ref_t& e);
   Expr();
@@ -50,7 +50,7 @@ public:
   Expr derivative(const Symbol& s) const;
   Expr simplify() const;
   Expr integrate(const Symbol& s, unsigned flags = 0) const;
-  Expr integrate(const Symbol& s, const Float& a, const Float& b, unsigned flags = 0) const;
+  Expr integrate(const Symbol& s, const Rational& a, const Rational& b, unsigned flags = 0) const;
   Expr integrate(const region_t& region, unsigned flags = 0) const;
   const Basic& internal() const;
   Expr subs(const subst_map& map, unsigned flags = 0) const;

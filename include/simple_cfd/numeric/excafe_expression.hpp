@@ -237,12 +237,24 @@ public:
 
   ExcafeExpression integrate(const region_t& region) const
   {
-    expr_t::region_t symbolicRegion;
+    using namespace symbolic;
+
+    Expr::region_t symbolicRegion;
     BOOST_FOREACH(const typename region_t::value_type& interval, region)
     {
-      symbolicRegion.setInterval(getSymbol(interval.first), 
-                                 numeric_t(interval.second.first), 
-                                 numeric_t(interval.second.second));
+      const Expr lowerBound = Float(interval.second.first).simplify();
+      const Expr upperBound = Float(interval.second.second).simplify();
+
+      if (is_a<Rational>(lowerBound) && is_a<Rational>(upperBound))
+      {
+        symbolicRegion.setInterval(getSymbol(interval.first), 
+                                   convert_to<Rational>(lowerBound), 
+                                   convert_to<Rational>(upperBound));
+      }
+      else
+      {
+        CFD_EXCEPTION("Can only integrate over rationally bounded regions.");
+      }
     }
 
     const expr_t integrated = expr.integrate(symbolicRegion);

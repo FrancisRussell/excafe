@@ -150,7 +150,7 @@ Expr Expr::integrate(const region_t& region, const unsigned flags) const
   return integrated.simplify();
 }
 
-Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b, const unsigned flags) const
+Expr Expr::integrate(const Symbol& s, const Rational& a, const Rational& b, const unsigned flags) const
 {
   region_t region;
   region.setInterval(s, a, b);
