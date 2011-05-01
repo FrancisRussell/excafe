@@ -71,6 +71,9 @@ public:
   {
     numeric_t result = 1;
     BOOST_FOREACH(const typename range_map_t::value_type& range, ranges)
+      result *= range.second.second - range.second.first;
+
+    return result;
   }
 };
 
