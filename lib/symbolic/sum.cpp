@@ -129,7 +129,7 @@ Expr Sum::integrate(const Symbol& s, const unsigned flags) const
   }
 
   Sum result(null(), dependentTerms);
-  result += Product::mul(Sum(overall, independentTerms), s);
+  result += Product::mul(constructSimplifiedExpr(overall, independentTerms, NON_NORMALISED), s);
   return result;
 }
 
