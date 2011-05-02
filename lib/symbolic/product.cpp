@@ -151,17 +151,12 @@ Expr Product::integrateComplex(const LazyTermMap& terms, const Symbol& s, const 
 
 Expr Product::integrate(const Symbol& s, const unsigned flags) const
 {
-  LazyTermMap independent;
   LazyTermMap dependent;
+  LazyTermMap independent;
 
-  /* We factor into products dependent and not dependent on s */
-  BOOST_FOREACH(const TermMap::value_type& d, *this)
-  {
-    if (d.first.depends(s))
-      dependent->insert(d);
-    else
-      independent->insert(d);
-  }
+  std::set<Symbol> symbols;
+  symbols.insert(s);
+  this->extractDependent(symbols, *dependent, *independent);
 
   Expr dependentIntegral;
   if (dependent->empty())
@@ -299,6 +294,38 @@ Expr Product::extractMultiplier(Rational& coeff) const
   const Product product  = (this->getRewriteState() == NORMALISED ? *this : this->getNormalised());
   coeff *= product.overall;
   return constructSimplifiedExpr(null(), product.terms, NORMALISED_AND_EXTRACTED);
+}
+
+Expr Product::integrate(const Expr::region_t& region, const unsigned flags) const
+{
+  LazyTermMap dependent;
+  LazyTermMap independent;
+
+  const std::set<Symbol> symbols = region.getVariables();
+  this->extractDependent(symbols, *dependent, *independent);
+
+  Expr expr = Product(null(), dependent).clone();
+
+  if ((flags & Flags::DO_NOT_COLLECT) == 0)
+  {
+    CollectVisitor collectVisitor(symbols);
+    expr.accept(collectVisitor);
+    expr = collectVisitor.getResult();
+  }
+
+  Expr integrated = expr;
+  BOOST_FOREACH(const Expr::region_t::value_type& interval, region)
+  {
+    const Symbol& variable = interval.first;
+    integrated = integrated.integrate(variable, flags | Flags::DO_NOT_COLLECT);
+    Expr::subst_map lower, upper;
+    lower[variable] = interval.second.first;
+    upper[variable] = interval.second.second;
+    integrated = (integrated.subs(upper) - integrated.subs(lower)).simplify();
+  }
+
+  ++(*independent)[integrated];
+  return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
 }

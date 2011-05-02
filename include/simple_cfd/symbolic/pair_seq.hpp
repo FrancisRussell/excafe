@@ -264,6 +264,20 @@ public:
     cfd::util::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
   }
+
+  void extractDependent(const std::set<Symbol>& symbols, TermMap& dependent, TermMap& independent) const
+  {
+    dependent.clear();
+    independent.clear();
+
+    BOOST_FOREACH(const typename TermMap::value_type& d, *this)
+    {
+      if (d.first.depends(symbols))
+        dependent.insert(d);
+      else
+        independent.insert(d);
+    }
+  }
 };
 
 }

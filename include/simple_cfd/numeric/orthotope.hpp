@@ -53,7 +53,7 @@ public:
     return ranges.end();
   }
 
-  std::set<variable_t> getVariables()
+  std::set<variable_t> getVariables() const
   {
     std::set<variable_t> result;
     BOOST_FOREACH(const typename range_map_t::value_type& range, ranges)
