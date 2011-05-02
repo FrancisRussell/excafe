@@ -31,8 +31,6 @@ private:
   value_type denominator;
 
   void normalise();
-  static value_type gcd(value_type a, value_type b);
-  static value_type lcm(value_type a, value_type b);
 
 public:
   static Rational gcd(const Rational& a, const Rational& b);

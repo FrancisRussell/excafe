@@ -4,6 +4,7 @@
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
+#include <simple_cfd/numeric/math_utilities.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <ostream>
 #include <cassert>
@@ -135,7 +136,7 @@ Rational Rational::operator-() const
 
 Rational& Rational::operator+=(const Rational& r)
 {
-  const value_type lcd = lcm(denominator, r.denominator);
+  const value_type lcd = MathUtilities::lcm(denominator, r.denominator);
   numerator = numerator * (lcd/denominator) + r.numerator * (lcd/r.denominator);
   denominator = lcd;
   normalise();
@@ -150,8 +151,8 @@ Rational& Rational::operator-=(const Rational& r)
 
 Rational& Rational::operator*=(const Rational& r)
 {
-  const value_type gcd1 = gcd(numerator, r.denominator);
-  const value_type gcd2 = gcd(r.numerator, denominator);
+  const value_type gcd1 = MathUtilities::gcd(numerator, r.denominator);
+  const value_type gcd2 = MathUtilities::gcd(r.numerator, denominator);
 
   numerator = (numerator/gcd1)*(r.numerator/gcd2);
   denominator = (denominator/gcd2)*(r.denominator/gcd1);
@@ -192,7 +193,7 @@ void Rational::normalise()
     denominator = -denominator;
   }
 
-  const value_type factor = gcd(numerator, denominator);
+  const value_type factor = MathUtilities::gcd(numerator, denominator);
   numerator /= factor;
   denominator /= factor;
 
@@ -209,52 +210,6 @@ Rational Rational::reciprocal() const
   return Rational(denominator, numerator);
 }
 
-Rational::value_type Rational::gcd(value_type u, value_type v)
-{
-  u = (u < 0 ? -u : u);
-  v = (v < 0 ? -v : v);
-
-  if (u == 0 || v == 0)
-    return u | v;
-
-  unsigned shift;
-  for(shift=0; ((u | v) & 1) == 0; ++shift)
-  {
-    u >>= 1;
-    v >>= 1;
-  }
-
-  while ((u & 1) == 0)
-    u >>= 1;
-
-  do
-  {
-    while ((v & 1) == 0)
-      v >>= 1;
-
-    if (u > v)
-    {
-      const value_type tmp = u;
-      u = v;
-      v = tmp;
-    }
-
-    v -= u;
-    v >>= 1;
-  }
-  while (v != 0);
-
-  return u << shift;
-}
-
-Rational::value_type Rational::lcm(const value_type a, const value_type b)
-{
-  // Performing the division first reduces the size of the intermediate
-  // value when gcd(a,b) > 1.
-
-  return b*(a/gcd(a, b));
-}
-
 Rational Rational::gcd(const Rational& a, const Rational& b)
 {
   if (a.numerator == 0)
@@ -262,8 +217,8 @@ Rational Rational::gcd(const Rational& a, const Rational& b)
   else if (b.numerator == 0)
     return abs(a);
 
-  const value_type numerator = gcd(a.numerator, b.numerator);
-  const value_type denominator = gcd(a.denominator, b.denominator);
+  const value_type numerator = MathUtilities::gcd(a.numerator, b.numerator);
+  const value_type denominator = MathUtilities::gcd(a.denominator, b.denominator);
   return Rational(numerator, denominator);
 }
 
