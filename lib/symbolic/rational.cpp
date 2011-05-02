@@ -9,6 +9,7 @@
 #include <ostream>
 #include <cassert>
 #include <cmath>
+#include <climits>
 #include <set>
 #include <cln/integer.h>
 #include <cln/rational.h>
@@ -95,9 +96,11 @@ Expr Rational::integrate(const Symbol& s, const unsigned flags) const
 
 std::size_t Rational::untypedHash() const
 {
+  static const cln::cl_byte bits(CHAR_BIT*sizeof(unsigned long), 0);
+
   std::size_t hash = 0x161f15c2;
-  cfd::util::hash_accum(hash, cln::cl_I_to_long(getNumerator()));
-  cfd::util::hash_accum(hash, cln::cl_I_to_ulong(getDenominator()));
+  cfd::util::hash_accum(hash, cln::cl_I_to_ulong(cln::ldb(getNumerator(), bits)));
+  cfd::util::hash_accum(hash, cln::cl_I_to_ulong(cln::ldb(getDenominator(), bits)));
   return hash;
 }
 
