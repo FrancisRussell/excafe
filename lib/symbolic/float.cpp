@@ -5,6 +5,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/util/hash.hpp>
+#include <cln/real.h>
 #include <set>
 #include <cmath>
 
@@ -14,11 +15,6 @@ namespace cfd
 namespace symbolic
 {
 
-Float Float::fromFraction(const long numerator, const long denominator)
-{
-  return Float(static_cast<double>(numerator)/denominator);
-}
-
 Float::Float() : value(0.0)
 {
 }
@@ -26,6 +22,12 @@ Float::Float() : value(0.0)
 Float::Float(const double _value) : value(_value)
 {
 }
+
+Float::Float(const cln::cl_R& _value) : 
+  value(cln::double_approx(_value))
+{
+}
+
 
 std::size_t Float::nops() const
 {

@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 #include <boost/operators.hpp>
+#include <cln/real.h>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 
@@ -26,10 +27,9 @@ private:
   bool asRational(Rational& r) const;
 
 public:
-  static Float fromFraction(long numerator, long denominator);
-
   Float();
   Float(const double _value);
+  Float(const cln::cl_R& value);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
