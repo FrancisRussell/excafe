@@ -193,12 +193,12 @@ class CollectVisitor : public Visitor,
                        public Group::Visitor
 {
 private:
-  Symbol symbol;
-  std::set<Symbol> symbolSet;
+  std::set<Symbol> symbols;
   std::stack<CollectedTerms> stack;
 
 public:
   CollectVisitor(const Symbol& s);
+  CollectVisitor(const std::set<Symbol>& s);
 
   void visit(const Basic& b);
   void visit(const Group& g);

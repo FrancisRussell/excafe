@@ -125,14 +125,18 @@ Expr CollectedTerms::toExpr() const
 
 // class CollectVisitor
 
-CollectVisitor::CollectVisitor(const Symbol& s) : symbol(s)
+CollectVisitor::CollectVisitor(const Symbol& s)
 {
-  symbolSet.insert(symbol);
+  symbols.insert(s);
+}
+
+CollectVisitor::CollectVisitor(const std::set<Symbol>& _symbols) : symbols(_symbols)
+{
 }
 
 void CollectVisitor::visit(const Symbol& s)
 {
-  if (s == symbol)
+  if (symbols.find(s) != symbols.end())
     stack.push(CollectTerm::poly(s));
   else
     stack.push(CollectTerm::expr(s));
@@ -140,7 +144,7 @@ void CollectVisitor::visit(const Symbol& s)
 
 void CollectVisitor::visit(const Sum& s)
 {
-  if (!s.depends(symbolSet))
+  if (!s.depends(symbols))
   {
     stack.push(CollectTerm::expr(s));
   }
@@ -162,7 +166,7 @@ void CollectVisitor::visit(const Sum& s)
 
 void CollectVisitor::visit(const Product& p)
 {
-  if (!p.depends(symbolSet))
+  if (!p.depends(symbols))
   {
     stack.push(CollectTerm::expr(p));
   }
@@ -172,7 +176,7 @@ void CollectVisitor::visit(const Product& p)
 
     BOOST_FOREACH(const Product::value_type& term, p)
     {
-      if (term.first.depends(symbolSet) && term.second >= 0)
+      if (term.first.depends(symbols) && term.second >= 0)
       {
         term.first.accept(*this);
         const CollectedTerms multiplicand(stack.top()); stack.pop();
@@ -197,7 +201,7 @@ void CollectVisitor::visit(const Basic& b)
 
 void CollectVisitor::visit(const Group& g)
 {
-  if (g.depends(symbolSet))
+  if (g.depends(symbols))
     g.getExpr().accept(*this);
   else
     stack.push(CollectTerm::expr(g));
