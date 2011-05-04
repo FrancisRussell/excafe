@@ -80,16 +80,10 @@ public:
     return coeff;
   }
 
-  result_type operator()(const ScalarConstant& c) const
-  {
-    return cfd::numeric_cast<result_type>(c);
-  }
-
   result_type operator()(const boost::blank&) const
   {
     CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");
   }
-
 };
 
 }
