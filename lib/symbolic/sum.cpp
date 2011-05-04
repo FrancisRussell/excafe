@@ -7,7 +7,6 @@
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <boost/function.hpp>
 
 namespace cfd
 {
@@ -38,9 +37,10 @@ Sum Sum::add(const Expr& a, const Expr& b)
   return Sum(null(), terms);
 }
 
-bool Sum::AlwaysTrue(const Expr& e)
+Sum Sum::constant(const Rational& r)
 {
-  return true;
+  LazyTermMap terms;
+  return Sum(r, terms);
 }
 
 Rational Sum::null()
@@ -86,17 +86,36 @@ Sum& Sum::operator+=(const Expr& e)
   return *this;
 }
 
-Expr Sum::derivative(const Symbol& s) const
+Sum& Sum::operator/=(const Rational& r)
 {
-  Sum result;
-  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
-  {
-    result.getTerms()[e.first.derivative(s)] += e.second;
-  }
-  return result;
+  if (r == 1)
+    return *this;
+
+  this->invalidateHash();
+  this->overall /= r;
+
+  BOOST_FOREACH(TermMap::value_type& e, getTerms())
+    e.second /= r;
+
+  return *this;
 }
 
-Expr Sum::integrate_internal(const Symbol& s) const
+Expr Sum::derivative(const Symbol& s) const
+{
+  LazyTermMap newTerms;
+
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
+  {
+    const Expr d = e.first.derivative(s);
+
+    if (d != Rational::zero())
+      (*newTerms)[d] += e.second;
+  }
+
+  return constructSimplifiedExpr(Rational(0), newTerms, NON_NORMALISED);
+}
+
+Expr Sum::integrate(const Symbol& s, const unsigned flags) const
 {
   LazyTermMap dependentTerms;
   LazyTermMap independentTerms;
@@ -104,43 +123,20 @@ Expr Sum::integrate_internal(const Symbol& s) const
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
     if (e.first.depends(s))
-      (*dependentTerms)[e.first.integrate_internal(s)] += e.second;
+      (*dependentTerms)[e.first.integrate(s, flags)] += e.second;
     else
       (*independentTerms)[e.first] += e.second;
   }
 
   Sum result(null(), dependentTerms);
-  result += Product::mul(Sum(overall, independentTerms), s);
+  result += Product::mul(constructSimplifiedExpr(overall, independentTerms, NON_NORMALISED), s);
   return result;
 }
 
-Sum Sum::groupNonMatching(const Sum& sum, const boost::function<bool (const Expr&)>& predicate)
+Sum Sum::expandedProduct(const Sum& other) const
 {
-  if (predicate != AlwaysTrue)
-  {
-    const Sum withoutOverall = sum.withoutOverall();
-    LazyTermMap matching, nonMatching;
-  
-    BOOST_FOREACH(const TermMap::value_type& term, withoutOverall)
-    {
-      (predicate(term.first) ? *matching : *nonMatching)[term.first] += term.second;
-    }
-  
-    if (!nonMatching->empty())
-      ++(*matching)[Sum(null(), nonMatching).clone()];
-  
-    return Sum(null(), matching);
-  }
-  else
-  {
-    return sum;
-  }
-}
-
-Sum Sum::expandedProduct(const Sum& other, const boost::function<bool (const Expr&)>& predicate) const
-{
-  const Sum withoutOverallThis = groupNonMatching(*this, predicate).withoutOverall();
-  const Sum withoutOverallOther = groupNonMatching(other, predicate).withoutOverall();
+  const Sum withoutOverallThis = this->withoutOverall();
+  const Sum withoutOverallOther = other.withoutOverall();
 
   LazyTermMap newTerms;
   BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)
@@ -253,15 +249,31 @@ Expr Sum::extractMultiplier(Rational& coeff) const
 
   // Even though gcd(0,n) == |n|, we still need to handle the all-zero case.
   if (multiplier == 0)
-    return Rational(1);
+    return Rational::one();
 
-  LazyTermMap newTerms(sum.getTerms());
-  BOOST_FOREACH(TermMap::value_type& d, *newTerms)
+  LazyTermMap newTerms = sum.terms;
+
+  // We can avoid forcing a copy of the TermMap if multiplier==1.
+  if (multiplier != 1)
   {
-    d.second /= multiplier;
+    BOOST_FOREACH(TermMap::value_type& d, *newTerms)
+    {
+      d.second /= multiplier;
+    }
   }
 
   return constructSimplifiedExpr(sum.overall / multiplier, newTerms, NORMALISED_AND_EXTRACTED);
+}
+
+Expr Sum::integrate(const Expr::region_t& region, const unsigned flags) const
+{
+  LazyTermMap resultTerms;
+  BOOST_FOREACH(const TermMap::value_type& e, getTerms())
+  {
+    (*resultTerms)[e.first.integrate(region, flags)] += e.second;
+  }
+
+  return constructSimplifiedExpr(getOverall() * region.getVolume(), resultTerms, NON_NORMALISED);
 }
 
 }

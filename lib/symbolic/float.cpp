@@ -5,6 +5,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/util/hash.hpp>
+#include <cln/real.h>
 #include <set>
 #include <cmath>
 
@@ -14,14 +15,19 @@ namespace cfd
 namespace symbolic
 {
 
-Float Float::fromFraction(const long numerator, const long denominator)
+Float::Float() : value(0.0)
 {
-  return Float(static_cast<double>(numerator)/denominator);
 }
 
 Float::Float(const double _value) : value(_value)
 {
 }
+
+Float::Float(const cln::cl_R& _value) : 
+  value(cln::double_approx(_value))
+{
+}
+
 
 std::size_t Float::nops() const
 {
@@ -35,7 +41,7 @@ void Float::write(std::ostream& o) const
 
 Expr Float::derivative(const Symbol& s) const
 {
-  return make_expr_from(Rational(0));
+  return Rational::zero();
 }
 
 bool Float::depends(const std::set<Symbol>& symbols) const
@@ -81,7 +87,7 @@ Float& Float::operator*=(const Float& n)
   return *this;
 }
 
-Expr Float::integrate_internal(const Symbol& s) const
+Expr Float::integrate(const Symbol& s, const unsigned flags) const
 {
   return Product::mul(*this, s);
 }
@@ -93,7 +99,7 @@ std::size_t Float::untypedHash() const
   return result;
 }
 
-Expr Float::subs(const Expr::subst_map& map) const
+Expr Float::subs(const Expr::subst_map& map, const unsigned flags) const
 {
   return clone();
 }
@@ -133,7 +139,7 @@ Expr Float::extractMultiplier(Rational& coeff) const
   if (asRational(rational))
   {
     coeff *= rational;
-    return Rational(1);
+    return Rational::one();
   }
   else
   {

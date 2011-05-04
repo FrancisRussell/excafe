@@ -12,6 +12,8 @@
 #include "expr.hpp"
 #include "rational.hpp"
 #include <boost/operators.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace cfd
 {
@@ -20,11 +22,11 @@ namespace symbolic
 {
 
 class Symbol : public AbstractBasic<Symbol>,
-               boost::equality_comparable<Symbol>
+               boost::totally_ordered<Symbol>
 {
 private:
   static int nextSerial;
-  std::string name;
+  boost::shared_ptr<const std::string> name;
   int serial;
   
 public:
@@ -33,13 +35,21 @@ public:
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
   Float eval(const Expr::subst_map& map) const;
-  bool operator==(const Symbol& s) const;
-  bool operator<(const Symbol& s) const;
   bool depends(const std::set<Symbol>& symbols) const;
-  Expr integrate_internal(const Symbol& s) const;
-  Expr subs(const Expr::subst_map& map) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
+  Expr subs(const Expr::subst_map& map, unsigned flags) const;
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+
+  bool operator==(const Symbol& s) const
+  {
+    return serial == s.serial;
+  }
+
+  bool operator<(const Symbol& s) const
+  {
+    return serial < s.serial;
+  }
 };
 
 }

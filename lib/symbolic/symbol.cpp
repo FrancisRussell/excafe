@@ -16,7 +16,8 @@ namespace symbolic
 
 int Symbol::nextSerial = 0;
 
-Symbol::Symbol(const std::string& _name) : name(_name), serial(nextSerial++)
+Symbol::Symbol(const std::string& _name) : 
+  name(boost::make_shared<const std::string>(_name)), serial(nextSerial++)
 {
 }
 
@@ -27,25 +28,15 @@ std::size_t Symbol::nops() const
 
 void Symbol::write(std::ostream& o) const
 {
-  o << name;
+  o << *name;
 }
 
 Expr Symbol::derivative(const Symbol& s) const
 {
   if (serial == s.serial)
-    return make_expr_from(Rational(1));
+    return Rational::one();
   else
-    return make_expr_from(Rational(0));
-}
-
-bool Symbol::operator==(const Symbol& s) const
-{
-  return serial == s.serial;
-}
-
-bool Symbol::operator<(const Symbol& s) const
-{
-  return serial < s.serial;
+    return Rational::zero();
 }
 
 bool Symbol::depends(const std::set<Symbol>& symbols) const
@@ -60,7 +51,7 @@ std::size_t Symbol::untypedHash() const
   return result;
 }
 
-Expr Symbol::subs(const Expr::subst_map& map) const
+Expr Symbol::subs(const Expr::subst_map& map, const unsigned flags) const
 {
   const Expr::subst_map::const_iterator iter = map.find(*this);
 
@@ -88,7 +79,7 @@ Float Symbol::eval(const Expr::subst_map& map) const
   }
 }
 
-Expr Symbol::integrate_internal(const Symbol& s) const
+Expr Symbol::integrate(const Symbol& s, const unsigned flags) const
 {
   if (serial != s.serial)
     return Product::mul(*this, s);

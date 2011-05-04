@@ -1,7 +1,8 @@
 bin_PROGRAMS = main
+
 main_SOURCES = main.cpp 
-main_CXXFLAGS = -I.
-main_LDFLAGS = -ldolfin
+main_CXXFLAGS = ${LIBXML2_CFLAGS}
+main_LDFLAGS = -ldolfin ${LIBXML2_LIBS}
 
 STEADY_STOKES_GENERATED = SteadyStokes.h
 BUILT_SOURCES = ${STEADY_STOKES_GENERATED}

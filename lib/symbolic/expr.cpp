@@ -7,6 +7,7 @@
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
+#include <simple_cfd/symbolic/flags.hpp>
 #include <ostream>
 #include <cassert>
 
@@ -137,27 +138,23 @@ Expr Expr::derivative(const Symbol& s) const
   return expr->derivative(s).simplify();
 }
 
-Expr Expr::integrate(const Symbol& s) const
+Expr Expr::integrate(const Symbol& s, const unsigned flags) const
 {
-  ExpandVisitor visitor(s);
-  expr->accept(visitor);
-  const Expr expanded = visitor.getResult();
-  return expanded.integrate_internal(s).simplify();
+  const Expr integrated = expr->integrate(s, flags);
+  return integrated.simplify();
 }
 
-Expr Expr::integrate_internal(const Symbol& s) const
+Expr Expr::integrate(const region_t& region, const unsigned flags) const
 {
-  return expr->integrate_internal(s);
+  const Expr integrated = expr->integrate(region, flags);
+  return integrated.simplify();
 }
 
-Expr Expr::integrate(const Symbol& s, const Float& a, const Float& b) const
+Expr Expr::integrate(const Symbol& s, const Rational& a, const Rational& b, const unsigned flags) const
 {
-  const Expr integrated = integrate(s);
-  subst_map aMap, bMap;
-  aMap[s] = a;
-  bMap[s] = b;
-
-  return (integrated.subs(bMap) - integrated.subs(aMap)).simplify();
+  region_t region;
+  region.setInterval(s, a, b);
+  return this->integrate(region, flags);
 }
 
 void Expr::accept(Visitor& v) const
@@ -182,9 +179,20 @@ void Expr::accept(NumericExpressionVisitor<Symbol>& v) const
   expr->accept(v);
 }
 
-Expr Expr::subs(const subst_map& map) const
+Expr Expr::subs(const subst_map& subs, const unsigned flags) const
 {
-  return expr->subs(map).simplify();
+  if ((flags & Flags::DO_NOT_SIMPLIFY_SUBST_MAP) == 0)
+  {
+    subst_map simplifiedSubs;
+    BOOST_FOREACH(const subst_map::value_type& sub, subs)
+      simplifiedSubs.insert(subst_map::value_type(sub.first, sub.second.simplify()));
+
+    return expr->subs(simplifiedSubs, flags | Flags::DO_NOT_SIMPLIFY_SUBST_MAP);
+  }
+  else
+  {
+    return expr->subs(subs, flags);
+  }
 }
 
 Expr pow(const Expr& e, const int power)

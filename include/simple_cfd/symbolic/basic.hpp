@@ -26,14 +26,16 @@ public:
   virtual void write(std::ostream& o) const = 0;
   virtual Expr clone() const = 0;
   virtual Expr derivative(const Symbol& s) const = 0;
-  virtual Expr integrate_internal(const Symbol& s) const = 0;
+  virtual Expr integrate(const Symbol& s, unsigned flags) const = 0;
+  virtual Expr integrate(const Expr::region_t& region, unsigned flags) const = 0;
   virtual Expr simplify() const = 0;
   virtual Expr extractMultiplier(Rational& coeff) const = 0;
   virtual Float eval(const Expr::subst_map& map) const = 0;
+  virtual std::size_t typeHash() const = 0;
   virtual std::size_t hashValue() const = 0;
   virtual bool operator==(const Basic& b) const = 0;
   virtual operator Expr() const = 0;
-  virtual Expr subs(const Expr::subst_map& map) const = 0;
+  virtual Expr subs(const Expr::subst_map& map, unsigned flags) const = 0;
   virtual bool depends(const std::set<Symbol>& e) const = 0;
   virtual void accept(Visitor& v) const = 0;
   virtual void accept(NumericExpressionVisitor<Symbol>& v) const = 0;

@@ -236,12 +236,12 @@ public:
     return constructSimplifiedExpr(normalised.overall, normalised.terms, NORMALISED);
   }
 
-  Expr subs(const Expr::subst_map& map) const
+  Expr subs(const Expr::subst_map& map, const unsigned flags) const
   {
     LazyTermMap newTermMap;
     BOOST_FOREACH(const typename TermMap::value_type& term, std::make_pair(begin(), end()))
     {
-      (*newTermMap)[term.first.subs(map)] += term.second;
+      (*newTermMap)[term.first.subs(map, flags)] += term.second;
     }
     return child_type(overall, newTermMap);
   }
@@ -263,6 +263,20 @@ public:
     cfd::util::hash_accum(result, overall);
     cfd::util::hash_accum(result, cfd::util::hash_unordered_map(getTerms()));
     return result;
+  }
+
+  void extractDependent(const std::set<Symbol>& symbols, TermMap& dependent, TermMap& independent) const
+  {
+    dependent.clear();
+    independent.clear();
+
+    BOOST_FOREACH(const typename TermMap::value_type& d, *this)
+    {
+      if (d.first.depends(symbols))
+        dependent.insert(d);
+      else
+        independent.insert(d);
+    }
   }
 };
 

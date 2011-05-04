@@ -3,6 +3,8 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/flags.hpp>
+#include <simple_cfd/symbolic/collect_visitor.hpp>
 #include <simple_cfd/exception.hpp>
 #include <map>
 #include <utility>
@@ -37,6 +39,12 @@ Product Product::mul(const Expr& a, const Expr& b)
   ++(*terms)[a];
   ++(*terms)[b];
   return Product(null(), terms);
+}
+
+Product Product::constant(const Rational& r)
+{
+  LazyTermMap terms;
+  return Product(r, terms);
 }
 
 Rational Product::null()
@@ -75,47 +83,91 @@ void Product::write(std::ostream& o) const
   o << ")";
 }
 
+/*
+  Generalised power rule: (f^g)' (e^(g*ln f))' = f^g * (f'gf^-1 + g'ln f)
+  Product rule (for 3 functions): (fgh)' = f'gh + fg'h + fgh'
+*/
+
 Expr Product::derivative(const Symbol& s) const
 {
   Sum summation;
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    LazyTermMap newTerm(getTerms());
-    newTerm->erase(d.first);
-    ++(*newTerm)[Rational(d.second)];
-    ++(*newTerm)[d.first.derivative(s)];
-    (*newTerm)[d.first]+=d.second-1;
-    summation += Product(getOverall(), newTerm);
+    const Expr termDerivative = d.first.derivative(s);
+
+    if (termDerivative != Rational::zero())
+    {
+      const Rational termOverall = getOverall() * d.second;
+      LazyTermMap newTerm(getTerms());
+
+      if (d.second == 1)
+        newTerm->erase(d.first);
+      else
+        --(*newTerm)[d.first];
+
+      ++(*newTerm)[termDerivative];
+      summation += constructSimplifiedExpr(termOverall, newTerm, NON_NORMALISED);
+    }
   }
   
   return summation;
 }
 
-Expr Product::integrate_internal(const Symbol& s) const
+Expr Product::integrateComplex(const LazyTermMap& terms, const Symbol& s, const unsigned flags)
 {
-  LazyTermMap independent;
-  TermMap dependent;
-
-  /* We factor into products dependent and not dependent on s */
-  BOOST_FOREACH(const TermMap::value_type& d, *this)
+  if ((flags & Flags::DO_NOT_COLLECT) == 0)
   {
-    if (d.first.depends(s))
-      dependent.insert(d);
-    else
-      independent->insert(d);
+    const Expr product = Product(null(), terms).clone();
+
+    CollectVisitor collectVisitor(s);
+    product.accept(collectVisitor);
+    const Expr collected = collectVisitor.getResult();
+
+    return collected.integrate(s, flags | Flags::DO_NOT_COLLECT);
   }
+  else if (terms->size() == 1)
+  {
+    const Expr expr = terms->begin()->first;
+    const int exponent = terms->begin()->second;
+
+    const int exp1 = exponent / 2;
+    const int exp2 = exponent - exp1;
+
+    return integrate(pow(expr, exp1), pow(expr, exp2), s, flags);
+  }
+  else
+  {
+    const TermMap::const_iterator pivot = 
+      boost::next(terms->begin(), terms->size()/2);
+
+    LazyTermMap first, second;
+    first->insert(terms->begin(), pivot);
+    second->insert(pivot, terms->end());
+
+    return integrate(Product(null(), first), Product(null(), second), s, flags);
+  }
+}
+
+Expr Product::integrate(const Symbol& s, const unsigned flags) const
+{
+  LazyTermMap dependent;
+  LazyTermMap independent;
+
+  std::set<Symbol> symbols;
+  symbols.insert(s);
+  this->extractDependent(symbols, *dependent, *independent);
 
   Expr dependentIntegral;
-  if (dependent.empty())
+  if (dependent->empty())
   {
     /* Integration of 1 */
     dependentIntegral = s;
   }
-  else if (dependent.size() == 1)
+  else if (dependent->size() == 1)
   {
-    const Expr expr = dependent.begin()->first;
-    const int exponent = dependent.begin()->second;
+    const Expr expr = dependent->begin()->first;
+    const int exponent = dependent->begin()->second;
 
     if (exponent < 0)
       CFD_EXCEPTION("Cannot integrate functions involving variable raised to negative exponents.");
@@ -133,45 +185,36 @@ Expr Product::integrate_internal(const Symbol& s) const
     else if (exponent == 1)
     {
       /* Integration of f^1*/
-      dependentIntegral = expr.integrate_internal(s); 
+      dependentIntegral = expr.integrate(s, flags); 
     }
     else
     {
       /* Integration of f^n where n>1 */
-      const int exp1 = exponent / 2;
-      const int exp2 = exponent - exp1;
-      dependentIntegral = integrate(pow(expr, exp1), pow(expr, exp2), s);
+      dependentIntegral = integrateComplex(dependent, s, flags);
     }
   }
   else
   {
-    const TermMap::iterator pivot = 
-      boost::next(dependent.begin(), dependent.size()/2);
-
-    LazyTermMap first, second;
-    first->insert(dependent.begin(), pivot);
-    second->insert(pivot, dependent.end());
-
-    dependentIntegral = integrate(Product(null(), first), Product(null(), second), s);
+    dependentIntegral = integrateComplex(dependent, s, flags);
   }
 
-  return Product(getOverall(), independent) * dependentIntegral;
+  ++(*independent)[dependentIntegral];
+  return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
-Expr Product::integrate(const Product& a, const Product& b, const Symbol& s)
+Expr Product::integrate(const Product& a, const Product& b, const Symbol& s, const unsigned flags)
 {
-  const Rational zero(0);
   int sign = 1;
   Sum result;
 
   Expr u = a;
-  Expr v = b.integrate_internal(s);
+  Expr v = b.integrate(s, flags);
 
-  while (u != zero)
+  while (u != Rational::zero())
   {
     result += Sum::rational_multiple(Product::mul(u, v), Rational(sign));
     u = u.derivative(s);
-    v = v.integrate_internal(s);
+    v = v.integrate(s, flags);
     sign *= -1;
   }
 
@@ -251,6 +294,38 @@ Expr Product::extractMultiplier(Rational& coeff) const
   const Product product  = (this->getRewriteState() == NORMALISED ? *this : this->getNormalised());
   coeff *= product.overall;
   return constructSimplifiedExpr(null(), product.terms, NORMALISED_AND_EXTRACTED);
+}
+
+Expr Product::integrate(const Expr::region_t& region, const unsigned flags) const
+{
+  LazyTermMap dependent;
+  LazyTermMap independent;
+
+  const std::set<Symbol> symbols = region.getVariables();
+  this->extractDependent(symbols, *dependent, *independent);
+
+  Expr expr = Product(null(), dependent).clone();
+
+  if ((flags & Flags::DO_NOT_COLLECT) == 0)
+  {
+    CollectVisitor collectVisitor(symbols);
+    expr.accept(collectVisitor);
+    expr = collectVisitor.getResult();
+  }
+
+  Expr integrated = expr;
+  BOOST_FOREACH(const Expr::region_t::value_type& interval, region)
+  {
+    const Symbol& variable = interval.first;
+    integrated = integrated.integrate(variable, flags | Flags::DO_NOT_COLLECT);
+    Expr::subst_map lower, upper;
+    lower[variable] = interval.second.first;
+    upper[variable] = interval.second.second;
+    integrated = (integrated.subs(upper) - integrated.subs(lower)).simplify();
+  }
+
+  ++(*independent)[integrated];
+  return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
 }

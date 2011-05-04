@@ -1,8 +1,8 @@
 #include <dolfin.h>
-#include <SteadyStokes.h>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include "SteadyStokes.h"
 
 using namespace dolfin;
 

@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 #include <boost/operators.hpp>
+#include <cln/real.h>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 
@@ -18,7 +19,7 @@ namespace symbolic
 
 class Float : public AbstractBasic<Float>, 
               boost::arithmetic<Float>,
-              boost::equality_comparable<Float>
+              boost::totally_ordered<Float>
 {
 private:
   double value;
@@ -26,15 +27,15 @@ private:
   bool asRational(Rational& r) const;
 
 public:
-  static Float fromFraction(long numerator, long denominator);
-
+  Float();
   Float(const double _value);
+  Float(const cln::cl_R& value);
   virtual std::size_t nops() const;
   virtual void write(std::ostream& o) const;
   virtual Expr derivative(const Symbol& s) const;
   virtual bool depends(const std::set<Symbol>& symbols) const;
-  Expr subs(const Expr::subst_map& map) const;
-  Expr integrate_internal(const Symbol& s) const;
+  Expr subs(const Expr::subst_map& map, unsigned flags) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
   Expr simplify() const;
   Float eval(const Expr::subst_map& map) const;
   bool operator==(const Float& n) const;

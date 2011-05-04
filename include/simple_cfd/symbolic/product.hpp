@@ -23,7 +23,8 @@ class Product : public PairSeq<Product, int>,
 private:
   friend class PairSeq<Product, int>;
 
-  static Expr integrate(const Product& a, const Product& b, const Symbol& s);
+  static Expr integrateComplex(const LazyTermMap& terms, const Symbol& s, unsigned flags);
+  static Expr integrate(const Product& a, const Product& b, const Symbol& s, unsigned flags);
 
   Product(const Rational& _overall, const LazyTermMap& _terms): 
     PairSeq<Product, int>(_overall, _terms)
@@ -36,6 +37,7 @@ private:
   Product extractMultipliers() const;
 
 public:
+  static Product constant(const Rational& r);
   static Product pow(const Expr& base, const int exponent);
   static Product div(const Expr& a, const Expr& b);
   static Product mul(const Expr& a, const Expr& b);
@@ -43,11 +45,12 @@ public:
   Product& operator*=(const Product& p);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s) const;
-  Expr integrate_internal(const Symbol& s) const;
+  Expr integrate(const Symbol& s, unsigned flags) const;
   Expr expand() const;
   Float eval(const Expr::subst_map& map) const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
-  virtual Expr extractMultiplier(Rational& coeff) const;
+  Expr extractMultiplier(Rational& coeff) const;
+  Expr integrate(const Expr::region_t& region, const unsigned flags) const;
 };
 
 }

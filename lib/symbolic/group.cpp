@@ -37,14 +37,14 @@ bool Group::depends(const std::set<Symbol>& symbols) const
   return expr.depends(symbols);
 }
 
-Expr Group::subs(const Expr::subst_map& map) const
+Expr Group::subs(const Expr::subst_map& map, const unsigned flags) const
 {
-  return Group(expr.subs(map)).clone();
+  return Group(expr.subs(map, flags)).clone();
 }
 
-Expr Group::integrate_internal(const Symbol& s) const
+Expr Group::integrate(const Symbol& s, const unsigned flags) const
 {
-  return Group(expr.integrate(s)).clone();
+  return Group(expr.integrate(s, flags)).clone();
 }
 
 Expr Group::simplify() const
