@@ -33,9 +33,11 @@ template<typename T>
 class AbstractBasic : public Basic
 {
 private:
-  mutable bool isHashed;
+  static const unsigned HEAP_ALLOCATED = 0x01;
+  static const unsigned HASH_CACHED    = 0x02;
+
+  mutable unsigned flags;
   mutable std::size_t hash;
-  bool heapAllocated;
 
 protected:
   typedef T child_type;
@@ -62,14 +64,14 @@ protected:
 
   AbstractBasic& operator=(const AbstractBasic& a)
   {
-    isHashed = a.isHashed;
     hash = a.hash;
+    flags = (a.flags & ~HEAP_ALLOCATED) | (flags & HEAP_ALLOCATED);
     return *this;
   }
 
   void invalidateHash()
   {
-    isHashed = false;
+    flags &= ~HASH_CACHED;
   }
 
 public:
@@ -103,12 +105,12 @@ public:
     }
   }
 
-  AbstractBasic() : isHashed(false), heapAllocated(false)
+  AbstractBasic() : flags(0)
   {
   }
 
   AbstractBasic(const AbstractBasic& a) : 
-    isHashed(a.isHashed), hash(a.hash), heapAllocated(false)
+    flags(a.flags & ~HEAP_ALLOCATED), hash(a.hash)
   {
   }
 
@@ -120,12 +122,12 @@ public:
 
   void markHeapAllocated()
   {
-    heapAllocated = true;
+    flags |= HEAP_ALLOCATED;
   }
 
   Expr clone() const
   {
-    if (heapAllocated)
+    if (flags & HEAP_ALLOCATED)
     {
       Expr::ref_t ref = this->shared_from_this();
       return Expr(ref);
@@ -148,12 +150,12 @@ public:
 
   std::size_t hashValue() const
   {
-    if (!isHashed)
+    if (~flags & HASH_CACHED)
     {
       hash = 0x02c3866e;
       cfd::util::hash_accum(hash, typeHash());
       cfd::util::hash_accum(hash, asChild(*this).untypedHash());
-      isHashed=true;
+      flags |= HASH_CACHED;
     }
     return hash;
   }
