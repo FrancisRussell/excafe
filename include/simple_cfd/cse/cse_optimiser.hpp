@@ -15,8 +15,8 @@
 #include <simple_cfd/numeric/polynomial.hpp>
 #include <simple_cfd/numeric/cast.hpp>
 #include <simple_cfd/exception.hpp>
-#include "expression_provider.hpp"
 #include "polynomial_index.hpp"
+#include "factorised_expression_visitor.hpp"
 #include "new_literal_creator.hpp"
 #include "cube.hpp"
 #include "sop.hpp"
@@ -156,86 +156,36 @@ private:
     return result;
   }
 
-  class LiteralToC : public boost::static_visitor<std::string>
+  class LiteralVisitor : public boost::static_visitor<void>
   {
   private:
-    const CSEOptimiser& optimiser;
-    ExpressionProvider<variable_t>& provider;
-    bool declareSubterms;
+    const CSEOptimiser& parent;
+    FactorisedExpressionVisitor<variable_t>& visitor;
 
   public:
-    LiteralToC(const CSEOptimiser& _optimiser, 
-               ExpressionProvider<variable_t>& _provider, 
-               const bool _declareSubterms = false) : 
-      optimiser(_optimiser), provider(_provider), declareSubterms(_declareSubterms)
+    LiteralVisitor(const CSEOptimiser& _parent, FactorisedExpressionVisitor<variable_t>& _visitor) :
+      parent(_parent), visitor(_visitor)
     {
     }
 
-    std::string operator()(const numeric_t& n) const
+    void operator()(const variable_t& v) const
     {
-      return boost::lexical_cast<std::string>(cfd::numeric_cast<double>(n));
+      visitor.visitVariable(v);
     }
-
-    std::string operator()(const variable_t& v) const
+    
+    void operator()(const numeric_t& n) const
     {
-      return provider.getRValue(v);
+      visitor.visitConstant(n);
     }
-
-    std::string operator()(const polynomial_index_t& i) const
+    
+    void operator()(const polynomial_index_t& index) const
     {
-      if (optimiser.isOriginalExpression(i))
-      {
-        return provider.getLValue(optimiser.getOriginalIndex(i));
-      }
+      if (parent.isOriginalExpression(index))
+        visitor.visitOriginalTerm(parent.getOriginalIndex(index));
       else
-      {
-        std::ostringstream result;
-        result << (declareSubterms ? "const double " : "");
-        result << "subterm_" << i.getIndex();
-        return result.str();
-      }
+        visitor.visitFactorisedTerm(index);
     }
   };
-
-  std::string cubeToC(ExpressionProvider<variable_t>& provider, const Cube& cube) const
-  {
-    bool nullNumerator = true;
-    bool nullDenominator = true;
-
-    std::ostringstream numerator;
-    std::ostringstream denominator;
-
-    for(Cube::const_iterator cubeIter = cube.begin(); cubeIter != cube.end(); ++cubeIter)
-    {
-      bool& nullFlag = (cubeIter->second < 0 ? nullDenominator : nullNumerator);
-      std::ostringstream& stream = (cubeIter->second < 0 ? denominator : numerator);
-
-      const int absExp = std::abs(cubeIter->second);
-      const literal_t literal = getLiteral(cubeIter->first);
-
-      for(int i=0; i<absExp; ++i)
-      {
-        if (nullFlag)
-          nullFlag = false;
-        else
-          stream << "*";
- 
-        stream << boost::apply_visitor(LiteralToC(*this, provider), literal);
-      }
-    }
-
-    std::ostringstream result;
-
-    if (nullNumerator)
-      result << "1.0";
-    else
-      result << numerator.str();
-
-    if (!nullDenominator)
-      result << "/(" << denominator.str() << ")";
-
-    return result.str();
-  }
 
 public:
   template<typename InputIterator>
@@ -338,25 +288,32 @@ public:
     return (boost::get<polynomial_index_t>(&value) != NULL);
   }
 
-  void outputToC(ExpressionProvider<variable_t>& provider, std::ostream& out) const
+  void accept(FactorisedExpressionVisitor<variable_t>& visitor) const
   {
     const std::vector<PolynomialIndex> sorted = getTopologicallySorted();
 
     BOOST_FOREACH(const PolynomialIndex& index, sorted)
     {
       const SOP& sop = sops[index];
-
-      out << LiteralToC(*this, provider, true)(index) << " = ";
-
       for(SOP::const_iterator sopIter = sop.begin(); sopIter != sop.end(); ++sopIter)
       {
-        if (sopIter != sop.begin())
-          out << " + ";
-         
-         const Cube& cube = *sopIter;
-         out << cubeToC(provider, cube);
+        for(Cube::const_iterator cubeIter = sopIter->begin(); cubeIter != sopIter->end(); ++cubeIter)
+        {
+          const LiteralVisitor literalVisitor(*this, visitor);
+          const literal_t literal = getLiteral(cubeIter->first);
+          boost::apply_visitor(literalVisitor, literal);
+
+          if (cubeIter->second != 1)
+            visitor.visitExponent(cubeIter->second);
+        }
+        visitor.postProduct(sopIter->size());
       }
-      out << ";" << std::endl;
+      visitor.postSummation(sop.size());
+
+      if (isOriginalExpression(index))
+        visitor.postOriginalTerm(getOriginalIndex(index));
+      else
+        visitor.postFactorisedTerm(index);
     }
   }
 };

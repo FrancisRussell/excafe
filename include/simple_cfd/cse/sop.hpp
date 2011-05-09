@@ -87,6 +87,11 @@ public:
     return cubes->end();
   }
 
+  std::size_t size() const
+  {
+    return cubes->size();
+  }
+
   std::size_t append(const Cube& cube)
   {
     return addCube(cube);

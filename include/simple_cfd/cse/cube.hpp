@@ -82,6 +82,11 @@ public:
     return literalExponents->end();
   }
 
+  std::size_t size() const
+  {
+    return literalExponents->size();
+  }
+
   bool operator<(const Cube& c) const
   {
     return *literalExponents < *c.literalExponents;
