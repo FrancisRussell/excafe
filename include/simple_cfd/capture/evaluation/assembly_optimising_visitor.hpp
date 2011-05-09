@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <set>
 #include <iostream>
+#include <boost/foreach.hpp>
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
@@ -13,6 +14,8 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
+#include <simple_cfd/cse/cse_optimiser.hpp>
+#include <simple_cfd/codegen/ufl_expression_provider.hpp>
 
 namespace cfd
 {
@@ -26,6 +29,26 @@ class AssemblyOptimisingVisitor : public DiscreteExprVisitor
 private:
   static const std::size_t dimension = D;
   Scenario<dimension>& scenario;
+
+  void factorise(const LocalAssemblyMatrix<dimension, ScalarPlaceholder::expression_t>& assembly) const
+  {
+    typedef ScalarPlaceholder::expression_t::variable_t variable_t;
+    std::vector<ScalarPlaceholder::expression_t> polynomials;
+
+    unsigned index = 0;
+    BOOST_FOREACH(const ScalarPlaceholder::expression_t& expr, assembly)
+    {
+      std::cout << "Adding local assembly matrix polynomial: " << index++ << std::endl;
+      const ScalarPlaceholder::expression_t normalised(expr.normalised());
+      polynomials.push_back(normalised);
+    }
+    
+    std::cout << "Calling CSE..." << std::endl;
+    cse::CSEOptimiser<variable_t> optimiser(polynomials.begin(), polynomials.end());
+
+    codegen::UFLExpressionProvider provider;
+    optimiser.outputToC(provider, std::cout);
+  }
 
 public:
   AssemblyOptimisingVisitor(Scenario<dimension>& _scenario) : scenario(_scenario)
@@ -93,12 +116,10 @@ public:
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
 
     std::cout << "Integrated local-matrix expression..." << std::endl;
-
-    //std::cout << localMatrix << std::endl;
+    
+    factorise(localMatrix);
 
     const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
-
-    std::cout << "Built optimised local-matrix expression..." << std::endl;
 
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
