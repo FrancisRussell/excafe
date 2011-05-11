@@ -141,6 +141,8 @@ public:
 
 class UFCKernelGenerator : public cse::FactorisedExpressionVisitor<cfd::detail::ScalarPlaceholder>
 {
+public:
+  typedef std::map<boost::variant<Field::expr_ptr, Scalar::expr_ptr>, unsigned> coefficient_index_map_t;
 private:
   friend class detail::ScalarPlaceholderNamer;
   typedef util::LazyCopy< std::vector<detail::Product> > sum_t;
@@ -150,8 +152,7 @@ private:
   static const std::string coefficientsName;
   static const std::string cellName;
 
-  const std::map<Field::expr_ptr, unsigned> fieldIndices;
-  const std::map<Scalar::expr_ptr, unsigned> scalarIndices;
+  const coefficient_index_map_t coefficientIndices;
   std::ostream& out;
   std::stack<sum_t> stack;
   std::map<cse::PolynomialIndex, std::string> factorisedTermNames;
@@ -201,8 +202,8 @@ private:
 
   std::size_t getFieldIndex(const Field::expr_ptr& f) const
   {
-    const std::map<Field::expr_ptr, unsigned>::const_iterator iter = fieldIndices.find(f);
-    if (iter != fieldIndices.end())
+    const coefficient_index_map_t::const_iterator iter = coefficientIndices.find(f);
+    if (iter != coefficientIndices.end())
     {
       return iter->second;
     }
@@ -214,8 +215,8 @@ private:
 
   std::size_t getScalarIndex(const Scalar::expr_ptr& s) const
   {
-    const std::map<Scalar::expr_ptr, unsigned>::const_iterator iter = scalarIndices.find(s);
-    if (iter != scalarIndices.end())
+    const coefficient_index_map_t::const_iterator iter = coefficientIndices.find(s);
+    if (iter != coefficientIndices.end())
     {
       return iter->second;
     }
@@ -226,10 +227,8 @@ private:
   }
 
 public:
-  UFCKernelGenerator(std::ostream& _out,
-                     const std::map<Field::expr_ptr, unsigned>& _fieldIndices,
-                     const std::map<Scalar::expr_ptr, unsigned>& _scalarIndices) : 
-    fieldIndices(_fieldIndices), scalarIndices(_scalarIndices), out(_out)
+  UFCKernelGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices) :
+    coefficientIndices(_coefficientIndices), out(_out)
   {
   }
 
@@ -357,14 +356,14 @@ public:
   result_type operator()(const cfd::detail::ScalarAccess& s) const
   {
     std::ostringstream stream;
-    stream << generator.coefficientsName << "[?]";
+    stream << generator.coefficientsName << "[" << generator.getScalarIndex(s.getExpr()) << "][0]";
     return stream.str();
   }
 
   result_type operator()(const cfd::detail::BasisCoefficient& c) const
   {
     std::ostringstream stream;
-    stream << generator.coefficientsName << "[?]";
+    stream << generator.coefficientsName << "[" << generator.getFieldIndex(c.getField()) << "][" << c.getIndex() << "]";
     return stream.str();
   }
 

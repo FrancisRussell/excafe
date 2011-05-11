@@ -14,8 +14,8 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
-#include <simple_cfd/cse/cse_optimiser.hpp>
 #include <simple_cfd/codegen/ufc_kernel_generator.hpp>
+#include <simple_cfd/codegen/ufc_evaluator.hpp>
 
 namespace cfd
 {
@@ -32,27 +32,7 @@ private:
 
   void factorise(const LocalAssemblyMatrix<dimension, ScalarPlaceholder::expression_t>& assembly) const
   {
-    typedef ScalarPlaceholder variable_t;
-    std::vector<ScalarPlaceholder::expression_t> polynomials;
-
-    unsigned index = 0;
-    BOOST_FOREACH(const ScalarPlaceholder::expression_t& expr, assembly)
-    {
-      std::cout << "Adding local assembly matrix polynomial: " << index++ << std::endl;
-      const ScalarPlaceholder::expression_t normalised(expr.normalised());
-      polynomials.push_back(normalised);
-    }
-    
-    std::cout << "Calling CSE..." << std::endl;
-    cse::CSEOptimiser<variable_t> optimiser(polynomials.begin(), polynomials.end());
-
-    const std::map<Field::expr_ptr, unsigned>  fieldMap;
-    const std::map<Scalar::expr_ptr, unsigned> scalarMap;
-    codegen::UFCKernelGenerator generator(std::cout, fieldMap, scalarMap);
-
-    generator.outputPrefix();
-    optimiser.accept(generator);
-    generator.outputPostfix();
+    codegen::UFCEvaluator<dimension>::construct(scenario, assembly);
   }
 
 public:
@@ -124,7 +104,7 @@ public:
     
     factorise(localMatrix);
 
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
+    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(ExpressionOptimiser<expression_t>()));
 
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
