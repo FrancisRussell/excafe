@@ -171,13 +171,10 @@ std::size_t Cube::numMultiplies(const NewLiteralCreator& creator) const
 
   BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
   {
-    if (!creator.isUnit(lMapping.first))
-    {
-      if (creator.isNumeric(lMapping.first))
-        hasNumeric = true;
-      else
-        result += std::abs(lMapping.second);
-    }
+    if (creator.isNumeric(lMapping.first))
+      hasNumeric = true;
+    else
+      result += std::abs(lMapping.second);
   }
 
   if (hasNumeric)
