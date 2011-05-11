@@ -94,7 +94,7 @@ public:
     if (coefficientAsDouble != 1.0 || numerators.empty())
     {
       firstNumerator = false;
-      out << coefficientAsDouble;
+      out << std::setprecision(25) << coefficientAsDouble;
     }
     
     for(exp_map_t::const_iterator numIter = numerators.begin(); 
@@ -143,6 +143,7 @@ class UFCKernelGenerator : public cse::FactorisedExpressionVisitor<cfd::detail::
 {
 public:
   typedef std::map<boost::variant<Field::expr_ptr, Scalar::expr_ptr>, unsigned> coefficient_index_map_t;
+
 private:
   friend class detail::ScalarPlaceholderNamer;
   typedef util::LazyCopy< std::vector<detail::Product> > sum_t;
@@ -150,8 +151,10 @@ private:
   static const std::string factorisedTermPrefix;
   static const std::string resultName;
   static const std::string coefficientsName;
-  static const std::string cellName;
+  static const std::string coordinatesName;
+  static long nextClassID;
 
+  const long classID;
   const coefficient_index_map_t coefficientIndices;
   std::ostream& out;
   std::stack<sum_t> stack;
@@ -226,9 +229,16 @@ private:
     }
   }
 
+  std::string getClassName() const
+  {
+    std::ostringstream stream;
+    stream << "ExcafeCellIntegral_" << classID;
+    return stream.str();
+  }
+
 public:
   UFCKernelGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices) :
-    coefficientIndices(_coefficientIndices), out(_out)
+    classID(nextClassID++), coefficientIndices(_coefficientIndices), out(_out)
   {
   }
 
@@ -248,15 +258,21 @@ public:
 
   void outputPrefix()
   {
-    out << "void tabulate_tensor(double* const " << resultName;
+    out << "#include <ufc.h>\n\n";
+    out << "class " << getClassName() << " : public ufc::cell_integral\n";
+    out << "{\n";
+    out << "public:\n";
+    out << "  void tabulate_tensor(double* const " << resultName;
     out << ", const double * const * " << coefficientsName;
-    out << ", const ufc::cell& " << cellName << ")" << std::endl;
-    out << "{" << std::endl;
+    out << ", const ufc::cell& c)" << std::endl;
+    out << "  {\n";
+    out << "    const double * const * " << coordinatesName << " = c.coordinates;\n\n";
   }
 
   void outputPostfix()
   {
-    out << "}" << std::endl;
+    out << "  }\n";
+    out << "};\n";
   }
 
   void visitConstant(const value_t& s)
@@ -315,14 +331,14 @@ public:
 
   void postOriginalTerm(const unsigned index)
   {
-    out << "  " << resultName << "[" << index << "] = ";
+    out << "    " << resultName << "[" << index << "] = ";
     writeSum();
     out << ";" << std::endl;
   }
 
   void postFactorisedTerm(const cse::PolynomialIndex& index)
   {
-    out << "  const double " << getName(index) << " = ";
+    out << "    const double " << getName(index) << " = ";
     writeSum();
     out << ";" << std::endl;
   }
@@ -349,7 +365,7 @@ public:
   result_type operator()(const cfd::detail::CellVertexComponent& c) const
   {
     std::ostringstream stream;
-    stream << generator.cellName << ".coordinates[" << c.getVertexID() << "][" << c.getComponent() << "]";
+    stream << generator.coordinatesName << "[" << c.getVertexID() << "][" << c.getComponent() << "]";
     return stream.str();
   }
 

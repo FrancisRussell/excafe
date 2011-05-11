@@ -10,8 +10,9 @@ namespace codegen
 const std::string UFCKernelGenerator::factorisedTermPrefix = "var";
 const std::string UFCKernelGenerator::resultName           = "A";
 const std::string UFCKernelGenerator::coefficientsName     = "w";
-const std::string UFCKernelGenerator::cellName             = "c";
+const std::string UFCKernelGenerator::coordinatesName      = "x";
 
+long UFCKernelGenerator::nextClassID = 0;
 
 void UFCKernelGenerator::visitVariable(const variable_t& var)
 {
