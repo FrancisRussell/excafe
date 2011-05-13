@@ -42,7 +42,7 @@ void DynamicCXX::compileCXX(const fs::path& source, const fs::path& object) cons
   const std::string sourceString = source.string();
   const std::string objectString = object.string();
   const char* args[] = 
-    {EXCAFE_CXX_COMPILER, "-O2", "-shared", "-fPIC", sourceString.c_str(), "-o", objectString.c_str(), NULL};
+    {"c++", "-O2", "-shared", "-fPIC", sourceString.c_str(), "-o", objectString.c_str(), NULL};
 
   const pid_t pid = fork();
   if (pid == 0)
