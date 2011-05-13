@@ -14,7 +14,6 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
-#include <simple_cfd/codegen/ufc_kernel_generator.hpp>
 #include <simple_cfd/codegen/ufc_evaluator.hpp>
 
 namespace cfd

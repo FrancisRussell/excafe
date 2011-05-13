@@ -6,6 +6,7 @@ AC_INIT(simple_cfd, 0.1, fpr02@doc.ic.ac.uk)
 AC_CONFIG_SRCDIR([steady_stokes/solver.cpp])
 AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
+AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
 CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
@@ -13,6 +14,9 @@ CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+
+# C++ compiler for Excafe.
+AC_DEFINE_UNQUOTED(EXCAFE_CXX_COMPILER, "${CXX}", [C++ compiler that Excafe will use at run-time.])
 
 # Checks for libraries.
 
@@ -28,6 +32,7 @@ AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
+AX_BOOST_FILESYSTEM
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 

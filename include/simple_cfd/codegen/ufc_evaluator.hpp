@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <memory>
+#include <sstream>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -13,7 +14,8 @@
 #include <simple_cfd/capture/fields/function_space_expr.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
-#include "ufc_kernel_generator.hpp"
+#include "ufc_integral_generator.hpp"
+#include "dynamic_cxx.hpp"
 
 namespace cfd
 {
@@ -39,7 +41,7 @@ private:
   std::vector<cfd::detail::ScalarPlaceholder> coefficientPlaceholders;
 
   // These hold the ordering of fields and scalars as passed via the UFC interface.
-  UFCKernelGenerator::coefficient_index_map_t coefficientIndices;
+  UFCIntegralGenerator::coefficient_index_map_t coefficientIndices;
 
   class FieldCollector : public boost::static_visitor<void>
   {
@@ -167,10 +169,18 @@ private:
     std::cout << "Calling CSE..." << std::endl;
     cse::CSEOptimiser<ScalarPlaceholder> optimiser(expressions.begin(), expressions.end());
 
-    UFCKernelGenerator generator(std::cout, coefficientIndices);
+    std::ostringstream source;
+    source << "#include <ufc.h>\n\n";
+
+    UFCIntegralGenerator generator(source, coefficientIndices);
     generator.outputPrefix();
     optimiser.accept(generator);
     generator.outputPostfix();
+
+    std::cout << source.str() << std::endl;
+
+    DynamicCXX dynamicLib(source.str());
+    dynamicLib.compile();
   }
 
 public:
