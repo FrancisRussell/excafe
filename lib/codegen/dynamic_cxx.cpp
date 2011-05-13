@@ -39,8 +39,8 @@ void DynamicCXX::writeSource(const fs::path& path) const
 
 void DynamicCXX::compileCXX(const fs::path& source, const fs::path& object) const
 {
-  const std::string sourceString = source.file_string();
-  const std::string objectString = object.file_string();
+  const std::string sourceString = source.string();
+  const std::string objectString = object.string();
   const char* args[] = 
     {EXCAFE_CXX_COMPILER, "-O2", "-shared", "-fPIC", sourceString.c_str(), "-o", objectString.c_str(), NULL};
 
