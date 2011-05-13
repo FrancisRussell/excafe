@@ -32,6 +32,7 @@ AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
+AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))

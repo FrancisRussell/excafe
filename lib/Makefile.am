@@ -22,4 +22,4 @@ numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \
-                          -lm -lblas -llapack ${CLN_LIBS} ${GINAC_LIBS} ${BOOST_FILESYSTEM_LIB}
+                          -lm -lblas -llapack ${CLN_LIBS} ${GINAC_LIBS} ${BOOST_SYSTEM_LIB} ${BOOST_FILESYSTEM_LIB}
