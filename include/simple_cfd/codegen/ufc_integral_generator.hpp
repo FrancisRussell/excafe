@@ -85,7 +85,6 @@ private:
   std::string getName(const cse::PolynomialIndex& i);
   std::size_t getFieldIndex(const Field::expr_ptr& f) const;
   std::size_t getScalarIndex(const Scalar::expr_ptr& s) const;
-  std::string getClassName() const;
 
 public:
   UFCIntegralGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices);
@@ -101,6 +100,7 @@ public:
   void visitFactorisedTerm(const cse::PolynomialIndex& index);
   void postOriginalTerm(const unsigned index);
   void postFactorisedTerm(const cse::PolynomialIndex& index);
+  std::string getClassName() const;
 };
 
 namespace detail

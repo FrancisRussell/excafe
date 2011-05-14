@@ -255,14 +255,23 @@ void UFCIntegralGenerator::outputPrefix()
   out << "{\n";
   out << "public:\n";
   out << "  void tabulate_tensor(double* const " << resultName;
-  out << ", const double * const * " << coefficientsName;
-  out << ", const ufc::cell& c)" << std::endl;
+  out << ", const double* const* " << coefficientsName;
+  out << ", const ufc::cell& c) const" << std::endl;
   out << "  {\n";
   out << "    const double * const * " << coordinatesName << " = c.coordinates;\n\n";
 }
 
 void UFCIntegralGenerator::outputPostfix()
 {
+  out << "  }\n\n";
+  out << "  void tabulate_tensor(double* const A,\n";
+  out << "                       const double* const* w,\n";
+  out << "                       const ufc::cell& c,\n";
+  out << "                       unsigned int num_quadrature_points,\n";
+  out << "                       const double* const* quadrature_points,\n";
+  out << "                       const double* quadrature_weights) const\n";
+  out << "  {\n";
+  out << "    assert(0 && \"This function is not implemented!\");\n";
   out << "  }\n";
   out << "};\n";
 }

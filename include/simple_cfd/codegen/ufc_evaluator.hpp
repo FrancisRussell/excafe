@@ -5,9 +5,11 @@
 #include <set>
 #include <memory>
 #include <sstream>
+#include <ufc.h>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <simple_cfd/cse/cse_optimiser.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/capture/capture_fwd.hpp>
@@ -33,6 +35,11 @@ public:
 private:
   const Scenario<dimension>& scenario;
   const cfd::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix;
+  std::string className;
+
+  // References to the DSO and dynamically constructed ufc::cell_integral
+  boost::scoped_ptr<DynamicCXX> dsoHandler;
+  boost::scoped_ptr<ufc::cell_integral> cellIntegral;
 
   // The number of entries in each UFC coefficent.
   std::vector<std::size_t> coefficientSizes;
@@ -152,7 +159,17 @@ private:
       addCoefficientScalar(scalar);
   }
 
-  void generateCode() const
+  void setClassName(const std::string name)
+  {
+    className = name;
+  }
+
+  std::string getInstantiatorName() const
+  {
+    return std::string("new") + className;
+  }
+
+  void generateCode()
   {
     using cfd::detail::ScalarPlaceholder;
 
@@ -170,6 +187,7 @@ private:
     cse::CSEOptimiser<ScalarPlaceholder> optimiser(expressions.begin(), expressions.end());
 
     std::ostringstream source;
+    source << "#include <cassert>\n";
     source << "#include <ufc.h>\n\n";
 
     UFCIntegralGenerator generator(source, coefficientIndices);
@@ -177,10 +195,22 @@ private:
     optimiser.accept(generator);
     generator.outputPostfix();
 
-    std::cout << source.str() << std::endl;
+    // Generate method used to instantiate new class.
+    setClassName(generator.getClassName());
+    source << "\n";
+    source << "extern \"C\" ufc::cell_integral* " << getInstantiatorName() << "()\n";
+    source << "{\n";
+    source << "  return new " << className << "();\n";
+    source << "}\n";
 
-    DynamicCXX dynamicLib(source.str());
-    dynamicLib.compile();
+    dsoHandler.reset(new DynamicCXX(source.str()));
+    dsoHandler->compileAndLoad();
+
+    typedef ufc::cell_integral* (*instantiator_t)();
+    const instantiator_t instantiator =
+      reinterpret_cast<instantiator_t>(dsoHandler->getFunction(getInstantiatorName()));
+
+    cellIntegral.reset(instantiator());
   }
 
 public:
@@ -190,8 +220,14 @@ public:
     std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));
     evaluator->computeOrdering();
     evaluator->generateCode();
-
     return evaluator;
+  }
+
+  ~UFCEvaluator()
+  {
+    // We must delete the run-time generated ufc::cell_integral before closing the DSO.
+    cellIntegral.reset();
+    dsoHandler.reset();
   }
 };
 
