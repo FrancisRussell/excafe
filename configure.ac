@@ -6,7 +6,6 @@ AC_INIT(simple_cfd, 0.1, fpr02@doc.ic.ac.uk)
 AC_CONFIG_SRCDIR([steady_stokes/solver.cpp])
 AC_CONFIG_HEADER([include/simple_cfd/config.h])
 AM_INIT_AUTOMAKE
-AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
 CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
@@ -32,8 +31,6 @@ AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
-AX_BOOST_SYSTEM
-AX_BOOST_FILESYSTEM
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 
@@ -46,8 +43,12 @@ CXXFLAGS="$CXXFLAGS $GINAC_CFLAGS"
 AC_SUBST(GINAC_LIBS)
 
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
-AC_SUBST(LIBXML2_CFLAGS)
+CXXFLAGS="$CXXFLAGS $LIBXML2_CFLAGS"
 AC_SUBST(LIBXML2_LIBS)
+
+PKG_CHECK_MODULES([APR1], [apr-1])
+CXXFLAGS="$CXXFLAGS $APR1_CFLAGS"
+AC_SUBST(APR1_LIBS)
 
 # Check for MTL
 #AC_ARG_WITH([mtl],

@@ -1,15 +1,11 @@
 #include <string>
-#include <cstdio>
 #include <cstdlib>
 #include <sstream>
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/path.hpp>
+#include <fstream>
+#include <apr_file_io.h>
 #include <simple_cfd/config.h>
 #include <simple_cfd/exception.hpp>
+#include <simple_cfd/util/apr_pool.hpp>
 #include <simple_cfd/codegen/dynamic_cxx.hpp>
 
 namespace cfd
@@ -20,78 +16,78 @@ namespace codegen
 
 long DynamicCXX::nextID = 0;
 
-fs::path DynamicCXX::getTemp()
+DynamicCXX::DynamicCXX(const std::string& _code) : 
+  id(nextID++), code(_code)
 {
-  // P_tmpdir is (possibly) defined in stdio.h.
-  #ifdef P_tmpdir
-  return P_tmpdir;
-  #else
-  return "/tmp";
-  #endif
+  apr_procattr_create(&attr, classPool);
+  apr_procattr_cmdtype_set(attr, APR_PROGRAM_PATH);
 }
 
-void DynamicCXX::writeSource(const fs::path& path) const
+std::string DynamicCXX::getTemp() const
 {
-  fs::ofstream file(path);
+  util::APRPool pool;
+  const char* temp;
+  apr_temp_dir_get(&temp, pool);
+  return temp;
+}
+
+void DynamicCXX::writeSource(const std::string& path) const
+{
+  std::ofstream file(path.c_str());
   file << code;
   file.close();
 }
 
-void DynamicCXX::compileCXX(const fs::path& source, const fs::path& object) const
+void DynamicCXX::compileCXX(const std::string& source, const std::string& object) const
 {
-  const std::string sourceString = source.string();
-  const std::string objectString = object.string();
+  util::APRPool pool;
   const char* args[] = 
-    {"c++", "-O2", "-shared", "-fPIC", sourceString.c_str(), "-o", objectString.c_str(), NULL};
+    {"c++", "-O2", "-shared", "-fPIC", source.c_str(), "-o", object.c_str(), NULL};
 
-  const pid_t pid = fork();
-  if (pid == 0)
-  {
-    execvp(args[0], const_cast<char**>(args));
-    std::cerr << "exec() of " << args[0] << " failed." << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  else if (pid < 0)
-  {
-    CFD_EXCEPTION("Call to fork() failed.");
-  }
-  else
-  {
-    const int options = 0;
-    int status;
+  apr_proc_t process;
+  apr_proc_create(&process, args[0], args, NULL, attr, pool); 
 
-    waitpid(pid, &status, options);
-    if (!WIFEXITED(status))
-    {
-      CFD_EXCEPTION("Child process exited abnormally.");
-    }
-    else if (WEXITSTATUS(status) != EXIT_SUCCESS)
-    {
-      CFD_EXCEPTION("Child process returned a non-success exit status.");
-    }
+  int status;
+  apr_exit_why_e why;
+  apr_proc_wait(&process, &status, &why, APR_WAIT);
+
+  if (why != APR_PROC_EXIT)
+  {
+    CFD_EXCEPTION("Child process exited abnormally.");
+  }
+  else if (status != EXIT_SUCCESS)
+  {
+    CFD_EXCEPTION("Child process returned a non-success exit status.");
   }
 }
 
-fs::path DynamicCXX::getSourcePath() const
+std::string DynamicCXX::mergePath(const std::string& root, const std::string& additional) const
+{
+  util::APRPool pool;
+  const apr_int32_t flags = 0;
+  char* path;
+  apr_filepath_merge(&path, root.c_str(), additional.c_str(), flags, pool);
+  return path;
+}
+
+std::string DynamicCXX::getSourcePath() const
 {
   std::ostringstream nameStream;
   nameStream << "excafe_generated_cxx_" << id << ".cpp";
-  const fs::path path = getTemp() / nameStream.str();
-  return path;
+  return mergePath(getTemp(), nameStream.str());
 }
 
-fs::path DynamicCXX::getObjectPath() const
+std::string DynamicCXX::getObjectPath() const
 {
   std::ostringstream nameStream;
   nameStream << "excafe_generated_lib_" << id << ".so";
-  const fs::path path = getTemp() / nameStream.str();
-  return path;
+  return mergePath(getTemp(), nameStream.str());
 }
 
 void DynamicCXX::compile()
 {
-  const fs::path sourcePath = getSourcePath();
-  const fs::path objectPath = getObjectPath();
+  const std::string sourcePath = getSourcePath();
+  const std::string objectPath = getObjectPath();
   writeSource(sourcePath);
   compileCXX(sourcePath, objectPath);
 }
