@@ -6,6 +6,7 @@
 #include <simple_cfd/config.h>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/util/apr_pool.hpp>
+#include <simple_cfd/util/apr_manager.hpp>
 #include <simple_cfd/codegen/dynamic_cxx.hpp>
 
 namespace cfd
@@ -14,20 +15,23 @@ namespace cfd
 namespace codegen
 {
 
+using util::APRManager;
+using util::APRPool;
+
 long DynamicCXX::nextID = 0;
 
 DynamicCXX::DynamicCXX(const std::string& _code) : 
   id(nextID++), code(_code)
 {
-  apr_procattr_create(&attr, classPool);
-  apr_procattr_cmdtype_set(attr, APR_PROGRAM_PATH);
+  APRManager::checkSuccess(apr_procattr_create(&attr, classPool));
+  APRManager::checkSuccess(apr_procattr_cmdtype_set(attr, APR_PROGRAM_PATH));
 }
 
 std::string DynamicCXX::getTemp() const
 {
-  util::APRPool pool;
+  APRPool pool;
   const char* temp;
-  apr_temp_dir_get(&temp, pool);
+  APRManager::checkSuccess(apr_temp_dir_get(&temp, pool));
   return temp;
 }
 
@@ -40,12 +44,12 @@ void DynamicCXX::writeSource(const std::string& path) const
 
 void DynamicCXX::compileCXX(const std::string& source, const std::string& object) const
 {
-  util::APRPool pool;
+  APRPool pool;
   const char* args[] = 
     {"c++", "-O2", "-shared", "-fPIC", source.c_str(), "-o", object.c_str(), NULL};
 
   apr_proc_t process;
-  apr_proc_create(&process, args[0], args, NULL, attr, pool); 
+  APRManager::checkSuccess(apr_proc_create(&process, args[0], args, NULL, attr, pool)); 
 
   int status;
   apr_exit_why_e why;
@@ -63,10 +67,11 @@ void DynamicCXX::compileCXX(const std::string& source, const std::string& object
 
 std::string DynamicCXX::mergePath(const std::string& root, const std::string& additional) const
 {
-  util::APRPool pool;
+  APRPool pool;
   const apr_int32_t flags = 0;
   char* path;
-  apr_filepath_merge(&path, root.c_str(), additional.c_str(), flags, pool);
+  const apr_status_t result = apr_filepath_merge(&path, root.c_str(), additional.c_str(), flags, pool);
+  APRManager::checkSuccess(result);
   return path;
 }
 

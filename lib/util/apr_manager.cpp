@@ -1,3 +1,5 @@
+#include <string>
+#include <vector>
 #include <apr_general.h>
 #include <simple_cfd/util/singleton.hpp>
 #include <simple_cfd/util/apr_manager.hpp>
@@ -22,7 +24,7 @@ void APRManager::init()
 {
   if (!initialised)
   {
-    apr_initialize();
+    checkSuccess(apr_initialize());
     initialised = true;
   }
   else
@@ -34,6 +36,19 @@ void APRManager::init()
 bool APRManager::isInitialised() const
 {
   return initialised;
+}
+
+void APRManager::checkSuccess(const apr_status_t status)
+{
+  if (status != APR_SUCCESS)
+    CFD_EXCEPTION(getDescription(status));
+}
+
+std::string APRManager::getDescription(const apr_status_t status)
+{
+  std::vector<char> buffer(256);
+  apr_strerror(status, &buffer[0], buffer.size());
+  return std::string(&buffer[0]);
 }
   
 APRManager::~APRManager()

@@ -13,12 +13,12 @@ APRPool::APRPool()
   if (!APRManager::instance().isInitialised())
     APRManager::instance().init();
 
-  apr_pool_create(&pool, NULL);
+  APRManager::checkSuccess(apr_pool_create(&pool, NULL));
 }
 
 APRPool::APRPool(const APRPool& p)
 {
-  apr_pool_create(&pool, p.pool);
+  APRManager::checkSuccess(apr_pool_create(&pool, p.pool));
 }
 
 APRPool::operator apr_pool_t*() const
