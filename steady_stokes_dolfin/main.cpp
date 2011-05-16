@@ -34,7 +34,7 @@ public:
 
 class Boundary : public SubDomain
 {
-  bool inside(const real* x, bool on_boundary) const
+  bool inside(const Array<double>& x, bool on_boundary) const
   {
     return on_boundary;
   }
@@ -49,7 +49,7 @@ public:
   {
   }
 
-  bool inside(const real* x, bool on_boundary) const
+  bool inside(const Array<double>& x, bool on_boundary) const
   {
     return on_boundary && (std::abs(x[0]) < EPSILON || std::abs(x[0]-1.0) < EPSILON);
   }
@@ -64,7 +64,7 @@ public:
   {
   }
 
-  bool inside(const real* x, bool on_boundary) const
+  bool inside(const Array<double>& x, bool on_boundary) const
   {
     return on_boundary && (std::abs(x[1]) < EPSILON || std::abs(x[1]-1.0) < EPSILON);
   }
@@ -111,7 +111,6 @@ int main(int argc, char* argv[])
   
   // Solve PDE
   Function w(mixedSpace);
-  pde.parameters["linear_solver"] = "direct";
   pde.solve(w);
   Function u = w[0];
   Function p = w[1];
