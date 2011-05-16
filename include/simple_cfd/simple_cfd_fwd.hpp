@@ -63,7 +63,6 @@ namespace util
   // Util
   template<typename T> class Singleton;
   template<typename T> class LazyCopy;
-  template<typename T> class Maybe;
   template<typename T> class tag;
 }
 
