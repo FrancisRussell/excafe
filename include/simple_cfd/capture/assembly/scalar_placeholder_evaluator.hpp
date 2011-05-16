@@ -3,13 +3,13 @@
 
 #include <cstddef>
 #include <cassert>
+#include <boost/optional.hpp>
 #include "scalar_placeholder.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/vertex.hpp>
 #include <simple_cfd/dof.hpp>
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/capture/evaluation/expression_values.hpp>
-#include <simple_cfd/util/maybe.hpp>
 
 namespace cfd
 {
@@ -32,26 +32,28 @@ private:
   const Scenario<dimension>& scenario;
   const ExpressionValues<dimension>& values;
   const std::size_t cid;
-  const cfd::util::Maybe< vertex<dimension> > position;
+  const boost::optional< vertex<dimension> > position;
 
 public:
   typedef double result_type;
 
-  ScalarPlaceholderEvaluatorHelper(const Scenario<dimension>& _scenario, const ExpressionValues<dimension>& _values, 
-    const std::size_t _cid, const util::Maybe< vertex<dimension> >& _position) : 
+  ScalarPlaceholderEvaluatorHelper(const Scenario<dimension>& _scenario, 
+    const ExpressionValues<dimension>& _values, 
+    const std::size_t _cid, 
+    const boost::optional< vertex<dimension> >& _position) : 
     scenario(_scenario), values(_values), cid(_cid), position(_position)
   {
   }
 
   result_type operator()(const PositionComponent& c) const
   {
-    if (position.isNothing())
+    if (!position)
     {
       CFD_EXCEPTION("ScalarPlaceholderEvaluator hasn't been supplied a local co-ordinate.");
     }
     else
     {
-      return position.value()[c.getComponent()];
+      return (*position)[c.getComponent()];
     }
   }
 
@@ -96,8 +98,10 @@ private:
   const ScalarPlaceholderEvaluatorHelper<dimension> helper;
 
 public:
-  ScalarPlaceholderEvaluator(const Scenario<dimension>& _scenario, const ExpressionValues<dimension>& _values,
-    const std::size_t _cid, const util::Maybe< vertex<dimension> >& _position = cfd::util::Nothing()) : 
+  ScalarPlaceholderEvaluator(const Scenario<dimension>& _scenario, 
+    const ExpressionValues<dimension>& _values,
+    const std::size_t _cid, 
+    const boost::optional< vertex<dimension> >& _position = boost::optional< vertex<dimension> >()) : 
     helper(_scenario, _values, _cid, _position)
   {
   }
