@@ -16,6 +16,7 @@ class FieldExpr
 public:
   typedef boost::shared_ptr<FieldExpr> reference_t;
   virtual void accept(FieldVisitor& visitor) = 0;
+  virtual ~FieldExpr() {}
 };
 
 }
