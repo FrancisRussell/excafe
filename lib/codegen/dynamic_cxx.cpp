@@ -1,9 +1,11 @@
 #include <string>
 #include <cstdlib>
 #include <cstdio>
+#include <climits>
 #include <sstream>
 #include <fstream>
 #include <boost/static_assert.hpp>
+#include <boost/integer.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <apr_file_io.h>
 #include <apr_dso.h>
@@ -90,6 +92,9 @@ void DynamicCXX::compileAndLoad()
 
 apr_dso_handle_sym_t DynamicCXX::getSymbol(const std::string& name)
 {
+  if (dsoHandle == NULL)
+    CFD_EXCEPTION("Cannot get symbol because DSO is not loaded!");
+
   apr_dso_handle_sym_t symbol;
   APRManager::checkSuccess(apr_dso_sym(&symbol, dsoHandle, name.c_str()));
   return symbol;
@@ -99,13 +104,16 @@ template<typename T>
 static T convertHandle(const apr_dso_handle_sym_t symbol)
 {
   // This function peforms the conversion between function pointers and
-  // data pointers needed for using dlsym-style APIs. Rather than
-  // casting directly, we dereference a "type-punned" pointer.
+  // data pointers needed for using dlsym-style APIs. We cast via an
+  // integral type of the same size.
 
   BOOST_STATIC_ASSERT(boost::is_pointer<T>::value);
+  BOOST_STATIC_ASSERT(boost::is_pointer<apr_dso_handle_sym_t>::value);
   BOOST_STATIC_ASSERT(sizeof(T) == sizeof(apr_dso_handle_sym_t));
 
-  const T converted = *reinterpret_cast<T const*>(&symbol);
+  typedef typename boost::int_t<CHAR_BIT*sizeof(T)>::exact integral_t;
+  const integral_t integral = reinterpret_cast<integral_t>(symbol);
+  const T converted = reinterpret_cast<T>(integral);
   return converted;
 }
 

@@ -15,6 +15,7 @@
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
 #include <simple_cfd/codegen/ufc_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
 
 namespace cfd
 {
@@ -28,11 +29,6 @@ class AssemblyOptimisingVisitor : public DiscreteExprVisitor
 private:
   static const std::size_t dimension = D;
   Scenario<dimension>& scenario;
-
-  void factorise(const LocalAssemblyMatrix<dimension, ScalarPlaceholder::expression_t>& assembly) const
-  {
-    codegen::UFCEvaluator<dimension>::construct(scenario, assembly);
-  }
 
 public:
   AssemblyOptimisingVisitor(Scenario<dimension>& _scenario) : scenario(_scenario)
@@ -101,15 +97,14 @@ public:
 
     std::cout << "Integrated local-matrix expression..." << std::endl;
     
-    factorise(localMatrix);
-
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(ExpressionOptimiser<expression_t>()));
+    const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
+      codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
 
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
        depending on whether they're cell or facet, and if facet, internal or external facets.
     */
-    scenario.setOptimisedCellIntegral(a, optimisedLocalMatrix);
+    scenario.setOptimisedCellIntegral(a, evaluator);
   }
 };
 

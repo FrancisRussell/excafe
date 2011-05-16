@@ -10,12 +10,16 @@
 #include <boost/utility.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/scoped_array.hpp>
 #include <simple_cfd/cse/cse_optimiser.hpp>
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/capture/capture_fwd.hpp>
 #include <simple_cfd/capture/fields/function_space_expr.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
+#include <simple_cfd/capture/assembly/scalar_placeholder_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator_impl.hpp>
 #include "ufc_integral_generator.hpp"
 #include "dynamic_cxx.hpp"
 
@@ -25,8 +29,64 @@ namespace cfd
 namespace codegen
 {
 
+namespace detail
+{
+
+class FieldCollector : public boost::static_visitor<void>
+{
+private:
+  std::set<Field::expr_ptr> fields;
+  std::set<Scalar::expr_ptr> scalars;
+
+public:
+  void operator()(const cfd::detail::PositionComponent& c)
+  {
+  }
+
+  void operator()(const cfd::detail::CellVertexComponent& c)
+  {
+  }
+
+  void operator()(const cfd::detail::ScalarAccess& s)
+  {
+    scalars.insert(s.getExpr());
+  }
+
+  void operator()(const cfd::detail::BasisCoefficient& c)
+  {
+    fields.insert(c.getField());
+  }
+
+  void operator()(const boost::blank&)
+  {
+    CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");
+  }
+
+  std::set<Field::expr_ptr> getFields() const
+  {
+    return fields;
+  }
+
+  std::set<Scalar::expr_ptr> getScalars() const
+  {
+    return scalars;
+  }
+};
+
+struct UFCContext
+{
+  boost::scoped_array<double> cellVertexValues;
+  boost::scoped_array<double*> cellVertexPointers;
+
+  boost::scoped_array<double> coefficientValues;
+  boost::scoped_array<double*> coefficientPointers;
+};
+
+}
+
 template<std::size_t D>
-class UFCEvaluator : public boost::noncopyable
+class UFCEvaluator : public cfd::detail::LocalAssemblyMatrixEvaluatorImpl<D>,
+                     public boost::noncopyable
 {
 public:
   static const std::size_t dimension = D;
@@ -37,7 +97,7 @@ private:
   const cfd::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix;
   std::string className;
 
-  // References to the DSO and dynamically constructed ufc::cell_integral
+  // References to the DSO and dynamically constructed ufc::cell_integral.
   boost::scoped_ptr<DynamicCXX> dsoHandler;
   boost::scoped_ptr<ufc::cell_integral> cellIntegral;
 
@@ -50,46 +110,8 @@ private:
   // These hold the ordering of fields and scalars as passed via the UFC interface.
   UFCIntegralGenerator::coefficient_index_map_t coefficientIndices;
 
-  class FieldCollector : public boost::static_visitor<void>
-  {
-  private:
-    std::set<Field::expr_ptr> fields;
-    std::set<Scalar::expr_ptr> scalars;
-
-  public:
-    void operator()(const cfd::detail::PositionComponent& c)
-    {
-    }
-
-    void operator()(const cfd::detail::CellVertexComponent& c)
-    {
-    }
-
-    void operator()(const cfd::detail::ScalarAccess& s)
-    {
-      scalars.insert(s.getExpr());
-    }
-
-    void operator()(const cfd::detail::BasisCoefficient& c)
-    {
-      fields.insert(c.getField());
-    }
-
-    void operator()(const boost::blank&)
-    {
-      CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");
-    }
-
-    std::set<Field::expr_ptr> getFields() const
-    {
-      return fields;
-    }
-
-    std::set<Scalar::expr_ptr> getScalars() const
-    {
-      return scalars;
-    }
-  };
+  // Struct containing information that will be passed to tabulate_tensor
+  detail::UFCContext context;
 
   void addCoefficient(const boost::variant<Field::expr_ptr, Scalar::expr_ptr>& coefficient,
                       const std::vector<cfd::detail::ScalarPlaceholder>& placeholders)
@@ -144,7 +166,7 @@ private:
     const std::set<ScalarPlaceholder> unknowns = collector.getVariables();
 
     // Isolate references to fields and scalars.
-    FieldCollector fieldCollector;
+    detail::FieldCollector fieldCollector;
     BOOST_FOREACH(const ScalarPlaceholder& unknown, unknowns)
       unknown.apply(fieldCollector);
 
@@ -213,14 +235,69 @@ private:
     cellIntegral.reset(instantiator());
   }
 
+  void initialiseContext()
+  {
+    const Mesh<dimension>& mesh = scenario.getMesh();
+    const std::size_t verticesPerCell = mesh.getReferenceCell()->numEntities(0);
+
+    context.cellVertexValues.reset(new double[dimension*verticesPerCell]);
+    context.cellVertexPointers.reset(new double*[verticesPerCell]);
+
+    context.coefficientValues.reset(new double[coefficientPlaceholders.size()]);
+    context.coefficientPointers.reset(new double*[coefficientSizes.size()]);
+
+    double* vertexPtr = context.cellVertexValues.get();
+    for(std::size_t v=0; v<verticesPerCell; ++v)
+    {
+      context.cellVertexPointers[v] = vertexPtr;
+      vertexPtr += dimension;
+    }
+
+    double* coefficientPtr = context.coefficientValues.get();
+    for(std::size_t i=0; i<coefficientSizes.size(); ++i)
+    {
+      context.coefficientPointers[i] = coefficientPtr;
+      coefficientPtr += coefficientSizes[i];
+    }
+  }
+
+  void evaluate(cfd::detail::LocalAssemblyMatrix<dimension, double>& matrix,
+                const std::size_t cid,
+                const cfd::detail::ExpressionValues<dimension>& values) const
+  {
+    const CellVertices<dimension> vertices(scenario.getMesh().getCoordinates(cid));
+    for(std::size_t v=0; v<vertices.size(); ++v)
+    {
+      for(std::size_t d=0; d<dimension; ++d)
+      {
+        context.cellVertexValues[v*dimension + d] = vertices[v][d];
+      }
+    }
+
+    const cfd::detail::ScalarPlaceholderEvaluator<dimension> evaluator(scenario, values, cid);
+    std::transform(coefficientPlaceholders.begin(), 
+                   coefficientPlaceholders.end(),
+                   context.coefficientValues.get(), 
+                   evaluator);
+
+    ufc::cell cell;
+    cell.topological_dimension = cell.geometric_dimension = dimension;
+    cell.coordinates = context.cellVertexPointers.get();
+
+    cellIntegral->tabulate_tensor(matrix.data(), context.coefficientPointers.get(), cell);
+  }
+
 public:
-  static std::auto_ptr<UFCEvaluator> construct(const Scenario<dimension>& scenario, 
+  static cfd::detail::LocalAssemblyMatrixEvaluator<dimension> construct(const Scenario<dimension>& scenario, 
     const cfd::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix)
   {
     std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));
     evaluator->computeOrdering();
     evaluator->generateCode();
-    return evaluator;
+    evaluator->initialiseContext();
+
+    std::auto_ptr< cfd::detail::LocalAssemblyMatrixEvaluatorImpl<dimension> > impl(evaluator);
+    return cfd::detail::LocalAssemblyMatrixEvaluator<dimension>(impl);
   }
 
   ~UFCEvaluator()
