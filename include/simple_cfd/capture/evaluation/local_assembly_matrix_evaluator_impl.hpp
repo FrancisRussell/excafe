@@ -17,6 +17,8 @@ public:
   virtual void evaluate(LocalAssemblyMatrix<dimension, double>& matrix,
                         std::size_t cid,
                         const ExpressionValues<dimension>& values) const = 0;
+
+  virtual ~LocalAssemblyMatrixEvaluatorImpl() {}
 };
 
 }
