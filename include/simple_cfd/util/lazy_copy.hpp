@@ -10,6 +10,14 @@ namespace cfd
 namespace util
 {
 
+/*
+   This class supplies copy-on-write semantics for an arbitrary class. The class needs to be well-behaved
+   with respect to const-correctness otherwise disaster may ensue, especially in the multi-threaded case.
+   In addition, although the ref() and cref() methods may look more appealing than using than operator*(),
+   avoid them where possible. The finer granularity of ref() and cref() make a mistake like passing an
+   iterator from a transparently cloned object to its clone more likely.
+*/
+
 template<typename T>
 class LazyCopy
 {

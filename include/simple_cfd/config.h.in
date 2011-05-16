@@ -1,13 +1,28 @@
 /* include/simple_cfd/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* C++ compiler that Excafe will use at run-time. */
+#undef EXCAFE_CXX_COMPILER
+
 /* define if the Boost library is available */
 #undef HAVE_BOOST
+
+/* define if the Boost::Filesystem library is available */
+#undef HAVE_BOOST_FILESYSTEM
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `triangle' library (-ltriangle). */
+#undef HAVE_LIBTRIANGLE
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define if you have the MPI library. */
+#undef HAVE_MPI
 
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW
@@ -42,6 +57,10 @@
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -56,6 +75,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

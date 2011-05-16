@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <set>
 #include <iostream>
+#include <boost/foreach.hpp>
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
@@ -13,6 +14,7 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
+#include <simple_cfd/codegen/ufc_evaluator.hpp>
 
 namespace cfd
 {
@@ -26,6 +28,11 @@ class AssemblyOptimisingVisitor : public DiscreteExprVisitor
 private:
   static const std::size_t dimension = D;
   Scenario<dimension>& scenario;
+
+  void factorise(const LocalAssemblyMatrix<dimension, ScalarPlaceholder::expression_t>& assembly) const
+  {
+    codegen::UFCEvaluator<dimension>::construct(scenario, assembly);
+  }
 
 public:
   AssemblyOptimisingVisitor(Scenario<dimension>& _scenario) : scenario(_scenario)
@@ -93,12 +100,10 @@ public:
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
 
     std::cout << "Integrated local-matrix expression..." << std::endl;
+    
+    factorise(localMatrix);
 
-    //std::cout << localMatrix << std::endl;
-
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
-
-    std::cout << "Built optimised local-matrix expression..." << std::endl;
+    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(ExpressionOptimiser<expression_t>()));
 
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals

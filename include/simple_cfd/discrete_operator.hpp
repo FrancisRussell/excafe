@@ -292,7 +292,7 @@ public:
     using namespace detail;
 
     // Build set of placeholders
-    PolynomialVariableCollector<expression_t::optimised_t> collector;
+    ExpressionVariableCollector<expression_t::optimised_t> collector;
 
     typedef std::pair<MeshEntity, opt_local_matrix_t> entity_matrix_pair_t;
     BOOST_FOREACH(const entity_matrix_pair_t& mapping, localMatrices)
@@ -325,7 +325,7 @@ public:
           const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
 
           // Build concrete local assembly matrix
-          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
+          const ExpressionEvaluator<optimised_expression_t> evaluator(placeholderValues);
           const evaluated_local_matrix_t concreteLocalMatrix(matIter->second.transform(evaluator));
           addValues(cid, concreteLocalMatrix);
         }
