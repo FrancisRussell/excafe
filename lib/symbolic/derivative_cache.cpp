@@ -23,7 +23,7 @@ Expr DerivativeCache::derivative(const Expr& e, const Symbol& s)
   }
   else
   {
-    const Expr d = e.derivative(s, *this);
+    const Expr d = e.internal().derivative(s, *this).simplify();
     cache->insert(cache_t::value_type(key, d));
     return d;
   }
