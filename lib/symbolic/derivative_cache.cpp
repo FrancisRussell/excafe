@@ -8,7 +8,7 @@ namespace cfd
 namespace symbolic
 {
   
-DerivativeCache::DerivativeCache()
+DerivativeCache::DerivativeCache() : cache(new cache_t())
 {
 }
 
