@@ -14,6 +14,7 @@ class Float;
 class Rational;
 class Group;
 class Visitor;
+class DerivativeCache;
 template<typename T> class AbstractBasic;
 template<typename T, typename C> class PairSeq;
 

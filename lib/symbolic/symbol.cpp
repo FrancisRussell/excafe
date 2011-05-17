@@ -31,7 +31,7 @@ void Symbol::write(std::ostream& o) const
   o << *name;
 }
 
-Expr Symbol::derivative(const Symbol& s) const
+Expr Symbol::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   if (serial == s.serial)
     return Rational::one();

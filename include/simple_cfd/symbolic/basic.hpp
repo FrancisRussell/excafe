@@ -25,7 +25,7 @@ public:
   virtual std::size_t nops() const = 0;
   virtual void write(std::ostream& o) const = 0;
   virtual Expr clone() const = 0;
-  virtual Expr derivative(const Symbol& s) const = 0;
+  virtual Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const = 0;
   virtual Expr integrate(const Symbol& s, unsigned flags) const = 0;
   virtual Expr integrate(const Expr::region_t& region, unsigned flags) const = 0;
   virtual Expr simplify() const = 0;

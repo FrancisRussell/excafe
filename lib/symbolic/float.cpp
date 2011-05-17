@@ -39,7 +39,7 @@ void Float::write(std::ostream& o) const
   o << value;
 }
 
-Expr Float::derivative(const Symbol& s) const
+Expr Float::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   return Rational::zero();
 }

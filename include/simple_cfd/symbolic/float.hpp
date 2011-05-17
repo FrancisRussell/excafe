@@ -30,10 +30,10 @@ public:
   Float();
   Float(const double _value);
   Float(const cln::cl_R& value);
-  virtual std::size_t nops() const;
-  virtual void write(std::ostream& o) const;
-  virtual Expr derivative(const Symbol& s) const;
-  virtual bool depends(const std::set<Symbol>& symbols) const;
+  std::size_t nops() const;
+  void write(std::ostream& o) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
   Expr simplify() const;
@@ -48,7 +48,7 @@ public:
   std::size_t untypedHash() const;
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
-  virtual Expr extractMultiplier(Rational& coeff) const;
+  Expr extractMultiplier(Rational& coeff) const;
 };
 
 Float pow(const Float& f, int exponent);

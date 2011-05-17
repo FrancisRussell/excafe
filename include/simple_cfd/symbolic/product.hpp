@@ -44,7 +44,7 @@ public:
 
   Product& operator*=(const Product& p);
   void write(std::ostream& o) const;
-  Expr derivative(const Symbol& s) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
   Expr expand() const;
   Float eval(const Expr::subst_map& map) const;

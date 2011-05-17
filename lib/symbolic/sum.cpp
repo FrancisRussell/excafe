@@ -100,13 +100,13 @@ Sum& Sum::operator/=(const Rational& r)
   return *this;
 }
 
-Expr Sum::derivative(const Symbol& s) const
+Expr Sum::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   LazyTermMap newTerms;
 
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
-    const Expr d = e.first.derivative(s);
+    const Expr d = e.first.derivative(s, cache);
 
     if (d != Rational::zero())
       (*newTerms)[d] += e.second;
@@ -267,6 +267,9 @@ Expr Sum::extractMultiplier(Rational& coeff) const
 
 Expr Sum::integrate(const Expr::region_t& region, const unsigned flags) const
 {
+  if (region.begin() == region.end())
+    return clone();
+
   LazyTermMap resultTerms;
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {

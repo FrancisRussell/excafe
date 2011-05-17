@@ -27,9 +27,9 @@ void Group::write(std::ostream& o) const
   o << "group(" << expr << ")";
 }
 
-Expr Group::derivative(const Symbol& s) const
+Expr Group::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
-  return Group(expr.derivative(s)).clone();
+  return Group(expr.derivative(s, cache)).clone();
 }
 
 bool Group::depends(const std::set<Symbol>& symbols) const

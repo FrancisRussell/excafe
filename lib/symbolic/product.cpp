@@ -88,13 +88,13 @@ void Product::write(std::ostream& o) const
   Product rule (for 3 functions): (fgh)' = f'gh + fg'h + fgh'
 */
 
-Expr Product::derivative(const Symbol& s) const
+Expr Product::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   Sum summation;
 
   BOOST_FOREACH(const TermMap::value_type& d, *this)
   {
-    const Expr termDerivative = d.first.derivative(s);
+    const Expr termDerivative = d.first.derivative(s, cache);
 
     if (termDerivative != Rational::zero())
     {

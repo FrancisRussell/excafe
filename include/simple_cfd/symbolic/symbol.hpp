@@ -33,7 +33,7 @@ public:
   Symbol(const std::string& _name);
   std::size_t nops() const;
   void write(std::ostream& o) const;
-  Expr derivative(const Symbol& s) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
   Float eval(const Expr::subst_map& map) const;
   bool depends(const std::set<Symbol>& symbols) const;
   Expr integrate(const Symbol& s, unsigned flags) const;

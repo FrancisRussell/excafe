@@ -64,7 +64,7 @@ void Rational::write(std::ostream& o) const
   o << value;
 }
 
-Expr Rational::derivative(const Symbol& s) const
+Expr Rational::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   return zero();
 }

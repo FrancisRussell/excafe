@@ -53,7 +53,7 @@ public:
   Sum& operator+=(const Sum& s);
   Sum& operator/=(const Rational& r);
   void write(std::ostream& o) const;
-  Expr derivative(const Symbol& s) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
   Sum expandedProduct(const Sum& s) const;
   Float eval(const Expr::subst_map& map) const;

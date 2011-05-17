@@ -3,10 +3,12 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/operators.hpp>
+#include <boost/optional.hpp>
 #include <map>
 #include <set>
 #include <cassert>
 #include "symbolic_fwd.hpp"
+#include "derivative_cache.hpp"
 #include <simple_cfd/numeric/expression.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
 #include <simple_cfd/numeric/orthotope.hpp>
@@ -31,6 +33,8 @@ private:
 public:
   typedef std::map<Symbol, Expr> subst_map;
   typedef numeric::Orthotope<Symbol, Rational> region_t;
+  typedef DerivativeCache derivative_cache;
+  typedef boost::optional<derivative_cache&> optional_derivative_cache;
 
   explicit Expr(const ref_t& e);
   Expr();
@@ -47,7 +51,8 @@ public:
   bool depends(const std::set<Symbol>& symbols) const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
-  Expr derivative(const Symbol& s) const;
+  Expr derivative(const Symbol& s, 
+                  optional_derivative_cache cache = optional_derivative_cache()) const;
   Expr simplify() const;
   Expr integrate(const Symbol& s, unsigned flags = 0) const;
   Expr integrate(const Symbol& s, const Rational& a, const Rational& b, unsigned flags = 0) const;

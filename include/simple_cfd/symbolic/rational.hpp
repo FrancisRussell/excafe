@@ -40,10 +40,10 @@ public:
   Rational();
   Rational(long value);
   Rational(long numerator, long denominator);
-  virtual std::size_t nops() const;
-  virtual void write(std::ostream& o) const;
-  virtual Expr derivative(const Symbol& s) const;
-  virtual bool depends(const std::set<Symbol>& symbols) const;
+  std::size_t nops() const;
+  void write(std::ostream& o) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
   Float eval(const Expr::subst_map& map) const;
@@ -61,7 +61,7 @@ public:
   Rational& operator--();
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
-  virtual Expr extractMultiplier(Rational& coeff) const;
+  Expr extractMultiplier(Rational& coeff) const;
   Rational abs() const;
   Rational pow(int exponent) const;
 };

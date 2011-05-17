@@ -22,10 +22,10 @@ private:
 
 public:
   Group(const Expr& e);
-  virtual std::size_t nops() const;
-  virtual void write(std::ostream& o) const;
-  virtual Expr derivative(const Symbol& s) const;
-  virtual bool depends(const std::set<Symbol>& symbols) const;
+  std::size_t nops() const;
+  void write(std::ostream& o) const;
+  Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
+  bool depends(const std::set<Symbol>& symbols) const;
   Expr getExpr() const;
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   Expr integrate(const Symbol& s, unsigned flags) const;

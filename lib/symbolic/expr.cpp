@@ -10,6 +10,7 @@
 #include <simple_cfd/symbolic/flags.hpp>
 #include <ostream>
 #include <cassert>
+#include <boost/optional.hpp>
 
 namespace cfd
 {
@@ -133,9 +134,12 @@ std::ostream& operator<<(std::ostream& o, const Expr& e)
   return o;
 }
 
-Expr Expr::derivative(const Symbol& s) const
+Expr Expr::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
-  return expr->derivative(s).simplify();
+  if (cache)
+    return cache->derivative(*this, s);
+  else
+    return expr->derivative(s, cache).simplify();
 }
 
 Expr Expr::integrate(const Symbol& s, const unsigned flags) const

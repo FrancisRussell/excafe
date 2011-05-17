@@ -90,7 +90,7 @@ std::size_t Polynomial::untypedHash() const
   return result;
 }
 
-Expr Polynomial::derivative(const Symbol& s) const
+Expr Polynomial::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
   Polynomial result;
   for(const_iterator iter = begin(); iter != end(); ++iter)
