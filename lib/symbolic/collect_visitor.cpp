@@ -16,108 +16,63 @@ namespace cfd
 namespace symbolic
 {
 
-// class CollectTerm
-
-CollectTerm& CollectTerm::normalise()
+CollectedTerms::CollectedTerms(const Sum& sum, const Expr& expr)
 {
-  const Rational content = polynomial.findMultiplier();
-
-  if (content == 0)
-  {
-    polynomial = Sum::constant(0);
-    expression = Rational(0);
-  }
-  else if (content != 1)
-  {
-    polynomial /= content;
-    expression *= content;
-  }
-
-  expression = expression.simplify();
-  return *this;
+  termMap->insert(std::make_pair(sum, expr));
 }
 
-
-// class CollectedTerms
-
-void CollectedTerms::addTerm(TermSet& termSet, const CollectTerm& term)
+CollectedTerms::CollectedTerms()
 {
-  if (term.isZero())
-    return;
-
-  // Add for matching polynomial.
-  if (addTermTagged<poly_tag>(termSet, term))
-    return;
-
-  // Add for matching expression.
-  if (addTermTagged<expr_tag>(termSet, term))
-    return;
-
-  // If all else fails, create a new term.
-  termSet.insert(term);
 }
 
-CollectedTerms::CollectedTerms(const CollectTerm& t)
+CollectedTerms CollectedTerms::poly(const Symbol& s)
 {
-  *this += t;
+  return CollectedTerms(Sum(s), Rational(1).clone());
+}
+
+CollectedTerms CollectedTerms::expr(const Expr& e)
+{
+  return CollectedTerms(Sum::constant(1), e);
 }
 
 CollectedTerms& CollectedTerms::operator+=(const CollectedTerms& c)
 {
-  BOOST_FOREACH(const TermSet::value_type& term, *c.termSet)
-    *this += term;
+  BOOST_FOREACH(const TermMap::value_type& term, *c.termMap)
+    (*termMap)[term.first] += term.second;
 
-  return *this;
-}
-
-CollectedTerms& CollectedTerms::operator+=(const CollectTerm& t)
-{
-  addTerm(*termSet, t);
   return *this;
 }
 
 CollectedTerms& CollectedTerms::operator*=(const CollectedTerms& c)
 {
-  LazyTermSet resultSet;
-  BOOST_FOREACH(const TermSet::value_type& aTerm, *termSet)
+  LazyTermMap resultMap;
+  BOOST_FOREACH(const TermMap::value_type& aTerm, *termMap)
   {
-    BOOST_FOREACH(const TermSet::value_type& bTerm, *c.termSet)
+    BOOST_FOREACH(const TermMap::value_type& bTerm, *c.termMap)
     {
-      CollectTerm newTerm = aTerm;
-      newTerm *= bTerm;
-      addTerm(*resultSet, newTerm);
+      const Sum product = aTerm.first.expandedProduct(bTerm.first);
+      (*resultMap)[product] += aTerm.second * bTerm.second;
     }
   }
 
-  std::swap(resultSet, termSet);
+  std::swap(resultMap, termMap);
   return *this;
 }
 
 CollectedTerms& CollectedTerms::operator*=(const Rational& r) 
 {
-  // Since multiplication changes the expression but not the
-  // polynomial, we use the polynomial index.
-
-  typedef TermSet::index<poly_tag>::type PolyTermSet;
-  PolyTermSet& polyTermSet = termSet->get<poly_tag>();
-
-  for (PolyTermSet::iterator termIter = polyTermSet.begin(); termIter != polyTermSet.end(); ++termIter)
+  BOOST_FOREACH(TermMap::value_type& term, *termMap)
   {
-    CollectTerm term = *termIter;
-    term *= r;
-
-    const bool replaced = replacePreservingIter(polyTermSet, termIter, term);
-    assert(replaced);
+    term.second *= r;
   }
-
   return *this;
 }
 
 Expr CollectedTerms::toExpr() const
 {
   Sum result;
-  BOOST_FOREACH(const TermSet::value_type& aTerm, *termSet)
-    result += aTerm.toExpr();
+  BOOST_FOREACH(const TermMap::value_type& term, *termMap)
+    result += Product::mul(term.first, term.second);
 
   return result.simplify();
 }
@@ -137,20 +92,20 @@ CollectVisitor::CollectVisitor(const std::set<Symbol>& _symbols) : symbols(_symb
 void CollectVisitor::visit(const Symbol& s)
 {
   if (symbols.find(s) != symbols.end())
-    stack.push(CollectTerm::poly(s));
+    stack.push(CollectedTerms::poly(s));
   else
-    stack.push(CollectTerm::expr(s));
+    stack.push(CollectedTerms::expr(s));
 }
 
 void CollectVisitor::visit(const Sum& s)
 {
   if (!s.depends(symbols))
   {
-    stack.push(CollectTerm::expr(s));
+    stack.push(CollectedTerms::expr(s));
   }
   else
   {
-    CollectedTerms result = CollectTerm::expr(s.getOverall());
+    CollectedTerms result = CollectedTerms::expr(s.getOverall());
 
     BOOST_FOREACH(const Sum::value_type& term, s)
     {
@@ -168,11 +123,11 @@ void CollectVisitor::visit(const Product& p)
 {
   if (!p.depends(symbols))
   {
-    stack.push(CollectTerm::expr(p));
+    stack.push(CollectedTerms::expr(p));
   }
   else
   {
-    CollectedTerms result = CollectTerm::expr(p.getOverall());
+    CollectedTerms result = CollectedTerms::expr(p.getOverall());
 
     BOOST_FOREACH(const Product::value_type& term, p)
     {
@@ -186,7 +141,7 @@ void CollectVisitor::visit(const Product& p)
       }
       else
       {
-        result *= CollectTerm::expr(pow(term.first, term.second));
+        result *= CollectedTerms::expr(pow(term.first, term.second));
       }
     }
 
@@ -196,7 +151,7 @@ void CollectVisitor::visit(const Product& p)
 
 void CollectVisitor::visit(const Basic& b)
 {
-  stack.push(CollectTerm::expr(b));
+  stack.push(CollectedTerms::expr(b));
 }
 
 void CollectVisitor::visit(const Group& g)
@@ -204,7 +159,7 @@ void CollectVisitor::visit(const Group& g)
   if (g.depends(symbols))
     g.getExpr().accept(*this);
   else
-    stack.push(CollectTerm::expr(g));
+    stack.push(CollectedTerms::expr(g));
 }
 
 Expr CollectVisitor::getResult() const
