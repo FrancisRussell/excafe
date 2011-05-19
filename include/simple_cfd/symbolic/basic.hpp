@@ -31,7 +31,7 @@ public:
   virtual Expr simplify() const = 0;
   virtual Expr extractMultiplier(Rational& coeff) const = 0;
   virtual Float eval(const Expr::subst_map& map) const = 0;
-  virtual std::size_t getTypeID() const = 0;
+  virtual std::size_t typeHash() const = 0;
   virtual std::size_t hashValue() const = 0;
   virtual bool operator==(const Basic& b) const = 0;
   virtual operator Expr() const = 0;
@@ -43,18 +43,6 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& o, const Basic& b);
-
-template<typename T>
-inline bool is_a(const Basic& e)
-{
-  return dynamic_cast<const T*>(&e) != NULL;
-}
-
-template<typename T>
-inline bool is_exactly_a(const Basic& e)
-{
-  return T::typeID() == e.getTypeID();
-}
 
 }
 
