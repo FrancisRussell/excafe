@@ -4,9 +4,9 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
-#include <simple_cfd/util/type_info.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include "symbolic_fwd.hpp"
+#include "type_manager.hpp"
 #include "basic.hpp"
 #include "visitor.hpp"
 #include "expr.hpp"
@@ -41,11 +41,6 @@ private:
 
 protected:
   typedef T child_type;
-
-  static util::TypeInfo getType(const Basic& b)
-  {
-    return util::TypeInfo(typeid(b));
-  }
 
   static const child_type& asChild(const Basic& b)
   {
@@ -87,7 +82,7 @@ public:
     {
       return true;
     }
-    else if (typeHash() != b.typeHash())
+    else if (!is_exactly_a<child_type>(b))
     {
       return false;
     }
@@ -95,13 +90,9 @@ public:
     {
       return false;
     }
-    else if (is_exactly_a<child_type>(b))
-    {
-      return asChild(*this)==asChild(b);
-    }
     else
     {
-      return false;
+      return asChild(*this)==asChild(b);
     }
   }
 
@@ -114,10 +105,15 @@ public:
   {
   }
 
-  std::size_t typeHash() const
+  static std::size_t typeID()
   {
-    static std::size_t typeHash = util::TypeInfo(typeid(child_type)).hashValue();
-    return typeHash;
+    static const std::size_t id = TypeManager::getInstance().typeID<child_type>();
+    return id;
+  }
+
+  std::size_t getTypeID() const
+  {
+    return typeID();
   }
 
   void markHeapAllocated()
@@ -153,7 +149,7 @@ public:
     if (~flags & HASH_CACHED)
     {
       hash = 0x02c3866e;
-      cfd::util::hash_accum(hash, typeHash());
+      cfd::util::hash_accum(hash, typeID());
       cfd::util::hash_accum(hash, asChild(*this).untypedHash());
       flags |= HASH_CACHED;
     }

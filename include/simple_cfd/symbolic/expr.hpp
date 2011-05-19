@@ -68,18 +68,6 @@ public:
 };
 
 template<typename T>
-inline bool is_a(const Basic& e)
-{
-  return dynamic_cast<const T*>(&e) != NULL;
-}
-
-template<typename T>
-inline bool is_exactly_a(const Basic& e)
-{
-  return typeid(e) == typeid(T);
-}
-
-template<typename T>
 inline const T& convert_to(const Basic& e)
 {
   return static_cast<const T&>(e);
