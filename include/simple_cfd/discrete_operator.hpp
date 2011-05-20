@@ -22,6 +22,7 @@
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/scalar_placeholder_evaluator.hpp"
+#include "capture/evaluation/local_assembly_matrix_evaluator.hpp"
 
 namespace cfd
 {
@@ -37,11 +38,11 @@ private:
   typedef typename DofMap<dimension>::dof_t dof_t;
 
   // Useful typedefs for expression capture
-  typedef detail::ScalarPlaceholder::expression_t                        expression_t;
-  typedef detail::ScalarPlaceholder::optimised_expression_t              optimised_expression_t;
-  typedef detail::LocalAssemblyMatrix<dimension, expression_t>           local_matrix_t;
-  typedef detail::LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
-  typedef detail::LocalAssemblyMatrix<dimension, double>                 evaluated_local_matrix_t;
+  typedef detail::ScalarPlaceholder::expression_t              expression_t;
+  typedef detail::ScalarPlaceholder::optimised_expression_t    optimised_expression_t;
+  typedef detail::LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+  typedef detail::LocalAssemblyMatrix<dimension, double>       evaluated_local_matrix_t;
+  typedef detail::LocalAssemblyMatrixEvaluator<dimension>      cell_integral_t;
 
   const DofMap<dimension> rowMappings;
   const DofMap<dimension> colMappings;
@@ -286,26 +287,16 @@ public:
 
   void assembleFromOptimisedLocalMatrix(const Scenario<dimension>& scenario, 
     const detail::ExpressionValues<dimension>& values,
-    const std::map<MeshEntity, opt_local_matrix_t> localMatrices,
+    const std::map<MeshEntity, cell_integral_t> localMatrices,
     const MeshFunction<bool>& subDomain)
   {
     using namespace detail;
 
-    // Build set of placeholders
-    PolynomialVariableCollector<expression_t::optimised_t> collector;
-
-    typedef std::pair<MeshEntity, opt_local_matrix_t> entity_matrix_pair_t;
-    BOOST_FOREACH(const entity_matrix_pair_t& mapping, localMatrices)
-    {
-      collector = std::for_each(mapping.second.begin(), mapping.second.end(), collector);
-    }
-
-    const std::set<ScalarPlaceholder> placeholders(collector.getVariables());
     const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
     const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
     const Mesh<dimension>& m = scenario.getMesh();
     const std::size_t entityDimension = subDomain.getDimension();
-    local_matrix_t localMatrix(testElements, trialElements);
+    evaluated_local_matrix_t localMatrix(testElements, trialElements);
 
     std::cout << "Starting assembly...." << std::flush;
     for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
@@ -316,18 +307,13 @@ public:
         const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
         localMatrix.clear();
         
-        const typename std::map<MeshEntity, opt_local_matrix_t>::const_iterator matIter = localMatrices.find(localEntity);
+        const typename std::map<MeshEntity, cell_integral_t>::const_iterator matIter = localMatrices.find(localEntity);
   
         if (matIter != localMatrices.end())
         {
-          // Find placeholder values
-          typedef optimised_expression_t::value_map value_map;
-          const value_map placeholderValues(evaluatePlaceholders<value_map>(scenario, values, cid, placeholders));
-
           // Build concrete local assembly matrix
-          const PolynomialEvaluator<optimised_expression_t> evaluator(placeholderValues);
-          const evaluated_local_matrix_t concreteLocalMatrix(matIter->second.transform(evaluator));
-          addValues(cid, concreteLocalMatrix);
+          matIter->second.evaluate(localMatrix, cid, values);
+          addValues(cid, localMatrix);
         }
         else
         {

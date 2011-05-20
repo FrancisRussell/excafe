@@ -9,8 +9,10 @@ namespace cfd
 
 class Scalar : boost::arithmetic<Scalar>
 {
-private:
+public:
   typedef detail::ScalarExpr::expr_ptr expr_ptr;
+
+private:
   expr_ptr expr;
 
 public:
