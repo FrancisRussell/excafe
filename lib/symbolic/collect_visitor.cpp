@@ -190,7 +190,6 @@ Expr CollectVisitor::getResult() const
 Expr CollectVisitor::getIntegratedResult(const Expr::region_t& region, const unsigned flags) const
 {
   assert(stack.size() == 1);
-  assert(region.getVariables() == symbols);
   
   Sum result;
   BOOST_FOREACH(const CollectedTerms::value_type& term, stack.top())
