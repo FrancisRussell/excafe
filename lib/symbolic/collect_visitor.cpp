@@ -8,8 +8,6 @@
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/basic.hpp>
-#include <simple_cfd/symbolic/flags.hpp>
-#include <iostream>
 
 namespace cfd
 {
@@ -199,11 +197,11 @@ Expr CollectVisitor::getIntegratedResult(const Expr::region_t& region, const uns
   {
     if (!term.second.depends(symbols))
     {
-      result += term.first.integrate(region, flags | Flags::DO_NOT_COLLECT) * term.second;
+      result += term.first.integrate(region, flags) * term.second;
     }
     else
     {
-      result += Product::mul(term.first, term.second).integrate(region, flags | Flags::DO_NOT_COLLECT);
+      result += Product::mul(term.first, term.second).integrate(region, flags);
     }
   }
 

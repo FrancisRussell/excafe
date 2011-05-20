@@ -309,7 +309,7 @@ Expr Product::integrate(const Expr::region_t& region, const unsigned flags) cons
   {
     CollectVisitor collectVisitor(region.getVariables());
     integrated.accept(collectVisitor);
-    integrated = collectVisitor.getIntegratedResult(region, flags);
+    integrated = collectVisitor.getIntegratedResult(region, flags | Flags::DO_NOT_COLLECT);
   }
   else
   {
