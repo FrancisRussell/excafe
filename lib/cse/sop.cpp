@@ -4,7 +4,6 @@
 #include <boost/foreach.hpp>
 #include <simple_cfd/cse/sop.hpp>
 #include <simple_cfd/cse/cube.hpp>
-#include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/cse/literal_info.hpp>
 
 namespace cfd

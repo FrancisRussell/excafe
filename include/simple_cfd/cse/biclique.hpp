@@ -8,7 +8,6 @@
 #include "properties.hpp"
 #include "sop_map.hpp"
 #include "polynomial_index.hpp"
-#include <simple_cfd/util/maybe.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
