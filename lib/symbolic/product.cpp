@@ -304,24 +304,25 @@ Expr Product::integrate(const Expr::region_t& region, const unsigned flags) cons
   const std::set<Symbol> symbols = region.getVariables();
   this->extractDependent(symbols, *dependent, *independent);
 
-  Expr expr = Product(null(), dependent).clone();
-
+  Expr integrated = Product(null(), dependent).clone();
   if ((flags & Flags::DO_NOT_COLLECT) == 0)
   {
-    CollectVisitor collectVisitor(symbols);
-    expr.accept(collectVisitor);
-    expr = collectVisitor.getResult();
+    CollectVisitor collectVisitor(region.getVariables());
+    integrated.accept(collectVisitor);
+    integrated = collectVisitor.getIntegratedResult(region, flags);
   }
-
-  Expr integrated = expr;
-  BOOST_FOREACH(const Expr::region_t::value_type& interval, region)
+  else
   {
-    const Symbol& variable = interval.first;
-    integrated = integrated.integrate(variable, flags | Flags::DO_NOT_COLLECT);
-    Expr::subst_map lower, upper;
-    lower[variable] = interval.second.first;
-    upper[variable] = interval.second.second;
-    integrated = (integrated.subs(upper) - integrated.subs(lower)).simplify();
+    BOOST_FOREACH(const Expr::region_t::value_type& interval, region)
+    {
+      const Symbol& variable = interval.first;
+      integrated = integrated.integrate(variable, flags);
+  
+      Expr::subst_map lower, upper;
+      lower[variable] = interval.second.first;
+      upper[variable] = interval.second.second;
+      integrated = (integrated.subs(upper) - integrated.subs(lower)).simplify();
+    }
   }
 
   ++(*independent)[integrated];

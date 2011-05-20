@@ -32,10 +32,18 @@ private:
   CollectedTerms(const Sum& sum, const Expr& expr);
 
 public:
+  typedef TermMap::value_type value_type;
+  typedef TermMap::iterator iterator;
+  typedef TermMap::const_iterator const_iterator;
+
   static CollectedTerms poly(const Symbol& s);
   static CollectedTerms expr(const Expr& e);
 
   CollectedTerms();
+  iterator begin();
+  iterator end();
+  const_iterator begin() const;
+  const_iterator end() const;
   CollectedTerms& operator+=(const CollectedTerms& c);
   CollectedTerms& operator*=(const CollectedTerms& c);
   CollectedTerms& operator*=(const Rational& r);
@@ -62,6 +70,7 @@ public:
   void visit(const Sum& s);
   void visit(const Product& p);
   Expr getResult() const;
+  Expr getIntegratedResult(const Expr::region_t& region, const unsigned flags) const;
 };
 
 }

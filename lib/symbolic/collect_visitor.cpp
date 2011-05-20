@@ -8,6 +8,7 @@
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/basic.hpp>
+#include <simple_cfd/symbolic/flags.hpp>
 #include <iostream>
 
 namespace cfd
@@ -23,6 +24,26 @@ CollectedTerms::CollectedTerms(const Sum& sum, const Expr& expr)
 
 CollectedTerms::CollectedTerms()
 {
+}
+
+CollectedTerms::iterator CollectedTerms::begin()
+{
+  return termMap->begin();
+}
+
+CollectedTerms::iterator CollectedTerms::end()
+{
+  return termMap->end();
+}
+
+CollectedTerms::const_iterator CollectedTerms::begin() const
+{
+  return termMap->begin();
+}
+
+CollectedTerms::const_iterator CollectedTerms::end() const
+{
+  return termMap->end();
 }
 
 CollectedTerms CollectedTerms::poly(const Symbol& s)
@@ -167,6 +188,28 @@ Expr CollectVisitor::getResult() const
   assert(stack.size() == 1);
   return stack.top().toExpr();
 }
+
+Expr CollectVisitor::getIntegratedResult(const Expr::region_t& region, const unsigned flags) const
+{
+  assert(stack.size() == 1);
+  assert(region.getVariables() == symbols);
+  
+  Sum result;
+  BOOST_FOREACH(const CollectedTerms::value_type& term, stack.top())
+  {
+    if (!term.second.depends(symbols))
+    {
+      result += term.first.integrate(region, flags | Flags::DO_NOT_COLLECT) * term.second;
+    }
+    else
+    {
+      result += Product::mul(term.first, term.second).integrate(region, flags | Flags::DO_NOT_COLLECT);
+    }
+  }
+
+  return result.simplify();
+}
+
 
 }
 
