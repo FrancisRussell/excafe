@@ -43,11 +43,7 @@ public:
   {
   }
   
-  explicit Sum(const Expr& a)
-  {
-    ++getTerms()[a];
-  }
-
+  explicit Sum(const Expr& a);
   Rational findMultiplier() const;
   Sum& operator+=(const Expr& e);
   Sum& operator+=(const Sum& s);

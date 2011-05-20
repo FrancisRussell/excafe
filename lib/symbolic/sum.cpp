@@ -14,6 +14,11 @@ namespace cfd
 namespace symbolic
 {
 
+Sum::Sum(const Expr& a)
+{
+  ++getTerms()[a];
+}
+
 Sum Sum::sub(const Expr& a, const Expr& b)
 {
   LazyTermMap terms;
