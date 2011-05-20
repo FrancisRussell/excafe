@@ -18,6 +18,11 @@ namespace cfd
 namespace symbolic
 {
 
+Product::Product(const Expr& e)
+{
+  ++getTerms()[e];
+}
+
 Product Product::pow(const Expr& base, const int exponent)
 {
   LazyTermMap terms;

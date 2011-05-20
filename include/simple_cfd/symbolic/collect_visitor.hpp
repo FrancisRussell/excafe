@@ -8,9 +8,9 @@
 #include <simple_cfd/exception.hpp>
 #include "symbolic_fwd.hpp"
 #include "visitor.hpp"
-#include "sum.hpp"
 #include "expr.hpp"
 #include "product.hpp"
+#include "sum.hpp"
 #include "group.hpp"
 #include "symbol.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
@@ -24,12 +24,12 @@ namespace symbolic
 class CollectedTerms
 {
 private:
-  typedef boost::unordered_map<Sum, Expr> TermMap;
+  typedef boost::unordered_map<Product, Expr> TermMap;
   typedef util::LazyCopy<TermMap> LazyTermMap;
 
   LazyTermMap termMap;
 
-  CollectedTerms(const Sum& sum, const Expr& expr);
+  CollectedTerms(const Product& sum, const Expr& expr);
 
 public:
   typedef TermMap::value_type value_type;

@@ -42,6 +42,7 @@ public:
   static Product div(const Expr& a, const Expr& b);
   static Product mul(const Expr& a, const Expr& b);
 
+  explicit Product(const Expr& e);
   Product& operator*=(const Product& p);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
