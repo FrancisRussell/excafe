@@ -15,9 +15,9 @@ namespace cfd
 namespace symbolic
 {
 
-CollectedTerms::CollectedTerms(const Sum& sum, const Expr& expr)
+CollectedTerms::CollectedTerms(const Product& product, const Expr& expr)
 {
-  termMap->insert(std::make_pair(sum, expr));
+  termMap->insert(std::make_pair(product, expr));
 }
 
 CollectedTerms::CollectedTerms()
@@ -46,12 +46,12 @@ CollectedTerms::const_iterator CollectedTerms::end() const
 
 CollectedTerms CollectedTerms::poly(const Symbol& s)
 {
-  return CollectedTerms(Sum(s), Rational(1).clone());
+  return CollectedTerms(Product(s), Rational(1).clone());
 }
 
 CollectedTerms CollectedTerms::expr(const Expr& e)
 {
-  return CollectedTerms(Sum::constant(1), e);
+  return CollectedTerms(Product::constant(1), e);
 }
 
 CollectedTerms& CollectedTerms::operator+=(const CollectedTerms& c)
@@ -69,7 +69,7 @@ CollectedTerms& CollectedTerms::operator*=(const CollectedTerms& c)
   {
     BOOST_FOREACH(const TermMap::value_type& bTerm, *c.termMap)
     {
-      const Sum product = aTerm.first.expandedProduct(bTerm.first);
+      const Product product = aTerm.first * bTerm.first;
       (*resultMap)[product] += aTerm.second * bTerm.second;
     }
   }
