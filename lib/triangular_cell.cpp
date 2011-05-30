@@ -162,40 +162,33 @@ TriangularCell::vertex_type TriangularCell::referenceToPhysical(const CellVertic
   return v;
 }
 
-std::vector< std::set<std::size_t> > TriangularCell::getIncidentVertices(MeshTopology& topology, const MeshEntity& cellEntity, std::size_t d) const
+std::set<std::size_t> TriangularCell::getIncidentVertices(MeshTopology& topology, const std::size_t cid, const MeshEntity& localEntity) const
 {
-  assert(cellEntity.getDimension() == dimension);
-  assert(d <= dimension);
+  assert(localEntity.getDimension() <= dimension);
 
-  std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
+  const MeshEntity cellEntity(dimension, cid);
+  const std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
   assert(vertices.size() == vertex_count);
 
-  std::vector< std::set<std::size_t> > result;
+  const std::size_t d = localEntity.getDimension();
+  const std::size_t i = localEntity.getIndex();
+  std::set<std::size_t> result;
 
   if (d == 2)
   {
     // All vertices are incident to the cell
-    result.push_back(std::set<std::size_t>(vertices.begin(), vertices.end()));
+    assert(i == 0);
+    result.insert(vertices.begin(), vertices.end());
   }
   else if (d == 1)
   {
-    for(unsigned edge=0; edge<3; ++edge)
-    {
-      std::set<std::size_t> edgeVertexSet;
-      edgeVertexSet.insert(vertices[edge]);
-      edgeVertexSet.insert(vertices[(edge+1)%3]);
-      result.push_back(edgeVertexSet);
-    }
+    result.insert(vertices[i]);
+    result.insert(vertices[(i+1)%3]);
   }
   else if (d == 0)
   {
     // Vertices are only incident to themselves
-    for(unsigned i=0; i<vertices.size(); ++i)
-    {
-      std::set<std::size_t> singleVertexSet;
-      singleVertexSet.insert(vertices[i]);
-      result.push_back(singleVertexSet);
-    }
+    result.insert(vertices[i]);
   }
 
   return result;
@@ -207,18 +200,17 @@ std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const std::siz
   const std::vector<std::size_t> vertexIndices(topology.getIndices(entity, 0));
   const std::set<std::size_t> vertexIndicesSet(vertexIndices.begin(), vertexIndices.end());
 
-  // Get sets of vertices corresponding to entities of dimension entity.getDimension() on cell cid.
-  const std::vector< std::set<std::size_t> > incidentVertices(getIncidentVertices(topology, MeshEntity(dimension, cid), entity.getDimension()));
-  
-  const std::vector< std::set<std::size_t> >::const_iterator 
-    entityIter(std::find(incidentVertices.begin(), incidentVertices.end(), vertexIndicesSet));
+  for(std::size_t e=0; e<numEntities(entity.getDimension()); ++e)
+  {
+    const MeshEntity localEntity(entity.getDimension(), e);
+    const std::set<std::size_t> incident(getIncidentVertices(topology, cid, localEntity));
 
-  // If this assertion fails, entity wasn't present on cell cid
-  assert(entityIter != incidentVertices.end());
+    if (incident == vertexIndicesSet)
+      return e;
+  }
 
-  return entityIter - incidentVertices.begin();
+  CFD_EXCEPTION("Requested entity not present on cell.");
 }
-
 
 Tensor<TriangularCell::dimension> TriangularCell::getFacetNormal(const CellVertices<2>& vertices, const std::size_t localFacetID, const vertex_type& v) const
 {

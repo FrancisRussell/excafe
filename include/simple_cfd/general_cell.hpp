@@ -18,7 +18,6 @@ class GeneralCell : public MeshCell
 public:
   static const std::size_t dimension = D;
 
-  virtual std::size_t numEntities(std::size_t dimension) const = 0;
   virtual std::size_t getLocalIndex(MeshTopology& topology, const std::size_t cid, const MeshEntity& entity) const = 0;
   virtual vertex<dimension> getLocalVertex(const std::size_t index) const = 0;
   virtual QuadraturePoints<dimension> getQuadrature(const boost::array<std::size_t, dimension>& degrees) const = 0;
