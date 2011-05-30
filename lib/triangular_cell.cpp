@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
-#include <boost/scoped_ptr.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <lagrange_triangle_linear.hpp>
@@ -14,6 +13,8 @@
 #include <numeric/quadrature.hpp>
 #include <mesh.hpp>
 #include <cell_vertices.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/foreach.hpp>
 
 namespace cfd
 {
@@ -162,36 +163,49 @@ TriangularCell::vertex_type TriangularCell::referenceToPhysical(const CellVertic
   return v;
 }
 
-std::set<std::size_t> TriangularCell::getIncidentVertices(MeshTopology& topology, const std::size_t cid, const MeshEntity& localEntity) const
+std::set<std::size_t> TriangularCell::getIncidentVertices(const MeshEntity& localEntity) const
 {
-  assert(localEntity.getDimension() <= dimension);
-
-  const MeshEntity cellEntity(dimension, cid);
-  const std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
-  assert(vertices.size() == vertex_count);
-
   const std::size_t d = localEntity.getDimension();
   const std::size_t i = localEntity.getIndex();
+
+  assert(d <= dimension);
+  assert(i < numEntities(d));
+
   std::set<std::size_t> result;
 
   if (d == 2)
   {
     // All vertices are incident to the cell
-    assert(i == 0);
-    result.insert(vertices.begin(), vertices.end());
+    for(std::size_t v=0; v<vertex_count; ++v)
+      result.insert(v);
   }
   else if (d == 1)
   {
-    result.insert(vertices[i]);
-    result.insert(vertices[(i+1)%3]);
+    result.insert((i+0)%3);
+    result.insert((i+1)%3);
   }
   else if (d == 0)
   {
     // Vertices are only incident to themselves
-    result.insert(vertices[i]);
+    result.insert(i);
   }
 
   return result;
+}
+
+std::set<std::size_t> TriangularCell::getIncidentVertices(MeshTopology& topology, const std::size_t cid, const MeshEntity& localEntity) const
+{
+  const MeshEntity cellEntity(dimension, cid);
+  const std::vector<std::size_t> vertices(topology.getIndices(cellEntity, 0));
+  assert(vertices.size() == vertex_count);
+
+  const std::set<std::size_t> localIndices = getIncidentVertices(localEntity);
+  std::set<std::size_t> globalIndices;
+
+  BOOST_FOREACH(const std::size_t localIndex, localIndices)
+    globalIndices.insert(vertices[localIndex]);
+
+  return globalIndices;
 }
 
 std::size_t TriangularCell::getLocalIndex(MeshTopology& topology, const std::size_t cid, const MeshEntity& entity) const

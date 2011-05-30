@@ -48,6 +48,7 @@ public:
   virtual GlobalTransformation<dimension, dimension> getLocalGlobalTransformation() const;
   virtual LocalTransformation<dimension, dimension> getCellReferenceLocalTransformation() const;
   virtual LocalTransformation<dimension-1, dimension> getFacetReferenceLocalTransformation(const std::size_t fid) const;
+  virtual std::set<std::size_t> getIncidentVertices(const MeshEntity& localEntity) const;
   virtual std::set<std::size_t> getIncidentVertices(MeshTopology& topology, const std::size_t cid, const MeshEntity& localEntity) const;
   Tensor<dimension> getFacetNormal(const CellVertices<dimension>& vertices, const std::size_t fid, const vertex_type& v) const;
   virtual const FiniteElement<dimension>& getCoordinateMapping() const;
