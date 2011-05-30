@@ -23,16 +23,19 @@ class ExpandVisitor : public Visitor,
 {
 private:
   typedef boost::unordered_map<Sum, Sum> quotient_map_t;
+
   static Sum toExpr(const quotient_map_t& q);
   static quotient_map_t constructQuotientMap(const Rational& r);
-  quotient_map_t reciprocal(const quotient_map_t& q) const;
+  static quotient_map_t reciprocal(const quotient_map_t& q);
+  static Sum expandedProduct(const Sum& a, const Sum& b);
+
+  boost::unordered_map<Expr, quotient_map_t> cache;
+  std::stack<quotient_map_t> stack;
+
   void add(quotient_map_t& q1, const quotient_map_t& q2) const;
   void mul(quotient_map_t& q1, const quotient_map_t& q2) const;
-
-  std::stack<quotient_map_t> stack;
   void push(const quotient_map_t& e);
   void push(const Sum& s);
-  Sum expandedProduct(const Sum& a, const Sum& b) const;
 
 public:
   ExpandVisitor();

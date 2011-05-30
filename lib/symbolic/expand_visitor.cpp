@@ -1,7 +1,7 @@
 #include <utility>
 #include <cassert>
 #include <boost/foreach.hpp>
-#include <boost/bind.hpp>
+#include <boost/unordered_map.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/group.hpp>
@@ -20,7 +20,7 @@ ExpandVisitor::ExpandVisitor()
 {
 }
 
-Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b) const
+Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b)
 {
   return a.expandedProduct(b);
 }
@@ -42,7 +42,7 @@ ExpandVisitor::quotient_map_t ExpandVisitor::constructQuotientMap(const Rational
   return result;
 }
 
-ExpandVisitor::quotient_map_t ExpandVisitor::reciprocal(const quotient_map_t& q) const
+ExpandVisitor::quotient_map_t ExpandVisitor::reciprocal(const quotient_map_t& q)
 {
   // If q has more than one term, this will involve a full expansion.
   Sum nominator;
@@ -55,7 +55,7 @@ ExpandVisitor::quotient_map_t ExpandVisitor::reciprocal(const quotient_map_t& q)
   }
 
   quotient_map_t result;
-  // We flip the expanded nominator and denominator
+  // We flip the expanded numerator and denominator
   result.insert(std::make_pair(nominator, denominator));
   return result;
 }
@@ -97,34 +97,54 @@ void ExpandVisitor::push(const Sum& s)
 }
 
 void ExpandVisitor::visit(const Sum& s)
-{
-  quotient_map_t qMap = constructQuotientMap(s.getOverall());
-  BOOST_FOREACH(const Sum::value_type& term, s)
+{  
+  const boost::unordered_map<Expr, quotient_map_t>::const_iterator iter = cache.find(s.clone());
+
+  if (iter == cache.end())
   {
-    term.first.accept(*this);
-    quotient_map_t newTerm(stack.top()); stack.pop();
-    mul(newTerm, constructQuotientMap(term.second));
-    add(qMap, newTerm);
+    quotient_map_t qMap = constructQuotientMap(s.getOverall());
+    BOOST_FOREACH(const Sum::value_type& term, s)
+    {
+      term.first.accept(*this);
+      quotient_map_t newTerm(stack.top()); stack.pop();
+      mul(newTerm, constructQuotientMap(term.second));
+      add(qMap, newTerm);
+    }
+
+    push(qMap);
+    cache.insert(std::make_pair(s.clone(), qMap));
   }
-  push(qMap);
+  else
+  {
+    push(iter->second);
+  }
 }
 
 void ExpandVisitor::visit(const Product& p)
 {
-  quotient_map_t qMap = constructQuotientMap(p.getOverall());
-  BOOST_FOREACH(const Product::value_type& term, p)
+  const boost::unordered_map<Expr, quotient_map_t>::const_iterator iter = cache.find(p.clone());
+  if (iter == cache.end())
   {
-    term.first.accept(*this);
-    quotient_map_t multiplicand(stack.top()); stack.pop();
+    quotient_map_t qMap = constructQuotientMap(p.getOverall());
+    BOOST_FOREACH(const Product::value_type& term, p)
+    {
+      term.first.accept(*this);
+      quotient_map_t multiplicand(stack.top()); stack.pop();
 
-    if (term.second < 0)
-      multiplicand = reciprocal(multiplicand);
+      if (term.second < 0)
+        multiplicand = reciprocal(multiplicand);
 
-    for (int n=0; n < std::abs(term.second); ++n)
-      mul(qMap, multiplicand);
+      for (int n=0; n < std::abs(term.second); ++n)
+        mul(qMap, multiplicand);
+    }
+
+    push(qMap);
+    cache.insert(std::make_pair(p.clone(), qMap));
   }
-
-  push(qMap);
+  else
+  {
+    push(iter->second);
+  }
 }
 
 void ExpandVisitor::visit(const Basic& b)
