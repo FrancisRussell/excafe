@@ -14,7 +14,7 @@ typedef std::size_t cell_id;
 template<std::size_t D> class Mesh;
 template<unsigned D> class MeshGeometry;
 template<unsigned D> class MeshGeometryImpl;
-template<std::size_t D> class vertex;
+template<std::size_t D, typename T = double> class vertex;
 template<std::size_t D> class FiniteElement;
 template<unsigned int D> class SubDomain;
 template<unsigned int D> class Function;

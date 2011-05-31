@@ -15,19 +15,20 @@
 namespace cfd
 {
 
-template<std::size_t D>
-class vertex :  boost::totally_ordered<vertex<D>,
-                boost::additive<vertex<D>,
-                boost::multiplicative<vertex<D>, double
+template<std::size_t D, typename T>
+class vertex :  boost::totally_ordered<vertex<D, T>,
+                boost::additive<vertex<D, T>,
+                boost::multiplicative<vertex<D, T>, T
                 > > >
 {
 public:
   static const std::size_t dimension = D;
-  typedef typename boost::array<double, dimension>::iterator iterator;
-  typedef typename boost::array<double, dimension>::const_iterator const_iterator;
+  typedef T value_type;
+  typedef typename boost::array<value_type, dimension>::iterator iterator;
+  typedef typename boost::array<value_type, dimension>::const_iterator const_iterator;
 
 private:
-  boost::array<double, dimension> values;
+  boost::array<value_type, dimension> values;
 
 public:
   vertex()
@@ -38,31 +39,31 @@ public:
   {
   }
 
-  vertex(const double x)
+  vertex(const value_type& x)
   {
     assert(dimension == 1);
     values[0] = x;
   }
 
-  vertex(const double x, const double y)
+  vertex(const value_type& x, const value_type& y)
   {
     assert(dimension == 2);
     values[0] = x;
     values[1] = y;
   }
 
-  vertex(const std::vector<double>& v)
+  vertex(const std::vector<value_type>& v)
   {
     assert(values.size() == dimension);
     std::copy(v.begin(), v.end(), values.begin());
   }
 
-  double& operator[](const unsigned int index)
+  value_type& operator[](const unsigned int index)
   {
     return values[index];
   }
  
-  const double& operator[](const unsigned int index) const
+  const value_type& operator[](const unsigned int index) const
   {
     return values[index];
   }
@@ -79,25 +80,29 @@ public:
 
   vertex& operator+=(const vertex& v) 
   {
-    std::transform(values.begin(), values.end(), v.values.begin(), values.begin(), boost::lambda::_1 + boost::lambda::_2);
+    std::transform(values.begin(), values.end(), v.values.begin(), values.begin(),
+      boost::lambda::ret<value_type>(boost::lambda::_1 + boost::lambda::_2));
     return *this;
   }
 
   vertex& operator-=(const vertex& v)
   {
-    std::transform(values.begin(), values.end(), v.values.begin(), values.begin(), boost::lambda::_1 - boost::lambda::_2);
+    std::transform(values.begin(), values.end(), v.values.begin(), values.begin(), 
+      boost::lambda::ret<value_type>(boost::lambda::_1 - boost::lambda::_2));
     return *this;
   }
 
-  vertex& operator/=(const double d)
+  vertex& operator/=(const value_type& d)
   {
-    std::transform(values.begin(), values.end(), values.begin(), boost::lambda::_1 / d);
+    std::transform(values.begin(), values.end(), values.begin(), 
+      boost::lambda::ret<value_type>(boost::lambda::_1 / d));
     return *this;
   }
 
-  vertex& operator*=(const double d)
+  vertex& operator*=(const value_type& d)
   {
-    std::transform(values.begin(), values.end(), values.begin(), boost::lambda::_1 * d);
+    std::transform(values.begin(), values.end(), values.begin(), 
+      boost::lambda::ret<value_type>(boost::lambda::_1 * d));
     return *this;
   }
 
@@ -121,19 +126,19 @@ public:
     return values.end();
   }
 
-  double distance(const vertex<dimension>& v) const 
+  value_type distance(const vertex<dimension>& v) const 
   {
     const vertex delta = v - *this;
     return std::sqrt(std::inner_product(delta.begin(), delta.end(), delta.begin(), 0.0));
   }
 };
 
-template<std::size_t D>
-std::ostream& operator<<(std::ostream& o, const vertex<D>& v)
+template<std::size_t D, typename T>
+std::ostream& operator<<(std::ostream& o, const vertex<D, T>& v)
 {
   o << "(";
 
-  for(typename vertex<D>::const_iterator vIter(v.begin()); vIter!=v.end(); ++vIter)
+  for(typename vertex<D, T>::const_iterator vIter(v.begin()); vIter!=v.end(); ++vIter)
   {
     o << *vIter;
 
