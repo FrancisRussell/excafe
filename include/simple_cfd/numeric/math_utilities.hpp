@@ -18,7 +18,7 @@ private:
   static double jacobi_a_4_n(const double alpha, const double beta, const std::size_t n);
 
 public:
-  static Polynomial<std::string> jacobi(const double alpha, const double beta, const std::size_t n);
+  static ExcafeExpression<std::string> jacobi(const double alpha, const double beta, const std::size_t n);
   static std::set<double> jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon = 1e-8);
 
   template<typename T>

@@ -4,6 +4,7 @@
 #include <ostream>
 #include <set>
 #include <map>
+#include <cassert>
 #include <boost/operators.hpp>
 #include <boost/foreach.hpp>
 #include "expression.hpp"
@@ -261,12 +262,23 @@ public:
     return ExcafeExpression(integrated);
   }
 
-/*
-  std::size_t degree(const variable_t& variable) const
+  value_type operator()() const
   {
-    return expr.degree(getSymbol(variable));
+    value_map valueMap;
+    return evaluate(valueMap);
   }
-*/
+
+  value_type operator()(const value_type& v) const
+  {
+    const std::set<variable_t> variables = getVariables();
+    assert(variables.size() <= 1);
+    value_map valueMap;
+
+    if (variables.size() == 1)
+      valueMap.bind(*variables.begin(), v);
+
+    return evaluate(valueMap);
+  }
 
   ExcafeExpression substituteValues(const value_map& valueMap) const
   {
