@@ -6,15 +6,17 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
+#include <boost/scoped_ptr.hpp>
+#include <boost/foreach.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <lagrange_triangle_linear.hpp>
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
+#include <symbolic/rational.hpp>
 #include <mesh.hpp>
+#include <exception.hpp>
 #include <cell_vertices.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/foreach.hpp>
 
 namespace cfd
 {
@@ -246,16 +248,26 @@ Tensor<TriangularCell::dimension> TriangularCell::getFacetNormal(const CellVerti
 
 TriangularCell::vertex_type TriangularCell::getLocalVertex(const std::size_t index) const
 {
+  std::vector<vertex_type::value_type> components;
+
+  BOOST_FOREACH(const exact_vertex_type::value_type& c, getLocalVertexExact(index))
+    components.push_back(c.toFloat().toDouble());
+
+  return vertex_type(components);
+}
+
+TriangularCell::exact_vertex_type TriangularCell::getLocalVertexExact(const std::size_t index) const
+{
   assert(index < localVertices.size());
   return localVertices[index];
 }
 
-std::vector<TriangularCell::vertex_type> TriangularCell::buildLocalVertices()
+std::vector<TriangularCell::exact_vertex_type> TriangularCell::buildLocalVertices()
 {
-  std::vector<vertex_type> vertices;
-  vertices.push_back(vertex_type(0.0, 0.0));
-  vertices.push_back(vertex_type(1.0, 0.0));
-  vertices.push_back(vertex_type(0.0, 1.0));
+  std::vector<exact_vertex_type> vertices;
+  vertices.push_back(exact_vertex_type(0, 0));
+  vertices.push_back(exact_vertex_type(1, 0));
+  vertices.push_back(exact_vertex_type(0, 1));
   return vertices;
 }
 
@@ -270,11 +282,9 @@ const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMap
 {
   //IMPORTANT: we need this to be lazily constructed to avoid an initialisation dependence loop
 
-  if (coordinateMapping == false)
-  {
-    boost::scoped_ptr< FiniteElement<dimension> > constructed(new LagrangeTriangleLinear<0>());
-    coordinateMapping.swap(constructed);
-  }
+  if (!coordinateMapping)
+    coordinateMapping.reset(new LagrangeTriangleLinear<0>());
+
   return *coordinateMapping;
 }
 
@@ -303,7 +313,6 @@ LocalTransformation<1, 2> TriangularCell::getFacetReferenceLocalTransformation(c
   SmallVector<2, expression_t> transform(getCellReferenceLocalTransformation().getTransformed());
   expression_t::value_map valueMap;
 
-  // TODO: By performing var->var substitution, this ties us to GiNaC.
   if (fid == 0)
   {
     valueMap.bind(localPosition[0], refPosition[0]);
@@ -330,6 +339,73 @@ LocalTransformation<1, 2> TriangularCell::getFacetReferenceLocalTransformation(c
   }
 
   return transform;
+}
+
+std::vector<TriangularCell::exact_vertex_type>
+TriangularCell::constructLattice(const exact_vertex_type& base, const std::vector<exact_vertex_type>& offsets, const std::size_t degree)
+{
+  // Note: this code deliberately only constructs interior points.
+
+  std::vector<exact_vertex_type> result;
+
+  if (offsets.empty())
+  {
+    result.push_back(base);
+  }
+  else
+  {
+    const exact_vertex_type offset = offsets.front();
+    const std::vector<exact_vertex_type> subOffsets(offsets.begin()+1, offsets.end());
+
+    for(std::size_t i=1; i<degree; ++i)
+    {
+      const exact_vertex_type newBase = base + offset*i;
+      const std::vector<exact_vertex_type> subLattice = constructLattice(newBase, subOffsets, degree-i);
+      result.insert(result.end(), subLattice.begin(), subLattice.end());
+    }
+  }
+  
+  return result;
+}
+
+std::vector<TriangularCell::exact_vertex_type> 
+TriangularCell::getSimplexPoints(const std::vector<exact_vertex_type>& vertices, const std::size_t degree)
+{
+  assert(!vertices.empty());
+
+  const exact_vertex_type base = vertices.front();
+  std::vector<exact_vertex_type> offsets;
+
+  BOOST_FOREACH(const exact_vertex_type& v, std::make_pair(vertices.begin() + 1, vertices.end()))
+    offsets.push_back((v - base)/degree);
+
+  return constructLattice(base, offsets, degree);
+}
+
+std::map< MeshEntity, std::vector<TriangularCell::exact_vertex_type> > 
+TriangularCell::getPoints(const std::size_t degree) const
+{
+  if (degree < 1)
+    CFD_EXCEPTION("Lattice degree must be greater than 0.");
+
+  std::map< MeshEntity, std::vector<exact_vertex_type> > pointMap;
+
+  for(std::size_t d=0; d<=dimension; ++d)
+  {
+    for(std::size_t e=0; e<numEntities(d); ++e)
+    {
+      const MeshEntity entity(d, e);
+      const std::set<std::size_t> vertexIndices = getIncidentVertices(entity);
+
+      std::vector<exact_vertex_type> vertices;
+      BOOST_FOREACH(const std::size_t index, vertexIndices)
+        vertices.push_back(getLocalVertexExact(index));
+
+      pointMap[entity] = getSimplexPoints(vertices, degree);
+    }
+  }
+
+  return pointMap;
 }
 
 }
