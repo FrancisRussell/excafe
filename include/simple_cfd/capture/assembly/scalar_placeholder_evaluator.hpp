@@ -82,6 +82,11 @@ public:
     return coeff;
   }
 
+  result_type operator()(const GenericSymbol& s) const
+  {
+    CFD_EXCEPTION("GenericSymbol found in ScalarPlaceholder. This should never happen.");
+  }
+
   result_type operator()(const boost::blank&) const
   {
     CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");

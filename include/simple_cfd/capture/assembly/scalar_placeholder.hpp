@@ -11,6 +11,7 @@
 #include "cell_vertex_component.hpp"
 #include "scalar_access.hpp"
 #include "basis_coefficient.hpp"
+#include "generic_symbol.hpp"
 #include "scalar_placeholder_operators.hpp"
 #include <simple_cfd/numeric/ginac_expression.hpp>
 #include <simple_cfd/numeric/excafe_expression.hpp>
@@ -41,7 +42,8 @@ private:
                          PositionComponent, 
                          CellVertexComponent, 
                          ScalarAccess, 
-                         BasisCoefficient> variant_t;
+                         BasisCoefficient,
+                         GenericSymbol> variant_t;
   variant_t value;
 
 public:
@@ -61,6 +63,10 @@ public:
   }
 
   explicit ScalarPlaceholder(const BasisCoefficient& c) : value(c)
+  {
+  }
+
+  explicit ScalarPlaceholder(const GenericSymbol& c) : value(c)
   {
   }
 

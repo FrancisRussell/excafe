@@ -14,6 +14,7 @@ class PositionComponent;
 class CellVertexComponent;
 class BasisCoefficient;
 class ScalarAccess;
+class GenericSymbol;
 template<typename T> class ScalarPlaceholderOperators;
 
 }
