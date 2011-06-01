@@ -24,7 +24,7 @@ class ExpandVisitor : public Visitor,
 private:
   typedef boost::unordered_map<Sum, Sum> quotient_map_t;
 
-  static Sum toExpr(const quotient_map_t& q);
+  static Sum toExpr(const quotient_map_t& q, bool distribute);
   static quotient_map_t constructQuotientMap(const Rational& r);
   static quotient_map_t reciprocal(const quotient_map_t& q);
   static Sum expandedProduct(const Sum& a, const Sum& b);
@@ -43,7 +43,7 @@ public:
   void visit(const Product& p);
   void visit(const Basic& b);
   void visit(const Group& g);
-  Expr getResult() const;
+  Expr getResult(bool distribute) const;
 };
 
 }

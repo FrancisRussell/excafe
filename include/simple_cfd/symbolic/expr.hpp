@@ -63,7 +63,7 @@ public:
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   void traverse(Visitor& v) const;
   void swap(Expr& e);
-  Expr expand() const;
+  Expr expand(bool distribute = true) const;
   Float eval(const subst_map& map) const;
 };
 

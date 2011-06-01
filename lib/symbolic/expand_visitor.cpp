@@ -25,12 +25,15 @@ Sum ExpandVisitor::expandedProduct(const Sum& a, const Sum& b)
   return a.expandedProduct(b);
 }
 
-Sum ExpandVisitor::toExpr(const quotient_map_t& q)
+Sum ExpandVisitor::toExpr(const quotient_map_t& q, const bool distribute)
 {
   Sum result;
   BOOST_FOREACH(const quotient_map_t::value_type& term, q)
   {
-    result += Product::div(term.second, term.first);
+    if (distribute)
+      result += expandedProduct(term.second, Sum(Product::div(Rational(1), term.first)));
+    else
+      result += Product::div(term.second, term.first);
   }
   return result;
 }
@@ -157,10 +160,10 @@ void ExpandVisitor::visit(const Group& g)
   push(Sum(g.clone()));
 }
 
-Expr ExpandVisitor::getResult() const
+Expr ExpandVisitor::getResult(const bool distribute) const
 {
   assert(stack.size() == 1);
-  return toExpr(stack.top()).simplify();
+  return toExpr(stack.top(), distribute).simplify();
 }
 
 }

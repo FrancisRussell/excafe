@@ -166,11 +166,11 @@ void Expr::accept(Visitor& v) const
   return expr->accept(v);
 }
 
-Expr Expr::expand() const
+Expr Expr::expand(const bool distribute) const
 {
   ExpandVisitor v;
   expr->accept(v);
-  return v.getResult().simplify();
+  return v.getResult(distribute).simplify();
 }
 
 void Expr::traverse(Visitor& v) const
