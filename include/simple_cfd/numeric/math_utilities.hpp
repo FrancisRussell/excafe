@@ -18,7 +18,25 @@ private:
   static double jacobi_a_4_n(const double alpha, const double beta, const std::size_t n);
 
 public:
-  static ExcafeExpression<std::string> jacobi(const double alpha, const double beta, const std::size_t n);
+  template<typename variable_t>
+  static ExcafeExpression<variable_t> jacobi(const variable_t& x, const double alpha, const double beta, const std::size_t n)
+  {
+    if (n == 0)
+    {
+      return ExcafeExpression<variable_t>(1.0);
+    }
+    else if (n == 1)
+    {
+      return (alpha - beta + (alpha + beta + 2.0)*ExcafeExpression<variable_t>(x)) * 0.5;
+    }
+    else
+    {
+      return ((jacobi_a_2_n(alpha, beta, n-1) + jacobi_a_3_n(alpha, beta, n-1)*ExcafeExpression<variable_t>(x)) * 
+        jacobi(x, alpha, beta, n-1) -
+        jacobi_a_4_n(alpha, beta, n-1) * jacobi(x, alpha, beta, n-2)) / jacobi_a_1_n(alpha, beta, n-1);
+    }
+  }
+
   static std::set<double> jacobi_roots(const double alpha, const double beta, const std::size_t n, const double epsilon = 1e-8);
 
   template<typename T>

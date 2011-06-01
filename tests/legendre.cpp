@@ -10,7 +10,8 @@ int main(int argc, char** argv)
 
   for(std::size_t n=0; n<5; ++n)
   {
-    const ExcafeExpression<std::string> p = cfd::MathUtilities::jacobi(0, 0, n);
+    const std::string x("x");
+    const ExcafeExpression<std::string> p = cfd::MathUtilities::jacobi(x, 0, 0, n);
     std::cout << "P" << n << "(x): " << p << std::endl;
 
     const std::set<double> roots = cfd::MathUtilities::jacobi_roots(0, 0, n);
