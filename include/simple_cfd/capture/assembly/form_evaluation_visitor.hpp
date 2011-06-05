@@ -25,6 +25,7 @@
 #include "position_placeholder.hpp"
 #include "cell_vertices_placeholder.hpp"
 #include "scalar_access.hpp"
+#include "tensor_operations.hpp"
 
 namespace cfd
 {
@@ -41,33 +42,17 @@ private:
   typedef ScalarPlaceholder::expression_t expression_t;
   typedef Tensor<dimension, expression_t> tensor_t;
 
+  TensorOperations<dimension> tensorOps;
   const Scenario<dimension>& scenario;
   PositionPlaceholder position;
   CellVerticesPlaceholder<dimension> cellVertices;
   const std::size_t basisFunctionIndex;
   std::stack<tensor_t> valueStack;
 
-  tensor_t buildLocalGradient(const tensor_t& operand) const
-  {
-    const TensorSize resultSize(operand.getRank()+1, dimension);
-    tensor_t result(resultSize);
-
-    for(std::size_t d=0; d<dimension; ++d)
-    {
-      const ScalarPlaceholder coord(position[d]);
-      tensor_t derivative(operand);
-      std::transform(derivative.begin(), derivative.end(), derivative.begin(),
-        PolynomialDifferentiator<expression_t>(coord));
-      result.setElement(d, derivative);
-    }
-
-    return result;
-  }
-
   tensor_t buildGlobalGradient(const tensor_t& operand) const
   {
-    const tensor_t localGradient(buildLocalGradient(operand));
-    const tensor_t inverseGradient(invert(buildLocalGradient(buildGlobalPosition())));
+    const tensor_t localGradient = tensorOps.grad(operand);
+    const tensor_t inverseGradient(tensorOps.invert(tensorOps.grad(buildGlobalPosition())));
 
     return inverseGradient.inner_product(localGradient);
   }
@@ -82,62 +67,14 @@ private:
     tensor_t globalPosition(positionSize);
 
     for(std::size_t i=0; i<numVertices; ++i)
-    {
       globalPosition += cell->getCoordinateMapping().getBasis(i, position) * cellVertices[i];
-    }
 
     return globalPosition;
   }
 
   tensor_t buildJacobian() const
   {
-    return transpose(buildLocalGradient(buildGlobalPosition()));
-  }
-
-  static tensor_t adjugate(const tensor_t& t)
-  {
-    tensor_t operand(t);
-    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
-
-    tensor_t adjugateTensor(operand.getSize());
-    TensorMatrixView<dimension, expression_t> adjugateMatrix(adjugateTensor);
-
-    if (operand.getDimension() == 1)
-    {
-      adjugateMatrix(0,0) = operandMatrix(0,0);
-    }
-    else if (operand.getDimension() == 2)
-    {
-      adjugateMatrix(0,0) = operandMatrix(1,1);
-      adjugateMatrix(0,1) = operandMatrix(0,1) * -1.0;
-      adjugateMatrix(1,0) = operandMatrix(1,0) * -1.0;
-      adjugateMatrix(1,1) = operandMatrix(0,0);
-    }
-    else
-    {
-      CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
-    }
-
-    return adjugateTensor; 
-  }
-
-  static tensor_t transpose(const tensor_t& t)
-  {
-    tensor_t operand(t);
-    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
-
-    tensor_t transposeTensor(operand.getSize());
-    TensorMatrixView<dimension, expression_t> transposeMatrix(transposeTensor);
-
-    for(std::size_t row=0; row<dimension; ++row)
-    {
-      for(std::size_t col=0; col<dimension; ++col)
-      {
-        transposeMatrix(col, row) = operandMatrix(row, col);
-      }
-    }
-
-    return transposeTensor;
+    return tensorOps.transpose(tensorOps.grad(buildGlobalPosition()));
   }
 
   static tensor_t asTensor(const expression_t& p)
@@ -148,57 +85,6 @@ private:
     tensor_t result(scalarSize);
     result[nullIndex] = p;
     return result;
-  }
-
-  static tensor_t invert(const tensor_t& t)
-  {
-    return adjugate(t)/determinant(t);
-  }
-
-  static expression_t determinant(const tensor_t& t)
-  {
-    tensor_t operand(t);
-    TensorMatrixView<dimension, expression_t> operandMatrix(operand);
-    expression_t det(0.0);
-
-    if (operand.getDimension() == 1)
-    {
-      det = operandMatrix(0,0);
-    }
-    else if (operand.getDimension() == 2)
-    {
-      det = operandMatrix(0,0) * operandMatrix (1,1) - operandMatrix(0,1) * operandMatrix(1,0);
-    }
-    else
-    {
-      CFD_EXCEPTION("Determinant only implemented for 1x1 and 2x2 matrices.");
-    }
-
-    return expression_t::group(det);
-  }
-  
-  static tensor_t gradToDiv(const tensor_t& operand)
-  {
-    // In order to take div, original operand must have had rank >= 1, so gradient rank must be>= 2.
-    assert(operand.getRank() >= 2);
-    const TensorSize gradientSize(operand.getSize());
-    const TensorSize divergenceSize(gradientSize.getRank() - 2, gradientSize.getDimension());
-    tensor_t div(divergenceSize);
-    
-    for(std::size_t divIndexFlat = 0; divIndexFlat < div.getExtent(); ++divIndexFlat)
-    {
-      for(std::size_t d=0; d<dimension; ++d)
-      {
-        // First two indices into gradient are equal
-        const std::size_t gradIndexFlat = (d*dimension + d) * divergenceSize.getExtent() + divIndexFlat;
-        const TensorIndex divIndex = TensorIndex::unflatten(divergenceSize, divIndexFlat, row_major_tag());
-        const TensorIndex gradIndex = TensorIndex::unflatten(gradientSize, gradIndexFlat, row_major_tag());
-
-        div[divIndex] += operand[gradIndex];
-      }
-    }
-
-    return div;
   }
 
   void printTop(const std::string& name) const
@@ -217,7 +103,7 @@ public:
 
   expression_t jacobianDeterminant() const
   {
-    return determinant(buildJacobian());
+    return tensorOps.determinant(buildJacobian());
   }
 
   tensor_t getResult() const
@@ -324,7 +210,7 @@ public:
     const tensor_t value = valueStack.top();
     valueStack.pop();
 
-    valueStack.push(gradToDiv(buildGlobalGradient(value)));
+    valueStack.push(tensorOps.gradToDiv(buildGlobalGradient(value)));
     //printTop("Divergence");
   }
 
