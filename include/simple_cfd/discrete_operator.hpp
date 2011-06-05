@@ -18,7 +18,6 @@
 #include "exception.hpp"
 #include "capture/forms/bilinear_form_integral_sum.hpp"
 #include "capture/forms/basis_finder.hpp"
-#include "capture/forms/form_evaluator.hpp"
 #include "capture/assembly/assembly_helper.hpp"
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/scalar_placeholder_evaluator.hpp"
@@ -105,113 +104,6 @@ private:
     return values;
   }
 
-  void addTermGeneral(const Scenario<dimension>& scenario, const detail::ExpressionValues<dimension>& values,
-    const forms::BilinearFormIntegralSum::const_iterator sumBegin, 
-    const forms::BilinearFormIntegralSum::const_iterator sumEnd,
-    const MeshFunction<bool>& subDomain)
-  {
-    using namespace cfd::forms;
-
-    const std::set<const finite_element_t*> trialElements(colMappings.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(rowMappings.getFiniteElements());
-
-    typedef detail::LocalAssemblyMatrix<dimension, double> local_matrix_t;
-    local_matrix_t localMatrix(testElements, trialElements);
-
-    typedef std::pair<const finite_element_t*, const finite_element_t*> element_pair;
-    typedef std::pair< FormEvaluator<dimension>, FormEvaluator<dimension> > evaluator_pair;
-
-    std::map< element_pair, std::vector<evaluator_pair> > evaluators;
-
-    for(BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
-    {
-      // Find trial
-      BasisFinder<dimension> trialFinder(scenario);
-      formIter->getTrialField()->accept(trialFinder);
-
-      const finite_element_t* const trialBasis = trialFinder.getBasis();
-      assert(trialBasis != NULL);
-      assert(trialElements.find(trialBasis) != trialElements.end());
-
-      // Find test
-      BasisFinder<dimension> testFinder(scenario);
-      formIter->getTestField()->accept(testFinder);
-
-      const finite_element_t* const testBasis = testFinder.getBasis();
-      assert(testBasis != NULL);
-      assert(testElements.find(testBasis) != testElements.end());
-
-      const FormEvaluator<dimension> trialEvaluator(trialBasis->getCell(), scenario, values, formIter->getTrialField());
-      const FormEvaluator<dimension> testEvaluator(testBasis->getCell(), scenario, values, formIter->getTestField());
-      evaluators[std::make_pair(trialBasis, testBasis)].push_back(std::make_pair(trialEvaluator, testEvaluator));
-    }
-
-    const Mesh<dimension>& m = rowMappings.getMesh();
-    const std::size_t degree = 5;
-    boost::array<std::size_t, dimension> degrees;
-    std::fill(degrees.begin(), degrees.end(), degree);
-    const QuadraturePoints<dimension> quadrature = m.getReferenceCell()->getQuadrature(degrees);
-
-    const std::size_t entityDimension = subDomain.getDimension();
-
-    for(typename Mesh<dimension>::global_iterator eIter(m.global_begin(entityDimension)); eIter != m.global_end(entityDimension); ++eIter)
-    {
-      if (subDomain(*eIter))
-      {
-        //FIXME: Assumes constant jacobian
-        const std::size_t cid = m.getContainingCell(*eIter);
-        const CellVertices<dimension> vertices(m.getCoordinates(cid));
-        const MeshEntity localEntity = m.getLocalEntity(cid, *eIter); 
-        const double jacobian = m.getReferenceCell()->getJacobian(vertices, localEntity, vertex_type(0.0, 0.0));
-        localMatrix.clear();
-  
-        for(typename std::map< element_pair, std::vector<evaluator_pair> >::const_iterator evaluatorIter=evaluators.begin(); evaluatorIter!=evaluators.end(); ++evaluatorIter)
-        {
-          const finite_element_t* const trialFunction = evaluatorIter->first.first;
-          const finite_element_t* const testFunction = evaluatorIter->first.second;
-  
-          const unsigned trialSpaceDimension = trialFunction->spaceDimension();
-          const unsigned testSpaceDimension = testFunction->spaceDimension();
-  
-          std::vector<int> trialIndices(trialSpaceDimension);
-          std::vector<int> testIndices(testSpaceDimension);
-  
-          std::vector< Tensor<dimension> > trialValues(trialSpaceDimension);
-          std::vector< Tensor<dimension> > testValues(testSpaceDimension);
-  
-          for(typename std::vector<evaluator_pair>::const_iterator bFormIter(evaluatorIter->second.begin()); bFormIter!=evaluatorIter->second.end(); ++bFormIter)
-          {
-  
-            for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              trialIndices[trial] = localMatrix.getTrialOffset(*trialFunction, trial);
-  
-            for(unsigned test=0; test<testSpaceDimension; ++test)
-              testIndices[test] = localMatrix.getTestOffset(*testFunction, test);
-
-            for(typename QuadraturePoints<dimension>::iterator quadIter(quadrature.begin(localEntity)); quadIter!=quadrature.end(localEntity); ++quadIter)
-            {
-              for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-                trialValues[trial] = bFormIter->first.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(trialFunction, cid, trial));
-  
-              for(unsigned test=0; test<testSpaceDimension; ++test)
-                testValues[test] = bFormIter->second.evaluate(vertices, localEntity, quadIter->first, Dof<dimension>(testFunction, cid, test));
-  
-              for(unsigned trial=0; trial<trialSpaceDimension; ++trial)
-              {
-                for(unsigned test=0; test<testSpaceDimension; ++test)
-                {
-                  localMatrix(testIndices[test], trialIndices[trial]) += trialValues[trial].colon_product(testValues[test]) *
-                    quadIter->second * jacobian;
-                }
-              }
-            }
-          }
-        }
-        addValues(cid, localMatrix);
-      }
-    }
-  }
-
 public:
   DiscreteOperator(const DofMap<dimension>& _rowMappings, const DofMap<dimension>& _colMappings) :
           rowMappings(_rowMappings), colMappings(_colMappings), matrix(createSparsityPattern(rowMappings, colMappings))
@@ -269,19 +161,6 @@ public:
       colIndices[col] = colMappings.getGlobalIndex(colDofs[col]);
 
     matrix.addValues(rows, cols, &rowIndices[0], &colIndices[0], block);
-  }
-
-  void assembleForms(Scenario<dimension>& scenario, detail::ExpressionValues<dimension>& values, const forms::BilinearFormIntegralSum& expr)
-  {
-    const Mesh<dimension>& m(scenario.getMesh());
-    const MeshFunction<bool> allCells(dimension, true);
-      addTermGeneral(scenario, values, expr.begin_dx(), expr.end_dx(), allCells);
-
-    const MeshFunction<bool> boundaryFunction = m.getBoundaryFunction();
-    addTermGeneral(scenario, values, expr.begin_ds(), expr.end_ds(), boundaryFunction);
-
-    //FIXME: perform internal boundary integrals
-    assemble();
   }
 
   void assembleFromOptimisedLocalMatrix(const Scenario<dimension>& scenario, 
