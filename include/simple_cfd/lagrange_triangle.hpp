@@ -29,6 +29,7 @@
 #include "capture/assembly/position_placeholder.hpp"
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/generic_symbol.hpp"
+#include "capture/assembly/tensor_operations.hpp"
 #include "symbolic/rational.hpp"
 
 namespace cfd
@@ -188,12 +189,18 @@ public:
 
   gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
-    CFD_EXCEPTION("Unimplemented.");
+    detail::PositionPlaceholder position;
+    detail::TensorOperations<dimension> tensorOps;
+    const tensor_expr_t gradientExpr = tensorOps.grad(getBasis(i, position));
+    return evaluate(gradientExpr, vRef);
   }
 
   divergence_type evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
   {
-    CFD_EXCEPTION("Unimplemented.");
+    detail::PositionPlaceholder position;
+    detail::TensorOperations<dimension> tensorOps;
+    const tensor_expr_t divergenceExpr = tensorOps.gradToDiv(tensorOps.grad(getBasis(i, position)));
+    return evaluate(divergenceExpr, vRef);
   }
 
   unsigned spaceDimension() const
