@@ -180,14 +180,14 @@ public:
     return basis;
   }
 
-  value_type evaluateTensor(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  value_type evaluateTensor(const std::size_t i, const vertex_type& vRef) const
   {
     detail::PositionPlaceholder position;
     const tensor_expr_t basis = getBasis(i, position);
     return evaluate(basis, vRef);
   }
 
-  gradient_type evaluateGradient(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  gradient_type evaluateGradient(const std::size_t i, const vertex_type& vRef) const
   {
     detail::PositionPlaceholder position;
     detail::TensorOperations<dimension> tensorOps;
@@ -195,7 +195,7 @@ public:
     return evaluate(gradientExpr, vRef);
   }
 
-  divergence_type evaluateDivergence(const CellVertices<dimension>& vertices, const std::size_t i, const vertex_type& vRef) const
+  divergence_type evaluateDivergence(const std::size_t i, const vertex_type& vRef) const
   {
     detail::PositionPlaceholder position;
     detail::TensorOperations<dimension> tensorOps;

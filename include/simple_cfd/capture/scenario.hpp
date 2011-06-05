@@ -58,12 +58,11 @@ private:
     assert(dimension <= 3);
     assert(field.getRank() <= 1);
 
-    const CellVertices<dimension> vertices(mesh.getCoordinates(cid));
     boost::tuple<double, double, double> value(0.0, 0.0, 0.0);
 
     for(unsigned dof=0; dof<field.getElement()->spaceDimension(); ++dof)
     {
-      Tensor<dimension> basis = field.getElement()->evaluateTensor(vertices, dof, vertex);
+      Tensor<dimension> basis = field.getElement()->evaluateTensor(dof, vertex);
       const dof_t fieldDof = dof_t(field.getElement(), cid, dof);
 
       double valueCoeff;
