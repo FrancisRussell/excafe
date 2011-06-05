@@ -183,8 +183,8 @@ std::set<std::size_t> TriangularCell::getIncidentVertices(const MeshEntity& loca
   }
   else if (d == 1)
   {
-    result.insert((i+0)%3);
     result.insert((i+1)%3);
+    result.insert((i+2)%3);
   }
   else if (d == 0)
   {
