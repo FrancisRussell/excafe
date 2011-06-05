@@ -30,7 +30,7 @@ private:
   void testQuadraticBasisDofs();
 
   template<typename basis_t>
-  void testBasis(const std::string& name)
+  void testBasis(const basis_t& basis, const std::string& name)
   {
     std::cout << "Testing " << name << " basis values..." << std::endl;
   
@@ -41,7 +41,6 @@ private:
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
-    basis_t basis;
 
     const std::size_t degree = 5;
     boost::array<std::size_t, 2> degrees;
@@ -67,7 +66,7 @@ private:
   }
 
   template<typename basis_t>
-  void testBasisDofs(const std::string& name)
+  void testBasisDofs(const basis_t& basis, const std::string& name)
   {
     std::cout << "Testing " << name << " basis function degrees-of-freedom..." << std::endl;
  
@@ -84,7 +83,6 @@ private:
 
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
-    basis_t basis;
 
     cfd::DofMapBuilder<cell_type::dimension> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);

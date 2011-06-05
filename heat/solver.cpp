@@ -5,8 +5,7 @@
 #include <simple_cfd/capture/solve_operation.hpp>
 #include <simple_cfd/petsc_manager.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/lagrange_triangle_linear.hpp>
-#include <simple_cfd/lagrange_triangle_quadratic.hpp>
+#include <simple_cfd/lagrange_triangle.hpp>
 #include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/fields/fields.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
@@ -54,7 +53,7 @@ private:
 public:
   HeatSolver(Mesh<dimension>& _mesh) : mesh(_mesh), scenario(mesh)
   {
-    temperature = scenario.addElement(new LagrangeTriangleLinear<0>());
+    temperature = scenario.addElement(new LagrangeTriangle<0>(1));
     temperatureSpace = scenario.defineFunctionSpace(temperature, mesh);
     temperatureField = scenario.defineNamedField("temperature", temperatureSpace);
 

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <boost/operators.hpp>
 #include <boost/foreach.hpp>
+#include <boost/optional.hpp>
 #include "expression.hpp"
 #include "orthotope.hpp"
 #include "expression_visitor.hpp"
@@ -18,6 +19,7 @@
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/group.hpp>
 
 namespace cfd
@@ -127,7 +129,7 @@ private:
     return mapper.getKey(s);
   }
 
-  ExcafeExpression(const expr_t& e) : expr(e)
+  explicit ExcafeExpression(const expr_t& e) : expr(e)
   {
   }
 
@@ -142,6 +144,10 @@ public:
   }
 
   ExcafeExpression(const value_type s) : expr(numeric_t(s)) 
+  {
+  }
+
+  ExcafeExpression(const symbolic::Rational& s) : expr(s) 
   {
   }
 
@@ -292,7 +298,12 @@ public:
 
   ExcafeExpression normalised() const
   {
-    return ExcafeExpression(expr.expand());
+    return ExcafeExpression(expr.expand(true));
+  }
+
+  ExcafeExpression pow(const int n) const
+  {
+    return ExcafeExpression(symbolic::pow(expr, n));
   }
 
   std::set<variable_t> getVariables() const
@@ -317,6 +328,17 @@ public:
     const symbolic::Float evaluated = expr.eval(variableValues.getReference());
     return evaluated.toDouble();
   }
+
+  boost::optional<symbolic::Rational> evaluateRational(const value_map& variableValues) const
+  {
+    using namespace symbolic;
+    const expr_t evaluated = expr.subs(variableValues.getReference());
+
+    if (is_exactly_a<Rational>(evaluated))
+      return convert_to<Rational>(evaluated);
+    else
+      return boost::optional<Rational>();
+  }
 };
 
 template<typename V>
@@ -324,6 +346,12 @@ std::ostream& operator<<(std::ostream& o, const ExcafeExpression<V>& e)
 {
   e.write(o);
   return o;
+}
+
+template<typename V>
+ExcafeExpression<V> pow(const ExcafeExpression<V>& e, const int n)
+{
+  return e.pow(n);
 }
 
 }

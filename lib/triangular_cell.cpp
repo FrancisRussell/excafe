@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
-#include <lagrange_triangle_linear.hpp>
+#include <lagrange_triangle.hpp>
 #include <numeric/tensor.hpp>
 #include <numeric/quadrature.hpp>
 #include <symbolic/rational.hpp>
@@ -283,7 +283,7 @@ const FiniteElement<TriangularCell::dimension>& TriangularCell::getCoordinateMap
   //IMPORTANT: we need this to be lazily constructed to avoid an initialisation dependence loop
 
   if (!coordinateMapping)
-    coordinateMapping.reset(new LagrangeTriangleLinear<0>());
+    coordinateMapping.reset(new LagrangeTriangle<0>(1));
 
   return *coordinateMapping;
 }

@@ -3,6 +3,11 @@
 
 #include <cstddef>
 
+// We need this for Boost's LU factorisation when using rationals.
+// Otherwise Boost tries to do things like take the square-root of
+// rational numbers.
+#define BOOST_UBLAS_TYPE_CHECK 0
+
 namespace cfd
 {
 

@@ -25,7 +25,8 @@ public:
   typedef vertex<dimension> vertex_type;
   typedef Dof<dimension> dof_t;
   typedef typename CellManager::ref<dimension>::general cell_ref_t;
-  typedef Tensor<dimension, detail::ScalarPlaceholder::expression_t> tensor_expr_t;
+  typedef detail::ScalarPlaceholder::expression_t expression_t;
+  typedef Tensor<dimension, expression_t> tensor_expr_t;
 
   virtual std::size_t getRank() const = 0;
   virtual std::size_t getDimension() const = 0;
