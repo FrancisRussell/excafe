@@ -8,6 +8,7 @@
 #include "properties.hpp"
 #include "sop_map.hpp"
 #include "polynomial_index.hpp"
+#include <simple_cfd/util/lazy_copy.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -87,8 +88,8 @@ protected:
   };
 
   graph_t* graph;
-  std::set<vertex_descriptor> cubeVertices;
-  std::set<vertex_descriptor> coKernelVertices;
+  util::LazyCopy< std::set<vertex_descriptor> > cubeVertices;
+  util::LazyCopy< std::set<vertex_descriptor> > coKernelVertices;
   VertexInfo cubeInfo;
   VertexInfo coKernelInfo;
 
@@ -97,9 +98,7 @@ protected:
   {
     VertexInfo result;
     BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
-    {
       result.addVertex(graph, v);
-    }
 
     return result;
   }
@@ -112,9 +111,7 @@ protected:
     {
       const typename std::set<vertex_descriptor>::const_iterator vIter = vertices.find(target(edge, *graph));
       if (vIter != vertices.end())
-      {
         newVertices.insert(*vIter);
-      }
     }
 
     std::swap(vertices, newVertices);
@@ -148,25 +145,23 @@ protected:
     cubeVertices(parent.cubeVertices), coKernelVertices(parent.coKernelVertices)
   {
     const bool isCube = get(is_cube(), *graph, v);
-    const bool firstVertex = isCube ? cubeVertices.empty() : coKernelVertices.empty();
+    const bool firstVertex = isCube ? cubeVertices->empty() : coKernelVertices->empty();
 
     if (isCube)
     {
-      cubeVertices.insert(v);
-      removeUnconnected(v, coKernelVertices);
+      cubeVertices->insert(v);
+      removeUnconnected(v, *coKernelVertices);
     }
     else
     {
-      coKernelVertices.insert(v);
-      removeUnconnected(v, cubeVertices);
+      coKernelVertices->insert(v);
+      removeUnconnected(v, *cubeVertices);
     }
 
     if (firstVertex)
     {
       BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, *graph))
-      {
-        (isCube ? coKernelVertices : cubeVertices).insert(target(edge, *graph));
-      }
+        (isCube ? coKernelVertices : cubeVertices)->insert(target(edge, *graph));
     }
 
     calculateValue();
@@ -174,8 +169,8 @@ protected:
 
   void calculateValue()
   {
-    cubeInfo = getValue(*graph, cubeVertices.begin(), cubeVertices.end());
-    coKernelInfo = getValue(*graph, coKernelVertices.begin(), coKernelVertices.end());
+    cubeInfo = getValue(*graph, cubeVertices->begin(), cubeVertices->end());
+    coKernelInfo = getValue(*graph, coKernelVertices->begin(), coKernelVertices->end());
   }
 
 public:
@@ -196,7 +191,7 @@ public:
 
   bool empty() const
   {
-    return cubeVertices.empty() && coKernelVertices.empty();
+    return cubeVertices->empty() && coKernelVertices->empty();
   }
 
   int getValue() const
@@ -206,12 +201,12 @@ public:
 
   std::size_t numCubes() const
   {
-    return cubeVertices.size();
+    return cubeVertices->size();
   }
 
   std::size_t numCoKernels() const
   {
-    return coKernelVertices.size();
+    return coKernelVertices->size();
   }
 
   int getCubeValueSum() const
@@ -226,12 +221,12 @@ public:
 
   std::set<vertex_descriptor> getCubeVertices() const
   {
-    return cubeVertices;
+    return *cubeVertices;
   }
 
   std::set<vertex_descriptor> getCoKernelVertices() const
   {
-    return coKernelVertices;
+    return *coKernelVertices;
   }
 
   Biclique addVertex(const vertex_descriptor& v) const
@@ -251,17 +246,15 @@ public:
   SOP getSOP() const
   {
     SOP result;
-    BOOST_FOREACH(const vertex_descriptor& v, cubeVertices)
-    {
+    BOOST_FOREACH(const vertex_descriptor& v, *cubeVertices)
       result.append(get(term_cube(), *graph, v));
-    }
     return result;
   }
 
   std::set<PolynomialIndex> getModifiedPolynomials() const
   {
     std::set<PolynomialIndex> polynomials;
-    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
+    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, *coKernelVertices)
     {
       const PolynomialIndex polynomialID = get(polynomial_id(), *graph, coKernelVertex);
       polynomials.insert(polynomialID);
@@ -274,13 +267,13 @@ public:
     const Cube newCube = get(term_cube(), *graph, newCubeVertex);
     std::set<std::pair<PolynomialIndex, std::size_t> > termIDs;
 
-    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, coKernelVertices)
+    BOOST_FOREACH(const vertex_descriptor& coKernelVertex, *coKernelVertices)
     {
       const PolynomialIndex polynomialID = get(polynomial_id(), *graph, coKernelVertex);
       BOOST_FOREACH(const edge_descriptor& edge, out_edges(coKernelVertex, *graph))
       {
         const vertex_descriptor cubeVertex = target(edge, *graph);
-        if (cubeVertices.find(cubeVertex) != cubeVertices.end())
+        if (cubeVertices->find(cubeVertex) != cubeVertices->end())
         {
           const std::pair<PolynomialIndex, std::size_t> termID = get(term_id(), *graph, edge);
 

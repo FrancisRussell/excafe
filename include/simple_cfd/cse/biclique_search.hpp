@@ -66,7 +66,7 @@ private:
       assert(oldSplitPoint != boost::graph_traits<graph_t>::null_vertex());
       int topScore = 0;
 
-      BOOST_FOREACH(const vertex_descriptor& coKernel, this->coKernelVertices)
+      BOOST_FOREACH(const vertex_descriptor& coKernel, *this->coKernelVertices)
       {
         typename base_t::VertexInfo currentCandidateInfo;
 
