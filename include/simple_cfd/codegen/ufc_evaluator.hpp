@@ -57,6 +57,11 @@ public:
     fields.insert(c.getField());
   }
 
+  void operator()(const cfd::detail::GenericSymbol& s)
+  {
+    CFD_EXCEPTION("GenericSymbol found in ScalarPlaceholder. This should never happen.");
+  }
+
   void operator()(const boost::blank&)
   {
     CFD_EXCEPTION("boost::blank found in ScalarPlaceholder. This should never happen.");

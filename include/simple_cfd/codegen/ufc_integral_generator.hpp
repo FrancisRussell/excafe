@@ -9,6 +9,7 @@
 #include <simple_cfd/capture/assembly/cell_vertex_component.hpp>
 #include <simple_cfd/capture/assembly/scalar_access.hpp>
 #include <simple_cfd/capture/assembly/basis_coefficient.hpp>
+#include <simple_cfd/capture/assembly/generic_symbol.hpp>
 #include <simple_cfd/cse/factorised_expression_visitor.hpp>
 #include <simple_cfd/cse/polynomial_index.hpp>
 #include <ostream>
@@ -117,6 +118,7 @@ public:
   result_type operator()(const cfd::detail::CellVertexComponent& c) const;
   result_type operator()(const cfd::detail::ScalarAccess& s) const;
   result_type operator()(const cfd::detail::BasisCoefficient& c) const;
+  result_type operator()(const cfd::detail::GenericSymbol& s) const;
   result_type operator()(const boost::blank&) const;
 };
 

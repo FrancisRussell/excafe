@@ -19,7 +19,7 @@ util/type_info.cpp symbolic/basic.cpp symbolic/sum.cpp symbolic/product.cpp \
 symbolic/expand_visitor.cpp symbolic/rational.cpp symbolic/group.cpp symbolic/collect_visitor.cpp \
 symbolic/polynomial.cpp symbolic/abstract_basic.cpp cse/sop_map.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
-util/apr_manager.cpp util/apr_pool.cpp symbolic/derivative_cache.cpp
+util/apr_manager.cpp util/apr_pool.cpp symbolic/derivative_cache.cpp \
 capture/assembly/generic_symbol.cpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include

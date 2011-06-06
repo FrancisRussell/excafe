@@ -159,11 +159,11 @@ public:
   {
   }
 
-  ExcafeExpression(const variable_t& v, const std::size_t e) : expr(pow(getSymbol(v), e)) 
+  ExcafeExpression(const variable_t& v, const std::size_t e) : expr(symbolic::pow(getSymbol(v), e)) 
   {
   }
 
-  ExcafeExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * pow(getSymbol(v), e)) 
+  ExcafeExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * symbolic::pow(getSymbol(v), e)) 
   {
   }
 

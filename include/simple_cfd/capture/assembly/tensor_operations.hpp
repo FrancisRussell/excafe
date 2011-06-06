@@ -38,7 +38,7 @@ public:
       const ScalarPlaceholder coord(position[d]);
       tensor_t derivative(operand);
       std::transform(derivative.begin(), derivative.end(), derivative.begin(),
-        PolynomialDifferentiator<expression_t>(coord));
+        ExpressionDifferentiator<expression_t>(coord));
       result.setElement(d, derivative);
     }
 

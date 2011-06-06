@@ -5,6 +5,7 @@
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/position_component.hpp>
 #include <simple_cfd/capture/assembly/cell_vertex_component.hpp>
+#include <simple_cfd/capture/assembly/generic_symbol.hpp>
 #include <simple_cfd/capture/assembly/scalar_access.hpp>
 #include <simple_cfd/capture/assembly/basis_coefficient.hpp>
 #include <simple_cfd/cse/factorised_expression_visitor.hpp>
@@ -139,6 +140,12 @@ ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd
   stream << generator.coefficientsName << "[" << generator.getFieldIndex(c.getField()) << "][" << c.getIndex() << "]";
   return stream.str();
 }
+
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::GenericSymbol& s) const
+{
+  CFD_EXCEPTION("GenericSymbol found in ScalarPlaceholder. This should never happen.");
+}
+
 
 ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const boost::blank&) const
 {
