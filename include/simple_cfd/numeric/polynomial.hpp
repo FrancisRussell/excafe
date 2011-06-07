@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <utility>
+#include <numeric>
 #include <iosfwd>
 #include <boost/operators.hpp>
 #include <boost/bind.hpp>
@@ -21,6 +22,7 @@
 #include "expression.hpp"
 #include "expression_visitor.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
+#include <simple_cfd/exception.hpp>
 
 namespace cfd
 {
@@ -87,6 +89,8 @@ private:
   }
 
 public:
+  static const bool supports_abs = false;
+
   typedef detail::ValueMap<variable_t, internal_value_t> value_map;
   typedef typename coefficient_map_t::iterator iterator;
   typedef typename coefficient_map_t::const_iterator const_iterator;
@@ -263,6 +267,19 @@ public:
     return result;
   }
 
+  Polynomial pow(const int n) const
+  {
+    if (n<0)
+      CFD_EXCEPTION("Polynomial cannot be raised to negative exponent.");
+
+    Polynomial result(1);
+
+    for(int i=0; i<n; ++i)
+      result *= *this;
+
+    return result;
+  }
+
   std::size_t degree(const variable_t& variable) const
   {
     std::size_t result = 0;
@@ -360,6 +377,12 @@ public:
     coefficients.swap(p.coefficients);
   }
 };
+
+template<typename V>
+Polynomial<V> pow(const Polynomial<V>& p, const int n)
+{
+  return p.pow(n);
+}
 
 template<typename V>
 std::ostream& operator<<(std::ostream& out, const Polynomial<V>& p)
