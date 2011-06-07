@@ -51,7 +51,7 @@ Expr Group::simplify() const
 {
   const Expr simplified = expr.simplify();
 
-  if (!is_exactly_a<Rational>(expr) && !is_exactly_a<Float>(expr))
+  if (!is_exactly_a<Rational>(simplified) && !is_exactly_a<Float>(simplified))
   {
     return Group(simplified).clone();
   }
