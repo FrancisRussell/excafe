@@ -204,14 +204,14 @@ public:
 
   PolynomialFraction reciprocal() const
   {
-    assert(divisor != 0);
-    return PolynomialFraction(dividend, divisor);
+    assert(dividend != 0);
+    return PolynomialFraction(divisor, dividend);
   }
 
   PolynomialFraction pow(const int n) const
   {
     const int absExponent = std::abs(n);
-    const PolynomialFraction raised(divisor.pow(absExponent), dividend.pow(absExponent));
+    const PolynomialFraction raised(dividend.pow(absExponent), divisor.pow(absExponent));
 
     if (n >= 0)
       return raised;
