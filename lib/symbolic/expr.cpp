@@ -5,6 +5,7 @@
 #include <simple_cfd/symbolic/sum.hpp>
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/abs.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/symbolic/flags.hpp>
@@ -204,6 +205,11 @@ Expr Expr::subs(const subst_map& subs, const unsigned flags) const
 Expr pow(const Expr& e, const int power)
 {
   return Product::pow(e, power).simplify();
+}
+
+Expr abs(const Expr& e)
+{
+  return Abs(e).simplify();
 }
 
 Float Expr::eval(const subst_map& map) const

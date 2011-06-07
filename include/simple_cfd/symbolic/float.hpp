@@ -45,6 +45,7 @@ public:
   Float& operator*=(const Float& n);
   Float& operator/=(const Float& n);
   Float pow(int exponent) const;
+  Float abs() const;
   std::size_t untypedHash() const;
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;

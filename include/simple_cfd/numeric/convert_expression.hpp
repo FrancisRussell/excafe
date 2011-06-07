@@ -3,9 +3,12 @@
 
 #include <stack>
 #include <cstddef>
+#include <boost/utility/enable_if.hpp>
+#include <boost/static_assert.hpp>
 #include "cast.hpp"
 #include "expression.hpp"
 #include "expression_visitor.hpp"
+#include "traits.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -21,7 +24,20 @@ private:
   typedef R result_type;
   typedef typename result_type::variable_t variable_t;
   typedef typename NumericExpressionVisitor<variable_t>::value_t value_t;
+
   std::stack<result_type> stack;
+
+  template<typename T>
+  static typename boost::disable_if_c<T::supports_abs, T>::type performAbs(const T& s)
+  {
+    CFD_EXCEPTION("Expression conversion result type does not support abs.");
+  }
+
+  template<typename T>
+  static typename boost::enable_if_c<T::supports_abs, T>::type performAbs(const T& s)
+  {
+    return abs(s);
+  }
 
 public:
   virtual void visitConstant(const value_t& s)
@@ -38,13 +54,14 @@ public:
   {
     const result_type val = stack.top();
     stack.pop();
+    stack.push(pow(val, exponent));
+  }
 
-    result_type result(1.0);
-
-    for(std::size_t i=0; i<std::abs(exponent); ++i)
-      result *= val;
-
-    stack.push(exponent>0 ? result : 1.0/result);
+  virtual void visitAbsoluteValue()
+  {
+    const result_type val = stack.top();
+    stack.pop();
+    stack.push(performAbs(val));
   }
 
   virtual void postSummation(const std::size_t nops)
@@ -80,13 +97,9 @@ public:
   result_type getResult() const
   {
     if (stack.size() != 1)
-    {
       CFD_EXCEPTION("Incorrect NumericExpressionVisitor use detected in NumericExpressionConverter.");
-    }
     else
-    {
       return stack.top();
-    }
   }
 };
 

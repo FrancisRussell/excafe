@@ -162,6 +162,11 @@ Float Float::pow(const int exponent) const
   return Float(std::pow(value, exponent));
 }
 
+Float Float::abs() const
+{
+  return Float(std::abs(value));
+}
+
 Float pow(const Float& f, const int exponent)
 {
   return f.pow(exponent);

@@ -39,6 +39,7 @@ private:
 public:
   void visitConstant(const typename parent_t::value_t& value) {}
   void visitExponent(const int n) {}
+  void visitAbsoluteValue() {}
   void postSummation(const std::size_t n) {}
   void postProduct(const std::size_t n) {}
 
@@ -77,6 +78,11 @@ public:
      visitor.visitExponent(n);
    }
 
+   void visitAbsoluteValue()
+   {
+     visitor.visitAbsoluteValue();
+   }
+
    void postSummation(const std::size_t n)
    {
      visitor.postSummation(n);
@@ -102,6 +108,8 @@ class ExcafeExpression : public NumericExpression<V>,
                         > >
 {
 public:
+  static const bool supports_abs = true;
+
   typedef double                                                value_type;
   typedef V                                                     variable_t;
   typedef ExcafeExpression<variable_t>                          optimised_t;
@@ -305,6 +313,11 @@ public:
   {
     return ExcafeExpression(symbolic::pow(expr, n));
   }
+  
+  ExcafeExpression abs() const
+  {
+    return ExcafeExpression(symbolic::abs(expr));
+  }
 
   std::set<variable_t> getVariables() const
   {
@@ -352,6 +365,12 @@ template<typename V>
 ExcafeExpression<V> pow(const ExcafeExpression<V>& e, const int n)
 {
   return e.pow(n);
+}
+
+template<typename V>
+ExcafeExpression<V> abs(const ExcafeExpression<V>& e)
+{
+  return e.abs();
 }
 
 }

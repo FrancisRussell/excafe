@@ -17,7 +17,7 @@ symbolic/expr.cpp symbolic/symbol.cpp symbolic/float.cpp \
 util/type_info.cpp symbolic/basic.cpp symbolic/sum.cpp symbolic/product.cpp \
 symbolic/expand_visitor.cpp symbolic/rational.cpp symbolic/group.cpp symbolic/collect_visitor.cpp \
 symbolic/polynomial.cpp symbolic/abstract_basic.cpp symbolic/derivative_cache.cpp \
-capture/assembly/generic_symbol.cpp
+capture/assembly/generic_symbol.cpp symbolic/abs.cpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \

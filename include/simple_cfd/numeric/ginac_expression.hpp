@@ -127,6 +127,8 @@ class GinacExpression : public NumericExpression<V>,
                         > >
 {
 public:
+  static const bool supports_abs = false;
+
   typedef double                                              value_type;
   typedef V                                                   variable_t;
   typedef OptimisedPolynomialFraction<variable_t>             optimised_t;
@@ -178,11 +180,11 @@ public:
   {
   }
 
-  GinacExpression(const variable_t& v, const std::size_t e) : expr(pow(getSymbol(v), e)) 
+  GinacExpression(const variable_t& v, const std::size_t e) : expr(GiNaC::pow(getSymbol(v), e)) 
   {
   }
 
-  GinacExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * pow(getSymbol(v), e)) 
+  GinacExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * GiNaC::pow(getSymbol(v), e)) 
   {
   }
 
@@ -243,6 +245,11 @@ public:
   {
     expr /= e.expr;
     return *this;
+  }
+  
+  GinacExpression pow(const int n) const
+  {
+    return GinacExpression(GiNaC::pow(expr, n));
   }
 
   void accept(NumericExpressionVisitor<variable_t>& v) const
@@ -326,6 +333,12 @@ public:
     }
   }
 };
+
+template<typename V>
+GinacExpression<V> pow(const GinacExpression<V>& e, const int n)
+{
+  return e.pow(n);
+}
 
 template<typename V>
 std::ostream& operator<<(std::ostream& o, const GinacExpression<V>& e)

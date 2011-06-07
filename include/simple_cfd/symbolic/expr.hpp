@@ -31,6 +31,8 @@ private:
   ref_t expr;
 
 public:
+  static const bool supports_abs = true;
+
   typedef std::map<Symbol, Expr> subst_map;
   typedef numeric::Orthotope<Symbol, Rational> region_t;
   typedef DerivativeCache derivative_cache;
@@ -107,6 +109,7 @@ std::size_t hash_value(const Expr& e);
 std::size_t hash_value(const Basic& b);
 
 Expr pow(const Expr& e, int power);
+Expr abs(const Expr& e);
 std::ostream& operator<<(std::ostream& o, const Expr& e);
 
 }
