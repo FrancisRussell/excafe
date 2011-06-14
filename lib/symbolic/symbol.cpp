@@ -87,6 +87,11 @@ Expr Symbol::integrate(const Symbol& s, const unsigned flags) const
     return Sum::rational_multiple(Product::pow(s, 2), Rational(1, 2));
 }
 
+Expr Symbol::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  return clone();
+}
+
 void Symbol::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   v.visitVariable(*this);

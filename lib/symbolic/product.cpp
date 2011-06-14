@@ -334,6 +334,22 @@ Expr Product::integrate(const Expr::region_t& region, const unsigned flags) cons
   return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
+Expr Product::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, std::make_pair(begin(), end()))
+  {
+    const Expr e = term.first.extractPolynomials(extracted);
+
+    if (term.second >= 0)
+      (*newTermMap)[e] += term.second;
+    else
+      (*newTermMap)[Product::pow(e, -1)] += std::abs(term.second);
+  }
+  return constructSimplifiedExpr(overall, newTermMap, NON_NORMALISED);
+}
+
 }
 
 }

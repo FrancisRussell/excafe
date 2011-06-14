@@ -3,6 +3,8 @@
 #include <simple_cfd/symbolic/rational.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/product.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
+#include <simple_cfd/symbolic/extracted_expressions.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <simple_cfd/exception.hpp>
 #include <set>
@@ -94,6 +96,12 @@ void Abs::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   expr.accept(v);
   v.visitAbsoluteValue();
+}
+
+Expr Abs::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  const Symbol subExpr = extracted.addRepresentable(expr.extractPolynomials(extracted));
+  return extracted.addUnrepresentable(Abs(subExpr));
 }
 
 }

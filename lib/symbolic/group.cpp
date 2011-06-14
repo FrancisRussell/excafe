@@ -1,7 +1,9 @@
 #include <simple_cfd/symbolic/group.hpp>
 #include <simple_cfd/symbolic/float.hpp>
 #include <simple_cfd/symbolic/rational.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/symbolic/extracted_expressions.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <set>
 #include <ostream>
@@ -86,6 +88,12 @@ std::size_t Group::untypedHash() const
 void Group::accept(NumericExpressionVisitor<Symbol>& v) const
 {
   expr.accept(v);
+}
+
+Expr Group::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  const Symbol subExpr = extracted.addRepresentable(expr.extractPolynomials(extracted));
+  return extracted.addUnrepresentable(Group(subExpr));
 }
 
 }

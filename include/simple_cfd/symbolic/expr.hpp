@@ -66,6 +66,7 @@ public:
   void traverse(Visitor& v) const;
   void swap(Expr& e);
   Expr expand(bool distribute = true) const;
+  Expr extractPolynomials(ExtractedExpressions& extracted) const;
   Float eval(const subst_map& map) const;
 };
 

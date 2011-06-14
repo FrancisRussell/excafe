@@ -217,6 +217,11 @@ Float Expr::eval(const subst_map& map) const
   return expr->eval(map);
 }
 
+Expr Expr::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  return expr->extractPolynomials(extracted);
+}
+
 }
 
 }

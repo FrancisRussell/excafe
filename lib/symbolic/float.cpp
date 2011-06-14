@@ -172,6 +172,11 @@ Float pow(const Float& f, const int exponent)
   return f.pow(exponent);
 }
 
+Expr Float::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  return clone();
+}
+
 }
 
 }

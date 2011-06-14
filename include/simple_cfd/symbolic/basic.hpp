@@ -39,6 +39,7 @@ public:
   virtual bool depends(const std::set<Symbol>& e) const = 0;
   virtual void accept(Visitor& v) const = 0;
   virtual void accept(NumericExpressionVisitor<Symbol>& v) const = 0;
+  virtual Expr extractPolynomials(ExtractedExpressions& extracted) const = 0;
   virtual ~Basic() {}
 };
 

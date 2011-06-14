@@ -284,6 +284,18 @@ Expr Sum::integrate(const Expr::region_t& region, const unsigned flags) const
   return constructSimplifiedExpr(getOverall() * region.getVolume(), resultTerms, NON_NORMALISED);
 }
 
+Expr Sum::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  LazyTermMap newTermMap;
+
+  BOOST_FOREACH(const TermMap::value_type& term, std::make_pair(begin(), end()))
+  {
+    const Expr e = term.first.extractPolynomials(extracted);
+    (*newTermMap)[e] += term.second;
+  }
+  return constructSimplifiedExpr(overall, newTermMap, NON_NORMALISED);
+}
+
 }
 
 }

@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <cstdlib>
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
@@ -278,6 +279,7 @@ public:
         independent.insert(d);
     }
   }
+
 };
 
 }

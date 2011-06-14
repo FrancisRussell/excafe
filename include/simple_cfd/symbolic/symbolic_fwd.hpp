@@ -15,6 +15,7 @@ class Rational;
 class Group;
 class Visitor;
 class DerivativeCache;
+class ExtractedExpressions;
 template<typename T> class AbstractBasic;
 template<typename T, typename C> class PairSeq;
 

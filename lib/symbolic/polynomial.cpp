@@ -362,6 +362,11 @@ void Polynomial::write(std::ostream& out) const
   }
 }
 
+Expr Polynomial::extractPolynomials(ExtractedExpressions& extracted) const
+{
+  return clone();
+}
+
 std::ostream& operator<<(std::ostream& o, const Polynomial& p)
 {
   p.write(o);

@@ -50,6 +50,7 @@ public:
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   Expr extractMultiplier(Rational& coeff) const;
+  Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 
 Float pow(const Float& f, int exponent);

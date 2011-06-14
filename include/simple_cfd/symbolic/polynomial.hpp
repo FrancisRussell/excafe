@@ -14,9 +14,9 @@
 #include <boost/foreach.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/abstract_basic.hpp>
+#include "symbol.hpp"
+#include "expr.hpp"
+#include "abstract_basic.hpp"
 
 namespace cfd
 {
@@ -472,6 +472,7 @@ public:
   Polynomial& operator*=(const Rational& r);
   void write(std::ostream& out) const;
   Expr toSum() const;
+  Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 
 std::ostream& operator<<(std::ostream& o, const Polynomial& p);

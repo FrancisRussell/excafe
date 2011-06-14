@@ -52,6 +52,7 @@ public:
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   Expr extractMultiplier(Rational& coeff) const;
   Expr integrate(const Expr::region_t& region, const unsigned flags) const;
+  Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 
 }

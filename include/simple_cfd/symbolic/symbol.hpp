@@ -40,6 +40,7 @@ public:
   Expr subs(const Expr::subst_map& map, unsigned flags) const;
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  Expr extractPolynomials(ExtractedExpressions& extracted) const;
 
   bool operator==(const Symbol& s) const
   {
