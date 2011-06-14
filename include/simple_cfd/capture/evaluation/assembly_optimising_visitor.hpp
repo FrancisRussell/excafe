@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <set>
 #include <iostream>
+#include <boost/foreach.hpp>
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
@@ -13,6 +14,8 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
+#include <simple_cfd/codegen/ufc_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
 
 namespace cfd
 {
@@ -93,18 +96,15 @@ public:
     localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
 
     std::cout << "Integrated local-matrix expression..." << std::endl;
-
-    //std::cout << localMatrix << std::endl;
-
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
-
-    std::cout << "Built optimised local-matrix expression..." << std::endl;
+    
+    const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
+      codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
 
     /* 
        FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
        depending on whether they're cell or facet, and if facet, internal or external facets.
     */
-    scenario.setOptimisedCellIntegral(a, optimisedLocalMatrix);
+    scenario.setOptimisedCellIntegral(a, evaluator);
   }
 };
 

@@ -35,17 +35,18 @@ class Polynomial : public NumericExpression<V>,
                    boost::totally_ordered< Polynomial<V>
                    > > > >
 {
+private:
+  static const std::size_t precision = 32;
+
 public:
   typedef V variable_t;
   typedef double value_type;
   typedef OptimisedPolynomial<variable_t> optimised_t;
-
-private:
-  //typedef double internal_value_t;
-  static const std::size_t precision = 32;
   typedef CLNWrapper<precision> internal_value_t;
   typedef Monomial<variable_t, internal_value_t> monomial_t;
   typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
+
+private:
   util::LazyCopy<coefficient_map_t> coefficients;
 
   void addTerm(const internal_value_t& coefficient, const variable_t& variable, const std::size_t exponent)

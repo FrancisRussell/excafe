@@ -222,7 +222,7 @@ public:
   {
     std::size_t dofsPerCell = 0;
     for(typename std::set<const finite_element_t*>::const_iterator elementIter(elements.begin()); elementIter!=elements.end(); ++elementIter)
-      dofsPerCell += (*elementIter)->space_dimension();
+      dofsPerCell += (*elementIter)->spaceDimension();
 
     return dofsPerCell;
   }
