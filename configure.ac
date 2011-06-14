@@ -14,6 +14,9 @@ CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
 AC_PROG_CXX
 AC_PROG_CC
 
+# C++ compiler for Excafe.
+AC_DEFINE_UNQUOTED(EXCAFE_CXX_COMPILER, "${CXX}", [C++ compiler that Excafe will use at run-time.])
+
 # Checks for libraries.
 
 # Checks for header files.
@@ -40,8 +43,12 @@ CXXFLAGS="$CXXFLAGS $GINAC_CFLAGS"
 AC_SUBST(GINAC_LIBS)
 
 PKG_CHECK_MODULES([LIBXML2], [libxml-2.0])
-AC_SUBST(LIBXML2_CFLAGS)
+CXXFLAGS="$CXXFLAGS $LIBXML2_CFLAGS"
 AC_SUBST(LIBXML2_LIBS)
+
+PKG_CHECK_MODULES([APR1], [apr-1])
+CXXFLAGS="$CXXFLAGS $APR1_CFLAGS"
+AC_SUBST(APR1_LIBS)
 
 # Check for MTL
 #AC_ARG_WITH([mtl],
