@@ -341,6 +341,11 @@ void UFCIntegralGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index
   pushProduct(getName(index));
 }
 
+void UFCIntegralGenerator::visitAbsoluteValue()
+{
+  CFD_EXCEPTION("Code generation unimplemented for call to modulus.");
+}
+
 void UFCIntegralGenerator::postOriginalTerm(const unsigned index)
 {
   out << "    " << resultName << "[" << index << "] = ";

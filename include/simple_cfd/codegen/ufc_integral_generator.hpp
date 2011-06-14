@@ -95,6 +95,7 @@ public:
   void visitConstant(const value_t& s);
   void visitVariable(const variable_t& var);
   void visitExponent(const int exponent);
+  void visitAbsoluteValue();
   void postSummation(const std::size_t nops);
   void postProduct(const std::size_t nops);
   void visitOriginalTerm(const unsigned index);

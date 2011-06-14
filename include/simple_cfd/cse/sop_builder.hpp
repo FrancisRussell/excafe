@@ -145,6 +145,11 @@ public:
     pushCube(c);
   }
 
+  void visitAbsoluteValue()
+  {
+    CFD_EXCEPTION("Cannot build a sum-of-products containing a modulus.");
+  }
+
   void postSummation(const std::size_t nops)
   {
     if (stack.size() < nops)
