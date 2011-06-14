@@ -128,7 +128,7 @@ private:
   static symbol_t getSymbol(const variable_t& var)
   {
     detail::ExcafeMapper<variable_t>& mapper(detail::ExcafeMapper<variable_t>::instance());
-    return mapper.getExcafeSymbol(var);
+    return mapper.getSymbol(var);
   }
 
   static variable_t getVariable(const symbol_t& s)

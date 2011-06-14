@@ -9,6 +9,7 @@
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/util/singleton.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
+#include "symbol_mapper.hpp"
 
 namespace cfd
 {
@@ -17,7 +18,7 @@ namespace detail
 {
 
 template<typename T>
-class ExcafeMapper : boost::noncopyable
+class ExcafeMapper : boost::noncopyable, public SymbolMapper<T, symbolic::Symbol>
 {
 private:
   friend class util::Singleton< ExcafeMapper<T> >;
@@ -43,7 +44,7 @@ public:
     return util::Singleton<ExcafeMapper>::getInstance();
   }
 
-  value_type getExcafeSymbol(const key_type& k)
+  value_type getSymbol(const key_type& k)
   {
     checkConsistent();
 

@@ -9,6 +9,8 @@
 #include "expression.hpp"
 #include "expression_visitor.hpp"
 #include "traits.hpp"
+#include "symbol_mapper.hpp"
+#include "identity_symbol_mapper.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -17,14 +19,16 @@ namespace cfd
 namespace
 {
 
-template<typename R>
-class NumericExpressionConverter : public NumericExpressionVisitor<typename R::variable_t>
+template<typename R, typename V>
+class NumericExpressionConverter : public NumericExpressionVisitor<V>
 {
 private:
   typedef R result_type;
-  typedef typename result_type::variable_t variable_t;
-  typedef typename NumericExpressionVisitor<variable_t>::value_t value_t;
+  typedef V source_variable_t;
+  typedef typename result_type::variable_t result_variable_t;
+  typedef typename NumericExpressionVisitor<source_variable_t>::value_t value_t;
 
+  detail::SymbolMapper<source_variable_t, result_variable_t>& mapper;
   std::stack<result_type> stack;
 
   template<typename T>
@@ -40,14 +44,18 @@ private:
   }
 
 public:
+  NumericExpressionConverter(detail::SymbolMapper<source_variable_t, result_variable_t>& _mapper) : mapper(_mapper)
+  {
+  }
+
   virtual void visitConstant(const value_t& s)
   {
     stack.push(result_type(cfd::numeric_cast<typename result_type::value_type>(s)));
   }
 
-  virtual void visitVariable(const variable_t& var)
+  virtual void visitVariable(const source_variable_t& var)
   {
-    stack.push(result_type(var));
+    stack.push(result_type(mapper.getSymbol(var)));
   }
 
   virtual void visitExponent(const int exponent)
@@ -108,12 +116,20 @@ public:
 namespace detail
 {
 
+template<typename result_type, typename source_symbol_type>
+result_type convert_expression(const NumericExpression<source_symbol_type>& e, 
+                               SymbolMapper<source_symbol_type, typename result_type::variable_t>& mapper)
+{
+  NumericExpressionConverter<result_type, source_symbol_type> converter(mapper);
+  e.accept(converter);
+  return converter.getResult();
+}
+
 template<typename result_type>
 result_type convert_expression(const NumericExpression<typename result_type::variable_t>& e)
 {
-  NumericExpressionConverter<result_type> converter;
-  e.accept(converter);
-  return converter.getResult();
+  detail::IdentitySymbolMapper<typename result_type::variable_t> identityMapper;
+  return convert_expression<result_type>(e, identityMapper);
 }
 
 }

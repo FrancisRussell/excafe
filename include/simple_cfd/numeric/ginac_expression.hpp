@@ -145,7 +145,7 @@ private:
   static ginac_symbol_t getSymbol(const variable_t& var)
   {
     detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
-    return mapper.getGiNaCSymbol(var);
+    return mapper.getSymbol(var);
   }
 
   static variable_t getVariable(const ginac_symbol_t& s)
