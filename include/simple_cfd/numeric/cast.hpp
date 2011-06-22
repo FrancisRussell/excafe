@@ -17,6 +17,24 @@ struct RawConverter
 };
 
 template<>
+struct RawConverter<cln::cl_R, float>
+{
+  static double low_level_convert(const cln::cl_R& s) 
+  { 
+    return cln::float_approx(s);
+  }
+};
+
+template<>
+struct RawConverter<cln::cl_R, double>
+{
+  static double low_level_convert(const cln::cl_R& s) 
+  { 
+    return cln::double_approx(s);
+  }
+};
+
+template<>
 struct RawConverter<cln::cl_F, float>
 {
   static float low_level_convert(const cln::cl_F& s) 
@@ -33,25 +51,6 @@ struct RawConverter<cln::cl_F, double>
     return cln::double_approx(s);
   }
 };
-
-template<>
-struct RawConverter<cln::cl_R, double>
-{
-  static double low_level_convert(const cln::cl_R& s) 
-  { 
-    return cln::double_approx(s);
-  }
-};
-
-template<>
-struct RawConverter<cln::cl_R, float>
-{
-  static double low_level_convert(const cln::cl_R& s) 
-  { 
-    return cln::float_approx(s);
-  }
-};
-
 
 }
 
