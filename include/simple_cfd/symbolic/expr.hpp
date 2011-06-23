@@ -51,6 +51,7 @@ public:
   Expr operator-() const;
   bool depends(const Symbol& s) const;
   bool depends(const std::set<Symbol>& symbols) const;
+  std::set<Symbol> getSymbols() const;
   void write(std::ostream& o) const;
   std::size_t hashValue() const;
   Expr derivative(const Symbol& s, 
