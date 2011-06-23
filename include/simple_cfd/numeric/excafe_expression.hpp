@@ -15,6 +15,7 @@
 #include "optimised_polynomial_fraction.hpp"
 #include "excafe_mapper.hpp"
 #include "excafe_value_map.hpp"
+#include "symbol_collector.hpp"
 #include <simple_cfd/exception.hpp>
 #include <simple_cfd/symbolic/expr.hpp>
 #include <simple_cfd/symbolic/float.hpp>
@@ -27,33 +28,6 @@ namespace cfd
 
 namespace 
 {
-
-template<typename V>
-class ExcafeSymbolCollector : public NumericExpressionVisitor<V>
-{
-private:
-  typedef V variable_t;
-  typedef NumericExpressionVisitor<variable_t> parent_t;
-  std::set<variable_t> symbols;
-
-public:
-  void visitConstant(const typename parent_t::value_t& value) {}
-  void visitExponent(const int n) {}
-  void visitAbsoluteValue() {}
-  void postSummation(const std::size_t n) {}
-  void postProduct(const std::size_t n) {}
-
-  void visitVariable(const variable_t& v)
-  {
-    symbols.insert(v);
-  }
-
-  std::set<variable_t> getSymbols() const
-  {
-    return symbols;
-  }
-};
-
 
 template<typename V>
 class ExcafeVisitorAdapter : public NumericExpressionVisitor<symbolic::Symbol>
@@ -321,7 +295,7 @@ public:
 
   std::set<variable_t> getVariables() const
   {
-    ExcafeSymbolCollector<variable_t> collector;
+    detail::SymbolCollector<variable_t> collector;
     accept(collector);
     return collector.getSymbols();
   }

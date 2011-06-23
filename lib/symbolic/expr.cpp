@@ -9,6 +9,7 @@
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/symbolic/flags.hpp>
+#include <simple_cfd/numeric/symbol_collector.hpp>
 #include <ostream>
 #include <cassert>
 #include <boost/optional.hpp>
@@ -220,6 +221,13 @@ Float Expr::eval(const subst_map& map) const
 Expr Expr::extractPolynomials(ExtractedExpressions& extracted) const
 {
   return expr->extractPolynomials(extracted);
+}
+
+std::set<Symbol> Expr::getSymbols() const
+{
+  cfd::detail::SymbolCollector<Symbol> collector;
+  accept(collector);
+  return collector.getSymbols();
 }
 
 }
