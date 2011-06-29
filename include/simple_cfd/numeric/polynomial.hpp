@@ -23,6 +23,8 @@
 #include "expression_visitor.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 #include <simple_cfd/exception.hpp>
+#include <cln/integer.h>
+#include <cln/float.h>
 
 namespace cfd
 {
@@ -107,6 +109,12 @@ public:
   Polynomial(const value_type constant)
   {
     addConstant(constant);
+    cleanZeros();
+  }
+
+  Polynomial(const cln::cl_R& constant)
+  {
+    addConstant(cfd::numeric_cast<value_type>(constant));
     cleanZeros();
   }
 
