@@ -12,6 +12,8 @@
 #include <simple_cfd/numeric/expression.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
 #include <simple_cfd/numeric/orthotope.hpp>
+#include <cln/float.h>
+#include <cln/rational.h>
 
 namespace cfd
 {
@@ -33,6 +35,7 @@ private:
 public:
   static const bool supports_abs = true;
 
+  typedef Symbol variable_t;
   typedef std::map<Symbol, Expr> subst_map;
   typedef numeric::Orthotope<Symbol, Rational> region_t;
   typedef DerivativeCache derivative_cache;
@@ -42,6 +45,9 @@ public:
   Expr();
   Expr(const double s);
   Expr(const long s);
+  Expr(const int s);
+  Expr(const cln::cl_RA& s);
+  Expr(const cln::cl_F& s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
   Expr& operator+=(const Expr& e);

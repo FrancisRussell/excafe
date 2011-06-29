@@ -4,6 +4,9 @@
 #include "cse_fwd.hpp"
 #include <simple_cfd/numeric/factoriser.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
+#include <simple_cfd/numeric/cast.hpp>
+#include <simple_cfd/symbolic/expr.hpp>
+#include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/exception.hpp>
 #include <stack>
 #include <set>
@@ -19,15 +22,16 @@ namespace cse
 {
 
 template<typename V>
-class SOPBuilder : public NumericExpressionVisitor<V>
+class SOPBuilder : public NumericExpressionVisitor<symbolic::Symbol>
 {
 private:
-  typedef NumericExpressionVisitor<V> parent_t;
+  typedef NumericExpressionVisitor<symbolic::Symbol> parent_t;
   typedef typename parent_t::variable_t variable_t;
-  typedef typename parent_t::value_t    value_t;
+  typedef typename parent_t::float_t    float_t;
+  typedef typename parent_t::integer_t  integer_t;
 
   Factoriser factoriser;
-  CSEOptimiser<variable_t>& optimiser;
+  CSEOptimiser<V>& optimiser;
 
 private:
   // SOPs don't enforce uniqueness so we use a set of cubes to represent an SOP
@@ -71,7 +75,7 @@ private:
     const sop_t terms = stack.top(); stack.pop();
 
     if (terms.empty())
-      return Cube(optimiser.getLiteralID(value_t(0)));
+      return Cube(optimiser.getLiteralID(integer_t(0)));
     else if (terms.size() == 1)
       return *terms.begin();
     else
@@ -91,11 +95,11 @@ private:
   }
 
 public:
-  SOPBuilder(CSEOptimiser<variable_t>& _optimiser) : optimiser(_optimiser)
+  SOPBuilder(CSEOptimiser<V>& _optimiser) : optimiser(_optimiser)
   {
   }
 
-  SOP getSOP(const NumericExpression<variable_t>& e)
+  SOP getSOP(const symbolic::Expr& e)
   {
     assert(stack.empty());
     e.accept(*this);
@@ -106,33 +110,30 @@ public:
     return result;
   }
 
-  void visitConstant(const value_t& s)
+  void visitConstant(const float_t& s)
   {
-    // Checks if s is an integer.
-    if (cln::instanceof(s, cln::cl_I_ring))
-    {
-      typedef Factoriser::power_t power_t;
-
-      const std::vector<power_t> factorMap = factoriser.factor(cln::the<cln::cl_I>(s));
-      BOOST_FOREACH(const power_t& power, factorMap)
-      {
-        const unsigned literalID = optimiser.getLiteralID(power.first);
-        pushLiteral(literalID);
-
-        if (power.second != 1)
-          visitExponent(cln::cl_I_to_int(power.second));
-      }
-
-      postProduct(factorMap.size());
-    }
-    else
-    {
-      const unsigned literalID = optimiser.getLiteralID(s);
-      pushLiteral(literalID);
-    }
+    const unsigned literalID = optimiser.getLiteralID(s);
+    pushLiteral(literalID);
   }
 
-  void visitVariable(const variable_t& var)
+  void visitConstant(const integer_t& s)
+  {
+    typedef Factoriser::power_t power_t;
+
+    const std::vector<power_t> factorMap = factoriser.factor(s);
+    BOOST_FOREACH(const power_t& power, factorMap)
+    {
+      const unsigned literalID = optimiser.getLiteralID(power.first);
+      pushLiteral(literalID);
+
+      if (power.second != 1)
+        visitExponent(cln::cl_I_to_int(power.second));
+    }
+
+    postProduct(factorMap.size());
+  }
+
+  void visitVariable(const symbolic::Symbol& var)
   {
     const unsigned literalID = optimiser.getLiteralID(var);
     pushLiteral(literalID);

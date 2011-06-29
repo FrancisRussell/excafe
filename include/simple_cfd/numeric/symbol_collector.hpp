@@ -19,7 +19,8 @@ private:
   std::set<variable_t> symbols;
 
 public:
-  void visitConstant(const typename parent_t::value_t& value) {}
+  void visitConstant(const typename parent_t::integer_t& value) {}
+  void visitConstant(const typename parent_t::float_t& value) {}
   void visitExponent(const int n) {}
   void visitAbsoluteValue() {}
   void postSummation(const std::size_t n) {}

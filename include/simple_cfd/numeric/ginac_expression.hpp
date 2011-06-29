@@ -15,6 +15,7 @@
 #include "convert_expression.hpp"
 #include "optimised_polynomial_fraction.hpp"
 #include <simple_cfd/exception.hpp>
+#include <cln/real.h>
 
 namespace cfd
 {
@@ -83,8 +84,32 @@ public:
 
   void visit(const GiNaC::numeric& n)
   {
-    const cln::cl_R value = cln::realpart(n.to_cl_N());
-    visitor.visitConstant(value);
+    const cln::cl_N value = n.to_cl_N();
+
+    if (cln::instanceof(value, cln::cl_R_ring))
+    {
+      if (cln::instanceof(value, cln::cl_RA_ring))
+      {
+        const cln::cl_RA& rational = cln::the<cln::cl_RA>(value);
+        visitor.visitConstant(cln::numerator(rational));
+
+        if (cln::denominator(rational) != 1)
+        {
+          visitor.visitConstant(cln::denominator(rational));
+          visitor.visitExponent(-1);
+          visitor.postProduct(2);
+        }
+      }
+      else
+      {
+        const cln::cl_F& floatVal = cln::the<cln::cl_F>(value);
+        visitor.visitConstant(floatVal);
+      }
+    }
+    else
+    {
+      CFD_EXCEPTION("GiNaC expression contains non-real value.");
+    }
   }
 
   void visit(const GiNaC::power& p)
@@ -173,6 +198,10 @@ public:
   }
 
   GinacExpression(const variable_t& v) : expr(getSymbol(v)) 
+  {
+  }
+
+  GinacExpression(const cln::cl_R& c) : expr(ginac_numeric_t(c))
   {
   }
 

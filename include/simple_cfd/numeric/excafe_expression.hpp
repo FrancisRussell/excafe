@@ -42,7 +42,12 @@ public:
    {
    }
 
-   void visitConstant(const parent_t::value_t& value)
+   void visitConstant(const parent_t::integer_t& value)
+   {
+     visitor.visitConstant(value);
+   }
+
+   void visitConstant(const parent_t::float_t& value)
    {
      visitor.visitConstant(value);
    }
@@ -95,7 +100,6 @@ public:
 private:
   typedef symbolic::Expr    expr_t;
   typedef symbolic::Symbol  symbol_t;
-  typedef symbolic::Float   numeric_t;
   
   expr_t expr;
 
@@ -121,15 +125,23 @@ public:
     return ExcafeExpression(symbolic::Group(e.expr).clone());
   }
 
-  ExcafeExpression() : expr(numeric_t(0.0))
+  ExcafeExpression()
   {
   }
 
-  ExcafeExpression(const value_type s) : expr(numeric_t(s)) 
+  ExcafeExpression(const value_type s) : expr(s) 
   {
   }
 
   ExcafeExpression(const symbolic::Rational& s) : expr(s) 
+  {
+  }
+
+  ExcafeExpression(const cln::cl_RA& s) : expr(s) 
+  {
+  }
+
+  ExcafeExpression(const cln::cl_F& s) : expr(s) 
   {
   }
 

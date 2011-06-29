@@ -4,6 +4,7 @@
 #include <simple_cfd/symbolic/product.hpp>
 #include <simple_cfd/symbolic/symbol.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
+#include <simple_cfd/numeric/cast.hpp>
 #include <simple_cfd/util/hash.hpp>
 #include <cln/real.h>
 #include <set>
@@ -149,7 +150,7 @@ Expr Float::extractMultiplier(Rational& coeff) const
 
 void Float::accept(NumericExpressionVisitor<Symbol>& v) const
 {
-  v.visitConstant(value);
+  v.visitConstant(cfd::numeric_cast<NumericExpressionVisitor<Symbol>::float_t>(value));
 }
 
 double Float::toDouble() const

@@ -92,7 +92,8 @@ public:
   void writeSum();
   void outputPrefix();
   void outputPostfix();
-  void visitConstant(const value_t& s);
+  void visitConstant(const float_t& s);
+  void visitConstant(const integer_t& s);
   void visitVariable(const variable_t& var);
   void visitExponent(const int exponent);
   void visitAbsoluteValue();

@@ -24,9 +24,8 @@ class NumericExpressionConverter : public NumericExpressionVisitor<V>
 {
 private:
   typedef R result_type;
-  typedef V source_variable_t;
   typedef typename result_type::variable_t result_variable_t;
-  typedef typename NumericExpressionVisitor<source_variable_t>::value_t value_t;
+  typedef V source_variable_t;
 
   detail::SymbolMapper<source_variable_t, result_variable_t>& mapper;
   std::stack<result_type> stack;
@@ -48,31 +47,36 @@ public:
   {
   }
 
-  virtual void visitConstant(const value_t& s)
+  void visitConstant(const typename NumericExpressionVisitor<V>::float_t& s)
   {
-    stack.push(result_type(cfd::numeric_cast<typename result_type::value_type>(s)));
+    stack.push(result_type(s));
   }
 
-  virtual void visitVariable(const source_variable_t& var)
+  void visitConstant(const typename NumericExpressionVisitor<V>::integer_t& s)
+  {
+    stack.push(result_type(s));
+  }
+
+  void visitVariable(const source_variable_t& var)
   {
     stack.push(result_type(mapper.getSymbol(var)));
   }
 
-  virtual void visitExponent(const int exponent)
+  void visitExponent(const int exponent)
   {
     const result_type val = stack.top();
     stack.pop();
     stack.push(pow(val, exponent));
   }
 
-  virtual void visitAbsoluteValue()
+  void visitAbsoluteValue()
   {
     const result_type val = stack.top();
     stack.pop();
     stack.push(performAbs(val));
   }
 
-  virtual void postSummation(const std::size_t nops)
+  void postSummation(const std::size_t nops)
   {
     if (stack.size() < nops)
       CFD_EXCEPTION("Too few operands on stack for sum in NumericExpressionConverter.");
@@ -87,7 +91,7 @@ public:
     stack.push(result);
   }
 
-  virtual void postProduct(const std::size_t nops)
+  void postProduct(const std::size_t nops)
   {
     if (stack.size() < nops)
       CFD_EXCEPTION("Too few operands on stack for product in NumericExpressionConverter.");
