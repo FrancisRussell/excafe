@@ -37,6 +37,7 @@ public:
   const_iterator begin() const;
   const_iterator end() const;
 
+  PolynomialIndex reserveIndex();
   std::vector<PolynomialIndex> reserveIndices(const std::size_t count);
   PolynomialIndex addSOP(const SOP& sop);
 

@@ -22,6 +22,13 @@ SOPMap::const_iterator SOPMap::end() const
   return map.end();
 }
 
+PolynomialIndex SOPMap::reserveIndex()
+{
+  const PolynomialIndex index = newIndex();
+  map.insert(std::make_pair(index, SOP()));
+  return index;
+}
+
 std::vector<PolynomialIndex> SOPMap::reserveIndices(const std::size_t count)
 {
   std::vector<PolynomialIndex> result;
