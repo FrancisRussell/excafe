@@ -345,7 +345,6 @@ void UFCIntegralGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index
 
 void UFCIntegralGenerator::visitAbsoluteValue()
 {
-  CFD_EXCEPTION("Code generation unimplemented for call to modulus.");
   assert(!stack.empty());
 
   const sum_t sum = stack.top(); stack.pop();
