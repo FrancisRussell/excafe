@@ -55,8 +55,11 @@ Symbol ExtractedExpressions::addExpression(const Expr& e, const bool isRepresent
 
   if (createSymbol)
   {
+    // Avoid creating new symbols for numeric values
+    const Expr rhs = (is_exactly_a<Rational>(e) || !found) ? e : exprIter->first;
+
     const Symbol newSym = allocateSymbol(found || isRepresentable);
-    const expr_mapping_t newEntry(newSym, (found ? exprIter->first : e));
+    const expr_mapping_t newEntry(newSym, rhs);
     expressions.insert(newEntry);
     return newSym;
   }
