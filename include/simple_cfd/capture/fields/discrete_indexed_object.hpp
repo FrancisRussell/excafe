@@ -159,7 +159,7 @@ public:
     TemporalIndexOffset offset = indexExpr.getOffset();
     TemporalIndexOffset::offset_t offsetType = offset.getType();
 
-    const InsideLoopHelper helper;
+    InsideLoopHelper helper;
     return boost::apply_visitor(helper, offsetType);
   }
 

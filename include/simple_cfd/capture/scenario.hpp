@@ -31,6 +31,7 @@
 #include "evaluation/function_space_resolver.hpp"
 #include "evaluation/boundary_condition_builder.hpp"
 #include "evaluation/assembly_optimising_visitor.hpp"
+#include "evaluation/local_assembly_matrix_evaluator.hpp"
 
 namespace cfd
 {
@@ -43,13 +44,13 @@ private:
   typedef vertex<dimension> vertex_type;
   typedef typename DofMap<dimension>::dof_t dof_t;
   typedef detail::FunctionSpaceExpr* function_space_ptr;
-  typedef detail::LocalAssemblyMatrix<dimension, detail::ScalarPlaceholder::optimised_expression_t> local_assembly_matrix_t;
+  typedef detail::LocalAssemblyMatrixEvaluator<dimension> cell_integral_t;
 
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::map< std::string, DiscreteField<dimension> > persistentFields;
-  std::map< const detail::OperatorAssembly*, local_assembly_matrix_t > optimisedCellIntegrals;
+  std::map< const detail::OperatorAssembly*, cell_integral_t> optimisedCellIntegrals;
   std::vector< DiscreteField<dimension> > boundaryValues;
 
   boost::tuple<double, double, double> getValue(const std::size_t cid, const vertex_type& vertex, 
@@ -260,20 +261,21 @@ public:
     }
   }
 
-  void setOptimisedCellIntegral(const detail::OperatorAssembly& assembly, const local_assembly_matrix_t& matrix)
+  void setOptimisedCellIntegral(const detail::OperatorAssembly& assembly,
+                                const cell_integral_t& evaluator)
   {
-    optimisedCellIntegrals.insert(std::make_pair(&assembly, matrix));
+    optimisedCellIntegrals.insert(std::make_pair(&assembly, evaluator));
   }
 
-  std::map<MeshEntity, local_assembly_matrix_t> getOptimisedCellIntegral(const detail::OperatorAssembly& assembly) const
+  std::map<MeshEntity, cell_integral_t> getOptimisedCellIntegral(const detail::OperatorAssembly& assembly) const
   {
     const MeshEntity cellEntity(dimension, 0);
-    typename std::map<const detail::OperatorAssembly*, local_assembly_matrix_t>::const_iterator matIter =
+    typename std::map<const detail::OperatorAssembly*, cell_integral_t>::const_iterator matIter =
       optimisedCellIntegrals.find(&assembly);
     
     if (matIter != optimisedCellIntegrals.end())
     {
-      std::map<MeshEntity, local_assembly_matrix_t> matrices;
+      std::map<MeshEntity, cell_integral_t> matrices;
       matrices.insert(std::make_pair(cellEntity, matIter->second));
       return matrices;
     }

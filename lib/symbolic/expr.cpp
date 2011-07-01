@@ -8,6 +8,7 @@
 #include <simple_cfd/symbolic/abs.hpp>
 #include <simple_cfd/symbolic/expand_visitor.hpp>
 #include <simple_cfd/symbolic/make_expr_from.hpp>
+#include <simple_cfd/symbolic/extracted_expressions.hpp>
 #include <simple_cfd/symbolic/flags.hpp>
 #include <simple_cfd/numeric/symbol_collector.hpp>
 #include <ostream>
@@ -32,6 +33,18 @@ Expr::Expr(const double s) : expr(make_expr_from(Float(s)).expr)
 }
 
 Expr::Expr(const long s) : expr(make_expr_from(Rational(s)).expr)
+{
+}
+
+Expr::Expr(const int s) : expr(make_expr_from(Rational(s)).expr)
+{
+}
+
+Expr::Expr(const cln::cl_RA& s) : expr(make_expr_from(Rational(s)).expr)
+{
+}
+
+Expr::Expr(const cln::cl_F& s) : expr(make_expr_from(Float(s)).expr)
 {
 }
 

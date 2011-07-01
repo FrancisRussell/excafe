@@ -5,6 +5,8 @@
 #include "symbol.hpp"
 #include "expr.hpp"
 #include <utility>
+#include <vector>
+#include <set>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -37,14 +39,31 @@ private:
     >
   > expr_map_t;
 
-  expr_map_t representable;
-  expr_map_t unrepresentable;
+  std::size_t nextID;
+  std::set<Symbol> representable;
+  expr_map_t expressions;
 
-  static Symbol addExpression(expr_map_t& map, const Expr& e, bool newSymbol);
+  Symbol addExpression(const Expr& e, bool isRepresentable, bool topLevel);
+  void getTopologicallySortedHelper(std::vector<Symbol>& result, std::set<Symbol>& seen, const Symbol& current) const;
+  Symbol allocateSymbol(bool isRepresentable);
 
 public:
-  Symbol addRepresentable(const Expr& e, bool newSymbol = false);
-  Symbol addUnrepresentable(const Expr& e, bool newSymbol = false);
+  typedef expr_mapping_t value_type;
+  typedef expr_map_t::index<symbol_tag>::type::iterator iterator;
+  typedef expr_map_t::index<symbol_tag>::type::const_iterator const_iterator;
+
+  ExtractedExpressions();
+
+  const_iterator begin() const;
+  const_iterator end() const;
+  const_iterator find(const Symbol& s) const;
+
+  Symbol addRepresentable(const Expr& e, bool topLevel = false);
+  Symbol addUnrepresentable(const Expr& e, bool topLevel = false);
+  void replaceExpression(const Symbol& s, const Expr& e);
+  bool containsSymbol(const Symbol& s) const;
+  bool isRepresentable(const Symbol& s) const;
+  std::vector<Symbol> getTopologicallySorted() const;
 };
 
 }

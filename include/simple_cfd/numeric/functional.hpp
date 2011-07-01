@@ -8,50 +8,50 @@
 namespace cfd
 {
 
-template<typename P>
-class PolynomialDifferentiator
+template<typename E>
+class ExpressionDifferentiator
 {
 private:
-  typedef P polynomial_t;
-  typedef typename polynomial_t::variable_t variable_t;
-  variable_t dx;
+  typedef E expression_t;
+  typedef typename expression_t::variable_t variable_t;
+  variable_t x;
 
 public:
-  PolynomialDifferentiator(const variable_t& _dx) : dx(_dx)
+  ExpressionDifferentiator(const variable_t& _x) : x(_x)
   {
   }
 
-  polynomial_t operator()(const polynomial_t& p) const
+  expression_t operator()(const expression_t& e) const
   {
-    return p.derivative(dx);
+    return e.derivative(x);
   }
 };
 
-template<typename P>
-class PolynomialOptimiser
+template<typename E>
+class ExpressionOptimiser
 {
 public:
-  typedef P polynomial_t;
-  typedef typename polynomial_t::optimised_t result_type;
+  typedef E expression_t;
+  typedef typename expression_t::optimised_t result_type;
 
-  result_type operator()(const polynomial_t& p) const
+  result_type operator()(const expression_t& e) const
   {
-    return p.optimise();
+    return e.optimise();
   }
 };
 
-template<typename P>
-class PolynomialVariableCollector
+template<typename E>
+class ExpressionVariableCollector
 {
 private:
-  typedef P polynomial_t;
-  typedef typename polynomial_t::variable_t variable_t;
+  typedef E expression_t;
+  typedef typename expression_t::variable_t variable_t;
   std::set<variable_t> variables;
 
 public:
-  void operator()(const polynomial_t& p)
+  void operator()(const expression_t& e)
   {
-    const std::set<variable_t> vars(p.getVariables());
+    const std::set<variable_t> vars(e.getVariables());
     variables.insert(vars.begin(), vars.end());
   }
 
@@ -61,28 +61,28 @@ public:
   }
 };
 
-template<typename P>
-class PolynomialEvaluator
+template<typename E>
+class ExpressionEvaluator
 {
 private:
-  typedef P polynomial_t;
-  typedef typename polynomial_t::variable_t  variable_t;
-  typedef typename polynomial_t::value_type  value_type;
-  typedef typename polynomial_t::value_map   value_map;
+  typedef E expression_t;
+  typedef typename expression_t::variable_t  variable_t;
+  typedef typename expression_t::value_type  value_type;
+  typedef typename expression_t::value_map   value_map;
 
   value_map variableValues;
 
 public:
   typedef value_type result_type;
 
-  PolynomialEvaluator(const value_map& _variableValues) :
+  ExpressionEvaluator(const value_map& _variableValues) :
     variableValues(_variableValues)
   {
   }
 
-  result_type operator()(const polynomial_t& p) const
+  result_type operator()(const expression_t& e) const
   {
-    return p.evaluate(variableValues);
+    return e.evaluate(variableValues);
   }
 };
 

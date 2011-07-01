@@ -141,7 +141,7 @@ private:
     for(std::size_t i=0; i<dimension; ++i)
       valueMap.bind(position[i], v[i]);
 
-    PolynomialEvaluator<expression_t> evaluator(valueMap);
+    ExpressionEvaluator<expression_t> evaluator(valueMap);
     value_type result(tensor.getSize());
 
     std::transform(tensor.begin(), tensor.end(), result.begin(), evaluator);

@@ -11,6 +11,8 @@
 #include "expression_visitor.hpp"
 #include "traits.hpp"
 #include <simple_cfd/exception.hpp>
+#include <cln/integer.h>
+#include <cln/float.h>
 #include <ostream>
 
 namespace cfd
@@ -62,6 +64,10 @@ public:
   }
 
   PolynomialFraction(const value_type constant) : dividend(constant), divisor(1.0)
+  {
+  }
+
+  PolynomialFraction(const cln::cl_R& constant) : dividend(constant), divisor(1.0)
   {
   }
 
