@@ -242,11 +242,8 @@ UFCIntegralGenerator::UFCIntegralGenerator(std::ostream& _out, const coefficient
 {
 }
 
-void UFCIntegralGenerator::writeSum()
+void UFCIntegralGenerator::writeSum(std::ostream& out, const sum_t& sum)
 {
-  assert(stack.size() == 1);
-  const sum_t sum = stack.top(); stack.pop();
-  
   for(std::vector<detail::Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
   {
     if (prodIter != sum->begin())
@@ -349,19 +346,36 @@ void UFCIntegralGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index
 void UFCIntegralGenerator::visitAbsoluteValue()
 {
   CFD_EXCEPTION("Code generation unimplemented for call to modulus.");
+  assert(!stack.empty());
+
+  const sum_t sum = stack.top(); stack.pop();
+  std::ostringstream stream;
+  stream << "std::abs(";
+  writeSum(stream, sum);
+  stream << ")";
+
+  pushProduct(stream.str());
 }
 
 void UFCIntegralGenerator::postOriginalTerm(const unsigned index)
 {
   out << "    " << resultName << "[" << index << "] = ";
-  writeSum();
+
+  assert(stack.size() == 1);
+  const sum_t sum = stack.top(); stack.pop();
+  writeSum(out, sum);
+
   out << ";" << std::endl;
 }
 
 void UFCIntegralGenerator::postFactorisedTerm(const cse::PolynomialIndex& index)
 {
   out << "    const double " << getName(index) << " = ";
-  writeSum();
+
+  assert(stack.size() == 1);
+  const sum_t sum = stack.top(); stack.pop();
+  writeSum(out, sum);
+
   out << ";" << std::endl;
 }
 
