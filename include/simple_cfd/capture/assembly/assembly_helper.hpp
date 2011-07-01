@@ -132,7 +132,7 @@ public:
     // Multiply by local-to-global jacobian
     // TODO: factor jacobian stuff into helper function
     FormEvaluationVisitor<dimension> evaluationVisitor(scenario, 0);
-    const expression_t jacobianDet = evaluationVisitor.jacobianDeterminant();
+    const expression_t jacobianDet = abs(evaluationVisitor.jacobianDeterminant());
     LocalAssemblyMatrix<dimension, expression_t> result(matrix * jacobianDet);
 
     // Now change co-ordinates and integrate over reference space, -1 to 1
