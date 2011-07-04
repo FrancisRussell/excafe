@@ -196,7 +196,7 @@ private:
     return std::string("new") + className;
   }
 
-  void generateCode()
+  std::string getCode()
   {
     using cfd::detail::ScalarPlaceholder;
 
@@ -232,7 +232,13 @@ private:
     source << "  return new " << className << "();\n";
     source << "}\n";
 
-    dsoHandler.reset(new DynamicCXX(source.str()));
+    return source.str();
+  }
+
+  void buildCodeAndOpen()
+  {
+    const std::string code = getCode();
+    dsoHandler.reset(new DynamicCXX(code));
     dsoHandler->compileAndLoad();
 
     typedef ufc::cell_integral* (*instantiator_t)();
@@ -300,11 +306,19 @@ public:
   {
     std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));
     evaluator->computeOrdering();
-    evaluator->generateCode();
+    evaluator->buildCodeAndOpen();
     evaluator->initialiseContext();
 
     std::auto_ptr< cfd::detail::LocalAssemblyMatrixEvaluatorImpl<dimension> > impl(evaluator);
     return cfd::detail::LocalAssemblyMatrixEvaluator<dimension>(impl);
+  }
+
+  static std::string getCode(const Scenario<dimension>& scenario, 
+    const cfd::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix)
+  {
+    std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));
+    evaluator->computeOrdering();
+    return evaluator->getCode();
   }
 
   ~UFCEvaluator()

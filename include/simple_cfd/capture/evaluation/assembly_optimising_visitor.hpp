@@ -66,37 +66,10 @@ public:
   virtual void visit(OperatorAssembly& a)
   {
     typedef ScalarPlaceholder::expression_t expression_t;
-    typedef expression_t::optimised_t optimised_expression_t;
     typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
-    typedef FiniteElement<dimension> finite_element_t;
 
-    const DofMap<dimension>& testMapping = scenario.getDofMap(*a.getTestSpace());
-    const DofMap<dimension>& trialMapping = scenario.getDofMap(*a.getTrialSpace());
-
-    const std::set<const finite_element_t*> trialElements(trialMapping.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(testMapping.getFiniteElements());
     const forms::BilinearFormIntegralSum sum = a.getBilinearFormIntegralSum();
-
-    //FIXME: Hard coded to cell integrals
-    const forms::BilinearFormIntegralSum::const_iterator sumBegin = sum.begin_dx();
-    const forms::BilinearFormIntegralSum::const_iterator sumEnd = sum.end_dx();
-
-    AssemblyHelper<dimension> assemblyHelper(scenario);
-    local_matrix_t localMatrix(testElements, trialElements);
-    
-    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
-    {
-      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
-      std::cout << "Assembled local-matrix expression " << 1 + formIter - sumBegin << " of " << sumEnd - sumBegin << std::endl;
-    }
-
-    //FIXME: Hard coded to cell integrals
-    const MeshEntity localCellEntity(dimension, 0);
-    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
-
-    std::cout << "Integrated local-matrix expression..." << std::endl;
-    
+    const local_matrix_t localMatrix = scenario.constructCellIntegralAssemblyMatrix(sum);
     const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
       codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
 

@@ -43,6 +43,7 @@ private:
   static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
   typedef typename DofMap<dimension>::dof_t dof_t;
+  typedef detail::ScalarPlaceholder::expression_t expression_t;
   typedef detail::FunctionSpaceExpr* function_space_ptr;
   typedef detail::LocalAssemblyMatrixEvaluator<dimension> cell_integral_t;
 
@@ -336,6 +337,59 @@ public:
   void execute(SolveOperation& o)
   {
     o.executeDimensionTemplated<dimension>(*this);
+  }
+
+  void writeUFCCellIntegral(std::ostream& o, const forms::BilinearFormIntegralSum& a)
+  {
+    using namespace cfd::detail;
+
+    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+
+    const local_matrix_t localMatrix = constructCellIntegralAssemblyMatrix(a);
+    const std::string code = codegen::UFCEvaluator<dimension>::getCode(*this, localMatrix);
+    o << code;
+  }
+
+  //TODO: does this belong in a different file?
+  detail::LocalAssemblyMatrix<dimension, expression_t> constructCellIntegralAssemblyMatrix(const forms::BilinearFormIntegralSum& sum)
+  {
+    using namespace cfd::detail;
+
+    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+    typedef FiniteElement<dimension> finite_element_t;
+
+    const forms::BilinearFormIntegralSum::const_iterator sumBegin = sum.begin_dx();
+    const forms::BilinearFormIntegralSum::const_iterator sumEnd = sum.end_dx();
+
+    std::set<const finite_element_t*> trialElements;
+    std::set<const finite_element_t*> testElements;
+
+    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      forms::BasisFinder<dimension> trialFinder(*this);
+      formIter->getTrialField()->accept(trialFinder);
+      trialElements.insert(trialFinder.getBasis());
+
+      forms::BasisFinder<dimension> testFinder(*this);
+      formIter->getTestField()->accept(testFinder);
+      testElements.insert(testFinder.getBasis());
+    }
+    
+    AssemblyHelper<dimension> assemblyHelper(*this);
+    local_matrix_t localMatrix(testElements, trialElements);
+    
+    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
+      std::cout << "Assembled local-matrix expression " << 1 + formIter - sumBegin << " of " << sumEnd - sumBegin << std::endl;
+    }
+
+    const MeshEntity localCellEntity(dimension, 0);
+    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
+
+    std::cout << "Integrated local-matrix expression..." << std::endl;
+
+    return localMatrix;
   }
 };
 
