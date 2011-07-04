@@ -235,9 +235,6 @@ public:
 
   virtual std::vector< std::set<dof_t> > resolveIdenticalDofs(const Mesh<dimension>& m, const MeshEntity& entity, const std::set<dof_t>& dofsOnEntity) const
   {
-    // FIXME: when cell orientatation can be ignored, remove me.
-    assert(degree <= 2);
-
     typedef std::map<std::size_t, std::set<dof_t> > tensor_index_to_dofs_map;
     tensor_index_to_dofs_map tensorIndexToDofsMap;
 
