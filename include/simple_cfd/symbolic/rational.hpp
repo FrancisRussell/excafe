@@ -11,6 +11,7 @@
 #include "float.hpp"
 #include <boost/operators.hpp>
 #include <cln/rational.h>
+#include <cln/integer.h>
 
 namespace cfd
 {
@@ -30,7 +31,6 @@ private:
   cln::cl_RA value;
   void normalise();
 
-  Rational(const cln::cl_RA& value);
   cln::cl_I getNumerator() const;
   cln::cl_I getDenominator() const;
 
@@ -40,6 +40,7 @@ public:
   Rational();
   Rational(long value);
   Rational(long numerator, long denominator);
+  Rational(const cln::cl_RA& value);
   std::size_t nops() const;
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;

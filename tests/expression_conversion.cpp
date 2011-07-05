@@ -38,13 +38,17 @@ void printConversion(const from& f)
 template<typename from, typename to>
 void printConversions()
 {
+  const std::string k("k");
+  const std::string x("x");
+  const std::string y("y");
+
   std::cout << "Converting from " << TypeNames<from>::name() << " to " << TypeNames<to>::name() << ":" << std::endl;
   printConversion<from, to>(from(7.5));
-  printConversion<from, to>(from("x") + from("y"));
-  printConversion<from, to>(from(7, "k", 5));
-  printConversion<from, to>(from(4, "k", 2) + from(2, "x", 3));
-  printConversion<from, to>(from(2, "k", 2) / from(6, "x", 3));
-  printConversion<from, to>(from(4, "k", 2) * from(1, "x", 2));
+  printConversion<from, to>(from(x) + from(y));
+  printConversion<from, to>(from(7, k, 5));
+  printConversion<from, to>(from(4, k, 2) + from(2, x, 3));
+  printConversion<from, to>(from(2, k, 2) / from(6, x, 3));
+  printConversion<from, to>(from(4, k, 2) * from(1, x, 2));
   std::cout << std::endl;
 }
 

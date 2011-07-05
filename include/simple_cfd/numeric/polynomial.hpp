@@ -23,6 +23,8 @@
 #include "expression_visitor.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 #include <simple_cfd/exception.hpp>
+#include <cln/integer.h>
+#include <cln/float.h>
 
 namespace cfd
 {
@@ -35,17 +37,18 @@ class Polynomial : public NumericExpression<V>,
                    boost::totally_ordered< Polynomial<V>
                    > > > >
 {
+private:
+  static const std::size_t precision = 32;
+
 public:
   typedef V variable_t;
   typedef double value_type;
   typedef OptimisedPolynomial<variable_t> optimised_t;
-
-private:
-  //typedef double internal_value_t;
-  static const std::size_t precision = 32;
   typedef CLNWrapper<precision> internal_value_t;
   typedef Monomial<variable_t, internal_value_t> monomial_t;
   typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
+
+private:
   util::LazyCopy<coefficient_map_t> coefficients;
 
   void addTerm(const internal_value_t& coefficient, const variable_t& variable, const std::size_t exponent)
@@ -106,6 +109,12 @@ public:
   Polynomial(const value_type constant)
   {
     addConstant(constant);
+    cleanZeros();
+  }
+
+  Polynomial(const cln::cl_R& constant)
+  {
+    addConstant(cfd::numeric_cast<value_type>(constant));
     cleanZeros();
   }
 
