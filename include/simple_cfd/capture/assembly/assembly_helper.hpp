@@ -136,7 +136,17 @@ public:
     LocalAssemblyMatrix<dimension, expression_t> result(matrix * jacobianDet);
 
     // Now change co-ordinates and integrate over reference space, -1 to 1
+    #ifdef _OPENMP
+    const std::size_t entries = std::distance(result.begin(), result.end());
+    #pragma omp parallel for schedule(dynamic)
+    for(std::size_t entry=0; entry<entries; ++entry)
+    {
+      const typename LocalAssemblyMatrix<dimension, expression_t>::iterator iter = result.begin() + entry;
+      (*iter) = integrator(*iter);
+    }
+    #else
     std::transform(result.begin(), result.end(), result.begin(), integrator);
+    #endif
     return result;
   }
 };

@@ -23,6 +23,9 @@ AC_CHECK_HEADERS([stdlib.h])
 # Check how to compile MPI
 ACX_MPI([], AC_MSG_ERROR([Unable to find MPI.]))
 
+# Check for OpenMP
+AX_OPENMP(CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS")
+
 # Check for Boost
 AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
