@@ -16,6 +16,7 @@
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
 #include <simple_cfd/codegen/ufc_evaluator.hpp>
 #include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_interpreter.hpp>
 
 namespace cfd
 {
@@ -70,14 +71,26 @@ public:
 
     const forms::BilinearFormIntegralSum sum = a.getBilinearFormIntegralSum();
     const local_matrix_t localMatrix = scenario.constructCellIntegralAssemblyMatrix(sum);
-    const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
-      codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
 
-    /* 
-       FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
-       depending on whether they're cell or facet, and if facet, internal or external facets.
-    */
-    scenario.setOptimisedCellIntegral(a, evaluator);
+    const bool interpret = false;
+    if (interpret)
+    {
+      const LocalAssemblyMatrixEvaluator<dimension> evaluator =
+        LocalAssemblyMatrixInterpreter<dimension>::construct(scenario, localMatrix);
+
+      scenario.setOptimisedCellIntegral(a, evaluator);
+    }
+    else
+    {
+      const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
+        codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
+
+      /* 
+         FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
+         depending on whether they're cell or facet, and if facet, internal or external facets.
+      */
+      scenario.setOptimisedCellIntegral(a, evaluator);
+    }
   }
 };
 
