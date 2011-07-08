@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <utility>
-#include <cln/integer.h>
+#include <simple_cfd/mp/integer.hpp>
 
 namespace cfd
 {
@@ -11,12 +11,12 @@ namespace cfd
 class Factoriser
 {
 public:
-  typedef std::pair<cln::cl_I, cln::cl_I> power_t;
-  std::vector<power_t> factor(const cln::cl_I& n);
+  typedef std::pair<mp::Integer, mp::Integer> power_t;
+  std::vector<power_t> factor(const mp::Integer& n);
 
 private:
   static const int primes[];
-  cln::cl_I removeFactor(cln::cl_I& value, const cln::cl_I& factor) const;
+  mp::Integer removeFactor(mp::Integer& value, const mp::Integer& factor) const;
 };
 
 }

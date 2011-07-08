@@ -40,7 +40,11 @@ Expr::Expr(const int s) : expr(make_expr_from(Rational(s)).expr)
 {
 }
 
-Expr::Expr(const cln::cl_RA& s) : expr(make_expr_from(Rational(s)).expr)
+Expr::Expr(const mp::Integer& i) : expr(make_expr_from(Rational(i)).expr)
+{
+}
+
+Expr::Expr(const mp::Rational& s) : expr(make_expr_from(Rational(s)).expr)
 {
 }
 

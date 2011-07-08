@@ -1,17 +1,16 @@
 #include <vector>
-#include <cln/integer.h>
-#include <cln/rational.h>
 #include <simple_cfd/numeric/factoriser.hpp>
+#include <simple_cfd/mp/integer.hpp>
 
 namespace cfd
 {
 
-std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
+std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
 {
-  using namespace cln;
+  using namespace mp;
 
-  std::vector< std::pair<cl_I, cl_I> > result;
-  cl_I value = n;
+  std::vector< std::pair<Integer, Integer> > result;
+  Integer value = n;
 
   // We explicitly handle the zero case since an empty list of factors is assumed to mean 1.
   if (value == 0)
@@ -28,12 +27,11 @@ std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
   }
 
   // Compute upper bound on factors
-  cl_I sqrtFloor;
-  isqrt(value, &sqrtFloor);
+  Integer sqrtFloor = isqrt(value);
 
   // Factorise using known primes from table, then revert to using odd numbers.
   std::size_t primeIndex = 0;
-  cl_I factor = 0;
+  Integer factor = 0;
   do
   {
     if (primes[primeIndex] != -1)
@@ -41,11 +39,11 @@ std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
     else
       factor += 2;
 
-    const cl_I exponent = removeFactor(value, factor);
+    const Integer exponent = removeFactor(value, factor);
     if (exponent > 0)
     {
       result.push_back(power_t(factor, exponent));
-      isqrt(value, &sqrtFloor);
+      sqrtFloor = isqrt(value);
     }
   }
   while(value != 1 && factor <= sqrtFloor);
@@ -57,10 +55,10 @@ std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)
   return result;
 }
 
-cln::cl_I Factoriser::removeFactor(cln::cl_I& value, const cln::cl_I& factor) const
+mp::Integer Factoriser::removeFactor(mp::Integer& value, const mp::Integer& factor) const
 {
-  cln::cl_I exponent = 0;
-  while (rem(value, factor) == 0)
+  mp::Integer exponent = 0;
+  while ((value%factor) == 0)
   {
     value /= factor;
     ++exponent;

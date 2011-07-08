@@ -24,6 +24,11 @@ Float::Float(const double _value) : value(_value)
 {
 }
 
+Float::Float(const mp::Rational& _value) : 
+  value(_value.toDouble())
+{
+}
+
 Float::Float(const cln::cl_R& _value) : 
   value(cln::double_approx(_value))
 {

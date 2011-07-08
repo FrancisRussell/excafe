@@ -282,7 +282,7 @@ void UFCIntegralGenerator::outputPostfix()
 
 void UFCIntegralGenerator::visitConstant(const integer_t& s)
 {
-  pushProduct(s);
+  pushProduct(cln::cl_F(s.toDouble()));
 }
 
 void UFCIntegralGenerator::visitConstant(const float_t& s)
