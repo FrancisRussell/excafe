@@ -9,6 +9,7 @@ namespace mp
 
 class Rational;
 class Integer;
+class Float;
 
 }
 
