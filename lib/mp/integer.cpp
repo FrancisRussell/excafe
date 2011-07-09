@@ -444,9 +444,12 @@ Integer Integer::isqrt() const
   if (size < 0)
     CFD_EXCEPTION("Can only take sqrt of positive integer.");
 
+  const int resultWidth = width()/2 + 1;
   Integer result;
-  result.reallocUnique(width()/2 + 1);
-  result.size = mpn_sqrtrem(result.limbs(), NULL, limbs(), width());
+  result.reallocUnique(resultWidth);
+  mpn_sqrtrem(result.limbs(), NULL, limbs(), width());
+  result.size = computeWidth(resultWidth);
+
   return result;
 }
 
