@@ -333,8 +333,12 @@ Integer& Integer::operator*=(const Integer& i)
   {
     const bool negative = isNegative() ^ i.isNegative();
     const int maxWidth = width() + i.width();
-    reallocUnique(maxWidth);
-    mpn_mul(limbs(), limbs(), width(), i.limbs(), i.width());
+
+    // mpn_mul does not allow any operand to overlap with the result
+    Integer result;
+    result.reallocUnique(maxWidth);
+    mpn_mul(result.limbs(), limbs(), width(), i.limbs(), i.width());
+    swap(result);
     size = negate(negative, computeWidth(maxWidth));
   }
 
