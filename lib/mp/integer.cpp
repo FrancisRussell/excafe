@@ -27,9 +27,12 @@ Integer::Integer(const char* str) : size(0), allocated(0)
   const std::size_t length = strlen(str);
 
   if (length == 0)
-    return;
+    CFD_EXCEPTION("Cannot construct integer from empty string.");
 
   const bool negative = (*str == '-');
+
+  if (length == 1 && negative)
+    CFD_EXCEPTION("Expected digits after minus sign when constructing integer.");
 
   for(std::size_t digit = (negative ? 1 : 0); digit < length; ++digit)
   {
@@ -37,7 +40,7 @@ Integer::Integer(const char* str) : size(0), allocated(0)
     const int digitValue = str[digit] - '0';
 
     if (digitValue < 0 || digitValue > 9)
-      CFD_EXCEPTION("Invalid characters in integer string");
+      CFD_EXCEPTION("Invalid characters in integer string.");
     else
       (*this) += digitValue;
   }
