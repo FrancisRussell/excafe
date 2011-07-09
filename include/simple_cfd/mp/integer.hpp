@@ -138,7 +138,7 @@ private:
       return ((data[0] & GMP_NUMB_MASK) < limb) ^ isNegative();
     }
 
-    return *this == Integer(i);
+    return *this < Integer(i);
   }
 
   void mpzInit(mpz_t& mpz) const;
