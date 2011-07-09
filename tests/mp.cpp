@@ -82,4 +82,12 @@ BOOST_AUTO_TEST_CASE( increments )
 
   BOOST_CHECK_EQUAL(value+1, inc);
   BOOST_CHECK_EQUAL(value-1, dec);
+
+  Integer incZero(0);
+  Integer decZero(0);
+
+  ++incZero;
+  --decZero;
+  BOOST_CHECK_EQUAL(incZero, 1);
+  BOOST_CHECK_EQUAL(decZero, -1);
 }
