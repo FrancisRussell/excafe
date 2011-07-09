@@ -286,7 +286,7 @@ Integer& Integer::operator-=(const Integer& i)
     return *this = -i;
   else
   {
-    const Integer negated = -(*this);
+    const Integer negated = -i;
     performAddition(this, &negated);
   }
 
