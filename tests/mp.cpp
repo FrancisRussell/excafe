@@ -70,3 +70,16 @@ BOOST_AUTO_TEST_CASE( add_sub )
   BOOST_CHECK_EQUAL((small-large)+large, small);
   BOOST_CHECK_EQUAL((large-small)+small, large);
 }
+
+BOOST_AUTO_TEST_CASE( increments )
+{
+  const Integer value = pow(Integer(-18484), 5);
+  Integer inc(value);
+  Integer dec(value);
+
+  ++inc;
+  --dec;
+
+  BOOST_CHECK_EQUAL(value+1, inc);
+  BOOST_CHECK_EQUAL(value-1, dec);
+}
