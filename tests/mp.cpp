@@ -32,6 +32,21 @@ BOOST_AUTO_TEST_CASE(BasicSanity)
     BOOST_CHECK_EQUAL(-integerValue, -intValue);
     
     BOOST_CHECK_EQUAL(-integerValue*-integerValue, integerValue*integerValue);
+    BOOST_CHECK_EQUAL(integerValue*1, integerValue);
+    BOOST_CHECK_EQUAL(integerValue*-1, -integerValue);
+    BOOST_CHECK_EQUAL(-(-integerValue), integerValue);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Powers)
+{
+  const Integer large = pow(Integer(898311), 5);
+  Integer raised(1);
+
+  for(int i=0; i<10; ++i)
+  {
+    BOOST_CHECK_EQUAL(raised, pow(large, i));
+    raised *= large;
   }
 }
 
@@ -48,7 +63,6 @@ BOOST_AUTO_TEST_CASE(IntegerSquareRoot)
   BOOST_CHECK_EQUAL(isqrt(pow(Integer(462711), 10)), pow(Integer(462711), 5));
   BOOST_CHECK_EQUAL(isqrt(pow(Integer(23451), 14)), pow(Integer(23451), 7));
 }
-
 
 BOOST_AUTO_TEST_CASE(MulDivMod)
 {
