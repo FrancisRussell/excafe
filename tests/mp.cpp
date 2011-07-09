@@ -42,6 +42,9 @@ BOOST_AUTO_TEST_CASE(BasicSanity)
     const Integer less = integerValue-1;
     BOOST_CHECK_LT(less, intValue);
     BOOST_CHECK_LT(less, integerValue);
+
+    BOOST_CHECK_GT(-less, -intValue);
+    BOOST_CHECK_GT(-less, -integerValue);
   }
 }
 
