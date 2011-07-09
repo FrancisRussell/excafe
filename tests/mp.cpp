@@ -16,35 +16,62 @@ BOOST_AUTO_TEST_CASE(BasicSanity)
   std::set<int> integers;
   integers.insert(0);
   integers.insert(1);
-  integers.insert(7);
+  integers.insert(-7);
   integers.insert(76);
-  integers.insert(5850);
+  integers.insert(-5850);
   integers.insert(53288);
   
   BOOST_FOREACH(const int intValue, integers)
   {
     const Integer integerValue(intValue);
 
+    // Check equality to self
     BOOST_CHECK_EQUAL(integerValue, integerValue);
+
+    // Check negation
     BOOST_CHECK_EQUAL(-integerValue, -integerValue);
 
+    // Check equality when signs are flipped
+    if (intValue != 0)
+    {
+      BOOST_CHECK_NE(-integerValue, integerValue);
+      BOOST_CHECK_NE(integerValue, -intValue);
+    }
+
+    // Check equality to primitive types
     BOOST_CHECK_EQUAL(integerValue, intValue);
     BOOST_CHECK_EQUAL(-integerValue, -intValue);
     
+    // Check multiplication respects signs
     BOOST_CHECK_EQUAL(-integerValue*-integerValue, integerValue*integerValue);
     BOOST_CHECK_EQUAL(integerValue*1, integerValue);
     BOOST_CHECK_EQUAL(integerValue*-1, -integerValue);
-    BOOST_CHECK_EQUAL(-(-integerValue), integerValue);
 
-    if (intValue != 0)
-      BOOST_CHECK_NE(-intValue, integerValue);
+    // Check that operator< is not ignoring signs of operands
+    if (intValue > 0)
+    {
+      BOOST_CHECK_LT(-intValue, integerValue);
+      BOOST_CHECK_LT(-integerValue, intValue);
+      BOOST_CHECK_EQUAL(integerValue < -integerValue, false);
+      BOOST_CHECK_EQUAL(-integerValue < -integerValue, false);
+    }
 
     const Integer less = integerValue-1;
+
+    // Check that operator< behaves correctly
     BOOST_CHECK_LT(less, intValue);
     BOOST_CHECK_LT(less, integerValue);
 
-    BOOST_CHECK_GT(-less, -intValue);
-    BOOST_CHECK_GT(-less, -integerValue);
+    // Check that operator> behaves correctly after flipping sign
+    BOOST_CHECK_LT(-intValue, -less);
+    BOOST_CHECK_LT(-integerValue, -less);
+
+    // Check that operator < behaves correctly for same magnitude operands with varying signs
+    BOOST_CHECK_EQUAL(integerValue < integerValue, false);
+    BOOST_CHECK_EQUAL(-integerValue < -integerValue, false);
+
+    BOOST_CHECK_EQUAL(integerValue < intValue, false);
+    BOOST_CHECK_EQUAL(-integerValue < -intValue, false); 
   }
 }
 

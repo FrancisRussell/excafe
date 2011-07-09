@@ -241,10 +241,25 @@ bool Integer::operator==(const long i) const
 bool Integer::operator<(const Integer& i) const
 {
   if (size == i.size)
-    return size != 0
-           && (isNegative() ^ (mpn_cmp(limbs(), i.limbs(), width()) < 0));
+  {
+    if (size == 0)
+    {
+      return false;
+    }
+    else if (isNegative() != i.isNegative())
+    {
+      return isNegative();
+    }
+    else
+    {
+      const int comparison = (isNegative() ? 1 : -1);
+      return mpn_cmp(limbs(), i.limbs(), width()) == comparison;
+    }
+  }
   else
+  {
     return size < i.size;
+  }
 }
 
 bool Integer::operator<(const int i) const

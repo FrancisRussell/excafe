@@ -134,8 +134,13 @@ private:
         return isNegative();
 
       // Both values fit into a single limb
-      const mp_limb_t limb = static_cast<mp_limb_t>(absI);
-      return ((data[0] & GMP_NUMB_MASK) < limb) ^ isNegative();
+      mp_limb_t left = data[0];
+      mp_limb_t right = static_cast<mp_limb_t>(absI);
+
+      if (isNegative()) 
+        std::swap(left, right);
+
+      return left < right;
     }
 
     return *this < Integer(i);
