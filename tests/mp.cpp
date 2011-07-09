@@ -58,3 +58,15 @@ BOOST_AUTO_TEST_CASE( mul_div_mod )
   BOOST_CHECK_EQUAL((small*large)/large, small);
   BOOST_CHECK_EQUAL((large%small) + (large/small)*small, large);
 }
+
+BOOST_AUTO_TEST_CASE( add_sub )
+{
+  const Integer small = pow(Integer(1848), 5);
+  const Integer large = pow(Integer(140849), 5);
+
+  BOOST_REQUIRE_LT(small, large);
+  BOOST_CHECK_EQUAL(small-small, 0);
+  BOOST_CHECK_EQUAL(large-large, 0);
+  BOOST_CHECK_EQUAL((small-large)+large, small);
+  BOOST_CHECK_EQUAL((large-small)+small, large);
+}
