@@ -91,3 +91,10 @@ BOOST_AUTO_TEST_CASE( increments )
   BOOST_CHECK_EQUAL(incZero, 1);
   BOOST_CHECK_EQUAL(decZero, -1);
 }
+
+BOOST_AUTO_TEST_CASE( shifts )
+{
+  const Integer value = pow(Integer(46272), 7);
+  BOOST_CHECK_EQUAL(value << 53, value * pow(Integer(2), 53));
+  BOOST_CHECK_EQUAL(value >> 41, value / pow(Integer(2), 41));
+}
