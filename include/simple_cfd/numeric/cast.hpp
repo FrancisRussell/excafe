@@ -1,7 +1,9 @@
 #ifndef SIMPLE_CFD_CAPTURE_NUMERIC_CAST_HPP
 #define SIMPLE_CFD_CAPTURE_NUMERIC_CAST_HPP
 
-#include <cln/cln.h>
+#include <simple_cfd/mp/integer.hpp>
+#include <simple_cfd/mp/rational.hpp>
+#include <simple_cfd/mp/float.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 namespace cfd
@@ -17,43 +19,60 @@ struct RawConverter
 };
 
 template<>
-struct RawConverter<cln::cl_R, float>
+struct RawConverter<mp::Float, float>
 {
-  static double low_level_convert(const cln::cl_R& s) 
+  static float low_level_convert(const mp::Float& s) 
   { 
-    return cln::float_approx(s);
+    return s.toFloat();
   }
 };
 
 template<>
-struct RawConverter<cln::cl_R, double>
+struct RawConverter<mp::Float, double>
 {
-  static double low_level_convert(const cln::cl_R& s) 
+  static double low_level_convert(const mp::Float& s) 
   { 
-    return cln::double_approx(s);
+    return s.toDouble();
   }
 };
 
 template<>
-struct RawConverter<cln::cl_F, float>
+struct RawConverter<mp::Integer, float>
 {
-  static float low_level_convert(const cln::cl_F& s) 
+  static float low_level_convert(const mp::Integer& s) 
   { 
-    return cln::float_approx(s);
+    return s.toFloat();
   }
 };
 
 template<>
-struct RawConverter<cln::cl_F, double>
+struct RawConverter<mp::Integer, double>
 {
-  static double low_level_convert(const cln::cl_F& s) 
+  static double low_level_convert(const mp::Integer& s) 
   { 
-    return cln::double_approx(s);
+    return s.toDouble();
+  }
+};
+
+template<>
+struct RawConverter<mp::Rational, float>
+{
+  static float low_level_convert(const mp::Rational& s) 
+  { 
+    return s.toFloat();
+  }
+};
+
+template<>
+struct RawConverter<mp::Rational, double>
+{
+  static double low_level_convert(const mp::Rational& s) 
+  { 
+    return s.toDouble();
   }
 };
 
 }
-
 
 template<typename Target, typename Source> inline
 typename boost::numeric::converter<Target,Source>::result_type
@@ -72,7 +91,6 @@ numeric_cast ( Source arg )
     UseInternalRangeChecker
     >::convert(arg);
 }
-
 
 }
 

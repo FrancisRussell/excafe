@@ -65,6 +65,7 @@ public:
   Expr extractMultiplier(Rational& coeff) const;
   Rational abs() const;
   Rational pow(int exponent) const;
+  mp::Rational getValue() const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 

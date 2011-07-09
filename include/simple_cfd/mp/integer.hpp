@@ -3,17 +3,13 @@
 
 #include "mp_fwd.hpp"
 #include <gmp.h>
-#include <cstring>
-#include <cassert>
-#include <ostream>
+#include <iosfwd>
 #include <climits>
 #include <vector>
-#include <iostream>
 #include <boost/operators.hpp>
 #include <boost/shared_array.hpp>
 #include <simple_cfd/util/hybrid_array.hpp>
 #include <simple_cfd/util/hash.hpp>
-#include <simple_cfd/numeric/cast.hpp>
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -30,6 +26,7 @@ class Integer : boost::totally_ordered<Integer>,
 {
 private:
   friend class Rational;
+  friend class Float;
 
   static const int STACK_LIMBS = 4;
   struct width_tag {};
@@ -152,9 +149,12 @@ public:
   static Integer lcm(const Integer& x, const Integer& y);
 
   Integer();
+  Integer(const char* str);
   Integer(const Integer& i);
   Integer(const int i);
   Integer(const long i);
+  Integer(const unsigned int i);
+  Integer(const unsigned long i);
 
   bool operator==(const Integer& i) const;
   bool operator==(const int i) const;
@@ -180,10 +180,10 @@ public:
   std::size_t hash() const;
   void write(std::ostream& out) const;
   void swap(Integer& i);
-  long toLong() const;
   int toInt() const;
-  double toDouble() const;
+  long toLong() const;
   float toFloat() const;
+  double toDouble() const;
 };
 
 std::ostream& operator<<(std::ostream& o, const Integer& i);

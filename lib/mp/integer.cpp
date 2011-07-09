@@ -1,6 +1,10 @@
 #include <gmp.h>
 #include <simple_cfd/mp/integer.hpp>
+#include <simple_cfd/exception.hpp>
+#include <simple_cfd/numeric/cast.hpp>
+#include <simple_cfd/util/hash.hpp>
 #include <cstring>
+#include <cassert>
 #include <ostream>
 
 namespace cfd
@@ -18,6 +22,30 @@ Integer::Integer() : size(0), allocated(0)
 {
 }
 
+Integer::Integer(const char* str) : size(0), allocated(0)
+{
+  const std::size_t length = strlen(str);
+
+  if (length == 0)
+    return;
+
+  const bool negative = (*str == '-');
+
+  for(std::size_t digit = (negative ? 1 : 0); digit < length; ++digit)
+  {
+    (*this) *= 10;
+    const int digitValue = str[digit] - '0';
+
+    if (digitValue < 0 || digitValue > 9)
+      CFD_EXCEPTION("Invalid characters in integer string");
+    else
+      (*this) += digitValue;
+  }
+
+  if (negative)
+    (*this) = -(*this);
+}
+
 Integer::Integer(const Integer& i) : size(i.size), allocated(i.allocated), data(i.data)
 {
 }
@@ -29,6 +57,18 @@ Integer::Integer(const int i) : size(0), allocated(0)
 }
 
 Integer::Integer(const long i) : size(0), allocated(0)
+{
+  if (i != 0)
+    initialise(i);
+}
+
+Integer::Integer(const unsigned int i) : size(0), allocated(0)
+{
+  if (i != 0)
+    initialise(i);
+}
+
+Integer::Integer(const unsigned long i) : size(0), allocated(0)
 {
   if (i != 0)
     initialise(i);

@@ -8,6 +8,7 @@
 #include <simple_cfd/capture/assembly/generic_symbol.hpp>
 #include <simple_cfd/capture/assembly/scalar_access.hpp>
 #include <simple_cfd/capture/assembly/basis_coefficient.hpp>
+#include <simple_cfd/mp/float.hpp>
 #include <simple_cfd/cse/factorised_expression_visitor.hpp>
 #include <simple_cfd/cse/polynomial_index.hpp>
 #include <simple_cfd/numeric/cast.hpp>
@@ -21,7 +22,6 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/variant.hpp>
-#include <cln/cln.h>
 
 namespace cfd
 {
@@ -35,7 +35,7 @@ namespace detail
 Product Product::pow(const int exponent) const
 {
   Product result;
-  result.coefficient = cln::expt(coefficient, exponent);
+  result.coefficient = mp::pow(coefficient, exponent);
 
   BOOST_FOREACH(const exp_map_t::value_type& exp, *exponents)
     (*result.exponents)[exp.first] = exp.second*exponent;
@@ -66,10 +66,11 @@ void Product::write(std::ostream& out) const
 
   bool firstNumerator = true;
   const double coefficientAsDouble = cfd::numeric_cast<double>(coefficient);
-  if (coefficientAsDouble != 1.0 || numerators.empty())
+  if (coefficient != 1.0 || numerators.empty())
   {
     firstNumerator = false;
-    out << std::setprecision(25) << coefficientAsDouble;
+    //out << std::setprecision(25) << coefficientAsDouble;
+    out << coefficient;
   }
   
   for(exp_map_t::const_iterator numIter = numerators.begin(); 
@@ -282,7 +283,7 @@ void UFCIntegralGenerator::outputPostfix()
 
 void UFCIntegralGenerator::visitConstant(const integer_t& s)
 {
-  pushProduct(cln::cl_F(s.toDouble()));
+  pushProduct(float_t(s));
 }
 
 void UFCIntegralGenerator::visitConstant(const float_t& s)

@@ -3,8 +3,6 @@
 
 #include "mp_fwd.hpp"
 #include "integer.hpp"
-#include <cassert>
-#include <simple_cfd/util/hash.hpp>
 #include <boost/operators.hpp>
 
 namespace cfd
@@ -17,6 +15,9 @@ class Rational : boost::totally_ordered<Rational>,
                  boost::arithmetic<Rational>
 {
 private:
+  friend class Integer;
+  friend class Float;
+
   Integer numerator;
   Integer denominator;
 
@@ -30,6 +31,8 @@ public:
   Rational();
   Rational(const int i);
   Rational(const long i);
+  Rational(const unsigned int i);
+  Rational(const unsigned long i);
   Rational(const Integer& i);
   Rational(const int numerator, const int denominator);
   Rational(const long numerator, const long denominator); 

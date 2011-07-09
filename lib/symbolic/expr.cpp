@@ -48,7 +48,7 @@ Expr::Expr(const mp::Rational& s) : expr(make_expr_from(Rational(s)).expr)
 {
 }
 
-Expr::Expr(const cln::cl_F& s) : expr(make_expr_from(Float(s)).expr)
+Expr::Expr(const mp::Float& s) : expr(make_expr_from(Float(s)).expr)
 {
 }
 

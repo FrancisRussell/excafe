@@ -11,8 +11,9 @@
 #include "expression_visitor.hpp"
 #include "traits.hpp"
 #include <simple_cfd/exception.hpp>
-#include <cln/integer.h>
-#include <cln/float.h>
+#include <simple_cfd/mp/float.hpp>
+#include <simple_cfd/mp/rational.hpp>
+#include <simple_cfd/mp/integer.hpp>
 #include <ostream>
 
 namespace cfd
@@ -67,7 +68,15 @@ public:
   {
   }
 
-  PolynomialFraction(const cln::cl_R& constant) : dividend(constant), divisor(1.0)
+  PolynomialFraction(const mp::Float& constant) : dividend(constant), divisor(1.0)
+  {
+  }
+
+  PolynomialFraction(const mp::Integer& constant) : dividend(constant), divisor(1.0)
+  {
+  }
+
+  PolynomialFraction(const mp::Rational& r) : dividend(r.getNumerator()), divisor(r.getDenominator())
   {
   }
 

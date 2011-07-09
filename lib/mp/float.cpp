@@ -4,6 +4,7 @@
 #include <gmp.h>
 #include <cstring>
 #include <ostream>
+#include <simple_cfd/exception.hpp>
 #include <simple_cfd/mp/float.hpp>
 #include <simple_cfd/mp/integer.hpp>
 #include <simple_cfd/mp/rational.hpp>
@@ -19,6 +20,14 @@ namespace mp
 Float::Float()
 {
   mpf_init(value);
+}
+
+Float::Float(const char* str)
+{
+  const int result = mpf_init_set_str(value, str, 10);
+
+  if (result != 0)
+    CFD_EXCEPTION("Invalid specification for floating point value.");
 }
 
 Float::Float(const double f)
@@ -119,7 +128,7 @@ Float Float::pow(const long exponent) const
 void Float::write(std::ostream& out) const
 {
   char* buffer;
-  const int bufferSize = gmp_asprintf(&buffer, "%.Ff", value);
+  const int bufferSize = gmp_asprintf(&buffer, "%.Fe", value);
 
   out << buffer;
 

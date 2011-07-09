@@ -23,6 +23,7 @@ private:
 
 public:
   Float();
+  Float(const char* str);
   Float(double f);
   Float(const Float& f);
   Float(const Integer& i);

@@ -12,8 +12,8 @@
 #include <simple_cfd/numeric/expression.hpp>
 #include <simple_cfd/numeric/expression_visitor.hpp>
 #include <simple_cfd/numeric/orthotope.hpp>
-#include <cln/float.h>
 #include <simple_cfd/mp/rational.hpp>
+#include <simple_cfd/mp/float.hpp>
 
 namespace cfd
 {
@@ -48,7 +48,7 @@ public:
   Expr(const int s);
   Expr(const mp::Integer& s);
   Expr(const mp::Rational& s);
-  Expr(const cln::cl_F& s);
+  Expr(const mp::Float& s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
   Expr& operator+=(const Expr& e);

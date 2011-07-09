@@ -247,6 +247,11 @@ Expr Rational::extractPolynomials(ExtractedExpressions& extracted) const
   return clone();
 }
 
+mp::Rational Rational::getValue() const
+{
+  return value;
+}
+
 }
 
 }

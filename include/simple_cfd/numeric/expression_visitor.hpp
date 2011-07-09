@@ -3,6 +3,7 @@
 
 #include <cln/cln.h>
 #include <simple_cfd/mp/integer.hpp>
+#include <simple_cfd/mp/float.hpp>
 
 namespace cfd
 {
@@ -11,8 +12,8 @@ template<typename V>
 class NumericExpressionVisitor
 {
 public:
-  typedef V          variable_t;
-  typedef cln::cl_F   float_t;
+  typedef V           variable_t;
+  typedef mp::Float   float_t;
   typedef mp::Integer integer_t;
 
   virtual void visitConstant(const float_t& s) = 0;

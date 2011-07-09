@@ -30,7 +30,7 @@
 #include "capture/assembly/scalar_placeholder.hpp"
 #include "capture/assembly/generic_symbol.hpp"
 #include "capture/assembly/tensor_operations.hpp"
-#include "symbolic/rational.hpp"
+#include "mp/rational.hpp"
 
 namespace cfd
 {
@@ -50,7 +50,7 @@ public:
 
 private:
   static const unsigned int tensor_size = detail::Power<dimension, rank>::value;
-  typedef vertex<dimension, symbolic::Rational> exact_vertex_type;
+  typedef vertex<dimension, mp::Rational> exact_vertex_type;
   typedef boost::tuple<MeshEntity, exact_vertex_type, detail::ScalarPlaceholder::expression_t> dof_info_t;
 
   const cell_ref_t referenceCell;
@@ -220,7 +220,7 @@ public:
     vertex_type v;
 
     for(std::size_t i=0; i<dimension; ++i)
-      v[i] = vExact[i].toFloat().toDouble();
+      v[i] = vExact[i].toDouble();
 
     return v;
   }

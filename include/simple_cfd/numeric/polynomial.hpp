@@ -17,11 +17,11 @@
 #include <simple_cfd_fwd.hpp>
 #include "monomial.hpp"
 #include "optimised_polynomial.hpp"
-#include "cln_wrapper.hpp"
 #include "value_map.hpp"
 #include "expression.hpp"
 #include "expression_visitor.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
+#include <simple_cfd/mp/float.hpp>
 #include <simple_cfd/exception.hpp>
 #include <cln/integer.h>
 #include <cln/float.h>
@@ -44,7 +44,7 @@ public:
   typedef V variable_t;
   typedef double value_type;
   typedef OptimisedPolynomial<variable_t> optimised_t;
-  typedef CLNWrapper<precision> internal_value_t;
+  typedef mp::Float internal_value_t;
   typedef Monomial<variable_t, internal_value_t> monomial_t;
   typedef std::map<monomial_t, internal_value_t> coefficient_map_t;
 
@@ -112,7 +112,19 @@ public:
     cleanZeros();
   }
 
-  Polynomial(const cln::cl_R& constant)
+  Polynomial(const mp::Integer& constant)
+  {
+    addConstant(cfd::numeric_cast<value_type>(constant));
+    cleanZeros();
+  }
+
+  Polynomial(const mp::Rational& constant)
+  {
+    addConstant(cfd::numeric_cast<value_type>(constant));
+    cleanZeros();
+  }
+
+  Polynomial(const mp::Float& constant)
   {
     addConstant(cfd::numeric_cast<value_type>(constant));
     cleanZeros();

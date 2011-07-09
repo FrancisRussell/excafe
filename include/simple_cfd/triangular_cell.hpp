@@ -23,7 +23,7 @@ class TriangularCell : public GeneralCell<2>
 public:
   static const std::size_t dimension = 2;
   typedef vertex<dimension> vertex_type;
-  typedef vertex<dimension, symbolic::Rational> exact_vertex_type;
+  typedef vertex<dimension, mp::Rational> exact_vertex_type;
   static const unsigned int vertex_count = 3;
 
 private:

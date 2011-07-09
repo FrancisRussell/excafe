@@ -1,10 +1,10 @@
 #include <vector>
-#include <simple_cfd/numeric/factoriser.hpp>
-#include <cln/cln.h>
-#include <boost/utility.hpp>
 #include <iostream>
+#include <boost/utility.hpp>
+#include <simple_cfd/numeric/factoriser.hpp>
+#include <simple_cfd/mp/integer.hpp>
 
-void factor(const cln::cl_I& n)
+void factor(const cfd::mp::Integer& n)
 {
   using namespace cfd;
 

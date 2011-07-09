@@ -19,7 +19,7 @@ cse/sop_map.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
 util/apr_manager.cpp util/apr_pool.cpp \
 capture/assembly/generic_symbol.cpp \
-mp/integer.cpp mp/rational.cpp
+mp/integer.cpp mp/rational.cpp mp/float.cpp mp/cln_conversions.cpp
 
 libsymbolic_la_CXXFLAGS = -I$(top_srcdir)/include
 libsymbolic_la_SOURCES= symbolic/expr.cpp symbolic/symbol.cpp symbolic/float.cpp \

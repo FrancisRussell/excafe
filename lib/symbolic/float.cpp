@@ -6,7 +6,6 @@
 #include <simple_cfd/symbolic/make_expr_from.hpp>
 #include <simple_cfd/numeric/cast.hpp>
 #include <simple_cfd/util/hash.hpp>
-#include <cln/real.h>
 #include <set>
 #include <cmath>
 
@@ -29,8 +28,8 @@ Float::Float(const mp::Rational& _value) :
 {
 }
 
-Float::Float(const cln::cl_R& _value) : 
-  value(cln::double_approx(_value))
+Float::Float(const mp::Float& _value) : 
+  value(_value.toDouble())
 {
 }
 

@@ -1,5 +1,10 @@
 #include <simple_cfd/mp/rational.hpp>
+#include <simple_cfd/mp/integer.hpp>
+#include <simple_cfd/numeric/cast.hpp>
+#include <simple_cfd/util/hash.hpp>
+#include <gmp.h>
 #include <ostream>
+#include <cassert>
 
 namespace cfd
 {
@@ -21,6 +26,14 @@ Rational::Rational(const int i) : numerator(i), denominator(1)
 }
 
 Rational::Rational(const long i) : numerator(i), denominator(1)
+{
+}
+
+Rational::Rational(const unsigned int i) : numerator(i), denominator(1)
+{
+}
+
+Rational::Rational(const unsigned long i) : numerator(i), denominator(1)
 {
 }
 

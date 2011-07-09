@@ -8,9 +8,9 @@
 #include <utility>
 #include <boost/operators.hpp>
 #include <simple_cfd/mp/rational.hpp>
+#include <simple_cfd/mp/float.hpp>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
-#include <cln/cln.h>
 
 namespace cfd
 {
@@ -31,7 +31,7 @@ public:
   Float();
   Float(const double _value);
   Float(const mp::Rational& value);
-  Float(const cln::cl_R& value);
+  Float(const mp::Float& value);
   std::size_t nops() const;
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
