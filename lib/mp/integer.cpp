@@ -535,12 +535,6 @@ long Integer::toLong() const
   const long value = mpz_get_ui(mpz);
   mpz_clear(mpz);
 
-  if (value > 10000)
-  {
-    std::cout << "hmm: " << *this << std::endl;
-    assert(false);
-  }
-
   if (mpz_fits_slong_p(mpz))
     return size < 0 ? -value : value;
   else
