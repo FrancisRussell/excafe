@@ -148,7 +148,9 @@ Sum Sum::expandedProduct(const Sum& other) const
   {
     BOOST_FOREACH(const TermMap::value_type& b, withoutOverallOther)
     {
-      (*newTerms)[Product::mul(a.first, b.first).simplify()] += a.second*b.second;
+      Rational coefficient = a.second*b.second;
+      const Expr simplified = Product::mul(a.first, b.first).extractMultiplier(coefficient);
+      (*newTerms)[simplified] += coefficient;
     }
   }
 
