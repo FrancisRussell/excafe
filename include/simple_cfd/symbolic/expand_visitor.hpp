@@ -29,7 +29,6 @@ private:
   static quotient_map_t reciprocal(const quotient_map_t& q);
   static Sum expandedProduct(const Sum& a, const Sum& b);
 
-  boost::unordered_map<Expr, quotient_map_t> cache;
   std::stack<quotient_map_t> stack;
 
   void add(quotient_map_t& q1, const quotient_map_t& q2) const;

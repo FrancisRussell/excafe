@@ -101,53 +101,34 @@ void ExpandVisitor::push(const Sum& s)
 
 void ExpandVisitor::visit(const Sum& s)
 {  
-  const boost::unordered_map<Expr, quotient_map_t>::const_iterator iter = cache.find(s.clone());
-
-  if (iter == cache.end())
+  quotient_map_t qMap = constructQuotientMap(s.getOverall());
+  BOOST_FOREACH(const Sum::value_type& term, s)
   {
-    quotient_map_t qMap = constructQuotientMap(s.getOverall());
-    BOOST_FOREACH(const Sum::value_type& term, s)
-    {
-      term.first.accept(*this);
-      quotient_map_t newTerm(stack.top()); stack.pop();
-      mul(newTerm, constructQuotientMap(term.second));
-      add(qMap, newTerm);
-    }
+    term.first.accept(*this);
+    quotient_map_t newTerm(stack.top()); stack.pop();
+    mul(newTerm, constructQuotientMap(term.second));
+    add(qMap, newTerm);
+  }
 
-    push(qMap);
-    cache.insert(std::make_pair(s.clone(), qMap));
-  }
-  else
-  {
-    push(iter->second);
-  }
+  push(qMap);
 }
 
 void ExpandVisitor::visit(const Product& p)
 {
-  const boost::unordered_map<Expr, quotient_map_t>::const_iterator iter = cache.find(p.clone());
-  if (iter == cache.end())
+  quotient_map_t qMap = constructQuotientMap(p.getOverall());
+  BOOST_FOREACH(const Product::value_type& term, p)
   {
-    quotient_map_t qMap = constructQuotientMap(p.getOverall());
-    BOOST_FOREACH(const Product::value_type& term, p)
-    {
-      term.first.accept(*this);
-      quotient_map_t multiplicand(stack.top()); stack.pop();
+    term.first.accept(*this);
+    quotient_map_t multiplicand(stack.top()); stack.pop();
 
-      if (term.second < 0)
-        multiplicand = reciprocal(multiplicand);
+    if (term.second < 0)
+      multiplicand = reciprocal(multiplicand);
 
-      for (int n=0; n < std::abs(term.second); ++n)
-        mul(qMap, multiplicand);
-    }
-
-    push(qMap);
-    cache.insert(std::make_pair(p.clone(), qMap));
+    for (int n=0; n < std::abs(term.second); ++n)
+      mul(qMap, multiplicand);
   }
-  else
-  {
-    push(iter->second);
-  }
+
+  push(qMap);
 }
 
 void ExpandVisitor::visit(const Basic& b)
