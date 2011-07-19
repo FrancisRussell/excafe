@@ -78,6 +78,12 @@ void ExpandVisitor::mul(quotient_map_t& q1, const quotient_map_t& q2) const
   std::swap(result, q1);
 }
 
+void ExpandVisitor::mul(quotient_map_t& q1, const Rational& r) const
+{
+  BOOST_FOREACH(quotient_map_t::value_type& q1Term, q1)
+    q1Term.second *= r;
+}
+
 void ExpandVisitor::add(quotient_map_t& q1, const quotient_map_t& q2) const
 {
   BOOST_FOREACH(const quotient_map_t::value_type& q2Term, q2)
@@ -106,7 +112,7 @@ void ExpandVisitor::visit(const Sum& s)
   {
     term.first.accept(*this);
     quotient_map_t newTerm(stack.top()); stack.pop();
-    mul(newTerm, constructQuotientMap(term.second));
+    mul(newTerm, term.second);
     add(qMap, newTerm);
   }
 

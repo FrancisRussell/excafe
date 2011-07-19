@@ -33,6 +33,7 @@ private:
 
   void add(quotient_map_t& q1, const quotient_map_t& q2) const;
   void mul(quotient_map_t& q1, const quotient_map_t& q2) const;
+  void mul(quotient_map_t& q1, const Rational& r) const;
   void push(const quotient_map_t& e);
   void push(const Sum& s);
 
