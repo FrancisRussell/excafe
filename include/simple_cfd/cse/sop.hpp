@@ -21,7 +21,7 @@ namespace cse
 class SOP
 {
 public:
-  typedef std::vector< std::pair<SOP, Cube> > kernel_set_t;
+  typedef std::vector<Cube> cokernel_set_t;
 
 private:
   std::size_t nextTermNumber;
@@ -47,7 +47,7 @@ private:
       CFD_EXCEPTION("Inconsistency detected in SOP.");
   }
 
-  static void addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, const Cube& d);
+  static void addCoKernels(cokernel_set_t& kernels, unsigned i, const SOP& p, const Cube& d);
 
 public:
   typedef std::vector<Cube>::value_type     value_type;
@@ -105,7 +105,7 @@ public:
 
   Cube maxDivisor() const;
   std::map<LiteralInfo, std::size_t> getLiteralUseCounts() const;
-  kernel_set_t getKernels() const;
+  cokernel_set_t getCoKernels() const;
   std::size_t getTermNumber(const const_iterator i) const;
 
   template<typename literal_writer>

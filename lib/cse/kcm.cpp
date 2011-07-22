@@ -21,16 +21,16 @@ namespace cse
 void KCM::addPolynomial(const PolynomialIndex& polynomialID)
 {
   const SOP& sop = sops[polynomialID];
-  const SOP::kernel_set_t kernels = sop.getKernels();
-  BOOST_FOREACH(const SOP::kernel_set_t::value_type kernel, kernels)
+  const SOP::cokernel_set_t coKernels = sop.getCoKernels();
+  BOOST_FOREACH(const Cube& coKernel, coKernels)
   {
-    const vertex_descriptor coKernelVertex = addCoKernel(polynomialID, kernel.second);
-    const SOP& sop = kernel.first;
+    const vertex_descriptor coKernelVertex = addCoKernel(polynomialID, coKernel);
+    const SOP kernel = sop/coKernel;
 
-    for(SOP::const_iterator iter = sop.begin(); iter != sop.end(); ++iter)
+    for(SOP::const_iterator iter = kernel.begin(); iter != kernel.end(); ++iter)
     {
       const vertex_descriptor cubeVertex = addCube(*iter);
-      const std::size_t termID = sop.getTermNumber(iter);
+      const std::size_t termID = kernel.getTermNumber(iter);
       const std::pair<edge_descriptor, bool> edgePair = add_edge(coKernelVertex, cubeVertex, graph);
 
       if (!edgePair.second)
@@ -39,7 +39,6 @@ void KCM::addPolynomial(const PolynomialIndex& polynomialID)
       const edge_descriptor edge = edgePair.first;
       put(term_id(), graph, edge, std::make_pair(polynomialID, termID));
     }
-    //std::cout << "kernel: " << kernel.first << ", co-kernel: " << kernel.second << std::endl;
   }
 }
 
@@ -52,15 +51,15 @@ literalCreator(_literalCreator), sops(literalCreator.getSOPMap())
   }
 }
 
-KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, const Cube& cokernel)
+KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, const Cube& coKernel)
 {
   const vertex_descriptor v = add_vertex(graph);
   put(is_cube(), graph, v, false);
   put(polynomial_id(), graph, v, polynomialID);
-  put(term_cokernel(), graph, v, cokernel);
-  put(mul_count(), graph, v, cokernel.numMultiplies(literalCreator));
-  put(is_unit(), graph, v, cokernel.isUnit(literalCreator));
-  put(is_numeric(), graph, v, cokernel.isNumeric(literalCreator));
+  put(term_cokernel(), graph, v, coKernel);
+  put(mul_count(), graph, v, coKernel.numMultiplies(literalCreator));
+  put(is_unit(), graph, v, coKernel.isUnit(literalCreator));
+  put(is_numeric(), graph, v, coKernel.isNumeric(literalCreator));
   return v;
 }
 
