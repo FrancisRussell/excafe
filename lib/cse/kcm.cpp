@@ -56,7 +56,7 @@ KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, con
   const vertex_descriptor v = add_vertex(graph);
   put(is_cube(), graph, v, false);
   put(polynomial_id(), graph, v, polynomialID);
-  put(term_cokernel(), graph, v, coKernel);
+  put(term_cube(), graph, v, coKernel);
   put(mul_count(), graph, v, coKernel.numMultiplies(literalCreator));
   put(is_unit(), graph, v, coKernel.isUnit(literalCreator));
   put(is_numeric(), graph, v, coKernel.isNumeric(literalCreator));

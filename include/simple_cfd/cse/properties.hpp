@@ -16,9 +16,6 @@ struct polynomial_id { typedef boost::vertex_property_tag kind; };
 // The value of the cube
 struct term_cube     { typedef boost::vertex_property_tag kind; };
 
-// The value of the co-kernel
-struct term_cokernel { typedef boost::vertex_property_tag kind; };
-
 // The number of multiplies required to evaluate the cube/co-kernel
 struct mul_count     { typedef boost::vertex_property_tag kind; };
 

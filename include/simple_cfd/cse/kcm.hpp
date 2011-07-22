@@ -30,14 +30,13 @@ class KCM
 {
 private:
   typedef boost::property<term_cube, Cube,
-          boost::property<term_cokernel, Cube,
           boost::property<mul_count, int,
           boost::property<is_cube, bool,
           boost::property<is_unit, bool,
           boost::property<is_numeric, bool,
           boost::property<polynomial_id, PolynomialIndex,
           boost::property<cube_ordering, std::pair<int, unsigned>
-          > > > > > > > > VertexProperty;
+          > > > > > > > VertexProperty;
 
   // term_number
   typedef boost::property<term_id, std::size_t> EdgeProperty;

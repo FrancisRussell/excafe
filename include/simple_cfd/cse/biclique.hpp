@@ -288,7 +288,7 @@ public:
       }
 
       // Add new term to polynomial
-      sops[polynomialID].append(get(term_cokernel(), *graph, coKernelVertex) + newCube);
+      sops[polynomialID].append(get(term_cube(), *graph, coKernelVertex) + newCube);
     }
   }
 };
