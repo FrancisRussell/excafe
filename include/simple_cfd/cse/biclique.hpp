@@ -275,17 +275,13 @@ public:
         const vertex_descriptor cubeVertex = target(edge, *graph);
         if (cubeVertices->find(cubeVertex) != cubeVertices->end())
         {
-          const std::pair<PolynomialIndex, std::size_t> termID = get(term_id(), *graph, edge);
+          const std::size_t termID = get(term_id(), *graph, edge);
 
-          // If the polynomial ID of the term associated with this edge doesn't match
-          // our co-kernel, something is badly wrong.
-          assert(polynomialID == termID.first);
-          
-          const bool inserted = termIDs.insert(termID).second;
+          const bool inserted = termIDs.insert(std::make_pair(polynomialID, termID)).second;
           if (!inserted)
             CFD_EXCEPTION("Duplicate term found in biclique.");
 
-          const bool deleted = sops[polynomialID].deleteTerm(termID.second);
+          const bool deleted = sops[polynomialID].deleteTerm(termID);
           if (!deleted)
             CFD_EXCEPTION("Failed to remove factorised term from SOP.");
         }

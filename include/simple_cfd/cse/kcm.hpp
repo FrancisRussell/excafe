@@ -39,8 +39,8 @@ private:
           boost::property<cube_ordering, std::pair<int, unsigned>
           > > > > > > > > VertexProperty;
 
-  // std::pair<polynomial_id, term_number>
-  typedef boost::property< term_id, std::pair<PolynomialIndex, std::size_t> > EdgeProperty;
+  // term_number
+  typedef boost::property<term_id, std::size_t> EdgeProperty;
 
   typedef boost::adjacency_list<
     boost::vecS,

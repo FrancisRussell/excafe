@@ -37,7 +37,7 @@ void KCM::addPolynomial(const PolynomialIndex& polynomialID)
         CFD_EXCEPTION("Attemped to insert duplicate edge into KCM. This should never happen.");
 
       const edge_descriptor edge = edgePair.first;
-      put(term_id(), graph, edge, std::make_pair(polynomialID, termID));
+      put(term_id(), graph, edge, termID);
     }
   }
 }
