@@ -32,10 +32,11 @@ protected:
     std::size_t count;
     std::size_t numeric;
     std::size_t unit;
+    std::size_t haveCoefficients;
     int value;
 
   public:
-    VertexInfo() : count(0), numeric(0), unit(0), value(0)
+    VertexInfo() : count(0), numeric(0), unit(0), haveCoefficients(0), value(0)
     {
     }
 
@@ -45,6 +46,7 @@ protected:
       numeric += (get(is_numeric(), graph, v) ? 1 : 0);
       unit += (get(is_unit(), graph, v) ? 1 : 0);
       value += get(mul_count(), graph, v);
+      haveCoefficients += (get(has_coefficient(), graph, v) ? 1 : 0);
     }
 
     VertexInfo& operator+=(const VertexInfo& v)
@@ -76,9 +78,9 @@ protected:
       return count - unit;
     }
 
-    std::size_t numNonUnitNumeric() const
+    std::size_t numHaveCoefficients() const
     {
-      return numeric - unit;
+      return haveCoefficients;
     }
 
     int getValue() const
@@ -128,7 +130,7 @@ protected:
     const int origMuls = cubeInfo.getValue() * coKernelInfo.num() +
                          coKernelInfo.getValue() * cubeInfo.num() +
                          coKernelInfo.numNonUnit() * cubeInfo.numNonUnit() -
-                         coKernelInfo.numNonUnitNumeric() * cubeInfo.numNonUnitNumeric();
+                         coKernelInfo.numHaveCoefficients() * cubeInfo.numHaveCoefficients();
 
     const int rectAdds = cubeInfo.num() - 1;
     const int rectMuls = cubeInfo.getValue() + 

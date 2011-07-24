@@ -164,6 +164,17 @@ bool Cube::isNumeric(const NewLiteralCreator& creator) const
   return true;
 }
 
+bool Cube::hasCoefficient(const NewLiteralCreator& creator) const
+{
+  BOOST_FOREACH(const exponent_map_t::value_type& lMapping, *literalExponents)
+  {
+    if (creator.isNumeric(lMapping.first) && !creator.isUnit(lMapping.first))
+      return true;
+  }
+
+  return false;
+}
+
 std::size_t Cube::numMultiplies(const NewLiteralCreator& creator) const
 {
   std::size_t result = 0;

@@ -60,6 +60,7 @@ KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, con
   put(mul_count(), graph, v, coKernel.numMultiplies(literalCreator));
   put(is_unit(), graph, v, coKernel.isUnit(literalCreator));
   put(is_numeric(), graph, v, coKernel.isNumeric(literalCreator));
+  put(has_coefficient(), graph, v, coKernel.hasCoefficient(literalCreator));
   return v;
 }
 
@@ -80,6 +81,7 @@ KCM::vertex_descriptor KCM::addCube(const Cube& c)
     put(mul_count(), graph, v, c.numMultiplies(literalCreator));
     put(is_unit(), graph, v, c.isUnit(literalCreator));
     put(is_numeric(), graph, v, c.isNumeric(literalCreator));
+    put(has_coefficient(), graph, v, c.hasCoefficient(literalCreator));
     return v;
   }
 }

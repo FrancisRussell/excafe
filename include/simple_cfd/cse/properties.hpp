@@ -28,6 +28,10 @@ struct is_unit       { typedef boost::vertex_property_tag kind; };
 // Is this cube a constant numeric value?
 struct is_numeric    { typedef boost::vertex_property_tag kind; };
 
+// Does this cube have a numeric coefficient?
+struct has_coefficient    { typedef boost::vertex_property_tag kind; };
+
+
 // This value represents a heuristic about which cubes to try to grow with first.
 // It *must* have a unique value for each cube, hence the form (score, vertex_id).
 struct cube_ordering { typedef boost::vertex_property_tag kind; };
