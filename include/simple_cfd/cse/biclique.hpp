@@ -7,6 +7,7 @@
 #include <boost/operators.hpp>
 #include "properties.hpp"
 #include "sop_map.hpp"
+#include "vertex_info.hpp"
 #include "polynomial_index.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 #include <simple_cfd/exception.hpp>
@@ -26,79 +27,16 @@ public:
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
 protected:
-  class VertexInfo : boost::addable<VertexInfo>
-  {
-  private:
-    std::size_t count;
-    std::size_t numeric;
-    std::size_t unit;
-    std::size_t haveCoefficients;
-    int value;
-
-  public:
-    VertexInfo() : count(0), numeric(0), unit(0), haveCoefficients(0), value(0)
-    {
-    }
-
-    void addVertex(const graph_t& graph, const vertex_descriptor& v)
-    {
-      ++count;
-      numeric += (get(is_numeric(), graph, v) ? 1 : 0);
-      unit += (get(is_unit(), graph, v) ? 1 : 0);
-      value += get(mul_count(), graph, v);
-      haveCoefficients += (get(has_coefficient(), graph, v) ? 1 : 0);
-    }
-
-    VertexInfo& operator+=(const VertexInfo& v)
-    {
-      count += v.count;
-      numeric += v.numeric;
-      unit += v.unit;
-      value += v.value;
-      return *this;
-    }
-
-    std::size_t num() const
-    {
-      return count;
-    }
-
-    std::size_t numNumeric() const
-    {
-      return numeric;
-    }
-
-    std::size_t numUnit() const
-    {
-      return unit;
-    }
-
-    std::size_t numNonUnit() const
-    {
-      return count - unit;
-    }
-
-    std::size_t numHaveCoefficients() const
-    {
-      return haveCoefficients;
-    }
-
-    int getValue() const
-    {
-      return value;
-    }
-  };
-
   graph_t* graph;
   util::LazyCopy< std::set<vertex_descriptor> > cubeVertices;
   util::LazyCopy< std::set<vertex_descriptor> > coKernelVertices;
-  VertexInfo cubeInfo;
-  VertexInfo coKernelInfo;
+  VertexInfo<graph_t> cubeInfo;
+  VertexInfo<graph_t> coKernelInfo;
 
   template<typename InputIterator>
-  static VertexInfo getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
+  static VertexInfo<graph_t> getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
   {
-    VertexInfo result;
+    VertexInfo<graph_t> result;
     BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
       result.addVertex(graph, v);
 
@@ -119,7 +57,7 @@ protected:
     std::swap(vertices, newVertices);
   }
 
-  static int getValue(const VertexInfo& cubeInfo, const VertexInfo& coKernelInfo)
+  static int getValue(const VertexInfo<graph_t>& cubeInfo, const VertexInfo<graph_t>& coKernelInfo)
   {
     const int multiplyWeight = 1;
 

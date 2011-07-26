@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <boost/foreach.hpp>
 #include "biclique.hpp"
+#include "vertex_info.hpp"
 #include <simple_cfd/exception.hpp>
 
 namespace cfd
@@ -27,7 +28,7 @@ private:
   typedef typename base_t::edge_descriptor   edge_descriptor;
 
   long depth;
-  typename base_t::VertexInfo maxCubeInfo;
+  VertexInfo<graph_t> maxCubeInfo;
   vertex_descriptor nextSplitPoint;
   bool finished;
 
@@ -40,7 +41,7 @@ private:
   void calculateValues(const vertex_descriptor& oldSplitPoint)
   {
     const vertex_descriptor nullVertex = boost::graph_traits<graph_t>::null_vertex();
-    typename base_t::VertexInfo candidateCubeInfo;
+    VertexInfo<graph_t> candidateCubeInfo;
     nextSplitPoint = nullVertex;
 
     // nextSplitPoint is the lexicographically next cube vertex after the old split point
@@ -68,7 +69,7 @@ private:
 
       BOOST_FOREACH(const vertex_descriptor& coKernel, *this->coKernelVertices)
       {
-        typename base_t::VertexInfo currentCandidateInfo;
+        VertexInfo<graph_t> currentCandidateInfo;
 
         BOOST_FOREACH(const edge_descriptor& e, out_edges(coKernel, this->getGraph()))
         {
