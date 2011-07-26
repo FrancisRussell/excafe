@@ -8,6 +8,7 @@
 #include <cmath>
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
+#include <boost/utility.hpp>
 #include <simple_cfd_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <lagrange_triangle.hpp>
@@ -354,8 +355,8 @@ TriangularCell::constructLattice(const exact_vertex_type& base, const std::vecto
   }
   else
   {
-    const exact_vertex_type offset = offsets.front();
-    const std::vector<exact_vertex_type> subOffsets(offsets.begin()+1, offsets.end());
+    const exact_vertex_type offset = offsets.back();
+    const std::vector<exact_vertex_type> subOffsets(offsets.begin(), boost::prior(offsets.end()));
 
     for(std::size_t i=1; i<degree; ++i)
     {
