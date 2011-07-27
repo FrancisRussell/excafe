@@ -179,7 +179,7 @@ protected:
     // child terms.
 
     const child_type simplifiedChildren = asChild(*this).extractMultipliers();
-    LazyTermMap newTermMap;
+    LazyTermMap newTermMap(getTerms().size());
     Rational newOverall = child_type::null();
     mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
     removeZeros(*newTermMap);
