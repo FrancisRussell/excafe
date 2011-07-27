@@ -146,6 +146,8 @@ protected:
     }
     else
     {
+      getTerms().rehash(getTerms().size() + other.getTerms().size());
+
       child_type::combineOverall(overall, other.overall);
       BOOST_FOREACH(const typename TermMap::value_type& term, other.getTerms())
       {

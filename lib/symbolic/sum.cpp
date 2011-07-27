@@ -121,7 +121,7 @@ Sum& Sum::operator*=(const Rational& r)
 
 Expr Sum::derivative(const Symbol& s, Expr::optional_derivative_cache cache) const
 {
-  LazyTermMap newTerms;
+  LazyTermMap newTerms(getTerms().size());
 
   BOOST_FOREACH(const TermMap::value_type& e, getTerms())
   {
@@ -157,7 +157,7 @@ Sum Sum::expandedProduct(const Sum& other) const
   const Sum withoutOverallThis = this->withoutOverall();
   const Sum withoutOverallOther = other.withoutOverall();
 
-  LazyTermMap newTerms;
+  LazyTermMap newTerms(withoutOverallThis.getTerms().size() * withoutOverallOther.getTerms().size());
   BOOST_FOREACH(const TermMap::value_type& a, withoutOverallThis)
   {
     BOOST_FOREACH(const TermMap::value_type& b, withoutOverallOther)
