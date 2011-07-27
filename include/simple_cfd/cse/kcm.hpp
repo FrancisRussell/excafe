@@ -5,8 +5,10 @@
 #define BOOST_NO_HASH
 
 #include <cstddef>
+#include <cassert>
 #include <vector>
 #include <map>
+#include <set>
 #include <utility>
 #include <queue>
 #include <iostream>
@@ -19,6 +21,7 @@
 #include "properties.hpp"
 #include "polynomial_index.hpp"
 #include "sop_map.hpp"
+#include "biclique_search.hpp"
 
 namespace cfd
 {
@@ -57,6 +60,22 @@ private:
   typedef Biclique<graph_t> biclique_t;
   typedef BicliqueSearch<graph_t> biclique_search_t;
 
+  class CubeComparator
+  {
+  private:
+    const graph_t* graph;
+
+  public:
+    CubeComparator(const graph_t& _graph) : graph(&_graph)
+    {
+    }
+
+    bool operator()(const vertex_descriptor& a, const vertex_descriptor& b) const
+    {
+      return get(cube_ordering(), *graph, a) < get(cube_ordering(), *graph, b);
+    }
+  };
+
   NewLiteralCreator& literalCreator;
   SOPMap& sops;
   std::map<Cube, vertex_descriptor> cubeVertices;
@@ -65,22 +84,43 @@ private:
   template<typename PriorityQueue>
   void addSearchSpaces(PriorityQueue& out)
   {
-    std::size_t count=0;
+    // Construct set of cubes ordered by the same property we use to
+    // choose which cube to next grow a biclique by.
+    const CubeComparator cubeComparator(graph);
+    std::set<vertex_descriptor, CubeComparator> orderedCubes(cubeComparator);
+
     BOOST_FOREACH(const vertex_descriptor v, vertices(graph))
     {
       if (get(is_cube(), graph, v))
       {
-        // out_degree is potentially O(n) so we compare iterators instead.
-        out_edge_iterator edgesBegin, edgesEnd;
-        boost::tie(edgesBegin, edgesEnd) = out_edges(v, graph);
+        const bool inserted = orderedCubes.insert(v).second;
+        assert(inserted && "Cube ordering value needs to be unique");
+      }
+    }
 
-        if (edgesBegin != edgesEnd)
+    // Add search spaces to priority queue only if their set of
+    // co-kernels have not been seen before. If they have, the previous
+    // search space contains the one just constructed.
+    std::set< std::set<vertex_descriptor> > coKernelSets;
+    std::size_t count=0;
+    BOOST_FOREACH(const vertex_descriptor v, orderedCubes)
+    {
+      // out_degree is potentially O(n) so we compare iterators instead.
+      out_edge_iterator edgesBegin, edgesEnd;
+      boost::tie(edgesBegin, edgesEnd) = out_edges(v, graph);
+
+      if (edgesBegin != edgesEnd)
+      {
+        const biclique_search_t searchSpace(graph, v);
+        const bool isNewSearchSpace = coKernelSets.insert(searchSpace.getCoKernelVertices()).second;
+        if (isNewSearchSpace)
         {
-          out.push(biclique_search_t(graph, v));
+          out.push(searchSpace);
           ++count;
         }
       }
     }
+
     std::cout << "Added " << count << " cubes to search space." << std::endl;
   }
 
