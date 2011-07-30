@@ -33,11 +33,12 @@ public:
   {
   }
 
-  explicit LazyCopy(const value_type& v) : value(boost::make_shared<value_type>(v))
+  LazyCopy(const LazyCopy& l) : value(l.value)
   {
   }
 
-  LazyCopy(const LazyCopy& l) : value(l.value)
+  template<typename T1>
+  explicit LazyCopy(const T1& v) : value(boost::make_shared<value_type>(v))
   {
   }
 

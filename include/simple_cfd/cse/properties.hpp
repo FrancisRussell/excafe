@@ -16,9 +16,6 @@ struct polynomial_id { typedef boost::vertex_property_tag kind; };
 // The value of the cube
 struct term_cube     { typedef boost::vertex_property_tag kind; };
 
-// The value of the co-kernel
-struct term_cokernel { typedef boost::vertex_property_tag kind; };
-
 // The number of multiplies required to evaluate the cube/co-kernel
 struct mul_count     { typedef boost::vertex_property_tag kind; };
 
@@ -30,6 +27,10 @@ struct is_unit       { typedef boost::vertex_property_tag kind; };
 
 // Is this cube a constant numeric value?
 struct is_numeric    { typedef boost::vertex_property_tag kind; };
+
+// Does this cube have a numeric coefficient?
+struct has_coefficient    { typedef boost::vertex_property_tag kind; };
+
 
 // This value represents a heuristic about which cubes to try to grow with first.
 // It *must* have a unique value for each cube, hence the form (score, vertex_id).

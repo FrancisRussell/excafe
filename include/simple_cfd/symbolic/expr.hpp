@@ -64,6 +64,7 @@ public:
   Expr derivative(const Symbol& s, 
                   optional_derivative_cache cache = optional_derivative_cache()) const;
   Expr simplify() const;
+  Expr extractMultiplier(Rational& r) const;
   Expr integrate(const Symbol& s, unsigned flags = 0) const;
   Expr integrate(const Symbol& s, const Rational& a, const Rational& b, unsigned flags = 0) const;
   Expr integrate(const region_t& region, unsigned flags = 0) const;

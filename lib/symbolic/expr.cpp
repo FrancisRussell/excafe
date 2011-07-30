@@ -132,6 +132,11 @@ Expr Expr::simplify() const
   return expr->simplify();
 }
 
+Expr Expr::extractMultiplier(Rational& r) const
+{
+  return expr->extractMultiplier(r);
+}
+
 std::size_t hash_value(const Basic& b)
 {
   return b.hashValue();

@@ -12,7 +12,7 @@ namespace cfd
 namespace cse
 {
 
-void SOP::addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, const Cube& d)
+void SOP::addCoKernels(cokernel_set_t& cokernels, const unsigned i, const SOP& p, const Cube& d)
 {
   typedef std::map<LiteralInfo, std::size_t> use_count_map;
   const use_count_map literalUseCounts = p.getLiteralUseCounts();
@@ -32,8 +32,8 @@ void SOP::addKernels(kernel_set_t& kernels, const unsigned i, const SOP& p, cons
         const SOP f1 = ft/c;
         const Cube d1 = merge(d, c, lj);
 
-        kernels.insert(kernels.end(), std::make_pair(f1, d1));
-        addKernels(kernels, j, f1, d1);
+        cokernels.insert(cokernels.end(), d1);
+        addCoKernels(cokernels, j, f1, d1);
       }
     }
   }
@@ -131,11 +131,11 @@ bool SOP::deleteTerm(const std::size_t termID)
   return false;
 }
 
-SOP::kernel_set_t SOP::getKernels() const
+SOP::cokernel_set_t SOP::getCoKernels() const
 {
-  kernel_set_t kernels;
-  kernels.insert(kernels.end(), std::make_pair(*this, Cube()));
-  addKernels(kernels, 0, *this, Cube());
+  cokernel_set_t kernels;
+  kernels.insert(kernels.end(), Cube());
+  addCoKernels(kernels, 0, *this, Cube());
   return kernels;
 }
 

@@ -146,6 +146,8 @@ protected:
     }
     else
     {
+      getTerms().rehash(getTerms().size() + other.getTerms().size());
+
       child_type::combineOverall(overall, other.overall);
       BOOST_FOREACH(const typename TermMap::value_type& term, other.getTerms())
       {
@@ -177,7 +179,7 @@ protected:
     // child terms.
 
     const child_type simplifiedChildren = asChild(*this).extractMultipliers();
-    LazyTermMap newTermMap;
+    LazyTermMap newTermMap(getTerms().size());
     Rational newOverall = child_type::null();
     mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
     removeZeros(*newTermMap);

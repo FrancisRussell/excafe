@@ -108,6 +108,7 @@ public:
 
   bool isUnit(const NewLiteralCreator& creator) const;
   bool isNumeric(const NewLiteralCreator& creator) const;
+  bool hasCoefficient(const NewLiteralCreator& creator) const;
   std::size_t numMultiplies(const NewLiteralCreator& creator) const;
 
   template<typename literal_writer>

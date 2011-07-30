@@ -7,6 +7,7 @@
 #include <boost/operators.hpp>
 #include "properties.hpp"
 #include "sop_map.hpp"
+#include "vertex_info.hpp"
 #include "polynomial_index.hpp"
 #include <simple_cfd/util/lazy_copy.hpp>
 #include <simple_cfd/exception.hpp>
@@ -26,77 +27,16 @@ public:
   typedef typename boost::graph_traits<graph_t>::edge_descriptor   edge_descriptor;
 
 protected:
-  class VertexInfo : boost::addable<VertexInfo>
-  {
-  private:
-    std::size_t count;
-    std::size_t numeric;
-    std::size_t unit;
-    int value;
-
-  public:
-    VertexInfo() : count(0), numeric(0), unit(0), value(0)
-    {
-    }
-
-    void addVertex(const graph_t& graph, const vertex_descriptor& v)
-    {
-      ++count;
-      numeric += (get(is_numeric(), graph, v) ? 1 : 0);
-      unit += (get(is_unit(), graph, v) ? 1 : 0);
-      value += get(mul_count(), graph, v);
-    }
-
-    VertexInfo& operator+=(const VertexInfo& v)
-    {
-      count += v.count;
-      numeric += v.numeric;
-      unit += v.unit;
-      value += v.value;
-      return *this;
-    }
-
-    std::size_t num() const
-    {
-      return count;
-    }
-
-    std::size_t numNumeric() const
-    {
-      return numeric;
-    }
-
-    std::size_t numUnit() const
-    {
-      return unit;
-    }
-
-    std::size_t numNonUnit() const
-    {
-      return count - unit;
-    }
-
-    std::size_t numNonUnitNumeric() const
-    {
-      return numeric - unit;
-    }
-
-    int getValue() const
-    {
-      return value;
-    }
-  };
-
   graph_t* graph;
   util::LazyCopy< std::set<vertex_descriptor> > cubeVertices;
   util::LazyCopy< std::set<vertex_descriptor> > coKernelVertices;
-  VertexInfo cubeInfo;
-  VertexInfo coKernelInfo;
+  VertexInfo<graph_t> cubeInfo;
+  VertexInfo<graph_t> coKernelInfo;
 
   template<typename InputIterator>
-  static VertexInfo getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
+  static VertexInfo<graph_t> getValue(const graph_t& graph, const InputIterator begin, const InputIterator end)
   {
-    VertexInfo result;
+    VertexInfo<graph_t> result;
     BOOST_FOREACH(const vertex_descriptor& v, std::make_pair(begin, end))
       result.addVertex(graph, v);
 
@@ -117,7 +57,7 @@ protected:
     std::swap(vertices, newVertices);
   }
 
-  static int getValue(const VertexInfo& cubeInfo, const VertexInfo& coKernelInfo)
+  static int getValue(const VertexInfo<graph_t>& cubeInfo, const VertexInfo<graph_t>& coKernelInfo)
   {
     const int multiplyWeight = 1;
 
@@ -128,7 +68,7 @@ protected:
     const int origMuls = cubeInfo.getValue() * coKernelInfo.num() +
                          coKernelInfo.getValue() * cubeInfo.num() +
                          coKernelInfo.numNonUnit() * cubeInfo.numNonUnit() -
-                         coKernelInfo.numNonUnitNumeric() * cubeInfo.numNonUnitNumeric();
+                         coKernelInfo.numHaveCoefficients() * cubeInfo.numHaveCoefficients();
 
     const int rectAdds = cubeInfo.num() - 1;
     const int rectMuls = cubeInfo.getValue() + 
@@ -275,24 +215,20 @@ public:
         const vertex_descriptor cubeVertex = target(edge, *graph);
         if (cubeVertices->find(cubeVertex) != cubeVertices->end())
         {
-          const std::pair<PolynomialIndex, std::size_t> termID = get(term_id(), *graph, edge);
+          const std::size_t termID = get(term_id(), *graph, edge);
 
-          // If the polynomial ID of the term associated with this edge doesn't match
-          // our co-kernel, something is badly wrong.
-          assert(polynomialID == termID.first);
-          
-          const bool inserted = termIDs.insert(termID).second;
+          const bool inserted = termIDs.insert(std::make_pair(polynomialID, termID)).second;
           if (!inserted)
             CFD_EXCEPTION("Duplicate term found in biclique.");
 
-          const bool deleted = sops[polynomialID].deleteTerm(termID.second);
+          const bool deleted = sops[polynomialID].deleteTerm(termID);
           if (!deleted)
             CFD_EXCEPTION("Failed to remove factorised term from SOP.");
         }
       }
 
       // Add new term to polynomial
-      sops[polynomialID].append(get(term_cokernel(), *graph, coKernelVertex) + newCube);
+      sops[polynomialID].append(get(term_cube(), *graph, coKernelVertex) + newCube);
     }
   }
 };

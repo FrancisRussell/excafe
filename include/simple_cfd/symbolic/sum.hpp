@@ -48,6 +48,7 @@ public:
   Sum& operator+=(const Expr& e);
   Sum& operator+=(const Sum& s);
   Sum& operator/=(const Rational& r);
+  Sum& operator*=(const Rational& r);
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
   Expr integrate(const Symbol& s, unsigned flags) const;
