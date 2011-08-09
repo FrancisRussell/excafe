@@ -141,7 +141,7 @@ bool KCM::factorise()
 
       const bool newBest = best.getValue() < bs.getValue()
                            || (best.getValue() == bs.getValue()
-                               && best.numCubes()*best.numCoKernels() < bs.numCubes()*bs.numCoKernels());
+                               && best.numCubes()*best.numCoKernels() > bs.numCubes()*bs.numCoKernels());
       if (newBest)
       {
         best = bs.getBiclique();
