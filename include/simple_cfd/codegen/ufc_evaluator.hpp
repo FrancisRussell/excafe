@@ -228,8 +228,10 @@ private:
     const long minutes = timer.getIntegerSeconds()/60;
     const double seconds = static_cast<double>(timer.getIntegerSeconds()%60) + timer.getFractionalSeconds();
 
-    source << "// Common sub-expression elimination pass took " << minutes << " minutes and ";
-    source << std::fixed << std::setprecision(2) << seconds << " seconds (wall clock).\n\n";
+    source << "// Common sub-expression elimination pass took ";
+    source << minutes << " minute" << (minutes != 1 ? "s":"") << " and ";
+    source << std::fixed << std::setprecision(2);
+    source << seconds << " seconds (wall clock).\n\n";
 
     UFCIntegralGenerator generator(source, coefficientIndices);
     generator.outputPrefix();
