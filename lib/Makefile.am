@@ -15,7 +15,7 @@ capture/assembly/cell_vertex_component.cpp capture/assembly/basis_coefficient.cp
 capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propagation_rules.cpp \
 cse/cube.cpp cse/sop.cpp cse/polynomial_index.cpp \
 symbolic/expr.cpp symbolic/symbol.cpp symbolic/float.cpp \
-util/type_info.cpp symbolic/basic.cpp symbolic/sum.cpp symbolic/product.cpp \
+util/type_info.cpp util/timer.cpp symbolic/basic.cpp symbolic/sum.cpp symbolic/product.cpp \
 symbolic/expand_visitor.cpp symbolic/rational.cpp symbolic/group.cpp symbolic/collect_visitor.cpp \
 symbolic/polynomial.cpp symbolic/abstract_basic.cpp cse/sop_map.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
