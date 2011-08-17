@@ -5,6 +5,7 @@
 #include <set>
 #include <memory>
 #include <sstream>
+#include <iomanip>
 #include <ufc.h>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
@@ -20,6 +21,7 @@
 #include <simple_cfd/capture/assembly/scalar_placeholder_evaluator.hpp>
 #include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
 #include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator_impl.hpp>
+#include <simple_cfd/util/timer.hpp>
 #include "ufc_integral_generator.hpp"
 #include "dynamic_cxx.hpp"
 
@@ -211,13 +213,23 @@ private:
     }
 
     std::cout << "Calling CSE..." << std::endl;
+
+    util::Timer timer;
+    timer.start();
     cse::CSEOptimiser<ScalarPlaceholder> optimiser(expressions.begin(), expressions.end());
+    timer.stop();
 
     std::ostringstream source;
     source << "#include <cassert>\n";
     source << "#include <cassert>\n";
     source << "#include <cmath>\n";
     source << "#include <ufc.h>\n\n";
+
+    const long minutes = timer.getIntegerSeconds()/60;
+    const double seconds = static_cast<double>(timer.getIntegerSeconds()%60) + timer.getFractionalSeconds();
+
+    source << "// Common sub-expression elimination pass took " << minutes << " minutes and ";
+    source << std::fixed << std::setprecision(2) << seconds << " seconds (wall clock).\n\n";
 
     UFCIntegralGenerator generator(source, coefficientIndices);
     generator.outputPrefix();
