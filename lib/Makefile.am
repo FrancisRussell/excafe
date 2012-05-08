@@ -21,8 +21,8 @@ symbolic/polynomial.cpp symbolic/abstract_basic.cpp cse/sop_map.cpp numeric/fact
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
 util/apr_manager.cpp util/apr_pool.cpp symbolic/derivative_cache.cpp \
 capture/assembly/generic_symbol.cpp symbolic/abs.cpp symbolic/extracted_expressions.cpp \
-cse/kcm.cpp
+cse/kcm.cpp python_manager.cpp numeric/sympy_bridge.cpp
 
-libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
+libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include ${PYTHON_CPPFLAGS}
 libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \
-                          -lm -lblas -llapack ${CLN_LIBS} ${GINAC_LIBS} ${APR1_LIBS}
+                          -lm -lblas -llapack ${CLN_LIBS} ${GINAC_LIBS} ${APR1_LIBS} ${PYTHON_LDFLAGS} -lboost_python

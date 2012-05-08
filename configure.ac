@@ -53,6 +53,8 @@ PKG_CHECK_MODULES([APR1], [apr-1])
 CXXFLAGS="$CXXFLAGS $APR1_CFLAGS"
 AC_SUBST(APR1_LIBS)
 
+AC_PYTHON_DEVEL
+
 # Check for MTL
 #AC_ARG_WITH([mtl],
 #          AC_HELP_STRING([--with-mtl=PFX], [Use the MTL installation in PFX]),
