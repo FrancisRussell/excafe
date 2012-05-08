@@ -19,7 +19,7 @@ struct RawConverter
 template<>
 struct RawConverter<cln::cl_R, float>
 {
-  static double low_level_convert(const cln::cl_R& s) 
+  static float low_level_convert(const cln::cl_R& s) 
   { 
     return cln::float_approx(s);
   }
