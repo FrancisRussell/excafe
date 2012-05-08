@@ -4,6 +4,20 @@
 #include <cln/cln.h>
 #include <boost/numeric/conversion/cast.hpp>
 
+namespace std
+{
+
+template<>
+struct numeric_limits<cln::cl_I>
+{
+  static const bool is_specialized = true;
+  static const bool is_integer = true;
+  static const bool is_signed = true;
+};
+
+}
+
+
 namespace cfd
 {
 
