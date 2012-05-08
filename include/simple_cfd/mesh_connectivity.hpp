@@ -31,8 +31,7 @@ public:
   std::size_t addEntity(const InputIterator& indicesBegin, const InputIterator& indicesEnd)
   {
     const std::size_t index = offsets.size() - 1;
-    indices.insert(indices.end(), indicesBegin, indicesEnd);
-    offsets.push_back(indices.size());
+    addEntity(index, indicesBegin, indicesEnd);
     return index;
   }
 

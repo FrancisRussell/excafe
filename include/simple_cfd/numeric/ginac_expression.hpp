@@ -15,6 +15,7 @@
 #include "convert_expression.hpp"
 #include "optimised_polynomial_fraction.hpp"
 #include <simple_cfd/exception.hpp>
+#include <cln/real.h>
 
 namespace cfd
 {
@@ -83,8 +84,32 @@ public:
 
   void visit(const GiNaC::numeric& n)
   {
-    const cln::cl_F value = cln::cl_float(cln::realpart(n.to_cl_N()));
-    visitor.visitConstant(value);
+    const cln::cl_N value = n.to_cl_N();
+
+    if (cln::instanceof(value, cln::cl_R_ring))
+    {
+      if (cln::instanceof(value, cln::cl_RA_ring))
+      {
+        const cln::cl_RA& rational = cln::the<cln::cl_RA>(value);
+        visitor.visitConstant(cln::numerator(rational));
+
+        if (cln::denominator(rational) != 1)
+        {
+          visitor.visitConstant(cln::denominator(rational));
+          visitor.visitExponent(-1);
+          visitor.postProduct(2);
+        }
+      }
+      else
+      {
+        const cln::cl_F& floatVal = cln::the<cln::cl_F>(value);
+        visitor.visitConstant(floatVal);
+      }
+    }
+    else
+    {
+      CFD_EXCEPTION("GiNaC expression contains non-real value.");
+    }
   }
 
   void visit(const GiNaC::power& p)
@@ -127,10 +152,13 @@ class GinacExpression : public NumericExpression<V>,
                         > >
 {
 public:
-  typedef double                                  value_type;
-  typedef V                                       variable_t;
-  typedef OptimisedPolynomialFraction<variable_t> optimised_t;
-  typedef detail::GinacValueMap<variable_t>       value_map;
+  static const bool supports_abs = false;
+
+  typedef double                                              value_type;
+  typedef V                                                   variable_t;
+  typedef OptimisedPolynomialFraction<variable_t>             optimised_t;
+  typedef detail::GinacValueMap<variable_t, GinacExpression>  value_map;
+  friend class detail::GinacValueMap<variable_t, GinacExpression>;
 
 private:
   typedef GiNaC::ex      ginac_expr_t;
@@ -142,7 +170,7 @@ private:
   static ginac_symbol_t getSymbol(const variable_t& var)
   {
     detail::GinacMapper<variable_t>& mapper(detail::GinacMapper<variable_t>::instance());
-    return mapper.getGiNaCSymbol(var);
+    return mapper.getSymbol(var);
   }
 
   static variable_t getVariable(const ginac_symbol_t& s)
@@ -156,6 +184,11 @@ private:
   }
 
 public:
+  static GinacExpression group(const GinacExpression& e)
+  {
+    return e;
+  }
+
   GinacExpression() : expr(ginac_numeric_t(0.0))
   {
   }
@@ -168,15 +201,19 @@ public:
   {
   }
 
+  GinacExpression(const cln::cl_R& c) : expr(ginac_numeric_t(c))
+  {
+  }
+
   GinacExpression(const value_type c, const variable_t& v) : expr(c * getSymbol(v)) 
   {
   }
 
-  GinacExpression(const variable_t& v, const std::size_t e) : expr(pow(getSymbol(v), e)) 
+  GinacExpression(const variable_t& v, const std::size_t e) : expr(GiNaC::pow(getSymbol(v), e)) 
   {
   }
 
-  GinacExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * pow(getSymbol(v), e)) 
+  GinacExpression(const value_type c, const variable_t& v, const std::size_t e) : expr(c * GiNaC::pow(getSymbol(v), e)) 
   {
   }
 
@@ -238,6 +275,11 @@ public:
     expr /= e.expr;
     return *this;
   }
+  
+  GinacExpression pow(const int n) const
+  {
+    return GinacExpression(GiNaC::pow(expr, n));
+  }
 
   void accept(NumericExpressionVisitor<variable_t>& v) const
   {
@@ -248,6 +290,11 @@ public:
   GinacExpression derivative(const variable_t& variable) const
   {
     return GinacExpression(expr.diff(getSymbol(variable)));
+  }
+
+  GinacExpression integrate(const variable_t& variable, const value_type& a, const value_type& b) const
+  {
+    return GinacExpression(GiNaC::integral(getSymbol(variable), a, b, expr).eval_integ().eval());
   }
   
   std::size_t degree(const variable_t& variable) const
@@ -267,6 +314,11 @@ public:
       cfd::detail::convert_expression< PolynomialFraction<variable_t> >(normalised);
 
     return optimised_t(polyFraction);
+  }
+
+  GinacExpression normalised() const
+  {
+    return GinacExpression(expr.normal());
   }
 
   std::set<variable_t> getVariables() const
@@ -310,6 +362,12 @@ public:
     }
   }
 };
+
+template<typename V>
+GinacExpression<V> pow(const GinacExpression<V>& e, const int n)
+{
+  return e.pow(n);
+}
 
 template<typename V>
 std::ostream& operator<<(std::ostream& o, const GinacExpression<V>& e)

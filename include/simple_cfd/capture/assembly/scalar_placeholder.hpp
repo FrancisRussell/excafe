@@ -6,14 +6,17 @@
 #include <ostream>
 #include <boost/variant.hpp>
 #include <boost/operators.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_void.hpp>
 #include <boost/blank.hpp>
 #include "position_component.hpp"
 #include "cell_vertex_component.hpp"
 #include "scalar_access.hpp"
-#include "scalar_constant.hpp"
 #include "basis_coefficient.hpp"
+#include "generic_symbol.hpp"
 #include "scalar_placeholder_operators.hpp"
 #include <simple_cfd/numeric/ginac_expression.hpp>
+#include <simple_cfd/numeric/excafe_expression.hpp>
 
 namespace cfd
 {
@@ -26,7 +29,7 @@ namespace
 
 struct ScalarPlaceholderExpression
 {
-  typedef GinacExpression<ScalarPlaceholder> type;
+  typedef ExcafeExpression<ScalarPlaceholder> type;
 };
 
 }
@@ -42,7 +45,7 @@ private:
                          CellVertexComponent, 
                          ScalarAccess, 
                          BasisCoefficient,
-                         ScalarConstant> variant_t;
+                         GenericSymbol> variant_t;
   variant_t value;
 
 public:
@@ -65,7 +68,7 @@ public:
   {
   }
 
-  explicit ScalarPlaceholder(const ScalarConstant& c) : value(c)
+  explicit ScalarPlaceholder(const GenericSymbol& c) : value(c)
   {
   }
 
@@ -80,9 +83,17 @@ public:
   }
 
   template<typename Visitor>
-  typename Visitor::result_type apply(const Visitor& v) const
+  typename boost::disable_if_c<boost::is_void<typename Visitor::result_type>::value, typename Visitor::result_type>::type 
+  apply(Visitor& v) const
   {
     return boost::apply_visitor(v, value);
+  }
+
+  template<typename Visitor>
+  typename boost::enable_if_c<boost::is_void<typename Visitor::result_type>::value, typename Visitor::result_type>::type 
+  apply(Visitor& v) const
+  {
+    boost::apply_visitor(v, value);
   }
 
   void write(std::ostream& o) const

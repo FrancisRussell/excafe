@@ -1,8 +1,7 @@
 #include <tester.hpp>
 #include <simple_cfd/mesh.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/lagrange_triangle_linear.hpp>
-#include <simple_cfd/lagrange_triangle_quadratic.hpp>
+#include <simple_cfd/lagrange_triangle.hpp>
 #include <simple_cfd/numeric/math_utilities.hpp>
 #include <simple_cfd/numeric/quadrature.hpp>
 #include <map>
@@ -112,20 +111,24 @@ void Tester::testQuadrature(const std::map<double, double>& q)
 
 void Tester::testLinearBasis()
 {
-  testBasis< LagrangeTriangleLinear<0> >("linear");
+  LagrangeTriangle<0> basis(1);
+  testBasis(basis, "linear");
 }
 
 void Tester::testQuadraticBasis()
 {
-  testBasis< LagrangeTriangleQuadratic<0> >("quadratic");
+  LagrangeTriangle<0> basis(2);
+  testBasis(basis, "quadratic");
 }
 
 void Tester::testLinearBasisDofs()
 {
-  testBasisDofs< LagrangeTriangleLinear<0> >("linear");
+  LagrangeTriangle<0> basis(1);
+  testBasisDofs(basis, "linear");
 }
 
 void Tester::testQuadraticBasisDofs()
 {
-  testBasisDofs< LagrangeTriangleQuadratic<0> >("quadratic");
+  LagrangeTriangle<0> basis(2);
+  testBasisDofs(basis, "quadratic");
 }

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <set>
 #include <iostream>
+#include <boost/foreach.hpp>
 #include <simple_cfd/finite_element.hpp>
 #include <simple_cfd/dof_map.hpp>
 #include <simple_cfd/local_assembly_matrix.hpp>
@@ -13,6 +14,9 @@
 #include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
 #include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
 #include <simple_cfd/capture/assembly/assembly_helper.hpp>
+#include <simple_cfd/codegen/ufc_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_evaluator.hpp>
+#include <simple_cfd/capture/evaluation/local_assembly_matrix_interpreter.hpp>
 
 namespace cfd
 {
@@ -63,48 +67,30 @@ public:
   virtual void visit(OperatorAssembly& a)
   {
     typedef ScalarPlaceholder::expression_t expression_t;
-    typedef expression_t::optimised_t optimised_expression_t;
     typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
-    typedef LocalAssemblyMatrix<dimension, optimised_expression_t> opt_local_matrix_t;
-    typedef FiniteElement<dimension> finite_element_t;
 
-    const DofMap<dimension>& testMapping = scenario.getDofMap(*a.getTestSpace());
-    const DofMap<dimension>& trialMapping = scenario.getDofMap(*a.getTrialSpace());
-
-    const std::set<const finite_element_t*> trialElements(trialMapping.getFiniteElements());
-    const std::set<const finite_element_t*> testElements(testMapping.getFiniteElements());
     const forms::BilinearFormIntegralSum sum = a.getBilinearFormIntegralSum();
+    const local_matrix_t localMatrix = scenario.constructCellIntegralAssemblyMatrix(sum);
 
-    //FIXME: Hard coded to cell integrals
-    const forms::BilinearFormIntegralSum::const_iterator sumBegin = sum.begin_dx();
-    const forms::BilinearFormIntegralSum::const_iterator sumEnd = sum.end_dx();
-
-    AssemblyHelper<dimension> assemblyHelper(scenario);
-    local_matrix_t localMatrix(testElements, trialElements);
-    
-    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    const bool interpret = false;
+    if (interpret)
     {
-      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
-      std::cout << "Assembled local-matrix expression " << 1 + formIter - sumBegin << " of " << sumEnd - sumBegin << std::endl;
+      const LocalAssemblyMatrixEvaluator<dimension> evaluator =
+        LocalAssemblyMatrixInterpreter<dimension>::construct(scenario, localMatrix);
+
+      scenario.setOptimisedCellIntegral(a, evaluator);
     }
+    else
+    {
+      const LocalAssemblyMatrixEvaluator<dimension> evaluator = 
+        codegen::UFCEvaluator<dimension>::construct(scenario, localMatrix);
 
-    //FIXME: Hard coded to cell integrals
-    const MeshEntity localCellEntity(dimension, 0);
-    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
-
-    std::cout << "Integrated local-matrix expression..." << std::endl;
-
-    //std::cout << localMatrix << std::endl;
-
-    const opt_local_matrix_t optimisedLocalMatrix(localMatrix.transform(PolynomialOptimiser<expression_t>()));
-
-    std::cout << "Built optimised local-matrix expression..." << std::endl;
-
-    /* 
-       FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
-       depending on whether they're cell or facet, and if facet, internal or external facets.
-    */
-    scenario.setOptimisedCellIntegral(a, optimisedLocalMatrix);
+      /* 
+         FIXME: We only save a cell integral. We need to support saving multiple optimised integrals
+         depending on whether they're cell or facet, and if facet, internal or external facets.
+      */
+      scenario.setOptimisedCellIntegral(a, evaluator);
+    }
   }
 };
 

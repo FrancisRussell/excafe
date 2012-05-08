@@ -22,6 +22,7 @@ template<typename V> class PolynomialFraction;
 template<typename V> class OptimisedPolynomial;
 template<typename V> class OptimisedPolynomialFraction;
 template<typename V> class GinacExpression;
+template<typename V> class ExcafeExpression;
 template<typename V> class NumericExpression;
 template<typename V> class NumericExpressionVisitor;
 

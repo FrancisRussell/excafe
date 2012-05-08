@@ -5,8 +5,7 @@
 #include <simple_cfd/capture/solve_operation.hpp>
 #include <simple_cfd/petsc_manager.hpp>
 #include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/lagrange_triangle_linear.hpp>
-#include <simple_cfd/lagrange_triangle_quadratic.hpp>
+#include <simple_cfd/lagrange_triangle.hpp>
 #include <simple_cfd/capture/scenario.hpp>
 #include <simple_cfd/capture/fields/fields.hpp>
 #include <simple_cfd/capture/forms/forms.hpp>
@@ -58,8 +57,8 @@ private:
 public:
   NavierStokesSolver(Mesh<dimension>& _mesh) : mesh(_mesh), scenario(mesh)
   {
-    velocity = scenario.addElement(new LagrangeTriangleQuadratic<1>());
-    pressure = scenario.addElement(new LagrangeTriangleLinear<0>());
+    velocity = scenario.addElement(new LagrangeTriangle<1>(2));
+    pressure = scenario.addElement(new LagrangeTriangle<0>(1));
 
     velocitySpace = scenario.defineFunctionSpace(velocity, mesh);
     pressureSpace = scenario.defineFunctionSpace(pressure, mesh);

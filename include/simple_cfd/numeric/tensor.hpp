@@ -49,9 +49,8 @@ public:
   typedef typename std::vector<value_type>::iterator iterator;
   typedef typename std::vector<value_type>::const_iterator const_iterator;
 
-  TensorSize size;
-
 private:
+  TensorSize size;
   std::vector<value_type>  elements;
 
   static std::size_t pow(const std::size_t base, const std::size_t exponent)
@@ -163,6 +162,19 @@ public:
     return elements[TensorIndex::flatten(indices, row_major_tag())];
   }
 
+  Tensor& operator=(const Tensor& t)
+  {
+    size = t.size;
+    elements = t.elements;
+    return *this;
+  }
+
+  Tensor& operator=(const value_type s)
+  {
+    assert(getRank() == 0);
+    elements[0] = s;
+    return *this;
+  }
 
   Tensor& operator*=(const value_type s)
   {

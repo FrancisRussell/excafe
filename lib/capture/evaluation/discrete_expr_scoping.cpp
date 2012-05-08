@@ -74,7 +74,7 @@ void DiscreteExprScoping::addExpressionNode(const TemporalIndexSet& indices, Dis
   {
     // The expression belongs in an inferable immediate sub-scope (which we MAY have to create)
     TemporalIndexValue& index = *indices.begin();
-    const TemporalIndexSet empty;
+    TemporalIndexSet empty;
     getLoop(index).addExpressionNode(empty, expr);
   }
   else

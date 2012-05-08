@@ -3,6 +3,11 @@
 
 #include <cstddef>
 
+// We need this for Boost's LU factorisation when using rationals.
+// Otherwise Boost tries to do things like take the square-root of
+// rational numbers.
+#define BOOST_UBLAS_TYPE_CHECK 0
+
 namespace cfd
 {
 
@@ -14,7 +19,7 @@ typedef std::size_t cell_id;
 template<std::size_t D> class Mesh;
 template<unsigned D> class MeshGeometry;
 template<unsigned D> class MeshGeometryImpl;
-template<std::size_t D> class vertex;
+template<std::size_t D, typename T = double> class vertex;
 template<std::size_t D> class FiniteElement;
 template<unsigned int D> class SubDomain;
 template<unsigned int D> class Function;
@@ -63,7 +68,6 @@ namespace util
   // Util
   template<typename T> class Singleton;
   template<typename T> class LazyCopy;
-  template<typename T> class Maybe;
   template<typename T> class tag;
 }
 

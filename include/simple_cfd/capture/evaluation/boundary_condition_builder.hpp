@@ -94,8 +94,7 @@ private:
               const std::size_t tensorIndex = element.getTensorIndex(mesh, dofIter->getCell(), dofIter->getIndex());
 
               //FIXME: the tensor index operator only works on rank 1 fields
-              const double dofCoeff = boundaryValue(tensorIndex);
-
+              const double dofCoeff = (condition.getRank() == 0 ? boundaryValue.toScalar() : boundaryValue(tensorIndex));
               boundaryField.setValues(1, &(*dofIter), &dofCoeff);
             }
           }

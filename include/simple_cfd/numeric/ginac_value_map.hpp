@@ -10,11 +10,12 @@ namespace cfd
 namespace detail
 {
 
-template<typename K>
+template<typename K, typename V>
 class GinacValueMap
 {
 public:
   typedef K key_type;
+  typedef V value_type;
   typedef GiNaC::exmap internal_map_t;
 
 private:
@@ -27,10 +28,10 @@ public:
     map[mapper.getGiNaCSymbol(var)] = s;
   }
 
-  void bind(const key_type& var, const key_type& value)
+  void bind(const key_type& var, const value_type& value)
   {
     detail::GinacMapper<key_type>& mapper(detail::GinacMapper<key_type>::instance());
-    map[mapper.getGiNaCSymbol(var)] = mapper.getGiNaCSymbol(value);
+    map[mapper.getGiNaCSymbol(var)] = value.expr;
   }
 
   const internal_map_t& getReference() const

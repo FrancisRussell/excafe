@@ -30,7 +30,7 @@ private:
   void testQuadraticBasisDofs();
 
   template<typename basis_t>
-  void testBasis(const std::string& name)
+  void testBasis(const basis_t& basis, const std::string& name)
   {
     std::cout << "Testing " << name << " basis values..." << std::endl;
   
@@ -41,7 +41,6 @@ private:
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
-    basis_t basis;
 
     const std::size_t degree = 5;
     boost::array<std::size_t, 2> degrees;
@@ -52,14 +51,13 @@ private:
   
     for(typename cfd::Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
-      const cfd::CellVertices<2> vertices = m.getCoordinates(cellIter->getIndex());
       const int dofs = basis.spaceDimension();
 
       for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
-          sum += basis.evaluateTensor(vertices, i, wIter->first);
+          sum += basis.evaluateTensor(i, wIter->first);
 
         assertEqual(1.0, sum);
       }
@@ -67,7 +65,7 @@ private:
   }
 
   template<typename basis_t>
-  void testBasisDofs(const std::string& name)
+  void testBasisDofs(const basis_t& basis, const std::string& name)
   {
     std::cout << "Testing " << name << " basis function degrees-of-freedom..." << std::endl;
  
@@ -84,7 +82,6 @@ private:
 
     cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
     cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
-    basis_t basis;
 
     cfd::DofMapBuilder<cell_type::dimension> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);
@@ -103,15 +100,13 @@ private:
       {
         const local_dof_t localDof(dofIter->second[0]);
         const vertex_type location = localDof.getElement()->getDofCoordinateLocal(localDof.getIndex());
-        const cfd::CellVertices<2> localDofCellVertices(m.getCoordinates(localDof.getCell()));
-        const double localDofValue = basis.evaluateTensor(localDofCellVertices, localDof.getIndex(), location);
+        const double localDofValue = basis.evaluateTensor(localDof.getIndex(), location);
 
         for(unsigned dof = 0; dof < dofIter->second.size(); ++dof)
         {
           const local_dof_t coDof(dofIter->second[dof]);
-          const cfd::CellVertices<2> coDofCellVertices(m.getCoordinates(coDof.getCell()));
           const vertex_type coDofLocation = coDof.getElement()->getDofCoordinateLocal(coDof.getIndex());
-          const double coDofValue = basis.evaluateTensor(coDofCellVertices, coDof.getIndex(), coDofLocation);
+          const double coDofValue = basis.evaluateTensor(coDof.getIndex(), coDofLocation);
           assertTrue(m.referenceToPhysical(localDof.getCell(), location) == m.referenceToPhysical(coDof.getCell(), coDofLocation));
           assertEqual(localDofValue, coDofValue);
         }

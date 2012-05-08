@@ -2,13 +2,17 @@
 #define SIMPLE_CFD_NUMERIC_POLYNOMIAL_FRACTION_HPP
 
 #include <cstddef>
+#include <cstdlib>
 #include <map>
 #include <boost/operators.hpp>
 #include "polynomial.hpp"
 #include "numeric_fwd.hpp"
 #include "expression.hpp"
 #include "expression_visitor.hpp"
+#include "traits.hpp"
 #include <simple_cfd/exception.hpp>
+#include <cln/integer.h>
+#include <cln/float.h>
 #include <ostream>
 
 namespace cfd
@@ -22,6 +26,8 @@ class PolynomialFraction : public NumericExpression<V>,
                            > > >
 {
 public:
+  static const bool supports_abs = false;
+
   typedef V variable_t;
   typedef Polynomial<variable_t> polynomial_t;
   typedef typename polynomial_t::value_type value_type;
@@ -58,6 +64,10 @@ public:
   }
 
   PolynomialFraction(const value_type constant) : dividend(constant), divisor(1.0)
+  {
+  }
+
+  PolynomialFraction(const cln::cl_R& constant) : dividend(constant), divisor(1.0)
   {
   }
 
@@ -198,6 +208,23 @@ public:
     return result;
   }
 
+  PolynomialFraction reciprocal() const
+  {
+    assert(dividend != 0);
+    return PolynomialFraction(divisor, dividend);
+  }
+
+  PolynomialFraction pow(const int n) const
+  {
+    const int absExponent = std::abs(n);
+    const PolynomialFraction raised(dividend.pow(absExponent), divisor.pow(absExponent));
+
+    if (n >= 0)
+      return raised;
+    else
+      return raised.reciprocal();
+  }
+
   optimised_t optimise() const
   {
     return optimised_t(*this);
@@ -231,6 +258,12 @@ public:
       o << ") * (" << divisor << ")^-1";
   }
 };
+
+template<typename V>
+PolynomialFraction<V> pow(const PolynomialFraction<V>& f, const int n)
+{
+  return f.pow(n);
+}
 
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const PolynomialFraction<T>& f)

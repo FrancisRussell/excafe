@@ -129,7 +129,7 @@ void PETScMatrix::zeroRow(const int row, const double diagonal)
 
 void PETScMatrix::zeroRows(const unsigned rowCount, const int* rows, const double diagonal)
 {
-  const PetscErrorCode ierr = MatZeroRows(m, rowCount, rows, diagonal);
+  const PetscErrorCode ierr = MatZeroRows(m, rowCount, rows, diagonal, PETSC_NULL, PETSC_NULL);
   checkError(ierr);
 }
 
@@ -196,15 +196,9 @@ PETScVector PETScMatrix::getLumpedDiagonal() const
   return *this * allOnes;
 }
 
-void PETScMatrix::extractSubmatrix(PETScMatrix& dest, const unsigned rows, const unsigned cols, const int* rowIndices, const int* colIndices) const
-{
-  const PetscErrorCode ierr = MatGetSubMatrixRaw(m, rows, rowIndices, cols, colIndices, PETSC_DECIDE, MAT_INITIAL_MATRIX, &dest.m);
-  checkError(ierr);
-}
-
 PETScMatrix::~PETScMatrix()
 {
-  const PetscErrorCode ierr = MatDestroy(m);
+  const PetscErrorCode ierr = MatDestroy(&m);
   checkError(ierr);
 }
 

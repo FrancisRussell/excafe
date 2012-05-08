@@ -2,12 +2,21 @@
 #define SIMPLE_CFD_UTIL_LAZY_COPY_HPP
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace cfd
 {
 
 namespace util
 {
+
+/*
+   This class supplies copy-on-write semantics for an arbitrary class. The class needs to be well-behaved
+   with respect to const-correctness otherwise disaster may ensue, especially in the multi-threaded case.
+   In addition, although the ref() and cref() methods may look more appealing than using than operator*(),
+   avoid them where possible. The finer granularity of ref() and cref() make a mistake like passing an
+   iterator from a transparently cloned object to its clone more likely.
+*/
 
 template<typename T>
 class LazyCopy
@@ -17,48 +26,40 @@ public:
 
 private:
   bool operator==(const LazyCopy&) const;
-
-  struct ValueHolder
-  {
-    ValueHolder() {}
-    ValueHolder(const value_type& _value) : value(_value) {}
-
-    value_type value;
-  };
-
-  boost::shared_ptr<ValueHolder> holder;
+  boost::shared_ptr<value_type> value;
 
 public:
-  LazyCopy() : holder(new ValueHolder())
+  LazyCopy() : value(boost::make_shared<value_type>())
   {
   }
 
-  LazyCopy(const value_type& v) : holder(new ValueHolder(v))
+  LazyCopy(const LazyCopy& l) : value(l.value)
   {
   }
 
-  LazyCopy(const LazyCopy& l) : holder(l.holder)
+  template<typename T1>
+  explicit LazyCopy(const T1& v) : value(boost::make_shared<value_type>(v))
   {
   }
 
   LazyCopy& operator=(const LazyCopy& l)
   {
-    holder = l.holder;
+    value = l.value;
     return *this;
   }
 
   const value_type& cref() const
   {
-    return holder->value;
+    return *value;
   }
 
   value_type& ref()
   {
     /* Is this problematic in the multi-threaded case? */
-    if (!holder.unique())
-      holder = boost::shared_ptr<ValueHolder>(new ValueHolder(holder->value));
+    if (!value.unique())
+      value = boost::make_shared<value_type>(*value);
 
-    return holder->value;
+    return *value;
   }
 
   const value_type& operator*() const
@@ -83,7 +84,7 @@ public:
 
   void swap(LazyCopy& l)
   {
-    holder.swap(l.holder);
+    value.swap(l.value);
   }
 };
 

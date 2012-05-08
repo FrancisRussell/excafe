@@ -31,6 +31,7 @@
 #include "evaluation/function_space_resolver.hpp"
 #include "evaluation/boundary_condition_builder.hpp"
 #include "evaluation/assembly_optimising_visitor.hpp"
+#include "evaluation/local_assembly_matrix_evaluator.hpp"
 
 namespace cfd
 {
@@ -42,14 +43,15 @@ private:
   static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
   typedef typename DofMap<dimension>::dof_t dof_t;
+  typedef detail::ScalarPlaceholder::expression_t expression_t;
   typedef detail::FunctionSpaceExpr* function_space_ptr;
-  typedef detail::LocalAssemblyMatrix<dimension, detail::ScalarPlaceholder::optimised_expression_t> local_assembly_matrix_t;
+  typedef detail::LocalAssemblyMatrixEvaluator<dimension> cell_integral_t;
 
   Mesh<dimension>& mesh;
   boost::ptr_vector< FiniteElement<dimension> > elements;
   std::map< function_space_ptr, DofMap<dimension> > functionSpaceMap;
   std::map< std::string, DiscreteField<dimension> > persistentFields;
-  std::map< const detail::OperatorAssembly*, local_assembly_matrix_t > optimisedCellIntegrals;
+  std::map< const detail::OperatorAssembly*, cell_integral_t> optimisedCellIntegrals;
   std::vector< DiscreteField<dimension> > boundaryValues;
 
   boost::tuple<double, double, double> getValue(const std::size_t cid, const vertex_type& vertex, 
@@ -58,12 +60,11 @@ private:
     assert(dimension <= 3);
     assert(field.getRank() <= 1);
 
-    const CellVertices<dimension> vertices(mesh.getCoordinates(cid));
     boost::tuple<double, double, double> value(0.0, 0.0, 0.0);
 
     for(unsigned dof=0; dof<field.getElement()->spaceDimension(); ++dof)
     {
-      Tensor<dimension> basis = field.getElement()->evaluateTensor(vertices, dof, vertex);
+      Tensor<dimension> basis = field.getElement()->evaluateTensor(dof, vertex);
       const dof_t fieldDof = dof_t(field.getElement(), cid, dof);
 
       double valueCoeff;
@@ -71,7 +72,7 @@ private:
 
       if (field.getRank() == 0)
       {
-        boost::get<0>(value) = basis * valueCoeff;
+        boost::get<0>(value) += basis * valueCoeff;
       }
       else
       {
@@ -261,20 +262,21 @@ public:
     }
   }
 
-  void setOptimisedCellIntegral(const detail::OperatorAssembly& assembly, const local_assembly_matrix_t& matrix)
+  void setOptimisedCellIntegral(const detail::OperatorAssembly& assembly,
+                                const cell_integral_t& evaluator)
   {
-    optimisedCellIntegrals.insert(std::make_pair(&assembly, matrix));
+    optimisedCellIntegrals.insert(std::make_pair(&assembly, evaluator));
   }
 
-  std::map<MeshEntity, local_assembly_matrix_t> getOptimisedCellIntegral(const detail::OperatorAssembly& assembly) const
+  std::map<MeshEntity, cell_integral_t> getOptimisedCellIntegral(const detail::OperatorAssembly& assembly) const
   {
     const MeshEntity cellEntity(dimension, 0);
-    typename std::map<const detail::OperatorAssembly*, local_assembly_matrix_t>::const_iterator matIter =
+    typename std::map<const detail::OperatorAssembly*, cell_integral_t>::const_iterator matIter =
       optimisedCellIntegrals.find(&assembly);
     
     if (matIter != optimisedCellIntegrals.end())
     {
-      std::map<MeshEntity, local_assembly_matrix_t> matrices;
+      std::map<MeshEntity, cell_integral_t> matrices;
       matrices.insert(std::make_pair(cellEntity, matIter->second));
       return matrices;
     }
@@ -335,6 +337,59 @@ public:
   void execute(SolveOperation& o)
   {
     o.executeDimensionTemplated<dimension>(*this);
+  }
+
+  void writeUFCCellIntegral(std::ostream& o, const forms::BilinearFormIntegralSum& a)
+  {
+    using namespace cfd::detail;
+
+    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+
+    const local_matrix_t localMatrix = constructCellIntegralAssemblyMatrix(a);
+    const std::string code = codegen::UFCEvaluator<dimension>::getCode(*this, localMatrix);
+    o << code;
+  }
+
+  //TODO: does this belong in a different file?
+  detail::LocalAssemblyMatrix<dimension, expression_t> constructCellIntegralAssemblyMatrix(const forms::BilinearFormIntegralSum& sum)
+  {
+    using namespace cfd::detail;
+
+    typedef LocalAssemblyMatrix<dimension, expression_t> local_matrix_t;
+    typedef FiniteElement<dimension> finite_element_t;
+
+    const forms::BilinearFormIntegralSum::const_iterator sumBegin = sum.begin_dx();
+    const forms::BilinearFormIntegralSum::const_iterator sumEnd = sum.end_dx();
+
+    std::set<const finite_element_t*> trialElements;
+    std::set<const finite_element_t*> testElements;
+
+    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      forms::BasisFinder<dimension> trialFinder(*this);
+      formIter->getTrialField()->accept(trialFinder);
+      trialElements.insert(trialFinder.getBasis());
+
+      forms::BasisFinder<dimension> testFinder(*this);
+      formIter->getTestField()->accept(testFinder);
+      testElements.insert(testFinder.getBasis());
+    }
+    
+    AssemblyHelper<dimension> assemblyHelper(*this);
+    local_matrix_t localMatrix(testElements, trialElements);
+    
+    for(forms::BilinearFormIntegralSum::const_iterator formIter = sumBegin; formIter!=sumEnd; ++formIter)
+    {
+      assemblyHelper.assembleBilinearForm(localMatrix, *formIter);
+      std::cout << "Assembled local-matrix expression " << 1 + formIter - sumBegin << " of " << sumEnd - sumBegin << std::endl;
+    }
+
+    const MeshEntity localCellEntity(dimension, 0);
+    localMatrix = assemblyHelper.integrate(localMatrix, localCellEntity);
+
+    std::cout << "Integrated local-matrix expression..." << std::endl;
+
+    return localMatrix;
   }
 };
 

@@ -109,6 +109,11 @@ public:
     return &values[0];
   }
 
+  value_type* data()
+  {
+    return &values[0];
+  }
+
   iterator begin()
   {
     return values.begin();
