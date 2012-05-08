@@ -1,4 +1,5 @@
 lib_LTLIBRARIES = libsimplecfd.la
+noinst_LTLIBRARIES = libcse.la libsymbolic.la
 
 CXX=${MPICXX}
 libsimplecfd_la_SOURCES = mesh_connectivity.cpp mesh_topology.cpp mesh_entity_iterator_local.cpp petsc_manager.cpp \
@@ -16,7 +17,8 @@ capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propa
 util/type_info.cpp util/timer.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
 util/apr_manager.cpp util/apr_pool.cpp \
-capture/assembly/generic_symbol.cpp
+capture/assembly/generic_symbol.cpp \
+mp/integer.cpp mp/rational.cpp mp/float.cpp mp/cln_conversions.cpp
 
 libcse_la_CXXFLAGS = -I$(top_srcdir)/include
 libcse_la_SOURCES = cse/cube.cpp cse/sop.cpp cse/polynomial_index.cpp cse/sop_map.cpp cse/kcm.cpp
@@ -28,7 +30,6 @@ symbolic/expand_visitor.cpp symbolic/rational.cpp symbolic/group.cpp symbolic/co
 symbolic/polynomial.cpp symbolic/abstract_basic.cpp \
 symbolic/derivative_cache.cpp \
 symbolic/abs.cpp symbolic/extracted_expressions.cpp
-
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LIBADD = libcse.la libsymbolic.la
