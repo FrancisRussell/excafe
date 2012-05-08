@@ -119,7 +119,7 @@ bool KCM::factorise()
     const biclique_search_t bs = queue.top();
     queue.pop();
 
-    if (bs.getMaximalValue() <= best.getValue())
+    if (bs.getMaximalValue() < best.getValue())
     {
       break;
     }
@@ -132,14 +132,17 @@ bool KCM::factorise()
       {
         const std::pair<biclique_search_t, biclique_search_t> pair = bs.split();
 
-        if (pair.first.getMaximalValue() > best.getValue())
+        if (best.getValue() <= pair.first.getMaximalValue())
           queue.push(pair.first);
 
-        if (pair.second.getMaximalValue() > best.getValue())
+        if (best.getValue() <= pair.second.getMaximalValue())
           queue.push(pair.second);
       }
 
-      if (best.getValue() < bs.getValue())
+      const bool newBest = best.getValue() < bs.getValue()
+                           || (best.getValue() == bs.getValue()
+                               && best.numCubes()*best.numCoKernels() > bs.numCubes()*bs.numCoKernels());
+      if (newBest)
       {
         best = bs.getBiclique();
         std::cout << "New best score: " << best.getValue() << std::endl;

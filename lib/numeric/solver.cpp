@@ -127,7 +127,7 @@ void PETScKrylovSolver::setAbsoluteTolerance(const double t)
 
 PETScKrylovSolver::~PETScKrylovSolver()
 {
-  KSPDestroy(ksp);
+  KSPDestroy(&ksp);
 }
 
 }
