@@ -34,8 +34,12 @@ static const char* initCode =
 "  (op, arg) = e\n"
 "  if op == SymPyBridge.OperatorType.SYM:\n"
 "    return symbolMap[arg]\n"
-"  elif op == SymPyBridge.OperatorType.CONST:\n"
-"    return sympy.Real(arg)\n"
+"  if op == SymPyBridge.OperatorType.ABS:\n"
+"    return Abs(commonToSymPy(symbolMap, arg))\n"
+"  elif op == SymPyBridge.OperatorType.FLOAT:\n"
+"    return sympy.Float(arg)\n"
+"  elif op == SymPyBridge.OperatorType.INTEGER:\n"
+"    return sympy.Integer(arg)\n"
 "  elif op == SymPyBridge.OperatorType.EXP:\n"
 "    return commonToSymPy(symbolMap, arg[0])**arg[1]\n"
 "  elif op == SymPyBridge.OperatorType.MUL:\n"
@@ -64,8 +68,14 @@ static const char* initCode =
 "  def _convert_Mul(self, symbolMap, expr):\n"
 "    return (SymPyBridge.OperatorType.MUL, map((lambda x: self.convert(symbolMap, x)), expr.args))\n"
 "\n"
-"  def _convert_Real(self, symbolMap, expr):\n"
-"    return (SymPyBridge.OperatorType.CONST, float(expr))\n"
+"  def _convert_Float(self, symbolMap, expr):\n"
+"    return (SymPyBridge.OperatorType.FLOAT, float(expr))\n"
+"\n"
+"  def _convert_Integer(self, symbolMap, expr):\n"
+"    return (SymPyBridge.OperatorType.INTEGER, int(expr))\n"
+"\n"
+"  def _convert_Abs(self, symbolMap, expr):\n"
+"    return (SymPyBridge.OperatorType.ABS, self.convert(symbolMap, expr))\n"
 "\n"
 "  def _convert_Pow(self, symbolMap, expr):\n"
 "    if not expr.args[1].is_integer: raise Exception('Cannot convert non-integer exponent')\n"
@@ -81,9 +91,10 @@ boost::python::enum_<OperatorType>("OperatorType")
   .value("ADD", ADD)
   .value("MUL", MUL)
   .value("EXP", EXP)
-  .value("CONST", CONST)
-  .value("SYM", SYM);
-
+  .value("FLOAT", FLOAT)
+  .value("INTEGER", INTEGER)
+  .value("SYM", SYM)
+  .value("ABS", ABS);
 }
 
 void init(boost::python::object& global)

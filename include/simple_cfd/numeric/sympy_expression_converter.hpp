@@ -28,7 +28,8 @@ class SymPyExpressionConverter : public NumericExpressionVisitor<V>
 private:
   typedef V variable_t;
   typedef boost::python::object result_type;
-  typedef typename NumericExpressionVisitor<variable_t>::value_t value_t;
+  typedef typename NumericExpressionVisitor<variable_t>::float_t   float_t;
+  typedef typename NumericExpressionVisitor<variable_t>::integer_t integer_t;
   typedef boost::bimap<variable_t, std::size_t> variable_map_t;
   variable_map_t variableIDs;
   std::stack<result_type> stack;
@@ -50,9 +51,14 @@ private:
   }
 
 public:
-  virtual void visitConstant(const value_t& s)
+  virtual void visitConstant(const float_t& s)
   {
-    stack.push(boost::python::make_tuple(CONST, cfd::numeric_cast<double>(s)));
+    stack.push(boost::python::make_tuple(FLOAT, cfd::numeric_cast<double>(s)));
+  }
+
+  virtual void visitConstant(const integer_t& s)
+  {
+    stack.push(boost::python::make_tuple(INTEGER, cfd::numeric_cast<long>(s)));
   }
 
   virtual void visitVariable(const variable_t& var)
@@ -66,6 +72,14 @@ public:
     stack.pop();
 
     stack.push(boost::python::make_tuple(EXP, boost::python::make_tuple(val, exponent)));
+  }
+
+  virtual void visitAbsoluteValue()
+  {
+    const result_type val = stack.top();
+    stack.pop();
+
+    stack.push(boost::python::make_tuple(ABS, val));
   }
 
   virtual void postSummation(const std::size_t nops)

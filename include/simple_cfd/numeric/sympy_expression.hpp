@@ -59,10 +59,20 @@ private:
       visitTuple(v, boost::python::extract<boost::python::tuple>(expTuple[0]));
       v.visitExponent(boost::python::extract<int>(expTuple[1]));
     }
-    else if (opType == CONST)
+    else if (opType == ABS)
+    {
+      visitTuple(v, boost::python::extract<boost::python::tuple>(operand));
+      v.visitAbsoluteValue();
+    }
+    else if (opType == FLOAT)
     {
       const double constant = boost::python::extract<double>(operand);
-      v.visitConstant(cfd::numeric_cast<typename NumericExpressionVisitor<V>::value_t>(constant));
+      v.visitConstant(cfd::numeric_cast<typename NumericExpressionVisitor<V>::float_t>(constant));
+    }
+    else if (opType == INTEGER)
+    {
+      const long constant = boost::python::extract<long>(operand);
+      v.visitConstant(cfd::numeric_cast<typename NumericExpressionVisitor<V>::integer_t>(constant));
     }
     else if (opType == SYM)
     {

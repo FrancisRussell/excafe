@@ -17,8 +17,10 @@ enum OperatorType
   ADD,
   MUL,
   EXP,
-  CONST,
-  SYM
+  FLOAT,
+  INTEGER,
+  SYM,
+  ABS
 };
 
 }
