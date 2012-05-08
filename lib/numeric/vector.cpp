@@ -156,7 +156,7 @@ Vec PETScVector::getPETScHandle() const
 
 PETScVector::~PETScVector()
 {
-  const PetscErrorCode ierr = VecDestroy(v);
+  const PetscErrorCode ierr = VecDestroy(&v);
   checkError(ierr);
 }
 
