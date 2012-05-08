@@ -52,6 +52,24 @@ struct RawConverter<cln::cl_F, double>
   }
 };
 
+template<>
+struct RawConverter<cln::cl_I, int>
+{
+  static int low_level_convert(const cln::cl_I& s) 
+  { 
+    return cln::cl_I_to_int(s);
+  }
+};
+
+template<>
+struct RawConverter<cln::cl_I, long>
+{
+  static long low_level_convert(const cln::cl_I& s) 
+  { 
+    return cln::cl_I_to_long(s);
+  }
+};
+
 }
 
 
