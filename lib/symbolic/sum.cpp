@@ -1,14 +1,14 @@
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

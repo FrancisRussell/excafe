@@ -6,7 +6,7 @@
 #include "mesh_cell.hpp"
 #include "cell_manager.hpp"
 
-namespace cfd
+namespace excafe
 {
 
 MeshTopology::MeshTopology(const CellManager::mesh_cell_ref _cell) : cell(_cell), dimension(cell->getDimension()), 

@@ -1,15 +1,15 @@
-#include <simple_cfd/symbolic/group.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/extracted_expressions.hpp>
-#include <simple_cfd/util/hash.hpp>
+#include <excafe/symbolic/group.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/extracted_expressions.hpp>
+#include <excafe/util/hash.hpp>
 #include <set>
 #include <ostream>
 #include <cstddef>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -81,7 +81,7 @@ bool Group::operator==(const Group& g) const
 std::size_t Group::untypedHash() const
 {
   std::size_t result = 0x2f33cf1c;
-  cfd::util::hash_accum(result, expr.hashValue());
+  excafe::util::hash_accum(result, expr.hashValue());
   return result;
 }
 

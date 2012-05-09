@@ -1,16 +1,16 @@
-#include <simple_cfd/codegen/codegen_fwd.hpp>
-#include <simple_cfd/codegen/ufc_integral_generator.hpp>
-#include <simple_cfd/exception.hpp>
-#include <simple_cfd/util/lazy_copy.hpp>
-#include <simple_cfd/capture/assembly/scalar_placeholder.hpp>
-#include <simple_cfd/capture/assembly/position_component.hpp>
-#include <simple_cfd/capture/assembly/cell_vertex_component.hpp>
-#include <simple_cfd/capture/assembly/generic_symbol.hpp>
-#include <simple_cfd/capture/assembly/scalar_access.hpp>
-#include <simple_cfd/capture/assembly/basis_coefficient.hpp>
-#include <simple_cfd/cse/factorised_expression_visitor.hpp>
-#include <simple_cfd/cse/polynomial_index.hpp>
-#include <simple_cfd/numeric/cast.hpp>
+#include <excafe/codegen/codegen_fwd.hpp>
+#include <excafe/codegen/ufc_integral_generator.hpp>
+#include <excafe/exception.hpp>
+#include <excafe/util/lazy_copy.hpp>
+#include <excafe/capture/assembly/scalar_placeholder.hpp>
+#include <excafe/capture/assembly/position_component.hpp>
+#include <excafe/capture/assembly/cell_vertex_component.hpp>
+#include <excafe/capture/assembly/generic_symbol.hpp>
+#include <excafe/capture/assembly/scalar_access.hpp>
+#include <excafe/capture/assembly/basis_coefficient.hpp>
+#include <excafe/cse/factorised_expression_visitor.hpp>
+#include <excafe/cse/polynomial_index.hpp>
+#include <excafe/numeric/cast.hpp>
 #include <ostream>
 #include <stack>
 #include <vector>
@@ -23,7 +23,7 @@
 #include <boost/variant.hpp>
 #include <cln/cln.h>
 
-namespace cfd
+namespace excafe
 {
 
 namespace codegen
@@ -65,7 +65,7 @@ void Product::write(std::ostream& out) const
   }
 
   bool firstNumerator = true;
-  const double coefficientAsDouble = cfd::numeric_cast<double>(coefficient);
+  const double coefficientAsDouble = excafe::numeric_cast<double>(coefficient);
   if (coefficientAsDouble != 1.0 || numerators.empty())
   {
     firstNumerator = false;
@@ -115,33 +115,33 @@ ScalarPlaceholderNamer::ScalarPlaceholderNamer(const UFCIntegralGenerator& _gene
 {
 }
 
-ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::PositionComponent& c) const
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::PositionComponent& c) const
 {
   CFD_EXCEPTION("PositionComponent detected in cell integral.");
 }
 
-ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::CellVertexComponent& c) const
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::CellVertexComponent& c) const
 {
   std::ostringstream stream;
   stream << generator.coordinatesName << "[" << c.getVertexID() << "][" << c.getComponent() << "]";
   return stream.str();
 }
 
-ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::ScalarAccess& s) const
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::ScalarAccess& s) const
 {
   std::ostringstream stream;
   stream << generator.coefficientsName << "[" << generator.getScalarIndex(s.getExpr()) << "][0]";
   return stream.str();
 }
 
-ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::BasisCoefficient& c) const
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::BasisCoefficient& c) const
 {
   std::ostringstream stream;
   stream << generator.coefficientsName << "[" << generator.getFieldIndex(c.getField()) << "][" << c.getIndex() << "]";
   return stream.str();
 }
 
-ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const cfd::detail::GenericSymbol& s) const
+ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::GenericSymbol& s) const
 {
   CFD_EXCEPTION("GenericSymbol found in ScalarPlaceholder. This should never happen.");
 }

@@ -1,15 +1,15 @@
 #include <tester.hpp>
-#include <simple_cfd/mesh.hpp>
-#include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/lagrange_triangle.hpp>
-#include <simple_cfd/numeric/math_utilities.hpp>
-#include <simple_cfd/numeric/quadrature.hpp>
+#include <excafe/mesh.hpp>
+#include <excafe/triangular_mesh_builder.hpp>
+#include <excafe/lagrange_triangle.hpp>
+#include <excafe/numeric/math_utilities.hpp>
+#include <excafe/numeric/quadrature.hpp>
 #include <map>
 #include <iostream>
 #include <cmath>
 #include <boost/array.hpp>
 
-using namespace cfd;
+using namespace excafe;
 
 Tester::Tester() : epsilon(1e-10)
 {
@@ -67,8 +67,8 @@ void Tester::testTriangleQuadrature()
   boost::array<std::size_t, 2> degrees;
   std::fill(degrees.begin(), degrees.end(), degree);
 
-  cfd::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(degrees));
-  const cfd::MeshEntity localCell(dimension, 0);
+  excafe::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(degrees));
+  const excafe::MeshEntity localCell(dimension, 0);
 
   for(Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
   {
@@ -77,7 +77,7 @@ void Tester::testTriangleQuadrature()
     const double jacobian = m.getJacobian(cellIter->getIndex(), vertex_type(0.0, 0.0));
     double accum = 0;
 
-    for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
+    for(excafe::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       accum += wIter->second * jacobian;
 
     assertEqual(accum, area);

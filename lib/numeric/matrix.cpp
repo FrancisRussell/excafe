@@ -1,6 +1,6 @@
-#include "simple_cfd/numeric/matrix.hpp"
-#include "simple_cfd/numeric/vector.hpp"
-#include "simple_cfd/numeric/sparsity_pattern.hpp"
+#include "excafe/numeric/matrix.hpp"
+#include "excafe/numeric/vector.hpp"
+#include "excafe/numeric/sparsity_pattern.hpp"
 #include <vector>
 #include <cassert>
 #include "petsc.h"
@@ -8,7 +8,7 @@
 #include "petscvec.h"
 #include "petscis.h"
 
-namespace cfd
+namespace excafe
 {
 
 PETScMatrix::PETScMatrix(const Mat& _m) : m(_m)

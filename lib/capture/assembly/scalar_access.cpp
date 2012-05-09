@@ -1,7 +1,7 @@
 #include <ostream>
-#include <simple_cfd/capture/assembly/scalar_access.hpp>
+#include <excafe/capture/assembly/scalar_access.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

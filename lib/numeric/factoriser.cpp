@@ -1,9 +1,9 @@
 #include <vector>
 #include <cln/integer.h>
 #include <cln/rational.h>
-#include <simple_cfd/numeric/factoriser.hpp>
+#include <excafe/numeric/factoriser.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 std::vector<Factoriser::power_t> Factoriser::factor(const cln::cl_I& n)

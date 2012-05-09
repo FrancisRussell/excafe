@@ -1,8 +1,8 @@
 #include <apr_pools.h>
-#include <simple_cfd/util/apr_pool.hpp>
-#include <simple_cfd/util/apr_manager.hpp>
+#include <excafe/util/apr_pool.hpp>
+#include <excafe/util/apr_manager.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace util

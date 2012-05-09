@@ -1,10 +1,10 @@
-#include <simple_cfd/mesh.hpp>
-#include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/dof_map_builder.hpp>
-#include <simple_cfd/mesh_entity.hpp>
-#include <simple_cfd/quadrature_points.hpp>
-#include <simple_cfd/cell_vertices.hpp>
-#include <simple_cfd/dof.hpp>
+#include <excafe/mesh.hpp>
+#include <excafe/triangular_mesh_builder.hpp>
+#include <excafe/dof_map_builder.hpp>
+#include <excafe/mesh_entity.hpp>
+#include <excafe/quadrature_points.hpp>
+#include <excafe/cell_vertices.hpp>
+#include <excafe/dof.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -14,7 +14,7 @@ class Tester
 {
 private:
   const double epsilon;
-  typedef cfd::TriangularCell cell_type;
+  typedef excafe::TriangularCell cell_type;
   typedef cell_type::vertex_type vertex_type;
 
   void assertTrue(const bool b);
@@ -38,22 +38,22 @@ private:
     const double height = 10.0;
     
     typedef typename basis_t::cell_type cell_type;
-    cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
-    cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
+    excafe::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
+    excafe::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
     const std::size_t dimension = m.getDimension();
 
     const std::size_t degree = 5;
     boost::array<std::size_t, 2> degrees;
     std::fill(degrees.begin(), degrees.end(), degree);
 
-    cfd::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(degrees));
-    const cfd::MeshEntity localCell(dimension, 0);
+    excafe::QuadraturePoints<2> quadrature(m.getReferenceCell()->getQuadrature(degrees));
+    const excafe::MeshEntity localCell(dimension, 0);
   
-    for(typename cfd::Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
+    for(typename excafe::Mesh<cell_type::dimension>::global_iterator cellIter(m.global_begin(dimension)); cellIter!=m.global_end(dimension); ++cellIter)
     {
       const int dofs = basis.spaceDimension();
 
-      for(cfd::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
+      for(excafe::QuadraturePoints<2>::const_iterator wIter(quadrature.begin(localCell)); wIter!=quadrature.end(localCell); ++wIter)
       {
         double sum = 0.0;
         for(int i=0; i<dofs; ++i)
@@ -74,16 +74,16 @@ private:
     
     typedef typename basis_t::cell_type cell_type;
     typedef typename cell_type::vertex_type vertex_type;
-    typedef typename cfd::DofMap<cell_type::dimension> dof_map_t;
+    typedef typename excafe::DofMap<cell_type::dimension> dof_map_t;
     typedef typename dof_map_t::local2global_map local2global_map;
     typedef typename local2global_map::key_type local_dof_t;
     typedef typename local2global_map::mapped_type global_dof_t;
     typedef typename std::map< global_dof_t, std::vector<local_dof_t> > global2local_map;
 
-    cfd::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
-    cfd::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
+    excafe::TriangularMeshBuilder meshBuilder(width, height, 2.0/15.0);
+    excafe::Mesh<cell_type::dimension> m(meshBuilder.buildMesh());
 
-    cfd::DofMapBuilder<cell_type::dimension> mapBuilder(m);
+    excafe::DofMapBuilder<cell_type::dimension> mapBuilder(m);
     mapBuilder.addFiniteElement(basis);
 
     dof_map_t dofMap(mapBuilder.getDofMap());

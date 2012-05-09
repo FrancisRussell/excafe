@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
-#include <simple_cfd/numeric/convert_expression.hpp>
-#include <simple_cfd/numeric/polynomial_fraction.hpp>
-#include <simple_cfd/numeric/ginac_expression.hpp>
-#include <simple_cfd/numeric/excafe_expression.hpp>
+#include <excafe/numeric/convert_expression.hpp>
+#include <excafe/numeric/polynomial_fraction.hpp>
+#include <excafe/numeric/ginac_expression.hpp>
+#include <excafe/numeric/excafe_expression.hpp>
 
 
 template<typename T>
@@ -12,19 +12,19 @@ struct TypeNames
 };
 
 template<typename V>
-struct TypeNames< cfd::PolynomialFraction<V> >
+struct TypeNames< excafe::PolynomialFraction<V> >
 {
   static std::string name() { return "PolynomialFraction"; }
 };
 
 template<typename V>
-struct TypeNames< cfd::GinacExpression<V> >
+struct TypeNames< excafe::GinacExpression<V> >
 {
   static std::string name() { return "GinacExpression"; }
 };
 
 template<typename V>
-struct TypeNames< cfd::ExcafeExpression<V> >
+struct TypeNames< excafe::ExcafeExpression<V> >
 {
   static std::string name() { return "ExcafeExpression"; }
 };
@@ -32,7 +32,7 @@ struct TypeNames< cfd::ExcafeExpression<V> >
 template<typename from, typename to>
 void printConversion(const from& f)
 {
-  std::cout << f << " -> " << cfd::detail::convert_expression<to>(f) << std::endl;
+  std::cout << f << " -> " << excafe::detail::convert_expression<to>(f) << std::endl;
 }
 
 template<typename from, typename to>
@@ -54,7 +54,7 @@ void printConversions()
 
 int main(int, char**)
 {
-  using namespace cfd;
+  using namespace excafe;
 
   printConversions< PolynomialFraction<std::string>, PolynomialFraction<std::string> >();
   printConversions< PolynomialFraction<std::string>, GinacExpression<std::string> >();

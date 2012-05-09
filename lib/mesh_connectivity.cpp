@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace cfd
+namespace excafe
 {
 
 MeshConnectivity::MeshConnectivity()

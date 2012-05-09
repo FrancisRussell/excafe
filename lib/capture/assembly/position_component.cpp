@@ -1,7 +1,7 @@
 #include <ostream>
-#include <simple_cfd/capture/assembly/position_component.hpp>
+#include <excafe/capture/assembly/position_component.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

@@ -1,9 +1,9 @@
-#include <simple_cfd/capture/fields/scalar.hpp>
-#include <simple_cfd/capture/fields/scalar_expr.hpp>
-#include <simple_cfd/capture/fields/scalar_literal.hpp>
-#include <simple_cfd/capture/fields/scalar_binary_operator.hpp>
+#include <excafe/capture/fields/scalar.hpp>
+#include <excafe/capture/fields/scalar_expr.hpp>
+#include <excafe/capture/fields/scalar_literal.hpp>
+#include <excafe/capture/fields/scalar_binary_operator.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 Scalar::Scalar() : expr(new detail::ScalarLiteral(0))

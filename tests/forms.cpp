@@ -1,17 +1,17 @@
-#include <simple_cfd/capture/forms/forms.hpp>
-#include <simple_cfd/lagrange_triangle_linear.hpp>
-#include <simple_cfd/mesh.hpp>
-#include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/dof_map.hpp>
-#include <simple_cfd/dof_map_builder.hpp>
-#include <simple_cfd/discrete_field.hpp>
-#include <simple_cfd/petsc_manager.hpp>
-#include <simple_cfd/numeric/tensor.hpp>
+#include <excafe/capture/forms/forms.hpp>
+#include <excafe/lagrange_triangle_linear.hpp>
+#include <excafe/mesh.hpp>
+#include <excafe/triangular_mesh_builder.hpp>
+#include <excafe/dof_map.hpp>
+#include <excafe/dof_map_builder.hpp>
+#include <excafe/discrete_field.hpp>
+#include <excafe/petsc_manager.hpp>
+#include <excafe/numeric/tensor.hpp>
 
 int main(int argc, char** argv)
 {
-  using namespace cfd;
-  using namespace cfd::forms;
+  using namespace excafe;
+  using namespace excafe::forms;
 
   PETScManager::instance().init(argc, argv);
 

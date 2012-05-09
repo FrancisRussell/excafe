@@ -1,12 +1,12 @@
-#include <simple_cfd/capture/fields/field.hpp>
-#include <simple_cfd/capture/fields/discrete_field_undefined.hpp>
-#include <simple_cfd/capture/fields/discrete_field_zero.hpp>
-#include <simple_cfd/capture/fields/discrete_field_expr.hpp>
-#include <simple_cfd/capture/fields/discrete_field_element_wise.hpp>
-#include <simple_cfd/capture/fields/discrete_field_two_norm.hpp>
-#include <simple_cfd/capture/fields/operator.hpp>
+#include <excafe/capture/fields/field.hpp>
+#include <excafe/capture/fields/discrete_field_undefined.hpp>
+#include <excafe/capture/fields/discrete_field_zero.hpp>
+#include <excafe/capture/fields/discrete_field_expr.hpp>
+#include <excafe/capture/fields/discrete_field_element_wise.hpp>
+#include <excafe/capture/fields/discrete_field_two_norm.hpp>
+#include <excafe/capture/fields/operator.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 Field::Field() : expr(new detail::DiscreteFieldUndefined())

@@ -1,9 +1,9 @@
 #include <boost/foreach.hpp>
-#include <simple_cfd/symbolic/abstract_basic.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
+#include <excafe/symbolic/abstract_basic.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

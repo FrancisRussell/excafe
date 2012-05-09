@@ -1,7 +1,7 @@
 #include <ostream>
-#include <simple_cfd/capture/assembly/cell_vertex_component.hpp>
+#include <excafe/capture/assembly/cell_vertex_component.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

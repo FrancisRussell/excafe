@@ -1,13 +1,13 @@
-#include <simple_cfd/symbolic/extracted_expressions.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/symbolic/extracted_expressions.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/exception.hpp>
 #include <sstream>
 #include <vector>
 #include <set>
 #include <boost/foreach.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

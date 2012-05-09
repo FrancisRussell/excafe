@@ -1,8 +1,8 @@
-#include <simple_cfd/util/timer.hpp>
+#include <excafe/util/timer.hpp>
 #include <sys/time.h>
 #include <cstddef>
 
-namespace cfd
+namespace excafe
 {
 
 namespace util

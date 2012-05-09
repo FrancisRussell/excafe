@@ -1,11 +1,11 @@
 #include <map>
 #include <set>
-#include <simple_cfd/capture/fields/fields_fwd.hpp>
-#include <simple_cfd/capture/fields/temporal_index_set.hpp>
-#include <simple_cfd/capture/evaluation/evaluation_strategy.hpp>
-#include <simple_cfd/capture/fields/discrete_expr_container.hpp>
+#include <excafe/capture/fields/fields_fwd.hpp>
+#include <excafe/capture/fields/temporal_index_set.hpp>
+#include <excafe/capture/evaluation/evaluation_strategy.hpp>
+#include <excafe/capture/fields/discrete_expr_container.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

@@ -1,11 +1,11 @@
-#include <simple_cfd/numeric/math_utilities.hpp>
-#include <simple_cfd/numeric/excafe_expression.hpp>
+#include <excafe/numeric/math_utilities.hpp>
+#include <excafe/numeric/excafe_expression.hpp>
 #include <cmath>
 #include <set>
 #include <vector>
 #include <string>
 
-namespace cfd
+namespace excafe
 {
 
 double MathUtilities::jacobi_a_1_n(const double alpha, const double beta, const std::size_t n)
