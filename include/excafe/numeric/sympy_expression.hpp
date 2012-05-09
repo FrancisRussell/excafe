@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CFD_NUMERIC_SYMPY_EXPRESSION_HPP
-#define SIMPLE_CFD_NUMERIC_SYMPY_EXPRESSION_HPP
+#ifndef EXCAFE_NUMERIC_SYMPY_EXPRESSION_HPP
+#define EXCAFE_NUMERIC_SYMPY_EXPRESSION_HPP
 
 #include <boost/bimap.hpp>
 #include <boost/python/object.hpp>

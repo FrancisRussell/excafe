@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CFD_PYTHON_MANAGER_HPP
-#define SIMPLE_CFD_PYTHON_MANAGER_HPP
+#ifndef EXCAFE_PYTHON_MANAGER_HPP
+#define EXCAFE_PYTHON_MANAGER_HPP
 
 #include <string>
 #include <boost/python/object.hpp>
