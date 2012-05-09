@@ -1,8 +1,8 @@
-#include <simple_cfd/util/type_info.hpp>
+#include <excafe/util/type_info.hpp>
 #include <string>
 #include <boost/functional/hash.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace util

@@ -1,13 +1,13 @@
-#include <simple_cfd/capture/fields/operator.hpp>
-#include <simple_cfd/capture/fields/function_space.hpp>
-#include <simple_cfd/capture/fields/function_space_expr.hpp>
-#include <simple_cfd/capture/fields/operator_assembly.hpp>
-#include <simple_cfd/capture/fields/operator_application.hpp>
-#include <simple_cfd/capture/fields/operator_addition.hpp>
-#include <simple_cfd/capture/fields/operator_undefined.hpp>
-#include <simple_cfd/capture/forms/bilinear_form_integral_sum.hpp>
+#include <excafe/capture/fields/operator.hpp>
+#include <excafe/capture/fields/function_space.hpp>
+#include <excafe/capture/fields/function_space_expr.hpp>
+#include <excafe/capture/fields/operator_assembly.hpp>
+#include <excafe/capture/fields/operator_application.hpp>
+#include <excafe/capture/fields/operator_addition.hpp>
+#include <excafe/capture/fields/operator_undefined.hpp>
+#include <excafe/capture/forms/bilinear_form_integral_sum.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 Operator::Operator(const FunctionSpace& _trialSpace, const FunctionSpace& _testSpace) : trialSpace(_trialSpace.getExpr()),

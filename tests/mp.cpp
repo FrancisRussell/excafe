@@ -1,15 +1,15 @@
 #include <cassert>
 #include <string>
 #include <set>
-#include <simple_cfd/mp/integer.hpp>
-#include <simple_cfd/mp/rational.hpp>
+#include <excafe/mp/integer.hpp>
+#include <excafe/mp/rational.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #define BOOST_TEST_MODULE "BigNum"
 #include <boost/test/unit_test.hpp>
 
-using namespace cfd::mp;
+using namespace excafe::mp;
 
 BOOST_AUTO_TEST_CASE(BasicSanity)
 {

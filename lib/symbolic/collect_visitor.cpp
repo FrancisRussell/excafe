@@ -1,15 +1,15 @@
 #include <utility>
 #include <cassert>
 #include <boost/foreach.hpp>
-#include <simple_cfd/symbolic/collect_visitor.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/group.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/basic.hpp>
+#include <excafe/symbolic/collect_visitor.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/group.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/basic.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

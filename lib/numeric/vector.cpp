@@ -1,4 +1,4 @@
-#include "simple_cfd/numeric/vector.hpp"
+#include "excafe/numeric/vector.hpp"
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -8,7 +8,7 @@
 #include "petsc.h"
 #include "petscvec.h"
 
-namespace cfd
+namespace excafe
 {
 
 PETScVector::PETScVector(const PETScVector& orig)

@@ -1,12 +1,12 @@
-#include <simple_cfd/mp/rational.hpp>
-#include <simple_cfd/mp/integer.hpp>
-#include <simple_cfd/numeric/cast.hpp>
-#include <simple_cfd/util/hash.hpp>
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/integer.hpp>
+#include <excafe/numeric/cast.hpp>
+#include <excafe/util/hash.hpp>
 #include <gmp.h>
 #include <ostream>
 #include <cassert>
 
-namespace cfd
+namespace excafe
 {
 
 namespace mp
@@ -221,7 +221,7 @@ double Rational::toDouble() const
 
 float Rational::toFloat() const
 {
-  return cfd::numeric_cast<float>(toDouble());
+  return excafe::numeric_cast<float>(toDouble());
 }
 
 std::size_t hash_value(const Rational& r)

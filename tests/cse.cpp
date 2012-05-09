@@ -2,12 +2,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <simple_cfd/numeric/polynomial.hpp>
-#include <simple_cfd/cse/cse_optimiser.hpp>
+#include <excafe/numeric/polynomial.hpp>
+#include <excafe/cse/cse_optimiser.hpp>
 
 int main(int argc, char** argv)
 {
-  typedef cfd::Polynomial<std::string> poly_t;
+  typedef excafe::Polynomial<std::string> poly_t;
   std::vector<poly_t> polys;
 
   const std::string x("x");
@@ -17,5 +17,5 @@ int main(int argc, char** argv)
     std::cout << i << ": " << polys[i] << std::endl;
 
   std::cout << std::endl << "Beginning CSE..." << std::endl;
-  cfd::cse::CSEOptimiser<std::string> optimiser(polys.begin(), polys.end());
+  excafe::cse::CSEOptimiser<std::string> optimiser(polys.begin(), polys.end());
 }

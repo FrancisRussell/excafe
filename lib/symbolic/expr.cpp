@@ -1,21 +1,21 @@
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/basic.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/abs.hpp>
-#include <simple_cfd/symbolic/expand_visitor.hpp>
-#include <simple_cfd/symbolic/make_expr_from.hpp>
-#include <simple_cfd/symbolic/extracted_expressions.hpp>
-#include <simple_cfd/symbolic/flags.hpp>
-#include <simple_cfd/numeric/symbol_collector.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/basic.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/abs.hpp>
+#include <excafe/symbolic/expand_visitor.hpp>
+#include <excafe/symbolic/make_expr_from.hpp>
+#include <excafe/symbolic/extracted_expressions.hpp>
+#include <excafe/symbolic/flags.hpp>
+#include <excafe/numeric/symbol_collector.hpp>
 #include <ostream>
 #include <cassert>
 #include <boost/optional.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -247,7 +247,7 @@ Expr Expr::extractPolynomials(ExtractedExpressions& extracted) const
 
 std::set<Symbol> Expr::getSymbols() const
 {
-  cfd::detail::SymbolCollector<Symbol> collector;
+  excafe::detail::SymbolCollector<Symbol> collector;
   accept(collector);
   return collector.getSymbols();
 }

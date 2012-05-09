@@ -1,12 +1,12 @@
-#include <simple_cfd/cse/sop_map.hpp>
-#include <simple_cfd/cse/polynomial_index.hpp>
+#include <excafe/cse/sop_map.hpp>
+#include <excafe/cse/polynomial_index.hpp>
 #include <vector>
 #include <utility>
 #include <cstddef>
 #include <map>
 #include <cassert>
 
-namespace cfd
+namespace excafe
 {
 
 namespace cse

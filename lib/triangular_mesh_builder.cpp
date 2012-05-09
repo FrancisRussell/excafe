@@ -9,14 +9,14 @@
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libtriangle.hpp>
-#include <simple_cfd_fwd.hpp>
+#include <excafe_fwd.hpp>
 #include <triangular_mesh_builder.hpp>
 #include <triangular_cell.hpp>
 #include <cell_manager.hpp>
-#include <simple_cfd/numeric/cast.hpp>
+#include <excafe/numeric/cast.hpp>
 #include <mesh.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace {
@@ -121,7 +121,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
   in.holelist = &holeList[0];
   in.numberofholes = holeList.size() / 2;
 
-  assert(cfd::numeric_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
+  assert(excafe::numeric_cast<int>(segmentMarkerList.size()) == in.numberofsegments);
   in.segmentmarkerlist = &segmentMarkerList[0];
 
   // Q=quiet, q=quality, e=output-edges, p=read-segments, z=zero-indexing, a=area-constraint
@@ -133,7 +133,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
   const CellManager::ref<2>::general cell = CellManager::getInstance<cell_type>();
   Mesh<dimension> m(cell);
 
-  for(vertex_id vid = 0; vid < cfd::numeric_cast<unsigned>(out.numberofpoints); ++vid)
+  for(vertex_id vid = 0; vid < excafe::numeric_cast<unsigned>(out.numberofpoints); ++vid)
   {
     const vertex_type v(out.pointlist[vid*2], out.pointlist[vid*2+1]);
     const vertex_id givenVid = m.addVertex(v);
@@ -142,7 +142,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshTriangle(
 
   std::vector<vertex_id> cellVertices(3);
 
-  for(cell_id cid = 0; cid < cfd::numeric_cast<unsigned>(out.numberoftriangles); ++cid)
+  for(cell_id cid = 0; cid < excafe::numeric_cast<unsigned>(out.numberoftriangles); ++cid)
   {
     cellVertices[0] = out.trianglelist[cid*3];
     cellVertices[1] = out.trianglelist[cid*3+1];
@@ -225,8 +225,8 @@ void TriangularMeshBuilder::handlePolygons(std::vector<double>& pointList,
 Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() const
 {
   const double sideLength = std::sqrt(2*maxCellArea);
-  const int x_size = cfd::numeric_cast<int>(std::ceil(width / sideLength)) + 1;
-  const int y_size = cfd::numeric_cast<int>(std::ceil(height / sideLength)) + 1;
+  const int x_size = excafe::numeric_cast<int>(std::ceil(width / sideLength)) + 1;
+  const int y_size = excafe::numeric_cast<int>(std::ceil(height / sideLength)) + 1;
 
   const CellManager::ref<2>::general cell = CellManager::getInstance<cell_type>();
   Mesh<dimension> m(cell);
@@ -244,7 +244,7 @@ Mesh<TriangularMeshBuilder::dimension> TriangularMeshBuilder::buildMeshOld() con
   {
     for(int x=0; x < x_nodes; ++x)
     {
-      const vertex_id givenVid = m.addVertex(vertex_type(cfd::numeric_cast<double>(x) / (x_nodes-1) * width, cfd::numeric_cast<double>(y) / (y_nodes-1) * height));
+      const vertex_id givenVid = m.addVertex(vertex_type(excafe::numeric_cast<double>(x) / (x_nodes-1) * width, excafe::numeric_cast<double>(y) / (y_nodes-1) * height));
       assert(vid == givenVid);
       ++vid;
     }

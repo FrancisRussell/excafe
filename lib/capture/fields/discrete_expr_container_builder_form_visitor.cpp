@@ -1,13 +1,13 @@
-#include <simple_cfd/capture/fields/discrete_expr_container_builder_form_visitor.hpp>
-#include <simple_cfd/capture/fields/discrete_expr_container_builder.hpp>
-#include <simple_cfd/capture/forms/field_addition.hpp>
-#include <simple_cfd/capture/forms/field_inner_product.hpp>
-#include <simple_cfd/capture/forms/field_outer_product.hpp>
-#include <simple_cfd/capture/forms/field_colon_product.hpp>
-#include <simple_cfd/capture/forms/field_divergence.hpp>
-#include <simple_cfd/capture/forms/field_gradient.hpp>
+#include <excafe/capture/fields/discrete_expr_container_builder_form_visitor.hpp>
+#include <excafe/capture/fields/discrete_expr_container_builder.hpp>
+#include <excafe/capture/forms/field_addition.hpp>
+#include <excafe/capture/forms/field_inner_product.hpp>
+#include <excafe/capture/forms/field_outer_product.hpp>
+#include <excafe/capture/forms/field_colon_product.hpp>
+#include <excafe/capture/forms/field_divergence.hpp>
+#include <excafe/capture/forms/field_gradient.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

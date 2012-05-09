@@ -1,9 +1,9 @@
 #include <memory>
 #include <set>
-#include <simple_cfd/capture/fields/operator_assembly.hpp>
-#include <simple_cfd/capture/indices/index_propagation_all.hpp>
+#include <excafe/capture/fields/operator_assembly.hpp>
+#include <excafe/capture/indices/index_propagation_all.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

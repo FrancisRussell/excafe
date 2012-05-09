@@ -1,14 +1,14 @@
 #include <cln/cln.h>
 #include <cln/float_io.h>
 #include <sstream>
-#include <simple_cfd/mp/cln_conversions.hpp>
-#include <simple_cfd/mp/integer.hpp>
-#include <simple_cfd/mp/float.hpp>
-#include <simple_cfd/mp/rational.hpp>
+#include <excafe/mp/cln_conversions.hpp>
+#include <excafe/mp/integer.hpp>
+#include <excafe/mp/float.hpp>
+#include <excafe/mp/rational.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
 
-namespace cfd
+namespace excafe
 {
 
 namespace mp

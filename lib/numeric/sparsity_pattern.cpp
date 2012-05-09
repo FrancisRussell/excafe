@@ -1,7 +1,7 @@
-#include "simple_cfd/numeric/sparsity_pattern.hpp"
+#include "excafe/numeric/sparsity_pattern.hpp"
 #include <cassert>
 
-namespace cfd
+namespace excafe
 {
 
 SparsityPattern::SparsityPattern(const unsigned r, const unsigned c) : rows(r), cols(c), pattern(rows)

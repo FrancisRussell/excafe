@@ -1,11 +1,11 @@
 #include <string>
 #include <vector>
 #include <apr_general.h>
-#include <simple_cfd/util/singleton.hpp>
-#include <simple_cfd/util/apr_manager.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/util/singleton.hpp>
+#include <excafe/util/apr_manager.hpp>
+#include <excafe/exception.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace util

@@ -1,12 +1,12 @@
 #include <queue>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/polynomial.hpp>
-#include <simple_cfd/util/hash.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/polynomial.hpp>
+#include <excafe/util/hash.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

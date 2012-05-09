@@ -1,7 +1,7 @@
-#include <simple_cfd/symbolic/basic.hpp>
+#include <excafe/symbolic/basic.hpp>
 #include <ostream>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

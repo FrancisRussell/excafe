@@ -1,8 +1,8 @@
-#include <simple_cfd/util/singleton.hpp>
-#include <simple_cfd/petsc_manager.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/util/singleton.hpp>
+#include <excafe/petsc_manager.hpp>
+#include <excafe/exception.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 PETScManager::PETScManager() : initialised(false)

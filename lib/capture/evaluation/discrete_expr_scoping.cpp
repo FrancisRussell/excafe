@@ -5,18 +5,18 @@
 #include <utility>
 #include <iterator>
 #include <boost/variant/apply_visitor.hpp>
-#include <simple_cfd/exception.hpp>
-#include <simple_cfd/capture/capture_fwd.hpp>
-#include <simple_cfd/capture/fields/temporal_index_value.hpp>
-#include <simple_cfd/capture/fields/indexable_value.hpp>
-#include <simple_cfd/capture/fields/temporal_index_set.hpp>
-#include <simple_cfd/capture/fields/discrete_expr.hpp>
-#include <simple_cfd/capture/evaluation/evaluation_fwd.hpp>
-#include <simple_cfd/capture/evaluation/expression_values.hpp>
-#include <simple_cfd/capture/evaluation/discrete_expr_scoping.hpp>
-#include <simple_cfd/capture/evaluation/discrete_expr_scoping_visitor.hpp>
+#include <excafe/exception.hpp>
+#include <excafe/capture/capture_fwd.hpp>
+#include <excafe/capture/fields/temporal_index_value.hpp>
+#include <excafe/capture/fields/indexable_value.hpp>
+#include <excafe/capture/fields/temporal_index_set.hpp>
+#include <excafe/capture/fields/discrete_expr.hpp>
+#include <excafe/capture/evaluation/evaluation_fwd.hpp>
+#include <excafe/capture/evaluation/expression_values.hpp>
+#include <excafe/capture/evaluation/discrete_expr_scoping.hpp>
+#include <excafe/capture/evaluation/discrete_expr_scoping_visitor.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

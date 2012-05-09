@@ -1,8 +1,8 @@
 #include <vector>
-#include <simple_cfd/numeric/factoriser.hpp>
-#include <simple_cfd/mp/integer.hpp>
+#include <excafe/numeric/factoriser.hpp>
+#include <excafe/mp/integer.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)

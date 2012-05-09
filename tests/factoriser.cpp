@@ -1,12 +1,12 @@
 #include <vector>
 #include <iostream>
 #include <boost/utility.hpp>
-#include <simple_cfd/numeric/factoriser.hpp>
-#include <simple_cfd/mp/integer.hpp>
+#include <excafe/numeric/factoriser.hpp>
+#include <excafe/mp/integer.hpp>
 
-void factor(const cfd::mp::Integer& n)
+void factor(const excafe::mp::Integer& n)
 {
-  using namespace cfd;
+  using namespace excafe;
 
   Factoriser factoriser;
   const std::vector<Factoriser::power_t> result = factoriser.factor(n);

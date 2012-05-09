@@ -1,8 +1,8 @@
-#include <simple_cfd/cse/polynomial_index.hpp>
+#include <excafe/cse/polynomial_index.hpp>
 
 #include <ostream>
 
-namespace cfd
+namespace excafe
 {
 
 namespace cse

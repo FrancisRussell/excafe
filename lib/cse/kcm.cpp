@@ -1,18 +1,18 @@
-#include <simple_cfd/cse/kcm.hpp>
-#include <simple_cfd/cse/sop.hpp>
-#include <simple_cfd/cse/cube.hpp>
-#include <simple_cfd/cse/biclique.hpp>
-#include <simple_cfd/cse/biclique_search.hpp>
-#include <simple_cfd/cse/polynomial_index.hpp>
-#include <simple_cfd/cse/new_literal_creator.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/cse/kcm.hpp>
+#include <excafe/cse/sop.hpp>
+#include <excafe/cse/cube.hpp>
+#include <excafe/cse/biclique.hpp>
+#include <excafe/cse/biclique_search.hpp>
+#include <excafe/cse/polynomial_index.hpp>
+#include <excafe/cse/new_literal_creator.hpp>
+#include <excafe/exception.hpp>
 #include <map>
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/utility.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace cse

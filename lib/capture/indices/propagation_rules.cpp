@@ -1,10 +1,10 @@
 #include <map>
-#include <simple_cfd/capture/fields/temporal_index_set.hpp>
-#include <simple_cfd/capture/indices/index_propagation_all.hpp>
-#include <simple_cfd/capture/indices/index_propagation_except.hpp>
-#include <simple_cfd/capture/indices/propagation_rules.hpp>
+#include <excafe/capture/fields/temporal_index_set.hpp>
+#include <excafe/capture/indices/index_propagation_all.hpp>
+#include <excafe/capture/indices/index_propagation_except.hpp>
+#include <excafe/capture/indices/propagation_rules.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

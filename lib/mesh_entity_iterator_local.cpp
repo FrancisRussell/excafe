@@ -1,6 +1,6 @@
 #include <mesh_entity_iterator_local.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 MeshEntityIteratorLocal::MeshEntityIteratorLocal(MeshTopology* const _topology,

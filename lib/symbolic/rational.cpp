@@ -1,11 +1,11 @@
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/make_expr_from.hpp>
-#include <simple_cfd/numeric/math_utilities.hpp>
-#include <simple_cfd/util/hash.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/make_expr_from.hpp>
+#include <excafe/numeric/math_utilities.hpp>
+#include <excafe/util/hash.hpp>
 #include <ostream>
 #include <cassert>
 #include <cmath>
@@ -14,7 +14,7 @@
 #include <cln/integer.h>
 #include <cln/rational.h>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -97,7 +97,7 @@ Expr Rational::integrate(const Symbol& s, const unsigned flags) const
 std::size_t Rational::untypedHash() const
 {
   std::size_t hash = 0x161f15c2;
-  cfd::util::hash_accum(hash, value);
+  excafe::util::hash_accum(hash, value);
   return hash;
 }
 

@@ -1,7 +1,7 @@
-#include <simple_cfd/capture/fields/discrete_expr.hpp>
-#include <simple_cfd/capture/fields/temporal_index_set.hpp>
+#include <excafe/capture/fields/discrete_expr.hpp>
+#include <excafe/capture/fields/temporal_index_set.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail
