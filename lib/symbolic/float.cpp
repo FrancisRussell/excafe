@@ -1,16 +1,16 @@
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/make_expr_from.hpp>
-#include <simple_cfd/numeric/cast.hpp>
-#include <simple_cfd/util/hash.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/make_expr_from.hpp>
+#include <excafe/numeric/cast.hpp>
+#include <excafe/util/hash.hpp>
 #include <cln/real.h>
 #include <set>
 #include <cmath>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -96,7 +96,7 @@ Expr Float::integrate(const Symbol& s, const unsigned flags) const
 std::size_t Float::untypedHash() const
 {
   std::size_t result = 0x2c6831da;
-  cfd::util::hash_accum(result, value);
+  excafe::util::hash_accum(result, value);
   return result;
 }
 
@@ -150,7 +150,7 @@ Expr Float::extractMultiplier(Rational& coeff) const
 
 void Float::accept(NumericExpressionVisitor<Symbol>& v) const
 {
-  v.visitConstant(cfd::numeric_cast<NumericExpressionVisitor<Symbol>::float_t>(value));
+  v.visitConstant(excafe::numeric_cast<NumericExpressionVisitor<Symbol>::float_t>(value));
 }
 
 double Float::toDouble() const

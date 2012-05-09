@@ -1,7 +1,7 @@
 #include <cassert>
-#include <simple_cfd/capture/fields/temporal_index_value.hpp>
+#include <excafe/capture/fields/temporal_index_value.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace detail

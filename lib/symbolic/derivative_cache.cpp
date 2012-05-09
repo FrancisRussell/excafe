@@ -1,8 +1,8 @@
-#include <simple_cfd/symbolic/derivative_cache.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
+#include <excafe/symbolic/derivative_cache.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic

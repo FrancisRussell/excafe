@@ -1,14 +1,14 @@
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/sum.hpp>
-#include <simple_cfd/symbolic/make_expr_from.hpp>
-#include <simple_cfd/util/hash.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/sum.hpp>
+#include <excafe/symbolic/make_expr_from.hpp>
+#include <excafe/util/hash.hpp>
+#include <excafe/exception.hpp>
 #include <set>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -47,7 +47,7 @@ bool Symbol::depends(const std::set<Symbol>& symbols) const
 std::size_t Symbol::untypedHash() const
 {
   std::size_t result = 0x2d3a117b;
-  cfd::util::hash_accum(result, serial);
+  excafe::util::hash_accum(result, serial);
   return result;
 }
 

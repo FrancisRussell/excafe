@@ -5,12 +5,12 @@
 #include <boost/python/object.hpp>
 #include <boost/python/exec.hpp>
 #include <boost/python/detail/wrap_python.hpp>
-#include <simple_cfd/exception.hpp>
-#include <simple_cfd/util/singleton.hpp>
-#include <simple_cfd/python_manager.hpp>
-#include <simple_cfd/numeric/sympy_bridge.hpp>
+#include <excafe/exception.hpp>
+#include <excafe/util/singleton.hpp>
+#include <excafe/python_manager.hpp>
+#include <excafe/numeric/sympy_bridge.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 void PythonManager::init()
@@ -30,7 +30,7 @@ void PythonManager::init()
       global = main.attr("__dict__");
 
       // Call the SymPy bridge init code
-      cfd::detail::sympy_bridge::init(global);
+      excafe::detail::sympy_bridge::init(global);
     }
     catch(error_already_set&)
     {

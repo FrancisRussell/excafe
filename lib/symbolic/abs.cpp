@@ -1,17 +1,17 @@
-#include <simple_cfd/symbolic/abs.hpp>
-#include <simple_cfd/symbolic/float.hpp>
-#include <simple_cfd/symbolic/rational.hpp>
-#include <simple_cfd/symbolic/expr.hpp>
-#include <simple_cfd/symbolic/product.hpp>
-#include <simple_cfd/symbolic/symbol.hpp>
-#include <simple_cfd/symbolic/extracted_expressions.hpp>
-#include <simple_cfd/util/hash.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/symbolic/abs.hpp>
+#include <excafe/symbolic/float.hpp>
+#include <excafe/symbolic/rational.hpp>
+#include <excafe/symbolic/expr.hpp>
+#include <excafe/symbolic/product.hpp>
+#include <excafe/symbolic/symbol.hpp>
+#include <excafe/symbolic/extracted_expressions.hpp>
+#include <excafe/util/hash.hpp>
+#include <excafe/exception.hpp>
 #include <set>
 #include <ostream>
 #include <cstddef>
 
-namespace cfd
+namespace excafe
 {
 
 namespace symbolic
@@ -88,7 +88,7 @@ bool Abs::operator==(const Abs& a) const
 std::size_t Abs::untypedHash() const
 {
   std::size_t result = 0x2371d80b;
-  cfd::util::hash_accum(result, expr.hashValue());
+  excafe::util::hash_accum(result, expr.hashValue());
   return result;
 }
 

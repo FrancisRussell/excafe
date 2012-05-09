@@ -1,12 +1,12 @@
 #include <vector>
-#include <simple_cfd/numeric/factoriser.hpp>
+#include <excafe/numeric/factoriser.hpp>
 #include <cln/cln.h>
 #include <boost/utility.hpp>
 #include <iostream>
 
 void factor(const cln::cl_I& n)
 {
-  using namespace cfd;
+  using namespace excafe;
 
   Factoriser factoriser;
   const std::vector<Factoriser::power_t> result = factoriser.factor(n);

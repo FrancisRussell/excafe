@@ -2,11 +2,11 @@
 #include <cstddef>
 #include <map>
 #include <boost/foreach.hpp>
-#include <simple_cfd/cse/sop.hpp>
-#include <simple_cfd/cse/cube.hpp>
-#include <simple_cfd/cse/literal_info.hpp>
+#include <excafe/cse/sop.hpp>
+#include <excafe/cse/cube.hpp>
+#include <excafe/cse/literal_info.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace cse

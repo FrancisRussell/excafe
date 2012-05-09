@@ -1,13 +1,13 @@
-#include "simple_cfd/numeric/solver.hpp"
-#include "simple_cfd/numeric/matrix.hpp"
-#include "simple_cfd/numeric/vector.hpp"
-#include "simple_cfd/numeric/sparsity_pattern.hpp"
+#include "excafe/numeric/solver.hpp"
+#include "excafe/numeric/matrix.hpp"
+#include "excafe/numeric/vector.hpp"
+#include "excafe/numeric/sparsity_pattern.hpp"
 #include "petsc.h"
 #include "petscksp.h"
 #include "petscpc.h"
 #include <cassert>
 
-namespace cfd
+namespace excafe
 {
 
 void PETScKrylovSolver::checkError(const PetscErrorCode ierr) const

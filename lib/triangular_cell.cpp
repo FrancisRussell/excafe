@@ -9,7 +9,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
-#include <simple_cfd_fwd.hpp>
+#include <excafe_fwd.hpp>
 #include <triangular_cell.hpp>
 #include <lagrange_triangle.hpp>
 #include <numeric/tensor.hpp>
@@ -19,7 +19,7 @@
 #include <exception.hpp>
 #include <cell_vertices.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 TriangularCell::TriangularCell() : localVertices(buildLocalVertices())

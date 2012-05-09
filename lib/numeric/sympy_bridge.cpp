@@ -1,4 +1,4 @@
-#include <simple_cfd/numeric/sympy_bridge.hpp>
+#include <excafe/numeric/sympy_bridge.hpp>
 #include <boost/python/enum.hpp>
 #include <boost/python/exec.hpp>
 #include <boost/python/import.hpp>
@@ -6,7 +6,7 @@
 #include <boost/python/object.hpp>
 #include <string>
 
-namespace cfd
+namespace excafe
 {
 namespace detail
 {

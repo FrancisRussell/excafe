@@ -4,11 +4,11 @@
 #include <algorithm>
 #include <boost/foreach.hpp>
 #include <boost/utility.hpp>
-#include <simple_cfd/cse/cube.hpp>
-#include <simple_cfd/cse/literal_info.hpp>
-#include <simple_cfd/cse/new_literal_creator.hpp>
+#include <excafe/cse/cube.hpp>
+#include <excafe/cse/literal_info.hpp>
+#include <excafe/cse/new_literal_creator.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace cse

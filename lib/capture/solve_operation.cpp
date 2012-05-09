@@ -1,14 +1,14 @@
 #include <cassert>
 #include <boost/shared_ptr.hpp>
-#include <simple_cfd/capture/solve_operation.hpp>
-#include <simple_cfd/capture/dimensionless_scenario.hpp>
-#include <simple_cfd/capture/fields/discrete_expr_container.hpp>
-#include <simple_cfd/capture/fields/discrete_expr_container_builder.hpp>
-#include <simple_cfd/capture/fields/discrete_expr_container_builder.hpp>
-#include <simple_cfd/capture/evaluation/assembly_optimising_visitor.hpp>
-#include <simple_cfd/exception.hpp>
+#include <excafe/capture/solve_operation.hpp>
+#include <excafe/capture/dimensionless_scenario.hpp>
+#include <excafe/capture/fields/discrete_expr_container.hpp>
+#include <excafe/capture/fields/discrete_expr_container_builder.hpp>
+#include <excafe/capture/fields/discrete_expr_container_builder.hpp>
+#include <excafe/capture/evaluation/assembly_optimising_visitor.hpp>
+#include <excafe/exception.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 bool SolveOperation::isExecutable() const

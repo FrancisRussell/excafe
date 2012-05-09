@@ -10,13 +10,13 @@
 #include <apr_file_io.h>
 #include <apr_dso.h>
 #include <apr_thread_proc.h>
-#include <simple_cfd/config.h>
-#include <simple_cfd/exception.hpp>
-#include <simple_cfd/util/apr_pool.hpp>
-#include <simple_cfd/util/apr_manager.hpp>
-#include <simple_cfd/codegen/dynamic_cxx.hpp>
+#include <excafe/config.h>
+#include <excafe/exception.hpp>
+#include <excafe/util/apr_pool.hpp>
+#include <excafe/util/apr_manager.hpp>
+#include <excafe/codegen/dynamic_cxx.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 namespace codegen

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
-#include <simple_cfd/numeric/polynomial.hpp>
-#include <simple_cfd/numeric/ginac_expression.hpp>
-#include <simple_cfd/numeric/excafe_expression.hpp>
+#include <excafe/numeric/polynomial.hpp>
+#include <excafe/numeric/ginac_expression.hpp>
+#include <excafe/numeric/excafe_expression.hpp>
 
 template<typename polynomial_t>
 void testPolynomial()
@@ -47,16 +47,16 @@ void testPolynomial()
 
 int main(int argc, char** argv)
 {
-  std::cout << "Testing cfd::Polynomial<std::string>:" << std::endl;
-  testPolynomial< cfd::Polynomial<std::string> >();
+  std::cout << "Testing excafe::Polynomial<std::string>:" << std::endl;
+  testPolynomial< excafe::Polynomial<std::string> >();
 
   std::cout << std::endl << std::endl;
 
-  std::cout << "Testing cfd::GinacExpression<std::string>:" << std::endl;
-  testPolynomial< cfd::GinacExpression<std::string> >();
+  std::cout << "Testing excafe::GinacExpression<std::string>:" << std::endl;
+  testPolynomial< excafe::GinacExpression<std::string> >();
 
   std::cout << std::endl << std::endl;
 
-  std::cout << "Testing cfd::ExcafeExpression<std::string>:" << std::endl;
-  testPolynomial< cfd::ExcafeExpression<std::string> >();
+  std::cout << "Testing excafe::ExcafeExpression<std::string>:" << std::endl;
+  testPolynomial< excafe::ExcafeExpression<std::string> >();
 }

@@ -1,9 +1,9 @@
-#include <simple_cfd/capture/fields/function_space.hpp>
-#include <simple_cfd/capture/fields/function_space_undefined.hpp>
-#include <simple_cfd/capture/fields/function_space_addition.hpp>
+#include <excafe/capture/fields/function_space.hpp>
+#include <excafe/capture/fields/function_space_undefined.hpp>
+#include <excafe/capture/fields/function_space_addition.hpp>
 
 
-namespace cfd
+namespace excafe
 {
 
 FunctionSpace::FunctionSpace() : expr(new detail::FunctionSpaceUndefined())

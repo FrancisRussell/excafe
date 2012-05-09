@@ -1,20 +1,20 @@
 #include <cstddef>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
-#include <simple_cfd/capture/scenario.hpp>
-#include <simple_cfd/capture/solve_operation.hpp>
-#include <simple_cfd/petsc_manager.hpp>
-#include <simple_cfd/triangular_mesh_builder.hpp>
-#include <simple_cfd/lagrange_triangle.hpp>
-#include <simple_cfd/capture/scenario.hpp>
-#include <simple_cfd/capture/fields/fields.hpp>
-#include <simple_cfd/capture/forms/forms.hpp>
-#include <simple_cfd/mesh.hpp>
-#include <simple_cfd/exception.hpp>
-#include <simple_cfd/boundary_condition_list.hpp>
-#include <simple_cfd/boundary_condition_trivial.hpp>
+#include <excafe/capture/scenario.hpp>
+#include <excafe/capture/solve_operation.hpp>
+#include <excafe/petsc_manager.hpp>
+#include <excafe/triangular_mesh_builder.hpp>
+#include <excafe/lagrange_triangle.hpp>
+#include <excafe/capture/scenario.hpp>
+#include <excafe/capture/fields/fields.hpp>
+#include <excafe/capture/forms/forms.hpp>
+#include <excafe/mesh.hpp>
+#include <excafe/exception.hpp>
+#include <excafe/boundary_condition_list.hpp>
+#include <excafe/boundary_condition_trivial.hpp>
 
-using namespace cfd;
+using namespace excafe;
 
 template<std::size_t D>
 class MassMatrixGenerator
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     }
     catch(const CFDException& e)
     {
-      std::cerr << "A simple_cfd specific exception was generated: " << std::endl;
+      std::cerr << "A excafe specific exception was generated: " << std::endl;
       std::cerr << e.what() << std::endl;
     }
   }

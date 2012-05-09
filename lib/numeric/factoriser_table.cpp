@@ -1,6 +1,6 @@
-#include <simple_cfd/numeric/factoriser.hpp>
+#include <excafe/numeric/factoriser.hpp>
 
-namespace cfd
+namespace excafe
 {
 
 // IMPORTANT: This array *must* be -1 terminated.
