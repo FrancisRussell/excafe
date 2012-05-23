@@ -164,7 +164,7 @@ PetscErrorCode VecDestroyWrapper(DestroyFunction func, Vec& v)
   return 0;
 }
 
-template<typename DestroyFunction> 
+template<> 
 PetscErrorCode VecDestroyWrapper(PetscErrorCode (*func)(Vec*), Vec& v)
 {
   return func(&v);

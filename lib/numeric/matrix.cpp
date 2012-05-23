@@ -230,7 +230,7 @@ PetscErrorCode MatDestroyWrapper(DestroyFunction func, Mat& m)
   return 0;
 }
 
-template<typename DestroyFunction> 
+template<> 
 PetscErrorCode MatDestroyWrapper(PetscErrorCode (*func)(Mat*), Mat& m)
 {
   return func(&m);

@@ -133,7 +133,7 @@ PetscErrorCode KSPDestroyWrapper(DestroyFunction func, KSP& ksp)
   return 0;
 }
 
-template<typename DestroyFunction> 
+template<> 
 PetscErrorCode KSPDestroyWrapper(PetscErrorCode (*func)(KSP*), KSP& ksp)
 {
   return func(&ksp);
