@@ -1,4 +1,5 @@
 #include "excafe/numeric/vector.hpp"
+#include <boost/static_assert.hpp>
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -154,9 +155,30 @@ Vec PETScVector::getPETScHandle() const
   return v;
 }
 
+// Handle PETSc API change between 3.1 and 3.2.
+
+template<typename DestroyFunction> 
+PetscErrorCode VecDestroyWrapper(DestroyFunction func, Vec& v)
+{
+  BOOST_STATIC_ASSERT(sizeof(DestroyFunction) == 0);
+  return 0;
+}
+
+template<typename DestroyFunction> 
+PetscErrorCode VecDestroyWrapper(PetscErrorCode (*func)(Vec*), Vec& v)
+{
+  return func(&v);
+}
+
+template<> 
+PetscErrorCode VecDestroyWrapper(PetscErrorCode (*func)(Vec), Vec& v)
+{
+  return func(v);
+}
+
 PETScVector::~PETScVector()
 {
-  const PetscErrorCode ierr = VecDestroy(&v);
+  const PetscErrorCode ierr = VecDestroyWrapper(&VecDestroy, v);
   checkError(ierr);
 }
 

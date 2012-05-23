@@ -1,3 +1,4 @@
+#include <boost/static_assert.hpp>
 #include "excafe/numeric/matrix.hpp"
 #include "excafe/numeric/vector.hpp"
 #include "excafe/numeric/sparsity_pattern.hpp"
@@ -127,9 +128,32 @@ void PETScMatrix::zeroRow(const int row, const double diagonal)
   zeroRows(1, &row, diagonal);
 }
 
+// Handle PETSc API change between 3.1 and 3.2.
+
+template<typename ZeroFunction> 
+PetscErrorCode ZeroRowsWrapper(ZeroFunction func, Mat& mat, const unsigned numRows, const int* const rows, const double diag)
+{
+  BOOST_STATIC_ASSERT(sizeof(ZeroFunction) == 0);
+  return 0;
+}
+
+template<> 
+PetscErrorCode ZeroRowsWrapper(PetscErrorCode (*func)(Mat, PetscInt, const PetscInt*, PetscScalar, Vec, Vec),
+    Mat& mat, const unsigned numRows, const int* const rows, const double diag)
+{
+  return func(mat, numRows, rows, diag, PETSC_NULL, PETSC_NULL);
+}
+
+template<> 
+PetscErrorCode ZeroRowsWrapper(PetscErrorCode (*func)(Mat, PetscInt, const PetscInt*, PetscScalar),
+    Mat& mat, const unsigned numRows, const int* const rows, const double diag)
+{
+  return func(mat, numRows, rows, diag);
+}
+
 void PETScMatrix::zeroRows(const unsigned rowCount, const int* rows, const double diagonal)
 {
-  const PetscErrorCode ierr = MatZeroRows(m, rowCount, rows, diagonal, PETSC_NULL, PETSC_NULL);
+  const PetscErrorCode ierr = ZeroRowsWrapper(&MatZeroRows, m, rowCount, rows, diagonal);
   checkError(ierr);
 }
 
@@ -196,9 +220,31 @@ PETScVector PETScMatrix::getLumpedDiagonal() const
   return *this * allOnes;
 }
 
+
+// Handle PETSc API change between 3.1 and 3.2.
+
+template<typename DestroyFunction> 
+PetscErrorCode MatDestroyWrapper(DestroyFunction func, Mat& m)
+{
+  BOOST_STATIC_ASSERT(sizeof(DestroyFunction) == 0);
+  return 0;
+}
+
+template<typename DestroyFunction> 
+PetscErrorCode MatDestroyWrapper(PetscErrorCode (*func)(Mat*), Mat& m)
+{
+  return func(&m);
+}
+
+template<> 
+PetscErrorCode MatDestroyWrapper(PetscErrorCode (*func)(Mat), Mat& m)
+{
+  return func(m);
+}
+
 PETScMatrix::~PETScMatrix()
 {
-  const PetscErrorCode ierr = MatDestroy(&m);
+  const PetscErrorCode ierr = MatDestroyWrapper(&MatDestroy, m);
   checkError(ierr);
 }
 
