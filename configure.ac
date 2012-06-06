@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT(excafe, 0.1, fpr02@doc.ic.ac.uk)
-AC_CONFIG_SRCDIR([steady_stokes/solver.cpp])
+AC_CONFIG_SRCDIR([navier_stokes/solver.cpp])
 AC_CONFIG_HEADER([include/excafe/config.h])
 AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
@@ -79,7 +79,7 @@ AC_CHECK_FUNCS([pow sqrt])
 #AC_TRY_COMPILE([@%:@include <mtl/mtl.h>], [], AC_MSG_RESULT([yes]), AC_MSG_RESULT([no]); AC_MSG_ERROR([Failed to find MTL.]))
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([steady_stokes/Makefile])
+AC_CONFIG_FILES([navier_stokes/Makefile])
 AC_CONFIG_FILES([heat/Makefile])
 AC_CONFIG_FILES([mass_matrix_generator_2d/Makefile])
 AC_CONFIG_FILES([steady_stokes_dolfin/Makefile])
