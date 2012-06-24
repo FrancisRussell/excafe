@@ -71,7 +71,7 @@ public:
     return form;
   }
 
-  void dumpUFL(std::ostream& out)
+  void dumpUFC(std::ostream& out)
   {
     const forms::BilinearFormIntegralSum form = constructForm();
     scenario.writeUFCCellIntegral(out, form);
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     
       MassMatrixGenerator<dimension> generator(mesh, laplacian, nf, p, q);
       std::ofstream out(filename.c_str());
-      generator.dumpUFL(out);
+      generator.dumpUFC(out);
       out.close();
     }
     catch(const CFDException& e)
