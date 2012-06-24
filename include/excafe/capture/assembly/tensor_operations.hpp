@@ -3,6 +3,7 @@
 
 #include <stack>
 #include <algorithm>
+#include <boost/foreach.hpp>
 #include <excafe/exception.hpp>
 #include <excafe/numeric/tensor.hpp>
 #include <excafe/numeric/tensor_matrix_view.hpp>
@@ -94,6 +95,17 @@ public:
   tensor_t invert(const tensor_t& t) const
   {
     return adjugate(t)/determinant(t);
+  }
+
+  tensor_t groupElements(const tensor_t& t) const
+  {
+    tensor_t result(t);
+    BOOST_FOREACH(typename tensor_t::value_type& entry, result)
+    {
+      entry = expression_t::group(entry);
+    }
+
+    return result;
   }
 
   expression_t determinant(const tensor_t& t) const

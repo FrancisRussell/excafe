@@ -54,7 +54,7 @@ private:
     const tensor_t localGradient = tensorOps.grad(operand);
     const tensor_t inverseGradient(tensorOps.invert(tensorOps.grad(buildGlobalPosition())));
 
-    return inverseGradient.inner_product(localGradient);
+    return tensorOps.groupElements(inverseGradient).inner_product(localGradient);
   }
 
   tensor_t buildGlobalPosition() const
