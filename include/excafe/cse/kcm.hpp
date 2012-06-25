@@ -18,7 +18,7 @@
 #include "cse_fwd.hpp"
 #include "cube.hpp"
 #include "sop.hpp"
-#include "properties.hpp"
+#include "kcm_properties.hpp"
 #include "polynomial_index.hpp"
 #include "sop_map.hpp"
 #include "biclique_search.hpp"
@@ -32,19 +32,6 @@ namespace cse
 class KCM
 {
 private:
-  typedef boost::property<term_cube, Cube,
-          boost::property<mul_count, int,
-          boost::property<is_cube, bool,
-          boost::property<is_unit, bool,
-          boost::property<is_numeric, bool,
-          boost::property<has_coefficient, bool,
-          boost::property<polynomial_id, PolynomialIndex,
-          boost::property<cube_ordering, std::pair<int, unsigned>
-          > > > > > > > > VertexProperty;
-
-  // term_number
-  typedef boost::property<term_id, std::size_t> EdgeProperty;
-
   typedef boost::adjacency_list<
     boost::vecS,
     boost::listS,
@@ -72,7 +59,7 @@ private:
 
     bool operator()(const vertex_descriptor& a, const vertex_descriptor& b) const
     {
-      return get(cube_ordering(), *graph, a) < get(cube_ordering(), *graph, b);
+      return (*graph)[a].cube_ordering < (*graph)[b].cube_ordering;
     }
   };
 
@@ -91,7 +78,7 @@ private:
 
     BOOST_FOREACH(const vertex_descriptor v, vertices(graph))
     {
-      if (get(is_cube(), graph, v))
+      if (graph[v].is_cube)
       {
         const bool inserted = orderedCubes.insert(v).second;
         assert(inserted && "Cube ordering value needs to be unique");

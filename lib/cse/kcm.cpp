@@ -37,7 +37,7 @@ void KCM::addPolynomial(const PolynomialIndex& polynomialID)
         CFD_EXCEPTION("Attemped to insert duplicate edge into KCM. This should never happen.");
 
       const edge_descriptor edge = edgePair.first;
-      put(term_id(), graph, edge, termID);
+      graph[edge].term_id = termID;
     }
   }
 }
@@ -54,13 +54,13 @@ literalCreator(_literalCreator), sops(literalCreator.getSOPMap())
 KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, const Cube& coKernel)
 {
   const vertex_descriptor v = add_vertex(graph);
-  put(is_cube(), graph, v, false);
-  put(polynomial_id(), graph, v, polynomialID);
-  put(term_cube(), graph, v, coKernel);
-  put(mul_count(), graph, v, coKernel.numMultiplies(literalCreator));
-  put(is_unit(), graph, v, coKernel.isUnit(literalCreator));
-  put(is_numeric(), graph, v, coKernel.isNumeric(literalCreator));
-  put(has_coefficient(), graph, v, coKernel.hasCoefficient(literalCreator));
+  graph[v].is_cube = false;
+  graph[v].polynomial_id = polynomialID;
+  graph[v].term_cube = coKernel;
+  graph[v].mul_count = coKernel.numMultiplies(literalCreator);
+  graph[v].is_unit = coKernel.isUnit(literalCreator);
+  graph[v].is_numeric = coKernel.isNumeric(literalCreator);
+  graph[v].has_coefficient = coKernel.hasCoefficient(literalCreator);
   return v;
 }
 
@@ -76,12 +76,12 @@ KCM::vertex_descriptor KCM::addCube(const Cube& c)
   {
     const vertex_descriptor v = add_vertex(graph);
     cubeVertices.insert(std::make_pair(c, v));
-    put(is_cube(), graph, v, true);
-    put(term_cube(), graph, v, c);
-    put(mul_count(), graph, v, c.numMultiplies(literalCreator));
-    put(is_unit(), graph, v, c.isUnit(literalCreator));
-    put(is_numeric(), graph, v, c.isNumeric(literalCreator));
-    put(has_coefficient(), graph, v, c.hasCoefficient(literalCreator));
+    graph[v].is_cube = true;
+    graph[v].term_cube = c;
+    graph[v].mul_count = c.numMultiplies(literalCreator);
+    graph[v].is_unit = c.isUnit(literalCreator);
+    graph[v].is_numeric = c.isNumeric(literalCreator);
+    graph[v].has_coefficient = c.hasCoefficient(literalCreator);
     return v;
   }
 }
@@ -91,9 +91,9 @@ void KCM::orderCubes()
   unsigned id=0;
   BOOST_FOREACH(const vertex_descriptor& vertex, vertices(graph))
   {
-    if (get(is_cube(), graph, vertex))
+    if (graph[vertex].is_cube)
     {
-      put(cube_ordering(), graph, vertex, std::make_pair(out_degree(vertex, graph), id));
+      graph[vertex].cube_ordering = std::make_pair(out_degree(vertex, graph), id);
       ++id;
     }
   }
@@ -171,7 +171,7 @@ std::size_t KCM::numCubes() const
   std::size_t count = 0;
   BOOST_FOREACH(const vertex_descriptor& v, vertices(graph))
   {
-    if (get(is_cube(), graph, v))
+    if (graph[v].is_cube)
       ++count;
   }
   return count;
@@ -211,9 +211,9 @@ void KCM::updateGraph(const Biclique<graph_t>& biclique)
   while(vi != viEnd)
   {
     const vertex_iter viNext = boost::next(vi);
-    if (!get(is_cube(), graph, *vi))
+    if (!graph[*vi].is_cube)
     {
-      if (modifiedPolynomials.find(get(polynomial_id(), graph, *vi)) != modifiedPolynomials.end())
+      if (modifiedPolynomials.find(graph[*vi].polynomial_id) != modifiedPolynomials.end())
       {
         clear_vertex(*vi, graph);
         remove_vertex(*vi, graph);
