@@ -37,13 +37,15 @@ Cube& Cube::merge(const Cube& c2, const bool negate)
 {
   typedef exponent_map_t::value_type::second_type exponent_t;
   const Cube& c1 = *this;
-  exponent_map_t newExponents;
   exponent_map_t::const_iterator c1Iter = c1.begin();
   exponent_map_t::const_iterator c2Iter = c2.begin();
 
+  exponent_map_t newExponents;
+  newExponents.reserve(c1.size() + c2.size());
+
   while(c1Iter != c1.end() || c2Iter != c2.end())
   {
-    if (c2Iter == c2.end() || c1Iter->first < c2Iter->first)
+    if (c2Iter == c2.end() || (c1Iter != c1.end() && c1Iter->first < c2Iter->first))
     {
       newExponents.insert(*c1Iter);
       ++c1Iter;
@@ -51,17 +53,20 @@ Cube& Cube::merge(const Cube& c2, const bool negate)
     else
     {
       const exponent_t c2NegatedValue = (negate ? -c2Iter->second : c2Iter->second);
+
       if (c1Iter == c1.end() || c2Iter->first < c1Iter->first)
       {
         newExponents.insert(exponent_map_t::value_type(c2Iter->first, c2NegatedValue));
-        ++c2Iter;
       }
       else
       {
-        newExponents.insert(exponent_map_t::value_type(c1Iter->first, c1Iter->second + c2NegatedValue));
+        const exponent_map_t::value_type::first_type exponentSum = c1Iter->second + c2NegatedValue;
+        if (exponentSum != 0)
+          newExponents.insert(exponent_map_t::value_type(c1Iter->first, exponentSum));
         ++c1Iter;
-        ++c2Iter;
       }
+
+      ++c2Iter;
     }
   }
 
@@ -123,20 +128,18 @@ Cube& Cube::operator&=(const Cube& c)
 
   while(expIter != literalExponents->end())
   {
-    const exponent_map_t::iterator nextExpIter(boost::next(expIter));
     const exponent_map_t::const_iterator cIter(c.literalExponents->find(expIter->first));
 
     if (cIter == c.literalExponents->end()
         || minExponent(expIter->second, cIter->second) == 0)
     {
-      literalExponents->erase(expIter);
+      expIter = literalExponents->erase(expIter);
     }
     else
     {
       expIter->second = minExponent(expIter->second, cIter->second);
+      ++expIter;
     }
-
-    expIter = nextExpIter;
   }
   return *this;
 }
