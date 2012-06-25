@@ -23,6 +23,7 @@ private:
   static const std::size_t dimension = D;
   Mesh<dimension> mesh;
   Scenario<dimension> scenario;
+  bool laplacian;
   int nf;
   int p;
   int q;
@@ -39,8 +40,8 @@ private:
   NamedField i;
 
 public:
-  MassMatrixGenerator(Mesh<dimension>& _mesh, const int _nf, const int _p, const int _q) :
-    mesh(_mesh), scenario(mesh), nf(_nf), p(_p), q(_q)
+  MassMatrixGenerator(Mesh<dimension>& _mesh, const bool _laplacian, const int _nf, const int _p, const int _q) :
+    mesh(_mesh), scenario(mesh), laplacian(_laplacian), nf(_nf), p(_p), q(_q)
   {
     elementBasis = scenario.addElement(new LagrangeTriangle<0>(q));
     elementSpace = scenario.defineFunctionSpace(elementBasis, mesh);
@@ -58,18 +59,19 @@ public:
   {
     using namespace forms;
 
-    LinearForm trial = elementBasis;
+    const LinearForm transformedBasis = (laplacian ? grad(elementBasis) : elementBasis);
+    LinearForm trial = transformedBasis;
     if (nf > 0) trial = trial*f;
     if (nf > 1) trial = trial*g;
     if (nf > 2) trial = trial*h;
     if (nf > 3) trial = trial*i;
     if (nf > 4) CFD_EXCEPTION("Cannot generate code for more than 4 coefficient functions.");
     
-    const BilinearFormIntegralSum form = B(trial, elementBasis)*dx;
+    const BilinearFormIntegralSum form = B(trial, transformedBasis)*dx;
     return form;
   }
 
-  void dumpUFL(std::ostream& out)
+  void dumpUFC(std::ostream& out)
   {
     const forms::BilinearFormIntegralSum form = constructForm();
     scenario.writeUFCCellIntegral(out, form);
@@ -78,17 +80,27 @@ public:
 
 int main(int argc, char** argv)
 {
-  if (argc != 5)
+  if (argc != 6)
   {
-    std::cerr << "Usage: generator num_functions coefficient_degree element_degree outfile" << std::endl;
+    std::cerr << "Usage: generator (mass_matrix|laplacian) num_functions coefficient_degree element_degree outfile" << std::endl;
     exit(1);
   }
   else
   {
-    const int nf = boost::lexical_cast<int>(argv[1]);
-    const int p = boost::lexical_cast<int>(argv[2]);
-    const int q = boost::lexical_cast<int>(argv[3]);
-    const std::string filename = boost::lexical_cast<std::string>(argv[4]);
+    const std::string matType(argv[1]);
+    bool laplacian;
+
+    if (matType == "mass_matrix")
+      laplacian = false;
+    else if (matType == "laplacian")
+      laplacian = true;
+    else
+      CFD_EXCEPTION("First argument must be mass_matrix or laplacian.");
+
+    const int nf = boost::lexical_cast<int>(argv[2]);
+    const int p = boost::lexical_cast<int>(argv[3]);
+    const int q = boost::lexical_cast<int>(argv[4]);
+    const std::string filename(argv[5]);
 
     try
     {
@@ -100,9 +112,9 @@ int main(int argc, char** argv)
       TriangularMeshBuilder meshBuilder(1.0, 1.0, maxCellArea);
       Mesh<dimension> mesh(meshBuilder.buildMesh());
     
-      MassMatrixGenerator<dimension> generator(mesh, nf, p, q);
+      MassMatrixGenerator<dimension> generator(mesh, laplacian, nf, p, q);
       std::ofstream out(filename.c_str());
-      generator.dumpUFL(out);
+      generator.dumpUFC(out);
       out.close();
     }
     catch(const CFDException& e)

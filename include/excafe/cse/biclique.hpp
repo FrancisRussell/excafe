@@ -5,6 +5,7 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/operators.hpp>
+#include <boost/interprocess/containers/flat_set.hpp>
 #include "properties.hpp"
 #include "sop_map.hpp"
 #include "vertex_info.hpp"
@@ -28,8 +29,8 @@ public:
 
 protected:
   graph_t* graph;
-  util::LazyCopy< std::set<vertex_descriptor> > cubeVertices;
-  util::LazyCopy< std::set<vertex_descriptor> > coKernelVertices;
+  util::LazyCopy< boost::container::flat_set<vertex_descriptor> > cubeVertices;
+  util::LazyCopy< boost::container::flat_set<vertex_descriptor> > coKernelVertices;
   VertexInfo<graph_t> cubeInfo;
   VertexInfo<graph_t> coKernelInfo;
 
@@ -43,13 +44,13 @@ protected:
     return result;
   }
 
-  void removeUnconnected(const vertex_descriptor& v, std::set<vertex_descriptor>& vertices)
+  void removeUnconnected(const vertex_descriptor& v, boost::container::flat_set<vertex_descriptor>& vertices)
   {
-    std::set<vertex_descriptor> newVertices;
+    boost::container::flat_set<vertex_descriptor> newVertices;
 
     BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, *graph))
     {
-      const typename std::set<vertex_descriptor>::const_iterator vIter = vertices.find(target(edge, *graph));
+      const typename boost::container::flat_set<vertex_descriptor>::const_iterator vIter = vertices.find(target(edge, *graph));
       if (vIter != vertices.end())
         newVertices.insert(*vIter);
     }
@@ -161,12 +162,12 @@ public:
 
   std::set<vertex_descriptor> getCubeVertices() const
   {
-    return *cubeVertices;
+    return std::set<vertex_descriptor>(cubeVertices->begin(), cubeVertices->end());
   }
 
   std::set<vertex_descriptor> getCoKernelVertices() const
   {
-    return *coKernelVertices;
+    return std::set<vertex_descriptor>(coKernelVertices->begin(), coKernelVertices->end());
   }
 
   Biclique addVertex(const vertex_descriptor& v) const
