@@ -5,7 +5,7 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/operators.hpp>
-#include <boost/container/flat_set.hpp>
+#include <boost/interprocess/containers/flat_set.hpp>
 #include "properties.hpp"
 #include "sop_map.hpp"
 #include "vertex_info.hpp"
