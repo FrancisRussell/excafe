@@ -33,34 +33,39 @@ int Cube::minExponent(const int a, const int b)
   return (std::abs(a) < std::abs(b)) ? a : b;
 }
 
-Cube& Cube::merge(const Cube& c, const bool negate)
+Cube& Cube::merge(const Cube& c2, const bool negate)
 {
-  exponent_map_t::iterator expIter = begin();
+  typedef exponent_map_t::value_type::second_type exponent_t;
+  const Cube& c1 = *this;
+  exponent_map_t newExponents;
+  exponent_map_t::const_iterator c1Iter = c1.begin();
+  exponent_map_t::const_iterator c2Iter = c2.begin();
 
-  BOOST_FOREACH(const exponent_map_t::value_type& clMapping, *c.literalExponents)
+  while(c1Iter != c1.end() || c2Iter != c2.end())
   {
-    const exponent_map_t::value_type 
-      lMapping(clMapping.first, negate ? -clMapping.second : clMapping.second);
-
-    while(expIter != literalExponents->end() && expIter->first < lMapping.first)
-      ++expIter;
-
-    if (expIter == literalExponents->end() || expIter->first != lMapping.first)
+    if (c2Iter == c2.end() || c1Iter->first < c2Iter->first)
     {
-      literalExponents->insert(expIter, lMapping);
+      newExponents.insert(*c1Iter);
+      ++c1Iter;
     }
     else
     {
-      expIter->second += lMapping.second;
-
-      if (expIter->second == 0)
+      const exponent_t c2NegatedValue = (negate ? -c2Iter->second : c2Iter->second);
+      if (c1Iter == c1.end() || c2Iter->first < c1Iter->first)
       {
-        const exponent_map_t::iterator nextExpIter(boost::next(expIter));
-        literalExponents->erase(expIter);
-        expIter = nextExpIter;
+        newExponents.insert(exponent_map_t::value_type(c2Iter->first, c2NegatedValue));
+        ++c2Iter;
+      }
+      else
+      {
+        newExponents.insert(exponent_map_t::value_type(c1Iter->first, c1Iter->second + c2NegatedValue));
+        ++c1Iter;
+        ++c2Iter;
       }
     }
   }
+
+  swap(*this->literalExponents, newExponents);
   return *this;
 }
 

@@ -6,6 +6,7 @@
 #include <utility>
 #include <algorithm>
 #include <boost/operators.hpp>
+#include <boost/interprocess/containers/flat_map.hpp>
 #include <excafe/util/lazy_copy.hpp>
 #include "cse_fwd.hpp"
 #include "literal_info.hpp"
@@ -32,7 +33,7 @@ class Cube : boost::totally_ordered<Cube,
              > >
 {
 private:
-  typedef std::map<unsigned, int> exponent_map_t;
+  typedef boost::container::flat_map<unsigned, int> exponent_map_t;
   util::LazyCopy<exponent_map_t> literalExponents; 
 
   Cube& merge(const Cube& c, bool negate);
