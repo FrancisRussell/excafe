@@ -47,6 +47,7 @@ protected:
   void removeUnconnected(const vertex_descriptor& v, boost::container::flat_set<vertex_descriptor>& vertices)
   {
     boost::container::flat_set<vertex_descriptor> newVertices;
+    newVertices.reserve(vertices.size());
 
     BOOST_FOREACH(const edge_descriptor& edge, out_edges(v, *graph))
     {
@@ -55,7 +56,7 @@ protected:
         newVertices.insert(*vIter);
     }
 
-    std::swap(vertices, newVertices);
+    vertices.swap(newVertices);
   }
 
   static int getValue(const VertexInfo<graph_t>& cubeInfo, const VertexInfo<graph_t>& coKernelInfo)
@@ -178,8 +179,8 @@ public:
   void swap(Biclique& b)
   {
     std::swap(graph, b.graph);
-    std::swap(cubeVertices, b.cubeVertices);
-    std::swap(coKernelVertices, b.coKernelVertices);
+    cubeVertices.swap(b.cubeVertices);
+    coKernelVertices.swap(b.coKernelVertices);
     std::swap(cubeInfo, b.cubeInfo);
     std::swap(coKernelInfo, b.coKernelInfo);
   }
