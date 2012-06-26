@@ -15,7 +15,7 @@
 #include "expr.hpp"
 #include <excafe/util/lazy_copy.hpp>
 #include <excafe/util/hash.hpp>
-#include <excafe/util/hash_unordered_map.hpp>
+#include <excafe/util/unordered_map_hash.hpp>
 
 namespace excafe
 {
@@ -264,7 +264,7 @@ public:
   {
     std::size_t result = 0x7730fe1a;
     excafe::util::hash_accum(result, overall);
-    excafe::util::hash_accum(result, excafe::util::hash_unordered_map(getTerms()));
+    excafe::util::hash_accum(result, excafe::util::UnorderedMapHash<TermMap>()(getTerms()));
     return result;
   }
 
