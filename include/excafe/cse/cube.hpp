@@ -111,6 +111,7 @@ public:
   bool isNumeric(const NewLiteralCreator& creator) const;
   bool hasCoefficient(const NewLiteralCreator& creator) const;
   std::size_t numMultiplies(const NewLiteralCreator& creator) const;
+  std::size_t hashValue() const;
 
   template<typename literal_writer>
   void write(std::ostream& o, const literal_writer& writer) const
@@ -137,6 +138,10 @@ public:
 
 std::ostream& operator<<(std::ostream& o, const Cube& c);
 Cube merge(const Cube& a, const Cube& b, const Cube& c);
+
+static inline std::size_t hash_value(const Cube& c) {
+  return c.hashValue();
+}
 
 }
 

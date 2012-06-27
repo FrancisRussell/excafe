@@ -7,6 +7,8 @@
 #include <excafe/cse/cube.hpp>
 #include <excafe/cse/literal_info.hpp>
 #include <excafe/cse/new_literal_creator.hpp>
+#include <excafe/util/ordered_map_hash.hpp>
+#include <excafe/util/hash.hpp>
 
 namespace excafe
 {
@@ -200,6 +202,13 @@ std::size_t Cube::numMultiplies(const NewLiteralCreator& creator) const
     ++result;
 
   return result > 0 ? result-1 : 0;
+}
+
+std::size_t Cube::hashValue() const
+{
+  std::size_t result = 0x5171b064;
+  util::hash_accum(result, util::OrderedMapHash<exponent_map_t>()(*literalExponents));
+  return result;
 }
 
 std::ostream& operator<<(std::ostream& o, const Cube& c)
