@@ -54,13 +54,15 @@ literalCreator(_literalCreator), sops(literalCreator.getSOPMap())
 KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, const Cube& coKernel)
 {
   const vertex_descriptor v = add_vertex(graph);
-  graph[v].is_cube = false;
-  graph[v].polynomial_id = polynomialID;
-  graph[v].term_cube = coKernel;
-  graph[v].mul_count = coKernel.numMultiplies(literalCreator);
-  graph[v].is_unit = coKernel.isUnit(literalCreator);
-  graph[v].is_numeric = coKernel.isNumeric(literalCreator);
-  graph[v].has_coefficient = coKernel.hasCoefficient(literalCreator);
+  boost::vertex_bundle_type<graph_t>::type properties;
+  properties.is_cube = false;
+  properties.polynomial_id = polynomialID;
+  properties.term_cube = coKernel;
+  properties.mul_count = coKernel.numMultiplies(literalCreator);
+  properties.is_unit = coKernel.isUnit(literalCreator);
+  properties.is_numeric = coKernel.isNumeric(literalCreator);
+  properties.has_coefficient = coKernel.hasCoefficient(literalCreator);
+  graph[v] = properties;
   return v;
 }
 
@@ -76,12 +78,14 @@ KCM::vertex_descriptor KCM::addCube(const Cube& c)
   {
     const vertex_descriptor v = add_vertex(graph);
     cubeVertices.insert(std::make_pair(c, v));
-    graph[v].is_cube = true;
-    graph[v].term_cube = c;
-    graph[v].mul_count = c.numMultiplies(literalCreator);
-    graph[v].is_unit = c.isUnit(literalCreator);
-    graph[v].is_numeric = c.isNumeric(literalCreator);
-    graph[v].has_coefficient = c.hasCoefficient(literalCreator);
+    boost::vertex_bundle_type<graph_t>::type properties;
+    properties.is_cube = true;
+    properties.term_cube = c;
+    properties.mul_count = c.numMultiplies(literalCreator);
+    properties.is_unit = c.isUnit(literalCreator);
+    properties.is_numeric = c.isNumeric(literalCreator);
+    properties.has_coefficient = c.hasCoefficient(literalCreator);
+    graph[v] = properties;
     return v;
   }
 }
