@@ -6,11 +6,11 @@
 #include <excafe/cse/polynomial_index.hpp>
 #include <excafe/cse/new_literal_creator.hpp>
 #include <excafe/exception.hpp>
-#include <map>
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/utility.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace excafe
 {
@@ -66,7 +66,7 @@ KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, con
 
 KCM::vertex_descriptor KCM::addCube(const Cube& c)
 {
-  const std::map<Cube, vertex_descriptor>::const_iterator vertexIter = cubeVertices.find(c);
+  const boost::unordered_map<Cube, vertex_descriptor>::const_iterator vertexIter = cubeVertices.find(c);
 
   if (vertexIter != cubeVertices.end())
   {

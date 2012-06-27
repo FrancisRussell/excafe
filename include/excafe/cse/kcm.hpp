@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cassert>
 #include <vector>
-#include <map>
 #include <set>
 #include <utility>
 #include <queue>
@@ -15,6 +14,7 @@
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/unordered_map.hpp>
 #include "cse_fwd.hpp"
 #include "cube.hpp"
 #include "sop.hpp"
@@ -65,7 +65,7 @@ private:
 
   NewLiteralCreator& literalCreator;
   SOPMap& sops;
-  std::map<Cube, vertex_descriptor> cubeVertices;
+  boost::unordered_map<Cube, vertex_descriptor> cubeVertices;
   graph_t graph;
 
   template<typename PriorityQueue>
