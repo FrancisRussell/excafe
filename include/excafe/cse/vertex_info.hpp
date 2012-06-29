@@ -31,10 +31,11 @@ public:
   void addVertex(const graph_t& graph, const vertex_descriptor& v)
   {
     ++count;
-    numeric += (graph[v].is_numeric ? 1 : 0);
-    unit += (graph[v].is_unit ? 1 : 0);
-    value += graph[v].mul_count;
-    haveCoefficients += (graph[v].has_coefficient ? 1 : 0);
+    const typename boost::vertex_bundle_type<graph_t>::type& vertexProperty = graph[v];
+    numeric += (vertexProperty.is_numeric ? 1 : 0);
+    unit += (vertexProperty.is_unit ? 1 : 0);
+    value += vertexProperty.mul_count;
+    haveCoefficients += (vertexProperty.has_coefficient ? 1 : 0);
   }
 
   VertexInfo& operator+=(const VertexInfo& v)
