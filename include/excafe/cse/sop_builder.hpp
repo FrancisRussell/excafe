@@ -8,12 +8,9 @@
 #include <excafe/symbolic/expr.hpp>
 #include <excafe/symbolic/symbol.hpp>
 #include <excafe/exception.hpp>
+#include <excafe/mp/integer.hpp>
 #include <stack>
 #include <set>
-
-#include <cln/io.h>
-#include <cln/ring.h>
-#include <cln/integer_ring.h>
 
 namespace excafe
 {
@@ -127,7 +124,7 @@ public:
       pushLiteral(literalID);
 
       if (power.second != 1)
-        visitExponent(cln::cl_I_to_int(power.second));
+        visitExponent(power.second.toInt());
     }
 
     postProduct(factorMap.size());

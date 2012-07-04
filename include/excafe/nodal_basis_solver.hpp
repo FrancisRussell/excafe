@@ -1,7 +1,7 @@
 #ifndef EXCAFE_NODAL_BASIS_SOLVER_HPP
 #define EXCAFE_NODAL_BASIS_SOLVER_HPP
 
-#include "symbolic/rational.hpp"
+#include "mp/rational.hpp"
 #include "vertex.hpp"
 #include "exception.hpp"
 #include "numeric/excafe_expression.hpp"
@@ -23,9 +23,9 @@ public:
   static const std::size_t dimension = D;
 
 private:
-  typedef boost::numeric::ublas::matrix<symbolic::Rational> matrix_t;
+  typedef boost::numeric::ublas::matrix<mp::Rational> matrix_t;
 
-  std::vector< vertex<dimension, symbolic::Rational> > points;
+  std::vector< vertex<dimension, mp::Rational> > points;
   std::vector< ExcafeExpression<detail::ScalarPlaceholder> > primeBases;
   std::size_t spaceDimension;
 
@@ -48,7 +48,7 @@ private:
   }
 
 public:
-  NodalBasisSolver(const std::vector< vertex<dimension, symbolic::Rational> >& _points,
+  NodalBasisSolver(const std::vector< vertex<dimension, mp::Rational> >& _points,
                    const std::vector< ExcafeExpression<detail::ScalarPlaceholder> >& _primeBases) :
     points(_points), primeBases(_primeBases), spaceDimension(points.size())
   {
@@ -59,7 +59,7 @@ public:
   std::vector< ExcafeExpression<detail::ScalarPlaceholder> > getBases()
   {
     using detail::ScalarPlaceholder;
-    using symbolic::Rational;
+    using mp::Rational;
 
     matrix_t evaluatedBases(spaceDimension, spaceDimension);
 

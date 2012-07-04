@@ -8,6 +8,7 @@
 #include <excafe/capture/assembly/generic_symbol.hpp>
 #include <excafe/capture/assembly/scalar_access.hpp>
 #include <excafe/capture/assembly/basis_coefficient.hpp>
+#include <excafe/mp/float.hpp>
 #include <excafe/cse/factorised_expression_visitor.hpp>
 #include <excafe/cse/polynomial_index.hpp>
 #include <excafe/numeric/cast.hpp>
@@ -21,7 +22,6 @@
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/variant.hpp>
-#include <cln/cln.h>
 
 namespace excafe
 {
@@ -35,7 +35,7 @@ namespace detail
 Product Product::pow(const int exponent) const
 {
   Product result;
-  result.coefficient = cln::expt(coefficient, exponent);
+  result.coefficient = mp::pow(coefficient, exponent);
 
   BOOST_FOREACH(const exp_map_t::value_type& exp, *exponents)
     (*result.exponents)[exp.first] = exp.second*exponent;
@@ -69,9 +69,9 @@ void Product::write(std::ostream& out) const
 
   if (numerators.empty() || !isUnitCoefficient)
   {
-    const double coefficientAsDouble = excafe::numeric_cast<double>(coefficient);
-    out << std::setprecision(25) << coefficientAsDouble;
     firstNumerator = false;
+    //out << std::setprecision(25) << coefficientAsDouble;
+    out << coefficient;
   }
   else
   {
@@ -284,7 +284,7 @@ void UFCIntegralGenerator::outputPostfix()
 
 void UFCIntegralGenerator::visitConstant(const integer_t& s)
 {
-  pushProduct(s);
+  pushProduct(float_t(s));
 }
 
 void UFCIntegralGenerator::visitConstant(const float_t& s)

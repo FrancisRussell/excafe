@@ -42,13 +42,13 @@ Rational::Rational(const long _value) : value(_value)
   normalise();
 }
 
-Rational::Rational(const cln::cl_RA& _value) : value(_value)
+Rational::Rational(const mp::Rational& _value) : value(_value)
 {
   normalise();
 }
 
 Rational::Rational(const long num, const long denom) : 
-  value(cln::cl_I(num) / cln::cl_I(denom))
+  value(num, denom)
 {
   assert(denom != 0);
   normalise();
@@ -96,11 +96,8 @@ Expr Rational::integrate(const Symbol& s, const unsigned flags) const
 
 std::size_t Rational::untypedHash() const
 {
-  static const cln::cl_byte bits(CHAR_BIT*sizeof(unsigned long), 0);
-
   std::size_t hash = 0x161f15c2;
-  excafe::util::hash_accum(hash, getNumerator());
-  excafe::util::hash_accum(hash, getDenominator());
+  excafe::util::hash_accum(hash, value);
   return hash;
 }
 
@@ -159,14 +156,14 @@ Rational& Rational::operator/=(const Rational& r)
   return *this;
 }
 
-cln::cl_I Rational::getNumerator() const
+mp::Integer Rational::getNumerator() const
 {
-  return cln::numerator(value);
+  return value.getNumerator();
 }
 
-cln::cl_I Rational::getDenominator() const
+mp::Integer Rational::getDenominator() const
 {
-  return cln::denominator(value);
+  return value.getDenominator();
 }
 
 void Rational::normalise()
@@ -181,19 +178,21 @@ Float Rational::toFloat() const
 
 Rational Rational::reciprocal() const
 {
-  return Rational(cln::recip(value));
+  return value.reciprocal();
 }
 
 Rational Rational::gcd(const Rational& a, const Rational& b)
 {
+  using mp::Integer;
+
   if (a == 0)
     return b.abs();
   else if (b == 0)
     return a.abs();
 
-  const cln::cl_I numerator = cln::gcd(a.getNumerator(), b.getNumerator());
-  const cln::cl_I denominator = cln::gcd(a.getDenominator(), b.getDenominator());
-  return Rational(numerator / denominator);
+  const Integer numerator = Integer::gcd(a.getNumerator(), b.getNumerator());
+  const Integer denominator = Integer::gcd(a.getDenominator(), b.getDenominator());
+  return Rational(mp::Rational(numerator, denominator));
 }
 
 Rational& Rational::operator++()
@@ -212,7 +211,7 @@ Rational& Rational::operator--()
 
 Rational Rational::abs() const
 {
-  return Rational(cln::abs(value));
+  return Rational(mp::abs(value));
 }
 
 Rational abs(const Rational& r)
@@ -222,7 +221,7 @@ Rational abs(const Rational& r)
 
 Rational Rational::pow(const int exponent) const
 {
-  return Rational(cln::expt(value, exponent));
+  return Rational(mp::pow(value, exponent));
 }
 
 Rational pow(const Rational& r, const int exponent)
@@ -246,6 +245,11 @@ Expr Rational::extractMultiplier(Rational& coeff) const
 Expr Rational::extractPolynomials(ExtractedExpressions& extracted) const
 {
   return clone();
+}
+
+mp::Rational Rational::getValue() const
+{
+  return value;
 }
 
 }

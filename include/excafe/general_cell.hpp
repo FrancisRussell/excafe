@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <boost/array.hpp>
 #include "excafe_fwd.hpp"
-#include "symbolic/rational.hpp"
+#include "mp/rational.hpp"
 #include "mesh_cell.hpp"
 
 namespace excafe
@@ -19,7 +19,7 @@ class GeneralCell : public MeshCell
 public:
   static const std::size_t dimension = D;
   typedef vertex<dimension> vertex_type;
-  typedef vertex<dimension, symbolic::Rational> exact_vertex_type;
+  typedef vertex<dimension, mp::Rational> exact_vertex_type;
 
   virtual std::size_t getLocalIndex(MeshTopology& topology, const std::size_t cid, const MeshEntity& entity) const = 0;
   virtual vertex_type getLocalVertex(const std::size_t index) const = 0;

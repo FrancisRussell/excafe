@@ -16,6 +16,10 @@
 #include "optimised_polynomial_fraction.hpp"
 #include <excafe/exception.hpp>
 #include <cln/real.h>
+#include <excafe/mp/integer.hpp>
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/float.hpp>
+#include <excafe/mp/cln_conversions.hpp>
 
 namespace excafe
 {
@@ -91,11 +95,13 @@ public:
       if (cln::instanceof(value, cln::cl_RA_ring))
       {
         const cln::cl_RA& rational = cln::the<cln::cl_RA>(value);
-        visitor.visitConstant(cln::numerator(rational));
+        const cln::cl_I numerator = cln::numerator(rational);
+        const cln::cl_I denominator = cln::denominator(rational);
+        visitor.visitConstant(mp::fromCLN(numerator));
 
-        if (cln::denominator(rational) != 1)
+        if (denominator != 1)
         {
-          visitor.visitConstant(cln::denominator(rational));
+          visitor.visitConstant(mp::fromCLN(denominator));
           visitor.visitExponent(-1);
           visitor.postProduct(2);
         }
@@ -103,7 +109,7 @@ public:
       else
       {
         const cln::cl_F& floatVal = cln::the<cln::cl_F>(value);
-        visitor.visitConstant(floatVal);
+        visitor.visitConstant(mp::fromCLN(floatVal));
       }
     }
     else
@@ -201,7 +207,15 @@ public:
   {
   }
 
-  GinacExpression(const cln::cl_R& c) : expr(ginac_numeric_t(c))
+  GinacExpression(const mp::Rational& r) : expr(ginac_numeric_t(mp::toCLN(r)))
+  {
+  }
+
+  GinacExpression(const mp::Integer& i) : expr(ginac_numeric_t(mp::toCLN(i)))
+  {
+  }
+
+  GinacExpression(const mp::Float& f) : expr(ginac_numeric_t(mp::toCLN(f)))
   {
   }
 

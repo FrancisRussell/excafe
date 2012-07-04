@@ -252,7 +252,7 @@ TriangularCell::vertex_type TriangularCell::getLocalVertex(const std::size_t ind
   std::vector<vertex_type::value_type> components;
 
   BOOST_FOREACH(const exact_vertex_type::value_type& c, getLocalVertexExact(index))
-    components.push_back(c.toFloat().toDouble());
+    components.push_back(c.toDouble());
 
   return vertex_type(components);
 }

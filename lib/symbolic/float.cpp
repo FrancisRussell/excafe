@@ -6,7 +6,6 @@
 #include <excafe/symbolic/make_expr_from.hpp>
 #include <excafe/numeric/cast.hpp>
 #include <excafe/util/hash.hpp>
-#include <cln/real.h>
 #include <set>
 #include <cmath>
 
@@ -24,8 +23,13 @@ Float::Float(const double _value) : value(_value)
 {
 }
 
-Float::Float(const cln::cl_R& _value) : 
-  value(cln::double_approx(_value))
+Float::Float(const mp::Rational& _value) : 
+  value(_value.toDouble())
+{
+}
+
+Float::Float(const mp::Float& _value) : 
+  value(_value.toDouble())
 {
 }
 
