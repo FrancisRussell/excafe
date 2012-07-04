@@ -178,7 +178,7 @@ protected:
     // don't do this first, mergeSubTerms may miss incorporating
     // child terms.
 
-    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
+    const child_type simplifiedChildren = AbstractBasic<T>::asChild(*this).extractMultipliers();
     LazyTermMap newTermMap(getTerms().size());
     Rational newOverall = child_type::null();
     mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
@@ -220,7 +220,7 @@ public:
 
   child_type withoutOverall() const
   {
-    child_type result(asChild(*this));
+    child_type result(AbstractBasic<T>::asChild(*this));
 
     if (overall != child_type::null())
     {
