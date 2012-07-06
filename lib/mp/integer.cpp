@@ -347,12 +347,25 @@ Integer& Integer::operator*=(const Integer& i)
   else
   {
     const bool negative = isNegative() ^ i.isNegative();
-    const int maxWidth = width() + i.width();
+
+    const Integer* u = this;
+    const Integer* v = &i;
+
+    int ausize = u->width();
+    int avsize = v->width();
+    const int maxWidth = ausize + avsize;
+
+    // Ensure that u is always the larger operand
+    if (ausize < avsize)
+    {
+      std::swap(u, v);
+      std::swap(ausize, avsize);
+    }
 
     // mpn_mul does not allow any operand to overlap with the result
     Integer result;
     result.reallocUnique(maxWidth);
-    mpn_mul(result.limbs(), limbs(), width(), i.limbs(), i.width());
+    mpn_mul(result.limbs(), u->limbs(), ausize, v->limbs(), avsize);
     swap(result);
     size = negate(negative, computeWidth(maxWidth));
   }
