@@ -9,9 +9,9 @@
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 #include "float.hpp"
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/integer.hpp>
 #include <boost/operators.hpp>
-#include <cln/rational.h>
-#include <cln/integer.h>
 
 namespace excafe
 {
@@ -28,11 +28,11 @@ public:
   static const Expr one();
 
 private:
-  cln::cl_RA value;
+  mp::Rational value;
   void normalise();
 
-  cln::cl_I getNumerator() const;
-  cln::cl_I getDenominator() const;
+  mp::Integer getNumerator() const;
+  mp::Integer getDenominator() const;
 
 public:
   static Rational gcd(const Rational& a, const Rational& b);
@@ -40,7 +40,7 @@ public:
   Rational();
   Rational(long value);
   Rational(long numerator, long denominator);
-  Rational(const cln::cl_RA& value);
+  Rational(const mp::Rational& value);
   std::size_t nops() const;
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;
@@ -65,6 +65,7 @@ public:
   Expr extractMultiplier(Rational& coeff) const;
   Rational abs() const;
   Rational pow(int exponent) const;
+  mp::Rational getValue() const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 

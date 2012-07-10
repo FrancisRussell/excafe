@@ -35,6 +35,8 @@ if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
 
+AX_BOOST_UNIT_TEST_FRAMEWORK
+
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 
 PKG_CHECK_MODULES([CLN], [cln])

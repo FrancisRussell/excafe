@@ -12,8 +12,8 @@
 #include <excafe/numeric/expression.hpp>
 #include <excafe/numeric/expression_visitor.hpp>
 #include <excafe/numeric/orthotope.hpp>
-#include <cln/float.h>
-#include <cln/rational.h>
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/float.hpp>
 
 namespace excafe
 {
@@ -46,8 +46,9 @@ public:
   Expr(const double s);
   Expr(const long s);
   Expr(const int s);
-  Expr(const cln::cl_RA& s);
-  Expr(const cln::cl_F& s);
+  Expr(const mp::Integer& s);
+  Expr(const mp::Rational& s);
+  Expr(const mp::Float& s);
   Expr& operator=(const Expr& e);
   bool operator==(const Expr& e) const;
   Expr& operator+=(const Expr& e);

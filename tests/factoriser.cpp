@@ -1,10 +1,10 @@
 #include <vector>
-#include <excafe/numeric/factoriser.hpp>
-#include <cln/cln.h>
-#include <boost/utility.hpp>
 #include <iostream>
+#include <boost/utility.hpp>
+#include <excafe/numeric/factoriser.hpp>
+#include <excafe/mp/integer.hpp>
 
-void factor(const cln::cl_I& n)
+void factor(const excafe::mp::Integer& n)
 {
   using namespace excafe;
 
