@@ -15,7 +15,7 @@
 #include <boost/mpl/min_max.hpp>
 #include <boost/mpl/integral_c.hpp>
 #include <boost/integer_traits.hpp>
-#include <boost/shared_array.hpp>
+#include <boost/static_assert.hpp>
 #include <excafe/util/hybrid_array.hpp>
 #include <excafe/util/hash.hpp>
 #include <excafe/exception.hpp>
@@ -25,8 +25,6 @@
 #else
 #define EXCAFE_VALIDATE_INTEGER
 #endif
-
-
 
 namespace excafe
 {
@@ -48,6 +46,9 @@ private:
 
   static const int TAG_BITS = 1;
   static const int VALUE_TAG = 1;
+
+  static const Integer ONE;
+  static const Integer MINUS_ONE;
 
   static const mp_limb_t MAX_PACKED_LIMB = boost::mpl::min< 
       boost::mpl::integral_c<mp_limb_t, GMP_NUMB_MAX>, 
@@ -221,10 +222,21 @@ private:
   void performAddition(const Integer* u, const Integer* v);
 
   template<typename T>
-  void initialise(const T& i)
+  void initialise(T i)
   {
+    BOOST_STATIC_ASSERT(boost::integer_traits<T>::is_integral);
+
+    bool offsetMinusOne = false;
     Packer packer(this);
     packer.reallocUnique(numLimbs(sizeof(T)*CHAR_BIT));
+
+    // We need to handle the special case where
+    // i is the minimum possible value.
+    if (boost::integer_traits<T>::const_min == i)
+    {
+      ++i;
+      offsetMinusOne = true;
+    }
 
     const bool negative = i<0;
     T magnitude = (negative ? -i : i);
@@ -238,6 +250,9 @@ private:
 
     packer.commit();
     size = negate(negative, loc);
+
+    if (offsetMinusOne)
+      --(*this);
   }
 
   template<typename T>

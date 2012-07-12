@@ -14,6 +14,9 @@ namespace excafe
 namespace mp
 {
 
+const Integer Integer::ONE =       Integer(1);
+const Integer Integer::MINUS_ONE = Integer(-1);
+
 void Integer::validate() const
 {
   if (size != 0)
@@ -403,14 +406,9 @@ Integer& Integer::operator-=(const Integer& i)
 Integer& Integer::operator++()
 {
   if (size == 0)
-  {
     initialise(1);
-  }
   else
-  {
-    const Integer one(1);
-    performAddition(this, &one);
-  }
+    performAddition(this, &ONE);
 
   EXCAFE_VALIDATE_INTEGER;
   return *this;
@@ -419,14 +417,9 @@ Integer& Integer::operator++()
 Integer& Integer::operator--()
 {
   if (size == 0)
-  {
     initialise(-1);
-  }
   else
-  {
-    const Integer minusOne(-1);
-    performAddition(this, &minusOne);
-  }
+    performAddition(this, &MINUS_ONE);
 
   EXCAFE_VALIDATE_INTEGER;
   return *this;
