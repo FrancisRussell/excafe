@@ -532,6 +532,13 @@ Integer& Integer::operator>>=(unsigned i)
 {
   const int oldWidth = width();
   const unsigned limbCount = i/GMP_NUMB_BITS;
+
+  if (limbCount >= oldWidth)
+  {
+    size = 0;
+    return *this;
+  }
+
   i -= GMP_NUMB_BITS*limbCount;
   const int newWidth = oldWidth - limbCount;
   Packer tp(this);
@@ -539,7 +546,7 @@ Integer& Integer::operator>>=(unsigned i)
   // Make unique
   tp.reallocUnique(oldWidth);
 
-  mpn_rshift(tp.limbs(), tp.limbs()+limbCount, oldWidth, i);
+  mpn_rshift(tp.limbs(), tp.limbs()+limbCount, newWidth, i);
 
   size = negate(isNegative(), tp.computeWidth(newWidth));
   tp.commit();
