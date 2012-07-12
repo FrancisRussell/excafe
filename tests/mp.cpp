@@ -2,6 +2,7 @@
 #define EXCAFE_VALIDATE_MP
 
 #include <cassert>
+#include <climits>
 #include <string>
 #include <set>
 #include <excafe/mp/integer.hpp>
@@ -78,13 +79,25 @@ BOOST_AUTO_TEST_CASE(BasicSanity)
   }
 }
 
-BOOST_AUTO_TEST_CASE(TwosComplement)
+BOOST_AUTO_TEST_CASE(Limits)
 {
-  // These numbers have no positive representation on two's complement systems.
-  BOOST_CHECK_EQUAL(Integer(CHAR_MIN), CHAR_MIN);
+  // In particular maximum negative two's complement numbers are tricky.
+  
+  // char
+  BOOST_CHECK_EQUAL(Integer(SCHAR_MIN), SCHAR_MIN);
+  BOOST_CHECK_EQUAL(Integer(SCHAR_MAX), SCHAR_MAX);
+
+  // short
   BOOST_CHECK_EQUAL(Integer(SHRT_MIN), SHRT_MIN);
+  BOOST_CHECK_EQUAL(Integer(SHRT_MAX), SHRT_MAX);
+
+  // int
   BOOST_CHECK_EQUAL(Integer(INT_MIN),  INT_MIN);
-  BOOST_CHECK_EQUAL(Integer(LONG_MIN), LONG_MIN);
+  BOOST_CHECK_EQUAL(Integer(INT_MAX),  INT_MAX);
+
+  // long
+  BOOST_CHECK_EQUAL(Integer(LONG_MIN),  LONG_MIN);
+  BOOST_CHECK_EQUAL(Integer(LONG_MAX),  LONG_MAX);
 }
 
 BOOST_AUTO_TEST_CASE(Powers)
