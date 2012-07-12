@@ -159,9 +159,23 @@ BOOST_AUTO_TEST_CASE(IncDec)
 
 BOOST_AUTO_TEST_CASE(Shifts)
 {
-  const Integer value = pow(Integer(46272), 7);
+  // 46272^251 is 3890 bits wide.
+  const Integer value = pow(Integer(46272), 251);
+  
+  // Sub-limb
   BOOST_CHECK_EQUAL(value << 53, value * pow(Integer(2), 53));
   BOOST_CHECK_EQUAL(value >> 41, value / pow(Integer(2), 41));
+
+  // Multiple-limb
+  BOOST_CHECK_EQUAL(value << 211, value * pow(Integer(2), 211));
+  BOOST_CHECK_EQUAL(value >> 347, value / pow(Integer(2), 347));
+
+  // Right shift to zero
+  BOOST_CHECK_EQUAL(value >> 3889, 1);
+  BOOST_CHECK_EQUAL(value >> 3890, 0);
+
+  // Right shift larger than operand
+  BOOST_CHECK_EQUAL(value >> 6000, 0);
 }
 
 BOOST_AUTO_TEST_CASE(InputOutput)
