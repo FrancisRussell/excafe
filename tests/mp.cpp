@@ -1,3 +1,6 @@
+// Enable bignum validation
+#define EXCAFE_VALIDATE_MP
+
 #include <cassert>
 #include <string>
 #include <set>

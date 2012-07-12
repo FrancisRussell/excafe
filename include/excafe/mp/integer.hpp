@@ -20,6 +20,14 @@
 #include <excafe/util/hash.hpp>
 #include <excafe/exception.hpp>
 
+#ifdef EXCAFE_VALIDATE_MP
+#define EXCAFE_VALIDATE_INTEGER this->validate();
+#else
+#define EXCAFE_VALIDATE_INTEGER
+#endif
+
+
+
 namespace excafe
 {
 

@@ -8,12 +8,6 @@
 #include <cassert>
 #include <ostream>
 
-#if 0
-#define VALIDATE this->validate();
-#else
-#define VALIDATE
-#endif
-
 namespace excafe
 {
 
@@ -41,12 +35,12 @@ Integer::Integer(const int _size, uintptr_t _data) :
   if ((data & VALUE_TAG) == 0)
     incrementUseCount(reinterpret_cast<mp_limb_t*>(data));
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer() : size(0), data(VALUE_TAG)
 {
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const char* str) : size(0), data(VALUE_TAG)
@@ -75,7 +69,7 @@ Integer::Integer(const char* str) : size(0), data(VALUE_TAG)
   if (negative)
     (*this) = -(*this);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const Integer& i) : size(i.size), data(i.data)
@@ -83,7 +77,7 @@ Integer::Integer(const Integer& i) : size(i.size), data(i.data)
   if ((data & VALUE_TAG) == 0)
     incrementUseCount(reinterpret_cast<mp_limb_t*>(data));
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const int i) : size(0), data(VALUE_TAG)
@@ -91,7 +85,7 @@ Integer::Integer(const int i) : size(0), data(VALUE_TAG)
   if (i != 0)
     initialise(i);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const long i) : size(0), data(VALUE_TAG)
@@ -99,7 +93,7 @@ Integer::Integer(const long i) : size(0), data(VALUE_TAG)
   if (i != 0)
     initialise(i);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const unsigned int i) : size(0), data(VALUE_TAG)
@@ -107,7 +101,7 @@ Integer::Integer(const unsigned int i) : size(0), data(VALUE_TAG)
   if (i != 0)
     initialise(i);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::Integer(const unsigned long i) : size(0), data(VALUE_TAG)
@@ -115,7 +109,7 @@ Integer::Integer(const unsigned long i) : size(0), data(VALUE_TAG)
   if (i != 0)
     initialise(i);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
 }
 
 Integer::~Integer()
@@ -373,7 +367,7 @@ Integer& Integer::operator=(const Integer& i)
   size = i.size;
   data = i.data;
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -386,7 +380,7 @@ Integer& Integer::operator+=(const Integer& i)
   else
     performAddition(this, &i);
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -402,7 +396,7 @@ Integer& Integer::operator-=(const Integer& i)
     performAddition(this, &negated);
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -418,7 +412,7 @@ Integer& Integer::operator++()
     performAddition(this, &one);
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -434,7 +428,7 @@ Integer& Integer::operator--()
     performAddition(this, &minusOne);
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -476,7 +470,7 @@ Integer& Integer::operator*=(const Integer& i)
     swap(result);
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -508,7 +502,7 @@ Integer& Integer::operator/=(const Integer& dividend)
     tp.commit();
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -537,7 +531,7 @@ Integer& Integer::operator%=(const Integer& dividend)
     tp.commit();
   }
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -557,7 +551,7 @@ Integer& Integer::operator>>=(unsigned i)
   size = negate(isNegative(), tp.computeWidth(newWidth));
   tp.commit();
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
@@ -578,7 +572,7 @@ Integer& Integer::operator<<=(unsigned i)
   size = negate(isNegative(), tp.computeWidth(newWidth));
   tp.commit();
 
-  VALIDATE;
+  EXCAFE_VALIDATE_INTEGER;
   return *this;
 }
 
