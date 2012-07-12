@@ -78,6 +78,15 @@ BOOST_AUTO_TEST_CASE(BasicSanity)
   }
 }
 
+BOOST_AUTO_TEST_CASE(TwosComplement)
+{
+  // These numbers have no positive representation on two's complement systems.
+  BOOST_CHECK_EQUAL(Integer(CHAR_MIN), CHAR_MIN);
+  BOOST_CHECK_EQUAL(Integer(SHRT_MIN), SHRT_MIN);
+  BOOST_CHECK_EQUAL(Integer(INT_MIN),  INT_MIN);
+  BOOST_CHECK_EQUAL(Integer(LONG_MIN), LONG_MIN);
+}
+
 BOOST_AUTO_TEST_CASE(Powers)
 {
   const Integer large = pow(Integer(898311), 5);
