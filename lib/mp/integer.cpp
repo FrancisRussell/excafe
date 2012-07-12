@@ -22,13 +22,7 @@ void Integer::validate() const
   if (size != 0)
   {
     ConstPacker tp(this);
-    bool hasContent = false;
-    for(int i=0; i<width(); ++i)
-    {
-      hasContent = hasContent || tp.limbs()[i] != 0;
-    }
-
-    assert(hasContent);
+    assert(tp.limbs()[width()-1] != 0);
   }
 }
 

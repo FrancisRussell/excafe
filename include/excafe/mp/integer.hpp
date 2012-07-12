@@ -164,7 +164,7 @@ private:
 
       if (isPacked())
       {
-        if (integer->width() < 2 && local[0] < MAX_PACKED_LIMB)
+        if (integer->width() < 2 && local[0] <= MAX_PACKED_LIMB)
         {
           integer->data = (static_cast<uintptr_t>(local[0]) << TAG_BITS) | VALUE_TAG;
         }
@@ -226,17 +226,16 @@ private:
   {
     BOOST_STATIC_ASSERT(boost::integer_traits<T>::is_integral);
 
-    bool offsetMinusOne = false;
     Packer packer(this);
     packer.reallocUnique(numLimbs(sizeof(T)*CHAR_BIT));
 
     // We need to handle the special case where
-    // i is the minimum possible value.
-    if (boost::integer_traits<T>::const_min == i)
-    {
+    // i is the minimum possible signed value.
+    const bool offsetMinusOne = boost::integer_traits<T>::is_signed &&
+                                boost::integer_traits<T>::const_min == i;
+
+    if (offsetMinusOne)
       ++i;
-      offsetMinusOne = true;
-    }
 
     const bool negative = i<0;
     T magnitude = (negative ? -i : i);
@@ -270,7 +269,8 @@ private:
     }
 
     const T absI = std::abs(i);
-    if (absI < GMP_NUMB_MAX)
+    if ((!boost::integer_traits<T>::is_signed || boost::integer_traits<T>::const_min != i) &&
+        absI <= GMP_NUMB_MAX)
     {
       // i is too small to be equal
       if (width() > 1)
@@ -301,7 +301,8 @@ private:
     }
 
     const T absI = std::abs(i);
-    if (absI < GMP_NUMB_MAX)
+    if ((!boost::integer_traits<T>::is_signed || boost::integer_traits<T>::const_min != i) &&
+        absI <= GMP_NUMB_MAX)
     {
       // i has a smaller magnitude
       if (width() > 1)
