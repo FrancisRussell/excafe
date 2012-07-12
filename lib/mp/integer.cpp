@@ -1,4 +1,5 @@
 #include <gmp.h>
+#include <apr_atomic.h>
 #include <excafe/mp/integer.hpp>
 #include <excafe/exception.hpp>
 #include <excafe/numeric/cast.hpp>
@@ -7,22 +8,48 @@
 #include <cassert>
 #include <ostream>
 
+#if 0
+#define VALIDATE this->validate();
+#else
+#define VALIDATE
+#endif
+
 namespace excafe
 {
 
 namespace mp
 {
 
-Integer::Integer(const int _size, const int _allocated, const boost::shared_array<mp_limb_t>& _data) :
-  size(_size), allocated(_allocated), data(_data)
+void Integer::validate() const
 {
+  if (size != 0)
+  {
+    ConstPacker tp(this);
+    bool hasContent = false;
+    for(int i=0; i<width(); ++i)
+    {
+      hasContent = hasContent || tp.limbs()[i] != 0;
+    }
+
+    assert(hasContent);
+  }
 }
 
-Integer::Integer() : size(0), allocated(0)
+Integer::Integer(const int _size, uintptr_t _data) :
+  size(_size), data(_data)
 {
+  if ((data & VALUE_TAG) == 0)
+    incrementUseCount(reinterpret_cast<mp_limb_t*>(data));
+
+  VALIDATE;
 }
 
-Integer::Integer(const char* str) : size(0), allocated(0)
+Integer::Integer() : size(0), data(VALUE_TAG)
+{
+  VALIDATE;
+}
+
+Integer::Integer(const char* str) : size(0), data(VALUE_TAG)
 {
   const std::size_t length = strlen(str);
 
@@ -47,56 +74,54 @@ Integer::Integer(const char* str) : size(0), allocated(0)
 
   if (negative)
     (*this) = -(*this);
+
+  VALIDATE;
 }
 
-Integer::Integer(const Integer& i) : size(i.size), allocated(i.allocated), data(i.data)
+Integer::Integer(const Integer& i) : size(i.size), data(i.data)
 {
+  if ((data & VALUE_TAG) == 0)
+    incrementUseCount(reinterpret_cast<mp_limb_t*>(data));
+
+  VALIDATE;
 }
 
-Integer::Integer(const int i) : size(0), allocated(0)
-{
-  if (i != 0)
-    initialise(i);
-}
-
-Integer::Integer(const long i) : size(0), allocated(0)
-{
-  if (i != 0)
-    initialise(i);
-}
-
-Integer::Integer(const unsigned int i) : size(0), allocated(0)
+Integer::Integer(const int i) : size(0), data(VALUE_TAG)
 {
   if (i != 0)
     initialise(i);
+
+  VALIDATE;
 }
 
-Integer::Integer(const unsigned long i) : size(0), allocated(0)
+Integer::Integer(const long i) : size(0), data(VALUE_TAG)
 {
   if (i != 0)
     initialise(i);
+
+  VALIDATE;
 }
 
-void Integer::reallocUnique(const int newAllocated)
+Integer::Integer(const unsigned int i) : size(0), data(VALUE_TAG)
 {
-  if (newAllocated > allocated || !data.unique())
-  {
-    mp_limb_t* const newLimbs = new mp_limb_t[newAllocated];
-    memcpy(newLimbs, limbs(), std::min(allocated, newAllocated) * sizeof(mp_limb_t));
-    allocated = newAllocated;
-    data.reset(newLimbs);
-  }
+  if (i != 0)
+    initialise(i);
+
+  VALIDATE;
 }
 
-int Integer::computeWidth(const int maxWidth) const
+Integer::Integer(const unsigned long i) : size(0), data(VALUE_TAG)
 {
-  int cwidth;
-  for(cwidth = maxWidth; cwidth>0; --cwidth)
-  {
-    if (data[cwidth-1] != 0)
-      break;
-  }
-  return cwidth;
+  if (i != 0)
+    initialise(i);
+
+  VALIDATE;
+}
+
+Integer::~Integer()
+{
+  if ((data & VALUE_TAG) == 0)
+    decrementUseCount(reinterpret_cast<mp_limb_t*>(data));
 }
 
 void Integer::performAddition(const Integer* u, const Integer* v)
@@ -111,48 +136,94 @@ void Integer::performAddition(const Integer* u, const Integer* v)
     std::swap(ausize, avsize);
   }
 
+  Packer tp(this);
   const bool sameSign = (u->size < 0) == (v->size < 0);
+
+  // up and vp must be constructed *after* the reallocation.
   if (sameSign)
   {
     // Possible carry
     const int maxWidth = ausize + 1;
-    reallocUnique(maxWidth);
 
-    const mp_limb_t carry = mpn_add(limbs(), u->limbs(), ausize, v->limbs(), avsize);
-    limbs()[ausize] = carry;
+    tp.reallocUnique(maxWidth);
+    ConstPacker up(u);
+    ConstPacker vp(v);
+
+    const mp_limb_t carry = mpn_add(tp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+    tp.limbs()[ausize] = carry;
     size = negate(u->size < 0, ausize + carry);
   }
   else
   {
-    reallocUnique(ausize);
+    tp.reallocUnique(ausize);
+    ConstPacker up(u);
+    ConstPacker vp(v);
 
     if (ausize != avsize)
     {
-      mpn_sub(limbs(), u->limbs(), ausize, v->limbs(), avsize);
-      size = negate(u->size < 0, computeWidth(ausize));
+      mpn_sub(tp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+      size = negate(u->size < 0, tp.computeWidth(ausize));
     }
-    else if (mpn_cmp(u->limbs(), v->limbs(), ausize) < 0)
+    else if (mpn_cmp(up.limbs(), vp.limbs(), ausize) < 0)
     {
-      mpn_sub_n(limbs(), v->limbs(), u->limbs(), ausize);
-      size = negate(v->size < 0, computeWidth(ausize));
+      mpn_sub_n(tp.limbs(), vp.limbs(), up.limbs(), ausize);
+      size = negate(v->size < 0, tp.computeWidth(ausize));
     }
     else
     {
-      mpn_sub_n(limbs(), u->limbs(), v->limbs(), ausize);
-      size = negate(u->size < 0, computeWidth(ausize));
+      mpn_sub_n(tp.limbs(), up.limbs(), vp.limbs(), ausize);
+      size = negate(u->size < 0, tp.computeWidth(ausize));
     }
   }
+
+  tp.commit();
 }
 
 std::size_t Integer::numLimbs(const int bits)
 {
-  std::size_t result = bits / GMP_NUMB_BITS;
-  result += ((bits % GMP_NUMB_BITS) != 0);
-  return result;
+  return (bits + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+}
+
+mp_limb_t* Integer::allocateLimbs(const std::size_t count)
+{
+  void* data = malloc(sizeof(Header) + sizeof(mp_limb_t)*count);
+  static_cast<Header*>(data)->allocated = count;
+  apr_atomic_set32(&static_cast<Header*>(data)->count, 1);
+  return static_cast<mp_limb_t*>(static_cast<void*>(static_cast<char*>(data)+sizeof(Header)));
+}
+
+std::size_t Integer::countLimbs(const mp_limb_t* limbs)
+{
+  const void* data = static_cast<const char*>(static_cast<const void*>(limbs)) - sizeof(Header);
+  return static_cast<const Header*>(data)->allocated;
+}
+
+void Integer::incrementUseCount(mp_limb_t* limbs)
+{
+  void* data = static_cast<char*>(static_cast<void*>(limbs)) - sizeof(Header);
+  apr_atomic_inc32(&static_cast<Header*>(data)->count);
+}
+
+void Integer::decrementUseCount(mp_limb_t* limbs)
+{
+  void* data = static_cast<char*>(static_cast<void*>(limbs)) - sizeof(Header);
+  const int result = apr_atomic_dec32(&static_cast<Header*>(data)->count);
+
+  if (result == 0)
+    free(data);
+}
+
+bool Integer::isUnique(mp_limb_t* limbs)
+{
+  void* data = static_cast<char*>(static_cast<void*>(limbs)) - sizeof(Header);
+  const int result = apr_atomic_read32(&static_cast<Header*>(data)->count);
+
+  return result == 1;
 }
 
 void Integer::mpzInit(mpz_t& mpz) const
 {
+  ConstPacker tp(this);
   const int w = width();
 
   // Add one for the sign bit
@@ -161,7 +232,7 @@ void Integer::mpzInit(mpz_t& mpz) const
   for(int i=0; i<w; ++i)
   {
     mpz_mul_2exp(mpz, mpz, GMP_NUMB_BITS);
-    mpz_add_ui(mpz, mpz, limbs()[i]);
+    mpz_add_ui(mpz, mpz, tp.limbs()[i]);
   }
   
   if (size < 0)
@@ -176,17 +247,21 @@ Integer Integer::gcd(const Integer& x, const Integer& y)
     return x;
 
   Integer result;
+  Packer rp(&result);
+  ConstPacker xp(&x);
+  ConstPacker yp(&y);
+
   if (y.width() == 1)
   {
-    result.reallocUnique(1);
+    rp.reallocUnique(1);
     result.size = 1;
-    *result.limbs() = mpn_gcd_1(x.limbs(), x.width(), *y.limbs());
+    rp.limbs()[0] = mpn_gcd_1(xp.limbs(), x.width(), yp.limbs()[0]);
   }
   else if (x.width() == 1)
   {
-    result.reallocUnique(1);
+    rp.reallocUnique(1);
     result.size = 1;
-    *result.limbs() = mpn_gcd_1(y.limbs(), y.width(), *x.limbs());
+    rp.limbs()[0] = mpn_gcd_1(yp.limbs(), y.width(), xp.limbs()[0]);
   }
   else
   {
@@ -197,23 +272,28 @@ Integer Integer::gcd(const Integer& x, const Integer& y)
       cx.swap(cy);
 
     // mpn_gcd clobbers
-    cx.reallocUnique(cx.width());
-    cy.reallocUnique(cy.width());
+    Packer cxp(&cx);
+    Packer cyp(&cy);
+    cxp.reallocUnique(cx.width());
+    cyp.reallocUnique(cy.width());
 
-    const mp_bitcnt_t cxZeros = mpn_scan1(cx.limbs(), 0);
-    const mp_bitcnt_t cyZeros = mpn_scan1(cy.limbs(), 0);
+    const mp_bitcnt_t cxZeros = mpn_scan1(cxp.limbs(), 0);
+    const mp_bitcnt_t cyZeros = mpn_scan1(cyp.limbs(), 0);
 
     // Remove leading zeros from cy
     cy >>= cyZeros;
-    result.reallocUnique(cy.width());
+    rp.reallocUnique(cy.width());
     result.size = cy.width();
-    mpn_gcd(result.limbs(), cx.limbs(), cx.width(), cy.limbs(), cy.width());
+    cyp.unpack();
+    mpn_gcd(rp.limbs(), cxp.limbs(), cx.width(), cyp.limbs(), cy.width());
+    cyp.abort();
+    cxp.abort();
 
     // Multiply result by common powers of two between cx and cy
     result <<= std::min(cxZeros, cyZeros);
   }
 
-  assert(result != 0);
+  rp.commit();
   return result;
 }
 
@@ -224,8 +304,16 @@ Integer Integer::lcm(const Integer& x, const Integer& y)
 
 bool Integer::operator==(const Integer& i) const
 {
-  return size == i.size 
-         && (size == 0 || mpn_cmp(limbs(), i.limbs(), width()) == 0);
+  if (size == i.size)
+  {
+    if (size == 0)
+      return true;
+
+    ConstPacker tp(this);
+    ConstPacker ip(&i);
+    return mpn_cmp(tp.limbs(), ip.limbs(), width()) == 0;
+  }
+  return false;
 }
 
 bool Integer::operator==(const int i) const
@@ -253,7 +341,9 @@ bool Integer::operator<(const Integer& i) const
     else
     {
       const int comparison = (isNegative() ? 1 : -1);
-      return mpn_cmp(limbs(), i.limbs(), width()) == comparison;
+      ConstPacker tp(this);
+      ConstPacker ip(&i);
+      return mpn_cmp(tp.limbs(), ip.limbs(), width()) == comparison;
     }
   }
   else
@@ -274,10 +364,16 @@ bool Integer::operator<(const long i) const
 
 Integer& Integer::operator=(const Integer& i)
 {
+  if ((i.data & VALUE_TAG) == 0)
+    incrementUseCount(reinterpret_cast<mp_limb_t*>(i.data));
+
+  if ((data & VALUE_TAG) == 0)
+    decrementUseCount(reinterpret_cast<mp_limb_t*>(data));
+
   size = i.size;
-  allocated = i.allocated;
   data = i.data;
 
+  VALIDATE;
   return *this;
 }
 
@@ -290,6 +386,7 @@ Integer& Integer::operator+=(const Integer& i)
   else
     performAddition(this, &i);
 
+  VALIDATE;
   return *this;
 }
 
@@ -305,6 +402,7 @@ Integer& Integer::operator-=(const Integer& i)
     performAddition(this, &negated);
   }
 
+  VALIDATE;
   return *this;
 }
 
@@ -320,6 +418,7 @@ Integer& Integer::operator++()
     performAddition(this, &one);
   }
 
+  VALIDATE;
   return *this;
 }
 
@@ -335,6 +434,7 @@ Integer& Integer::operator--()
     performAddition(this, &minusOne);
   }
 
+  VALIDATE;
   return *this;
 }
 
@@ -364,12 +464,19 @@ Integer& Integer::operator*=(const Integer& i)
 
     // mpn_mul does not allow any operand to overlap with the result
     Integer result;
-    result.reallocUnique(maxWidth);
-    mpn_mul(result.limbs(), u->limbs(), ausize, v->limbs(), avsize);
+    Packer rp(&result);
+    ConstPacker up(u);
+    ConstPacker vp(v);
+
+    rp.reallocUnique(maxWidth);
+    mpn_mul(rp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+    result.size = negate(negative, rp.computeWidth(maxWidth));
+    rp.commit();
+  
     swap(result);
-    size = negate(negative, computeWidth(maxWidth));
   }
 
+  VALIDATE;
   return *this;
 }
 
@@ -383,21 +490,25 @@ Integer& Integer::operator/=(const Integer& dividend)
   {
     const bool negative = isNegative() ^ dividend.isNegative();
     const int maxWidth = width() - dividend.width() + 1;
+    ConstPacker dp(&dividend);
+    Packer tp(this);
 
     // Ensure that we are unique since we intend to overwite our data
-    reallocUnique(width());
+    tp.reallocUnique(width());
 
     // Allocate space for our result
     util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
 
     // Perform the division, overwriting our original value with the remainder
-    mpn_tdiv_qr(result.get(), limbs(), 0, limbs(), width(), dividend.limbs(), dividend.width());
+    mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
 
     // Copy result of division back to data
-    memcpy(limbs(), result.get(), maxWidth*sizeof(mp_limb_t));
-    size = negate(negative, computeWidth(maxWidth));
+    memcpy(tp.limbs(), result.get(), maxWidth*sizeof(mp_limb_t));
+    size = negate(negative, tp.computeWidth(maxWidth));
+    tp.commit();
   }
 
+  VALIDATE;
   return *this;
 }
 
@@ -407,68 +518,78 @@ Integer& Integer::operator%=(const Integer& dividend)
   {
     const bool negative = isNegative();
     const int maxWidth = width() - dividend.width() + 1;
+    ConstPacker dp(&dividend);
+    Packer tp(this);
 
     // Ensure that we are unique since we intend to overwite our data
-    reallocUnique(width());
+    tp.reallocUnique(width());
 
     // Allocate space for our result
     util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
 
     // Perform the division, overwriting our original value with the remainder
-    mpn_tdiv_qr(result.get(), limbs(), 0, limbs(), width(), dividend.limbs(), dividend.width());
+    mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
 
     // Compute size of remainder
-    size = negate(negative, computeWidth(dividend.width()));
+    size = negate(negative, tp.computeWidth(dividend.width()));
+
+    // Commit changes
+    tp.commit();
   }
 
+  VALIDATE;
   return *this;
 }
 
 Integer& Integer::operator>>=(unsigned i)
 {
   const int oldWidth = width();
+  const unsigned limbCount = i/GMP_NUMB_BITS;
+  i -= GMP_NUMB_BITS*limbCount;
+  const int newWidth = oldWidth - limbCount;
+  Packer tp(this);
 
   // Make unique
-  reallocUnique(oldWidth);
+  tp.reallocUnique(oldWidth);
 
-  while(i>0)
-  {
-    const unsigned shift = std::min(i, static_cast<unsigned>(GMP_NUMB_BITS));
-    mpn_rshift(limbs(), limbs(), width(), shift);
-    i -= shift;
-  }
+  mpn_rshift(tp.limbs(), tp.limbs()+limbCount, oldWidth, i);
 
-  size = negate(isNegative(), computeWidth(oldWidth - i/GMP_NUMB_BITS));
+  size = negate(isNegative(), tp.computeWidth(newWidth));
+  tp.commit();
+
+  VALIDATE;
   return *this;
 }
 
 Integer& Integer::operator<<=(unsigned i)
 {
-  const int newWidth = width() + i/GMP_NUMB_BITS + 1;
+  const int oldWidth = width();
+  const unsigned limbCount = i/GMP_NUMB_BITS;
+  i -= GMP_NUMB_BITS*limbCount;
+  const int newWidth = oldWidth + limbCount + (i>0 ? 1 : 0);
+  Packer tp(this);
 
   // Enlarge and make unique
-  reallocUnique(newWidth);
+  tp.reallocUnique(newWidth);
 
-  while(i>0)
-  {
-    const unsigned shift = std::min(i, static_cast<unsigned>(GMP_NUMB_BITS));
-    limbs()[width()] = mpn_lshift(limbs(), limbs(), width(), shift);
-    size += (size < 0 ? -1 : 1);
-    i -= shift;
-  }
+  tp.limbs()[newWidth-1] = mpn_lshift(tp.limbs()+limbCount, tp.limbs(), oldWidth, i);
+  mpn_zero(tp.limbs(), limbCount);
 
-  size = negate(isNegative(), computeWidth(newWidth));
+  size = negate(isNegative(), tp.computeWidth(newWidth));
+  tp.commit();
+
+  VALIDATE;
   return *this;
 }
 
 Integer Integer::operator-() const
 {
-  return Integer(-size, allocated, data);
+  return Integer(-size, data);
 }
 
 Integer Integer::abs() const
 {
-  return Integer(width(), allocated, data);
+  return Integer(width(), data);
 }
 
 Integer Integer::isqrt() const
@@ -478,9 +599,13 @@ Integer Integer::isqrt() const
 
   const int resultWidth = width()/2 + width()%2;
   Integer result;
-  result.reallocUnique(resultWidth);
-  mpn_sqrtrem(result.limbs(), NULL, limbs(), width());
-  result.size = computeWidth(resultWidth);
+  Packer rp(&result);
+  ConstPacker tp(this);
+
+  rp.reallocUnique(resultWidth);
+  mpn_sqrtrem(rp.limbs(), NULL, tp.limbs(), width());
+  result.size = rp.computeWidth(resultWidth);
+  rp.commit();
 
   return result;
 }
@@ -518,9 +643,10 @@ std::size_t Integer::hash() const
   std::size_t result = 0x42cbce0c;
   util::hash_accum(result, size < 0);
 
+  ConstPacker tp(this);
   const std::size_t w = width();
   for(std::size_t i=0; i<w; ++i)
-    util::hash_accum(result, data[i] & GMP_NUMB_MASK);
+    util::hash_accum(result, tp.limbs()[i] & GMP_NUMB_MASK);
 
   return result;
 }
@@ -542,10 +668,12 @@ void Integer::write(std::ostream& out) const
       out << "-";
 
     Integer clobbered(*this);
-    clobbered.reallocUnique(width());
+    Packer cp(&clobbered);
+    cp.reallocUnique(width());
 
     std::vector<unsigned char> characters(maxChars);
-    const mp_size_t chars = mpn_get_str(&characters[0], base, clobbered.limbs(), clobbered.width());
+    const mp_size_t chars = mpn_get_str(&characters[0], base, cp.limbs(), clobbered.width());
+    cp.abort();
 
     mp_size_t loc = 0;
     // Skip any leading zeros
@@ -559,8 +687,7 @@ void Integer::write(std::ostream& out) const
 void Integer::swap(Integer& i)
 {
   std::swap(size, i.size);
-  std::swap(allocated, i.allocated);
-  data.swap(i.data);
+  std::swap(data, i.data);
 }
 
 long Integer::toLong() const

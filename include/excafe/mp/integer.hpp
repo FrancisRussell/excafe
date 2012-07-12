@@ -3,10 +3,18 @@
 
 #include "mp_fwd.hpp"
 #include <gmp.h>
+#include <apr_general.h>
 #include <iosfwd>
 #include <climits>
+#include <cstring>
+#include <stdint.h>
 #include <vector>
+#include <cassert>
 #include <boost/operators.hpp>
+#include <boost/utility.hpp>
+#include <boost/mpl/min_max.hpp>
+#include <boost/mpl/integral_c.hpp>
+#include <boost/integer_traits.hpp>
 #include <boost/shared_array.hpp>
 #include <excafe/util/hybrid_array.hpp>
 #include <excafe/util/hash.hpp>
@@ -15,8 +23,10 @@
 namespace excafe
 {
 
+
 namespace mp
 {
+
 
 class Integer : boost::totally_ordered<Integer>,
                 boost::totally_ordered<Integer, int>,
@@ -28,12 +38,153 @@ private:
   friend class Rational;
   friend class Float;
 
+  static const int TAG_BITS = 1;
+  static const int VALUE_TAG = 1;
+
+  static const mp_limb_t MAX_PACKED_LIMB = boost::mpl::min< 
+      boost::mpl::integral_c<mp_limb_t, GMP_NUMB_MAX>, 
+      boost::mpl::integral_c<uintptr_t, (boost::integer_traits<uintptr_t>::const_max >> TAG_BITS)> 
+    >::type::value;
+
+  struct Header
+  {
+    int allocated;
+    apr_uint32_t count;
+  };
+
+  class ConstPacker : public boost::noncopyable
+  {
+  private:
+    const Integer* integer;
+
+  protected:
+    mp_limb_t  local[2];
+    mp_limb_t* data;
+
+    inline bool isPacked() const
+    {
+      return integer->data & VALUE_TAG;
+    }
+
+    inline int getAllocated() const
+    {
+      if (isPacked())
+        return 2;
+      else
+        return countLimbs(data);
+    }
+
+  public:
+    void unpack()
+    {
+      if (isPacked())
+      {
+        uintptr_t value = integer->data;
+        value >>= TAG_BITS;
+        local[0] = value;
+        data = &local[0];
+      }
+      else
+      {
+        data = reinterpret_cast<mp_limb_t*>(integer->data);
+      }
+    }
+
+    ConstPacker(const Integer* _integer) : integer(_integer), data(NULL)
+    {
+      unpack();
+    }
+
+    const mp_limb_t* limbs() const
+    {
+      return data;
+    }
+
+    int computeWidth(const int maxWidth) const
+    {
+      int cwidth;
+      for(cwidth = maxWidth; cwidth>0; --cwidth)
+      {
+        if (limbs()[cwidth-1] != 0)
+          break;
+      }
+      return cwidth;
+    }
+  };
+
+  class Packer : public ConstPacker
+  {
+  private:
+    Integer* integer;
+    bool complete;
+
+  public:
+    Packer(Integer* _integer) : ConstPacker(_integer), integer(_integer), complete(false)
+    {
+    }
+
+    mp_limb_t* limbs()
+    {
+      return data;
+    }
+
+    void reallocUnique(const int newAllocated)
+    {
+      const bool packed = isPacked();
+
+      if ((packed && newAllocated > 2) 
+          || (!packed && (newAllocated > getAllocated() || !isUnique(limbs()))))
+      {
+        mp_limb_t* const newLimbs = allocateLimbs(newAllocated);
+        memcpy(newLimbs, limbs(), std::min(getAllocated(), newAllocated) * sizeof(mp_limb_t));
+
+        if (!packed)
+          decrementUseCount(limbs());
+
+        integer->data = reinterpret_cast<uintptr_t>(newLimbs);
+        data = newLimbs;
+      }
+    }
+
+    // The size of the result *must* be set before this is called, otherwise the resulting commit
+    // may truncate the result
+    void commit()
+    {
+      assert(!complete);
+      complete = true;
+
+      if (isPacked())
+      {
+        if (integer->width() < 2 && local[0] < MAX_PACKED_LIMB)
+        {
+          integer->data = (static_cast<uintptr_t>(local[0]) << TAG_BITS) | VALUE_TAG;
+        }
+        else
+        {
+          mp_limb_t* const newLimbs = allocateLimbs(2);
+          newLimbs[0] = local[0];
+          newLimbs[1] = local[1];
+          integer->data = reinterpret_cast<uintptr_t>(newLimbs);
+          data = newLimbs;
+        }
+      }
+    }
+
+    void abort()
+    {
+      complete = true;
+    }
+
+    ~Packer()
+    {
+      assert(complete && "All non-const packers must be explicitly committed or aborted.");
+    }
+  };
+
   static const int STACK_LIMBS = 4;
-  struct width_tag {};
 
   int size;
-  int allocated;
-  boost::shared_array<mp_limb_t> data;
+  uintptr_t data;
 
   int width() const
   {
@@ -45,41 +196,39 @@ private:
     return size < 0;
   }
 
-  const mp_limb_t* limbs() const
-  {
-    return data.get();
-  }
-
-  mp_limb_t* limbs()
-  {
-    return data.get();
-  }
-  
   static int negate(const bool b, const int val)
   {
     return (b ? -val : val);
   }
 
   static std::size_t numLimbs(const int bits);
+  static mp_limb_t* allocateLimbs(const std::size_t count);
+  static std::size_t countLimbs(const mp_limb_t* count);
+  static void incrementUseCount(mp_limb_t* limbs);
+  static void decrementUseCount(mp_limb_t* limbs);
+  static bool isUnique(mp_limb_t* limbs);
+
+  void validate() const;
   void reallocUnique(const int newAllocated);
-  int computeWidth(const int maxWidth) const;
   void performAddition(const Integer* u, const Integer* v);
 
   template<typename T>
   void initialise(const T& i)
   {
-    reallocUnique(numLimbs(sizeof(T)*CHAR_BIT));
+    Packer packer(this);
+    packer.reallocUnique(numLimbs(sizeof(T)*CHAR_BIT));
 
     const bool negative = i<0;
     T magnitude = (negative ? -i : i);
     int loc = 0;
     while(magnitude>0)
     {
-      data[loc] = magnitude & GMP_NUMB_MASK;
+      packer.limbs()[loc] = magnitude & GMP_NUMB_MASK;
       magnitude /= GMP_NUMB_MAX;
       ++loc;
     }
 
+    packer.commit();
     size = negate(negative, loc);
   }
 
@@ -106,7 +255,9 @@ private:
 
       // Both values fit into a single limb
       const mp_limb_t limb = static_cast<mp_limb_t>(absI);
-      return (data[0] & GMP_NUMB_MASK) == limb;
+
+      ConstPacker packer(this);
+      return (packer.limbs()[0] & GMP_NUMB_MASK) == limb;
     }
 
     return *this == Integer(i);
@@ -134,7 +285,8 @@ private:
         return isNegative();
 
       // Both values fit into a single limb
-      mp_limb_t left = data[0];
+      ConstPacker packer(this);
+      mp_limb_t left = packer.limbs()[0];
       mp_limb_t right = static_cast<mp_limb_t>(absI);
 
       if (isNegative()) 
@@ -146,14 +298,16 @@ private:
     return *this < Integer(i);
   }
 
-  void mpzInit(mpz_t& mpz) const;
-  Integer(const int size, const int allocated, const boost::shared_array<mp_limb_t>& data);
+  Integer(const int size, uintptr_t data);
 
 public:
+  void mpzInit(mpz_t& mpz) const;
+
   static Integer gcd(const Integer& x, const Integer& y);
   static Integer lcm(const Integer& x, const Integer& y);
 
   Integer();
+  ~Integer();
   Integer(const char* str);
   Integer(const Integer& i);
   Integer(const int i);
