@@ -406,7 +406,7 @@ Integer& Integer::operator-=(const Integer& i)
 Integer& Integer::operator++()
 {
   if (size == 0)
-    initialise(1);
+    *this = ONE;
   else
     performAddition(this, &ONE);
 
@@ -417,7 +417,7 @@ Integer& Integer::operator++()
 Integer& Integer::operator--()
 {
   if (size == 0)
-    initialise(-1);
+    *this = MINUS_ONE;
   else
     performAddition(this, &MINUS_ONE);
 
