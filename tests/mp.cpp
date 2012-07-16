@@ -189,6 +189,14 @@ BOOST_AUTO_TEST_CASE(Shifts)
 
   // Right shift larger than operand
   BOOST_CHECK_EQUAL(value >> 6000, 0);
+
+  // Shift by probable multiples of sizeof(mp_limb_t)*CHAR_BIT
+  BOOST_CHECK_EQUAL(value << 32, value * pow(Integer(2), 32));
+  BOOST_CHECK_EQUAL(value << 64, value * pow(Integer(2), 64));
+  BOOST_CHECK_EQUAL(value << 128, value * pow(Integer(2), 128));
+  BOOST_CHECK_EQUAL(value >> 32, value / pow(Integer(2), 32));
+  BOOST_CHECK_EQUAL(value >> 64, value / pow(Integer(2), 64));
+  BOOST_CHECK_EQUAL(value >> 128, value / pow(Integer(2), 128));
 }
 
 BOOST_AUTO_TEST_CASE(InputOutput)
