@@ -175,7 +175,11 @@ BOOST_AUTO_TEST_CASE(Shifts)
   // 46272^251 is 3890 bits wide.
   const Integer value = pow(Integer(46272), 251);
   
-  // Sub-limb
+  // Sub-limb on 32-bit
+  BOOST_CHECK_EQUAL(value << 15, value * pow(Integer(2), 15));
+  BOOST_CHECK_EQUAL(value >> 27, value / pow(Integer(2), 27));
+
+  // Sub-limb on 64-bit
   BOOST_CHECK_EQUAL(value << 53, value * pow(Integer(2), 53));
   BOOST_CHECK_EQUAL(value >> 41, value / pow(Integer(2), 41));
 
