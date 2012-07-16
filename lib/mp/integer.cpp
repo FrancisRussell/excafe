@@ -540,7 +540,10 @@ Integer& Integer::operator>>=(unsigned i)
   // Make unique
   tp.reallocUnique(oldWidth);
 
-  mpn_rshift(tp.limbs(), tp.limbs()+limbCount, newWidth, i);
+  if (i == 0)
+    mpn_copyi(tp.limbs(), tp.limbs()+limbCount, newWidth);
+  else
+    mpn_rshift(tp.limbs(), tp.limbs()+limbCount, newWidth, i);
 
   size = negate(isNegative(), tp.computeWidth(newWidth));
   tp.commit();
@@ -560,7 +563,11 @@ Integer& Integer::operator<<=(unsigned i)
   // Enlarge and make unique
   tp.reallocUnique(newWidth);
 
-  tp.limbs()[newWidth-1] = mpn_lshift(tp.limbs()+limbCount, tp.limbs(), oldWidth, i);
+  if (i == 0)
+    mpn_copyd(tp.limbs()+limbCount, tp.limbs(), oldWidth);
+  else
+    tp.limbs()[newWidth-1] = mpn_lshift(tp.limbs()+limbCount, tp.limbs(), oldWidth, i);
+
   mpn_zero(tp.limbs(), limbCount);
 
   size = negate(isNegative(), tp.computeWidth(newWidth));
