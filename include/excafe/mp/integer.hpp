@@ -15,6 +15,7 @@
 #include <boost/mpl/min_max.hpp>
 #include <boost/mpl/integral_c.hpp>
 #include <boost/integer_traits.hpp>
+#include <boost/type_traits/make_unsigned.hpp>
 #include <boost/static_assert.hpp>
 
 #ifdef EXCAFE_VALIDATE_MP
@@ -265,7 +266,7 @@ private:
       return false;
     }
 
-    const T absI = std::abs(i);
+    const typename boost::make_unsigned<T>::type absI = std::abs(i);
     if ((!boost::integer_traits<T>::is_signed || boost::integer_traits<T>::const_min != i) &&
         absI <= GMP_NUMB_MAX)
     {
@@ -297,7 +298,7 @@ private:
       return isNegative();
     }
 
-    const T absI = std::abs(i);
+    const typename boost::make_unsigned<T>::type absI = std::abs(i);
     if ((!boost::integer_traits<T>::is_signed || boost::integer_traits<T>::const_min != i) &&
         absI <= GMP_NUMB_MAX)
     {
