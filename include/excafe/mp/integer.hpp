@@ -16,9 +16,6 @@
 #include <boost/mpl/integral_c.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/static_assert.hpp>
-#include <excafe/util/hybrid_array.hpp>
-#include <excafe/util/hash.hpp>
-#include <excafe/exception.hpp>
 
 #ifdef EXCAFE_VALIDATE_MP
 #define EXCAFE_VALIDATE_INTEGER this->validate();

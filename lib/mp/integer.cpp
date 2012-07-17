@@ -4,6 +4,7 @@
 #include <excafe/exception.hpp>
 #include <excafe/numeric/cast.hpp>
 #include <excafe/util/hash.hpp>
+#include <excafe/util/hybrid_array.hpp>
 #include <cstring>
 #include <cassert>
 #include <ostream>
