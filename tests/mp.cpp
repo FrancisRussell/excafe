@@ -168,6 +168,11 @@ BOOST_AUTO_TEST_CASE(IncDec)
   --decZero;
   BOOST_CHECK_EQUAL(incZero, 1);
   BOOST_CHECK_EQUAL(decZero, -1);
+
+  --incZero;
+  ++decZero;
+  BOOST_CHECK_EQUAL(incZero, 0);
+  BOOST_CHECK_EQUAL(decZero, 0);
 }
 
 BOOST_AUTO_TEST_CASE(Shifts)
