@@ -303,7 +303,7 @@ bool Integer::operator==(const Integer& i) const
 {
   if (size == i.size)
   {
-    if (size == 0)
+    if (size == 0 || data == i.data)
       return true;
 
     ConstPacker tp(this);
@@ -662,7 +662,7 @@ Integer Integer::pow(const long exponent) const
 std::size_t Integer::hash() const
 {
   std::size_t result = 0x42cbce0c;
-  util::hash_accum(result, size < 0);
+  util::hash_accum(result, size);
 
   ConstPacker tp(this);
   const std::size_t w = width();

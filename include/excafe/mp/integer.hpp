@@ -11,7 +11,6 @@
 #include <vector>
 #include <cassert>
 #include <boost/operators.hpp>
-#include <boost/utility.hpp>
 #include <boost/mpl/min_max.hpp>
 #include <boost/mpl/integral_c.hpp>
 #include <boost/integer_traits.hpp>
@@ -59,9 +58,12 @@ private:
     apr_uint32_t count;
   };
 
-  class ConstPacker : public boost::noncopyable
+  class ConstPacker
   {
   private:
+    ConstPacker(const ConstPacker&);
+    ConstPacker& operator=(const ConstPacker&);
+
     const Integer* integer;
 
   protected:
@@ -86,10 +88,9 @@ private:
     {
       if (isPacked())
       {
-        uintptr_t value = integer->data;
-        value >>= TAG_BITS;
+        const uintptr_t value = (integer->data >> TAG_BITS);
         local[0] = value;
-        data = &local[0];
+        data = local;
       }
       else
       {
@@ -97,7 +98,7 @@ private:
       }
     }
 
-    ConstPacker(const Integer* _integer) : integer(_integer), data(NULL)
+    ConstPacker(const Integer* _integer) : integer(_integer)
     {
       unpack();
     }
@@ -109,13 +110,12 @@ private:
 
     int computeWidth(const int maxWidth) const
     {
-      int cwidth;
-      for(cwidth = maxWidth; cwidth>0; --cwidth)
+      for(int cwidth = maxWidth; cwidth>0; --cwidth)
       {
         if (limbs()[cwidth-1] != 0)
-          break;
+          return cwidth;
       }
-      return cwidth;
+      return 0;
     }
   };
 
@@ -198,12 +198,12 @@ private:
     return size < 0 ? -size : size;
   }
 
-  bool isNegative() const
+  inline bool isNegative() const
   {
     return size < 0;
   }
 
-  static int negate(const bool b, const int val)
+  static inline int negate(const bool b, const int val)
   {
     return (b ? -val : val);
   }
