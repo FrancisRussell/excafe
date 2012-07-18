@@ -451,7 +451,12 @@ Integer& Integer::operator*=(const Integer& i)
     ConstPacker vp(v);
 
     rp.reallocUnique(maxWidth);
-    mpn_mul(rp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+
+    if (avsize == 1)
+      rp.limbs()[maxWidth-1] = mpn_mul_1(rp.limbs(), up.limbs(), ausize, *vp.limbs());
+    else
+      mpn_mul(rp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+
     result.size = negate(negative, rp.computeWidth(maxWidth));
     rp.commit();
   
