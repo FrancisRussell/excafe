@@ -488,14 +488,22 @@ Integer& Integer::operator/=(const Integer& dividend)
     // Ensure that we are unique since we intend to overwite our data
     tp.reallocUnique(width());
 
-    // Allocate space for our result
-    util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
-
     // Perform the division, overwriting our original value with the remainder
-    mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
+    if (dividend.width() == 1)
+    {
+      mpn_divrem_1(tp.limbs(), 0, tp.limbs(), width(), *dp.limbs());
+    }
+    else
+    {
+      // Allocate space for our result
+      util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
 
-    // Copy result of division back to data
-    memcpy(tp.limbs(), result.get(), maxWidth*sizeof(mp_limb_t));
+      mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
+
+      // Copy result of division back to data
+      memcpy(tp.limbs(), result.get(), maxWidth*sizeof(mp_limb_t));
+    }
+
     size = negate(negative, tp.computeWidth(maxWidth));
     tp.commit();
   }
