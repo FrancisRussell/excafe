@@ -526,7 +526,7 @@ Integer& Integer::operator%=(const Integer& dividend)
 
     if (dividend.width() == 1)
     {
-      tp.limbs()[0] = mpn_divrem_1(tp.limbs(), 0, tp.limbs(), width(), *dp.limbs());
+      tp.limbs()[0] = mpn_mod_1(tp.limbs(), width(), *dp.limbs());
     }
     else
     {
