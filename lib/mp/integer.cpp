@@ -524,11 +524,18 @@ Integer& Integer::operator%=(const Integer& dividend)
     // Ensure that we are unique since we intend to overwite our data
     tp.reallocUnique(width());
 
-    // Allocate space for our result
-    util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
+    if (dividend.width() == 1)
+    {
+      tp.limbs()[0] = mpn_divrem_1(tp.limbs(), 0, tp.limbs(), width(), *dp.limbs());
+    }
+    else
+    {
+      // Allocate space for our result
+      util::HybridArray<mp_limb_t, STACK_LIMBS> result(maxWidth);
 
-    // Perform the division, overwriting our original value with the remainder
-    mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
+      // Perform the division, overwriting our original value with the remainder
+      mpn_tdiv_qr(result.get(), tp.limbs(), 0, tp.limbs(), width(), dp.limbs(), dividend.width());
+    }
 
     // Compute size of remainder
     size = negate(negative, tp.computeWidth(dividend.width()));
