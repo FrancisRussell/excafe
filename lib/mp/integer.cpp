@@ -141,7 +141,12 @@ void Integer::performAddition(const Integer* u, const Integer* v)
     ConstPacker up(u);
     ConstPacker vp(v);
 
-    const mp_limb_t carry = mpn_add(tp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+    mp_limb_t carry;
+    if (avsize == 1)
+      carry = mpn_add_1(tp.limbs(), up.limbs(), ausize, *vp.limbs());
+    else
+      carry = mpn_add(tp.limbs(), up.limbs(), ausize, vp.limbs(), avsize);
+
     tp.limbs()[ausize] = carry;
     size = negate(u->size < 0, ausize + carry);
   }
