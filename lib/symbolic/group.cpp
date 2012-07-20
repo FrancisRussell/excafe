@@ -90,6 +90,11 @@ void Group::accept(NumericExpressionVisitor<Symbol>& v) const
   expr.accept(v);
 }
 
+bool Group::isPolynomial() const
+{
+  return false;
+}
+
 Expr Group::extractPolynomials(ExtractedExpressions& extracted) const
 {
   const Symbol subExpr = extracted.addRepresentable(expr.extractPolynomials(extracted));

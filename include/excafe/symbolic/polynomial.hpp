@@ -472,6 +472,7 @@ public:
   Polynomial& operator*=(const Rational& r);
   void write(std::ostream& out) const;
   Expr toSum() const;
+  bool isPolynomial() const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 

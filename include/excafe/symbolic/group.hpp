@@ -34,6 +34,7 @@ public:
   bool operator==(const Group& g) const;
   std::size_t untypedHash() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
+  bool isPolynomial() const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 

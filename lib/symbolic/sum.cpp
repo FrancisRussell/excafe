@@ -300,6 +300,17 @@ Expr Sum::integrate(const Expr::region_t& region, const unsigned flags) const
   return constructSimplifiedExpr(getOverall() * region.getVolume(), resultTerms, NON_NORMALISED);
 }
 
+bool Sum::isPolynomial() const
+{
+  BOOST_FOREACH(const TermMap::value_type& term, std::make_pair(begin(), end()))
+  {
+    if (!term.second.isPolynomial())
+      return false;
+  }
+
+  return true;
+}
+
 Expr Sum::extractPolynomials(ExtractedExpressions& extracted) const
 {
   LazyTermMap newTermMap;

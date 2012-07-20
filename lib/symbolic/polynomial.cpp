@@ -362,6 +362,11 @@ void Polynomial::write(std::ostream& out) const
   }
 }
 
+bool Polynomial::isPolynomial() const
+{
+  return true;
+}
+
 Expr Polynomial::extractPolynomials(ExtractedExpressions& extracted) const
 {
   return clone();

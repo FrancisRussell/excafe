@@ -243,6 +243,11 @@ Expr Rational::extractMultiplier(Rational& coeff) const
   }
 }
 
+bool Rational::isPolynomial() const
+{
+  return true;
+}
+
 Expr Rational::extractPolynomials(ExtractedExpressions& extracted) const
 {
   return clone();
