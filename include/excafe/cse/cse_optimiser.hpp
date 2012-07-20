@@ -356,6 +356,7 @@ public:
     SOPBuilder<variable_t> builder(*this);
     std::size_t index = 0;
 
+    std::cout << "Extracting polynomial components..." << std::flush;
     for(InputIterator iter = begin; iter != end; ++iter)
     {
       const Expr original = convert_expression<Expr>(*iter, symbolMapper);
@@ -365,6 +366,7 @@ public:
       originalIndices.left.insert(std::make_pair(symbol, index));
       ++index;
     }
+    std::cout << "done." << std::endl;
 
     // Allocate indices for the extracted sub-expressions
     BOOST_FOREACH(const ExtractedExpressions::value_type& exprMapping, extracted)
