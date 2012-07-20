@@ -15,6 +15,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include "cse_fwd.hpp"
 #include "cube.hpp"
 #include "sop.hpp"
@@ -88,7 +89,8 @@ private:
     // Add search spaces to priority queue only if their set of
     // co-kernels have not been seen before. If they have, the previous
     // search space contains the one just constructed.
-    std::set< std::set<vertex_descriptor> > coKernelSets;
+    std::cout << "Populating biclique search..." << std::flush;
+    boost::unordered_set< std::set<vertex_descriptor> > coKernelSets;
     std::size_t count=0;
     BOOST_FOREACH(const vertex_descriptor v, orderedCubes)
     {
@@ -108,6 +110,7 @@ private:
       }
     }
 
+    std::cout << "done." << std::endl;
     std::cout << "Added " << count << " cubes to search space." << std::endl;
   }
 
