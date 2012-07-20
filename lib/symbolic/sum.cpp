@@ -304,7 +304,7 @@ bool Sum::isPolynomial() const
 {
   BOOST_FOREACH(const TermMap::value_type& term, std::make_pair(begin(), end()))
   {
-    if (!term.second.isPolynomial())
+    if (!term.first.isPolynomial())
       return false;
   }
 
