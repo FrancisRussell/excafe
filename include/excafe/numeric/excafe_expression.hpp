@@ -22,6 +22,9 @@
 #include <excafe/symbolic/symbol.hpp>
 #include <excafe/symbolic/rational.hpp>
 #include <excafe/symbolic/group.hpp>
+#include <excafe/mp/integer.hpp>
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/float.hpp>
 
 namespace excafe
 {
@@ -133,15 +136,15 @@ public:
   {
   }
 
-  ExcafeExpression(const symbolic::Rational& s) : expr(s) 
+  ExcafeExpression(const mp::Integer& s) : expr(s) 
   {
   }
 
-  ExcafeExpression(const cln::cl_RA& s) : expr(s) 
+  ExcafeExpression(const mp::Rational& s) : expr(s) 
   {
   }
 
-  ExcafeExpression(const cln::cl_F& s) : expr(s) 
+  ExcafeExpression(const mp::Float& s) : expr(s) 
   {
   }
 
@@ -328,15 +331,15 @@ public:
     return evaluated.toDouble();
   }
 
-  boost::optional<symbolic::Rational> evaluateRational(const value_map& variableValues) const
+  boost::optional<mp::Rational> evaluateRational(const value_map& variableValues) const
   {
     using namespace symbolic;
     const expr_t evaluated = expr.subs(variableValues.getReference());
 
     if (is_exactly_a<Rational>(evaluated))
-      return convert_to<Rational>(evaluated);
+      return convert_to<Rational>(evaluated).getValue();
     else
-      return boost::optional<Rational>();
+      return boost::optional<mp::Rational>();
   }
 };
 

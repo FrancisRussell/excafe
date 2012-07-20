@@ -27,13 +27,15 @@ AC_CHECK_HEADERS([stdlib.h])
 ACX_MPI([], AC_MSG_ERROR([Unable to find MPI.]))
 
 # Check for OpenMP
-#AX_OPENMP(CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS")
+AX_OPENMP(CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS")
 
 # Check for Boost
 AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
+
+AX_BOOST_UNIT_TEST_FRAMEWORK
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 

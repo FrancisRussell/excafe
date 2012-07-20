@@ -12,13 +12,13 @@
 #include <excafe/capture/assembly/generic_symbol.hpp>
 #include <excafe/cse/factorised_expression_visitor.hpp>
 #include <excafe/cse/polynomial_index.hpp>
+#include <excafe/mp/float.hpp>
 #include <ostream>
 #include <stack>
 #include <vector>
 #include <map>
 #include <string>
 #include <boost/variant.hpp>
-#include <cln/cln.h>
 
 namespace excafe
 {
@@ -32,7 +32,7 @@ namespace detail
 class Product
 {
 private:
-  typedef cln::cl_R numeric_t;
+  typedef mp::Float numeric_t;
   typedef std::map<std::string, int> exp_map_t;
   typedef util::LazyCopy<exp_map_t> lazy_exp_map_t;
 

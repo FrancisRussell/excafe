@@ -7,7 +7,8 @@
 #include <set>
 #include <utility>
 #include <boost/operators.hpp>
-#include <cln/real.h>
+#include <excafe/mp/rational.hpp>
+#include <excafe/mp/float.hpp>
 #include "symbolic_fwd.hpp"
 #include "abstract_basic.hpp"
 
@@ -29,7 +30,8 @@ private:
 public:
   Float();
   Float(const double _value);
-  Float(const cln::cl_R& value);
+  Float(const mp::Rational& value);
+  Float(const mp::Float& value);
   std::size_t nops() const;
   void write(std::ostream& o) const;
   Expr derivative(const Symbol& s, Expr::optional_derivative_cache cache) const;

@@ -1,5 +1,5 @@
 # ===========================================================================
-#               http://autoconf-archive.cryp.to/ax_openmp.html
+#         http://www.gnu.org/software/autoconf-archive/ax_openmp.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -21,9 +21,9 @@
 #
 #   If you want to compile everything with OpenMP, you should set:
 #
-#       CFLAGS="$CFLAGS $OPENMP_CFLAGS"
-#       #OR#  CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
-#       #OR#  FFLAGS="$FFLAGS $OPENMP_FFLAGS"
+#     CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+#     #OR#  CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
+#     #OR#  FFLAGS="$FFLAGS $OPENMP_FFLAGS"
 #
 #   (depending on the selected language).
 #
@@ -64,6 +64,8 @@
 #   Macro released by the Autoconf Archive. When you make and distribute a
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
+
+#serial 8
 
 AC_DEFUN([AX_OPENMP], [
 AC_PREREQ(2.59) dnl for _AC_LANG_PREFIX
