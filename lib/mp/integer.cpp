@@ -6,6 +6,7 @@
 #include <excafe/util/hash.hpp>
 #include <excafe/util/hybrid_array.hpp>
 #include <cstring>
+#include <cmath>
 #include <cassert>
 #include <ostream>
 

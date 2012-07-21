@@ -7,6 +7,7 @@
 #include <iosfwd>
 #include <climits>
 #include <cstring>
+#include <cmath>
 #include <stdint.h>
 #include <vector>
 #include <cassert>
@@ -236,7 +237,7 @@ private:
       ++i;
 
     const bool negative = i<0;
-    T magnitude = (negative ? -i : i);
+    typename boost::make_unsigned<T>::type magnitude = std::abs(i);
     int loc = 0;
     while(magnitude>0)
     {
