@@ -98,6 +98,11 @@ void Abs::accept(NumericExpressionVisitor<Symbol>& v) const
   v.visitAbsoluteValue();
 }
 
+bool Abs::isPolynomial() const
+{
+  return false;
+}
+
 Expr Abs::extractPolynomials(ExtractedExpressions& extracted) const
 {
   const Symbol subExpr = extracted.addRepresentable(expr.extractPolynomials(extracted));

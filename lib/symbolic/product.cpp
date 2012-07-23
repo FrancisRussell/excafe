@@ -334,6 +334,17 @@ Expr Product::integrate(const Expr::region_t& region, const unsigned flags) cons
   return constructSimplifiedExpr(getOverall(), independent, NON_NORMALISED);
 }
 
+bool Product::isPolynomial() const
+{
+  BOOST_FOREACH(const TermMap::value_type& term, std::make_pair(begin(), end()))
+  {
+    if (term.second < 0 || !term.first.isPolynomial())
+      return false;
+  }
+
+  return true;
+}
+
 Expr Product::extractPolynomials(ExtractedExpressions& extracted) const
 {
   LazyTermMap newTermMap;

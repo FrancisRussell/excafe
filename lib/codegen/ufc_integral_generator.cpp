@@ -64,26 +64,30 @@ void Product::write(std::ostream& out) const
       denominators.insert(exp_map_t::value_type(exp.first, -exp.second));
   }
 
+  const bool isUnitCoefficient = (coefficient == 1.0 || coefficient == -1.0);
   bool firstNumerator = true;
-  const double coefficientAsDouble = excafe::numeric_cast<double>(coefficient);
-  if (coefficientAsDouble != 1.0 || numerators.empty())
+
+  if (numerators.empty() || !isUnitCoefficient)
   {
-    firstNumerator = false;
+    const double coefficientAsDouble = excafe::numeric_cast<double>(coefficient);
     out << std::setprecision(25) << coefficientAsDouble;
+    firstNumerator = false;
   }
-  
-  for(exp_map_t::const_iterator numIter = numerators.begin(); 
-      numIter != numerators.end();
-      ++numIter)
+  else
   {
-    for(int i=0; i<numIter->second; ++i)
+    out << (coefficient < 0.0 ? "-" : "");
+  }
+
+  BOOST_FOREACH(const exp_map_t::value_type& exp, numerators)
+  {
+    for(int i=0; i<exp.second; ++i)
     {
       if (!firstNumerator)
         out << "*";
       else
         firstNumerator = false;
 
-      out << numIter->first;
+      out << exp.first;
     }
   }
 
@@ -92,18 +96,16 @@ void Product::write(std::ostream& out) const
     out << "/(";
     bool firstDenominator = true;
     
-    for(exp_map_t::const_iterator denomIter = denominators.begin(); 
-        denomIter != denominators.end();
-        ++denomIter)
+    BOOST_FOREACH(const exp_map_t::value_type& exp, denominators)
     {
-      for(int i=0; i<denomIter->second; ++i)
+      for(int i=0; i<exp.second; ++i)
       {
         if (!firstDenominator)
           out << "*";
         else
           firstDenominator = false;
 
-        out << denomIter->first;
+        out << exp.first;
       }
     }
 

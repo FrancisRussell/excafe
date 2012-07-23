@@ -6,6 +6,7 @@
 #include "petscksp.h"
 #include "petscpc.h"
 #include <cassert>
+#include <boost/static_assert.hpp>
 
 namespace excafe
 {
@@ -125,9 +126,29 @@ void PETScKrylovSolver::setAbsoluteTolerance(const double t)
   updateTolerances();
 }
 
+template<typename DestroyFunction> 
+PetscErrorCode KSPDestroyWrapper(DestroyFunction func, KSP& ksp)
+{
+  BOOST_STATIC_ASSERT(sizeof(DestroyFunction) == 0);
+  return 0;
+}
+
+template<> 
+PetscErrorCode KSPDestroyWrapper(PetscErrorCode (*func)(KSP*), KSP& ksp)
+{
+  return func(&ksp);
+}
+
+template<> 
+PetscErrorCode KSPDestroyWrapper(PetscErrorCode (*func)(KSP), KSP& ksp)
+{
+  return func(ksp);
+}
+
 PETScKrylovSolver::~PETScKrylovSolver()
 {
-  KSPDestroy(&ksp);
+  const PetscErrorCode ierr = KSPDestroyWrapper(&KSPDestroy, ksp);
+  checkError(ierr);
 }
 
 }

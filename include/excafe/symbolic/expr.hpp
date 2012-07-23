@@ -75,6 +75,7 @@ public:
   void swap(Expr& e);
   Expr expand(bool distribute = true) const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
+  bool isPolynomial() const;
   Float eval(const subst_map& map) const;
 };
 

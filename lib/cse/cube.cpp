@@ -7,6 +7,8 @@
 #include <excafe/cse/cube.hpp>
 #include <excafe/cse/literal_info.hpp>
 #include <excafe/cse/new_literal_creator.hpp>
+#include <excafe/util/ordered_map_hash.hpp>
+#include <excafe/util/hash.hpp>
 
 namespace excafe
 {
@@ -33,34 +35,44 @@ int Cube::minExponent(const int a, const int b)
   return (std::abs(a) < std::abs(b)) ? a : b;
 }
 
-Cube& Cube::merge(const Cube& c, const bool negate)
+Cube& Cube::merge(const Cube& c2, const bool negate)
 {
-  exponent_map_t::iterator expIter = begin();
+  typedef exponent_map_t::value_type::second_type exponent_t;
+  const Cube& c1 = *this;
+  exponent_map_t::const_iterator c1Iter = c1.begin();
+  exponent_map_t::const_iterator c2Iter = c2.begin();
 
-  BOOST_FOREACH(const exponent_map_t::value_type& clMapping, *c.literalExponents)
+  exponent_map_t newExponents;
+  newExponents.reserve(c1.size() + c2.size());
+
+  while(c1Iter != c1.end() || c2Iter != c2.end())
   {
-    const exponent_map_t::value_type 
-      lMapping(clMapping.first, negate ? -clMapping.second : clMapping.second);
-
-    while(expIter != literalExponents->end() && expIter->first < lMapping.first)
-      ++expIter;
-
-    if (expIter == literalExponents->end() || expIter->first != lMapping.first)
+    if (c2Iter == c2.end() || (c1Iter != c1.end() && c1Iter->first < c2Iter->first))
     {
-      literalExponents->insert(expIter, lMapping);
+      newExponents.insert(*c1Iter);
+      ++c1Iter;
     }
     else
     {
-      expIter->second += lMapping.second;
+      const exponent_t c2NegatedValue = (negate ? -c2Iter->second : c2Iter->second);
 
-      if (expIter->second == 0)
+      if (c1Iter == c1.end() || c2Iter->first < c1Iter->first)
       {
-        const exponent_map_t::iterator nextExpIter(boost::next(expIter));
-        literalExponents->erase(expIter);
-        expIter = nextExpIter;
+        newExponents.insert(exponent_map_t::value_type(c2Iter->first, c2NegatedValue));
       }
+      else
+      {
+        const exponent_map_t::value_type::first_type exponentSum = c1Iter->second + c2NegatedValue;
+        if (exponentSum != 0)
+          newExponents.insert(exponent_map_t::value_type(c1Iter->first, exponentSum));
+        ++c1Iter;
+      }
+
+      ++c2Iter;
     }
   }
+
+  swap(*this->literalExponents, newExponents);
   return *this;
 }
 
@@ -118,20 +130,18 @@ Cube& Cube::operator&=(const Cube& c)
 
   while(expIter != literalExponents->end())
   {
-    const exponent_map_t::iterator nextExpIter(boost::next(expIter));
     const exponent_map_t::const_iterator cIter(c.literalExponents->find(expIter->first));
 
     if (cIter == c.literalExponents->end()
         || minExponent(expIter->second, cIter->second) == 0)
     {
-      literalExponents->erase(expIter);
+      expIter = literalExponents->erase(expIter);
     }
     else
     {
       expIter->second = minExponent(expIter->second, cIter->second);
+      ++expIter;
     }
-
-    expIter = nextExpIter;
   }
   return *this;
 }
@@ -192,6 +202,13 @@ std::size_t Cube::numMultiplies(const NewLiteralCreator& creator) const
     ++result;
 
   return result > 0 ? result-1 : 0;
+}
+
+std::size_t Cube::hashValue() const
+{
+  std::size_t result = 0x5171b064;
+  util::hash_accum(result, util::OrderedMapHash<exponent_map_t>()(*literalExponents));
+  return result;
 }
 
 std::ostream& operator<<(std::ostream& o, const Cube& c)

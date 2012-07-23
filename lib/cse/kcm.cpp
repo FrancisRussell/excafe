@@ -6,11 +6,11 @@
 #include <excafe/cse/polynomial_index.hpp>
 #include <excafe/cse/new_literal_creator.hpp>
 #include <excafe/exception.hpp>
-#include <map>
 #include <utility>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/utility.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace excafe
 {
@@ -37,7 +37,7 @@ void KCM::addPolynomial(const PolynomialIndex& polynomialID)
         CFD_EXCEPTION("Attemped to insert duplicate edge into KCM. This should never happen.");
 
       const edge_descriptor edge = edgePair.first;
-      put(term_id(), graph, edge, termID);
+      graph[edge].term_id = termID;
     }
   }
 }
@@ -54,19 +54,21 @@ literalCreator(_literalCreator), sops(literalCreator.getSOPMap())
 KCM::vertex_descriptor KCM::addCoKernel(const PolynomialIndex& polynomialID, const Cube& coKernel)
 {
   const vertex_descriptor v = add_vertex(graph);
-  put(is_cube(), graph, v, false);
-  put(polynomial_id(), graph, v, polynomialID);
-  put(term_cube(), graph, v, coKernel);
-  put(mul_count(), graph, v, coKernel.numMultiplies(literalCreator));
-  put(is_unit(), graph, v, coKernel.isUnit(literalCreator));
-  put(is_numeric(), graph, v, coKernel.isNumeric(literalCreator));
-  put(has_coefficient(), graph, v, coKernel.hasCoefficient(literalCreator));
+  boost::vertex_bundle_type<graph_t>::type properties;
+  properties.is_cube = false;
+  properties.polynomial_id = polynomialID;
+  properties.term_cube = coKernel;
+  properties.mul_count = coKernel.numMultiplies(literalCreator);
+  properties.is_unit = coKernel.isUnit(literalCreator);
+  properties.is_numeric = coKernel.isNumeric(literalCreator);
+  properties.has_coefficient = coKernel.hasCoefficient(literalCreator);
+  graph[v] = properties;
   return v;
 }
 
 KCM::vertex_descriptor KCM::addCube(const Cube& c)
 {
-  const std::map<Cube, vertex_descriptor>::const_iterator vertexIter = cubeVertices.find(c);
+  const boost::unordered_map<Cube, vertex_descriptor>::const_iterator vertexIter = cubeVertices.find(c);
 
   if (vertexIter != cubeVertices.end())
   {
@@ -76,12 +78,14 @@ KCM::vertex_descriptor KCM::addCube(const Cube& c)
   {
     const vertex_descriptor v = add_vertex(graph);
     cubeVertices.insert(std::make_pair(c, v));
-    put(is_cube(), graph, v, true);
-    put(term_cube(), graph, v, c);
-    put(mul_count(), graph, v, c.numMultiplies(literalCreator));
-    put(is_unit(), graph, v, c.isUnit(literalCreator));
-    put(is_numeric(), graph, v, c.isNumeric(literalCreator));
-    put(has_coefficient(), graph, v, c.hasCoefficient(literalCreator));
+    boost::vertex_bundle_type<graph_t>::type properties;
+    properties.is_cube = true;
+    properties.term_cube = c;
+    properties.mul_count = c.numMultiplies(literalCreator);
+    properties.is_unit = c.isUnit(literalCreator);
+    properties.is_numeric = c.isNumeric(literalCreator);
+    properties.has_coefficient = c.hasCoefficient(literalCreator);
+    graph[v] = properties;
     return v;
   }
 }
@@ -91,9 +95,9 @@ void KCM::orderCubes()
   unsigned id=0;
   BOOST_FOREACH(const vertex_descriptor& vertex, vertices(graph))
   {
-    if (get(is_cube(), graph, vertex))
+    if (graph[vertex].is_cube)
     {
-      put(cube_ordering(), graph, vertex, std::make_pair(out_degree(vertex, graph), id));
+      graph[vertex].cube_ordering = std::make_pair(out_degree(vertex, graph), id);
       ++id;
     }
   }
@@ -171,7 +175,7 @@ std::size_t KCM::numCubes() const
   std::size_t count = 0;
   BOOST_FOREACH(const vertex_descriptor& v, vertices(graph))
   {
-    if (get(is_cube(), graph, v))
+    if (graph[v].is_cube)
       ++count;
   }
   return count;
@@ -211,9 +215,9 @@ void KCM::updateGraph(const Biclique<graph_t>& biclique)
   while(vi != viEnd)
   {
     const vertex_iter viNext = boost::next(vi);
-    if (!get(is_cube(), graph, *vi))
+    if (!graph[*vi].is_cube)
     {
-      if (modifiedPolynomials.find(get(polynomial_id(), graph, *vi)) != modifiedPolynomials.end())
+      if (modifiedPolynomials.find(graph[*vi].polynomial_id) != modifiedPolynomials.end())
       {
         clear_vertex(*vi, graph);
         remove_vertex(*vi, graph);

@@ -32,10 +32,10 @@ private:
   vertex_descriptor nextSplitPoint;
   bool finished;
 
-  typename boost::property_map<graph_t, cube_ordering>::type::value_type 
+  typename boost::vertex_bundle_type<graph_t>::type::cube_ordering_t
   id(const vertex_descriptor& v) const
   {
-    return get(cube_ordering(), this->getGraph(), v);
+    return this->getGraph()[v].cube_ordering;
   }
 
   void calculateValues(const vertex_descriptor& oldSplitPoint)
@@ -52,7 +52,7 @@ private:
       BOOST_FOREACH(const vertex_descriptor& v, vertices(this->getGraph()))
       {
         const bool afterOldSplit = (oldSplitPoint == nullVertex || id(v) > id(oldSplitPoint));
-        if (afterOldSplit && get(is_cube(), this->getGraph(), v))
+        if (afterOldSplit && this->getGraph()[v].is_cube)
         {
           const bool lowerThanNextSplit = (nextSplitPoint == nullVertex || id(v) < id(nextSplitPoint));
           if (lowerThanNextSplit)

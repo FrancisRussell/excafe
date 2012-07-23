@@ -15,7 +15,7 @@
 #include "expr.hpp"
 #include <excafe/util/lazy_copy.hpp>
 #include <excafe/util/hash.hpp>
-#include <excafe/util/hash_unordered_map.hpp>
+#include <excafe/util/unordered_map_hash.hpp>
 
 namespace excafe
 {
@@ -178,7 +178,7 @@ protected:
     // don't do this first, mergeSubTerms may miss incorporating
     // child terms.
 
-    const child_type simplifiedChildren = asChild(*this).extractMultipliers();
+    const child_type simplifiedChildren = AbstractBasic<T>::asChild(*this).extractMultipliers();
     LazyTermMap newTermMap(getTerms().size());
     Rational newOverall = child_type::null();
     mergeSubTerms(newOverall, *newTermMap, defaultCoefficient, simplifiedChildren);
@@ -220,7 +220,7 @@ public:
 
   child_type withoutOverall() const
   {
-    child_type result(asChild(*this));
+    child_type result(AbstractBasic<T>::asChild(*this));
 
     if (overall != child_type::null())
     {
@@ -264,7 +264,7 @@ public:
   {
     std::size_t result = 0x7730fe1a;
     excafe::util::hash_accum(result, overall);
-    excafe::util::hash_accum(result, excafe::util::hash_unordered_map(getTerms()));
+    excafe::util::hash_accum(result, excafe::util::UnorderedMapHash<TermMap>()(getTerms()));
     return result;
   }
 

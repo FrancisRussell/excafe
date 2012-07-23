@@ -2,8 +2,6 @@
 #define EXCAFE_UTIL_HYBRID_ARRAY_HPP
 
 #include <cstddef>
-#include <boost/utility.hpp>
-#include <boost/scoped_array.hpp>
 
 namespace excafe
 {
@@ -12,54 +10,50 @@ namespace util
 {
 
 template<typename T, std::size_t N>
-class HybridArray : boost::noncopyable
+class HybridArray
 {
 public:
   typedef T value_type;
   static const std::size_t max_stack_size = N;
 
 private:
-   value_type stackAllocated[max_stack_size];
-   const boost::scoped_array<value_type> heapAllocated;
-   value_type* const dataPointer;
+  HybridArray(const HybridArray&);
+  HybridArray& operator=(const HybridArray&);
 
-   static value_type* allocateDynamic(const std::size_t size)
-   {
-     if (size > max_stack_size)
-       return new value_type[size];
-     else
-       return NULL;
-   }
-
-   value_type* getData()
-   {
-     return heapAllocated.get() != NULL ? heapAllocated.get() : stackAllocated;
-   }
+  value_type stackData[max_stack_size];
+  value_type* const dataPointer;
 
 public:
-   HybridArray(const std::size_t size) : heapAllocated(allocateDynamic(size)), dataPointer(getData())
-   {
-   }
+  HybridArray(const std::size_t size) : 
+    dataPointer(size > max_stack_size ? new value_type[size] : stackData)
+  {
+  }
 
-   const value_type& operator[](const std::ptrdiff_t i) const
-   {
-     return dataPointer[i];
-   }
+  const value_type& operator[](const std::size_t i) const
+  {
+    return dataPointer[i];
+  }
 
-   value_type& operator[](const std::ptrdiff_t i)
-   {
-     return dataPointer[i];
-   }
+  value_type& operator[](const std::size_t i)
+  {
+    return dataPointer[i];
+  }
 
-   value_type* get()
-   {
-     return dataPointer;
-   }
+  value_type* get()
+  {
+    return dataPointer;
+  }
 
-   const value_type* get() const
-   {
-     return dataPointer;
-   }
+  const value_type* get() const
+  {
+    return dataPointer;
+  }
+
+  ~HybridArray()
+  {
+    if (dataPointer != stackData)
+      delete[] dataPointer;
+  }
 };
 
 }
