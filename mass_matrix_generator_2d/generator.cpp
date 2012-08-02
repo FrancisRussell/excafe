@@ -50,10 +50,10 @@ public:
   MassMatrixGenerator(Mesh<dimension>& _mesh, const BenchmarkType _benchmarkType, const int _nf, const int _p, const int _q) :
     mesh(_mesh), scenario(mesh), benchmarkType(_benchmarkType), nf(_nf), p(_p), q(_q)
   {
-    elementBasis = scenario.addElement(constructBasis());
+    elementBasis = scenario.addElement(constructBasis(q));
     elementSpace = scenario.defineFunctionSpace(elementBasis, mesh);
 
-    coefficientBasis = scenario.addElement(constructBasis());
+    coefficientBasis = scenario.addElement(constructBasis(p));
     coefficientSpace = scenario.defineFunctionSpace(coefficientBasis, mesh);
 
     f = scenario.defineNamedField("f", coefficientSpace);
@@ -62,12 +62,12 @@ public:
     i = scenario.defineNamedField("i", coefficientSpace);
   }
 
-  FiniteElement<dimension>* constructBasis() const
+  FiniteElement<dimension>* constructBasis(const int degree) const
   {
     if (benchmarkType == VECTOR_LAPLACIAN)
-      return new LagrangeTriangle<1>(q);
+      return new LagrangeTriangle<1>(degree);
     else
-      return new LagrangeTriangle<0>(q);
+      return new LagrangeTriangle<0>(degree);
   }
 
   forms::BilinearFormIntegralSum constructForm()
