@@ -120,6 +120,36 @@ bool Rational::operator==(const Rational& r) const
   return numerator == r.numerator && denominator == r.denominator;
 }
 
+bool Rational::operator==(const Integer& i) const
+{
+  return denominator == 1 && numerator == i;
+}
+
+bool Rational::operator==(const int i) const
+{
+  return denominator == 1 && numerator == i;
+}
+
+bool Rational::operator==(const long i) const
+{
+  return denominator == 1 && numerator == i;
+}
+
+bool Rational::operator<(const Integer& i) const
+{
+  return numerator < (denominator * i);
+}
+
+bool Rational::operator<(const int i) const
+{
+  return numerator < (denominator * i);
+}
+
+bool Rational::operator<(const long i) const
+{
+  return numerator < (denominator * i);
+}
+
 bool Rational::operator<(const Rational& r) const
 {
   return numerator*r.denominator < r.numerator*denominator;

@@ -50,7 +50,13 @@ public:
   Integer getDenominator() const;
 
   bool operator==(const Rational& r) const;
+  bool operator==(const Integer& i) const;
+  bool operator==(int i) const;
+  bool operator==(long i) const;
   bool operator<(const Rational& r) const;
+  bool operator<(const Integer& r) const;
+  bool operator<(int i) const;
+  bool operator<(long i) const;
   Rational operator-() const;
   Rational& operator+=(const Rational& r);
   Rational& operator-=(const Rational& r);
