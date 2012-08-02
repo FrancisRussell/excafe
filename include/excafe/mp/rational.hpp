@@ -5,6 +5,13 @@
 #include "integer.hpp"
 #include <boost/operators.hpp>
 
+#ifdef EXCAFE_VALIDATE_MP
+#define EXCAFE_VALIDATE_RATIONAL this->validate();
+#else
+#define EXCAFE_VALIDATE_RATIONAL
+#endif
+
+
 namespace excafe
 {
 
@@ -25,6 +32,7 @@ private:
 
   Rational(const Integer& _numerator, const Integer& _denominator, struct no_normalise_tag);
   void normalise();
+  void validate() const;
   void mpqInit(mpq_t& mpq) const;
 
 public:

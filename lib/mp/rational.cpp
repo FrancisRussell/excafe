@@ -15,48 +15,58 @@ namespace mp
 Rational::Rational(const Integer& _numerator, const Integer& _denominator, struct no_normalise_tag) :
   numerator(_numerator), denominator(_denominator)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational() : numerator(0), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const int i) : numerator(i), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const long i) : numerator(i), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const unsigned int i) : numerator(i), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const unsigned long i) : numerator(i), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const Integer& i) : numerator(i), denominator(1)
 {
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const int _numerator, const int _denominator) : 
   numerator(_numerator), denominator(_denominator)
 {
   normalise();
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const long _numerator, const long _denominator) : 
   numerator(_numerator), denominator(_denominator)
 {
   normalise();
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 Rational::Rational(const Integer& _numerator, const Integer& _denominator) : 
   numerator(_numerator), denominator(_denominator)
 {
   normalise();
+  EXCAFE_VALIDATE_RATIONAL
 }
 
 void Rational::normalise()
@@ -81,6 +91,14 @@ void Rational::normalise()
     numerator /= factor;
     denominator /= factor;
   }
+}
+
+void Rational::validate() const
+{
+  Rational normalised(*this);
+  normalised.normalise();
+
+  assert(normalised == *this);
 }
 
 void Rational::mpqInit(mpq_t& mpq) const
@@ -129,12 +147,16 @@ Rational& Rational::operator+=(const Rational& r)
   denominator = lcd;
 
   normalise();
+
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
 Rational& Rational::operator-=(const Rational& r)
 {
   (*this) += -r;
+
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
@@ -146,7 +168,7 @@ Rational& Rational::operator*=(const Rational& r)
   numerator = (numerator/gcd1)*(r.numerator/gcd2);
   denominator = (denominator/gcd2)*(r.denominator/gcd1);
 
-  normalise();
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
@@ -163,18 +185,24 @@ Rational Rational::reciprocal() const
 Rational& Rational::operator/=(const Rational& r)
 {
   (*this) *= r.reciprocal();
+
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
 Rational& Rational::operator++()
 {
   numerator += denominator;
+
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
 Rational& Rational::operator--()
 {
   numerator -= denominator;
+
+  EXCAFE_VALIDATE_RATIONAL
   return *this;
 }
 
