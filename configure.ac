@@ -30,7 +30,7 @@ ACX_MPI([], AC_MSG_ERROR([Unable to find MPI.]))
 #AX_OPENMP(CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS")
 
 # Check for Boost
-AX_BOOST_BASE([1.33])
+AX_BOOST_BASE([1.41])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
