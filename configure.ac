@@ -34,6 +34,7 @@ AX_BOOST_BASE([1.41])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
+CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 
