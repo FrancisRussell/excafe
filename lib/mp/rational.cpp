@@ -192,11 +192,19 @@ Rational& Rational::operator-=(const Rational& r)
 
 Rational& Rational::operator*=(const Rational& r)
 {
-  const Integer gcd1 = Integer::gcd(numerator, r.denominator);
-  const Integer gcd2 = Integer::gcd(r.numerator, denominator);
+  if (denominator == r.denominator)
+  {
+    numerator *= r.numerator;
+    denominator *= r.denominator;
+  }
+  else
+  {
+    const Integer gcd1 = Integer::gcd(numerator, r.denominator);
+    const Integer gcd2 = Integer::gcd(r.numerator, denominator);
 
-  numerator = (numerator/gcd1)*(r.numerator/gcd2);
-  denominator = (denominator/gcd2)*(r.denominator/gcd1);
+    numerator = (numerator/gcd1)*(r.numerator/gcd2);
+    denominator = (denominator/gcd2)*(r.denominator/gcd1);
+  }
 
   EXCAFE_VALIDATE_RATIONAL
   return *this;
