@@ -172,11 +172,23 @@ Rational Rational::operator-() const
 
 Rational& Rational::operator+=(const Rational& r)
 {
-  const Integer lcd = Integer::lcm(denominator, r.denominator);
-  numerator = numerator*(lcd/denominator) + r.numerator*(lcd/r.denominator);
-  denominator = lcd;
+  if (r.denominator == 1)
+  {
+    numerator += r.numerator * denominator;
+  }
+  else if (denominator == 1)
+  {
+    numerator = numerator*r.denominator + r.numerator;
+    denominator = r.denominator;
+  }
+  else
+  {
+    const Integer lcd = Integer::lcm(denominator, r.denominator);
+    numerator = numerator*(lcd/denominator) + r.numerator*(lcd/r.denominator);
+    denominator = lcd;
 
-  normalise();
+    normalise();
+  }
 
   EXCAFE_VALIDATE_RATIONAL
   return *this;
