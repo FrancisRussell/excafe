@@ -172,7 +172,15 @@ Rational Rational::operator-() const
 
 Rational& Rational::operator+=(const Rational& r)
 {
-  if (r.denominator == 1)
+  if (r.numerator == 0)
+  {
+    return *this;
+  }
+  else if (numerator == 0)
+  {
+    return (*this = r);
+  }
+  else if (r.denominator == 1)
   {
     numerator += r.numerator * denominator;
   }
@@ -204,7 +212,15 @@ Rational& Rational::operator-=(const Rational& r)
 
 Rational& Rational::operator*=(const Rational& r)
 {
-  if (denominator == r.denominator)
+  if (numerator == 0)
+  {
+    return *this;
+  }
+  else if (r.numerator == 0)
+  {
+    return (*this = r);
+  }
+  else if (denominator == r.denominator)
   {
     numerator *= r.numerator;
     denominator *= r.denominator;
