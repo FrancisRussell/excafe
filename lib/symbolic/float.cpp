@@ -177,6 +177,11 @@ Float pow(const Float& f, const int exponent)
   return f.pow(exponent);
 }
 
+bool Float::isPolynomial() const
+{
+  return true;
+}
+
 Expr Float::extractPolynomials(ExtractedExpressions& extracted) const
 {
   return clone();

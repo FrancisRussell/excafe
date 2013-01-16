@@ -34,6 +34,7 @@ AX_BOOST_BASE([1.33])
 if test "$want_boost" = no; then
   AC_MSG_ERROR([Boost is a required dependency and cannot be disabled.])
 fi
+CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
 
 AX_BOOST_UNIT_TEST_FRAMEWORK
 

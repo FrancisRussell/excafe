@@ -16,6 +16,13 @@
 
 using namespace excafe;
 
+enum BenchmarkType
+{
+  MASS_MATRIX,
+  LAPLACIAN,
+  VECTOR_LAPLACIAN
+};
+
 template<std::size_t D>
 class MassMatrixGenerator
 {
@@ -23,7 +30,7 @@ private:
   static const std::size_t dimension = D;
   Mesh<dimension> mesh;
   Scenario<dimension> scenario;
-  bool laplacian;
+  BenchmarkType benchmarkType;
   int nf;
   int p;
   int q;
@@ -40,13 +47,13 @@ private:
   NamedField i;
 
 public:
-  MassMatrixGenerator(Mesh<dimension>& _mesh, const bool _laplacian, const int _nf, const int _p, const int _q) :
-    mesh(_mesh), scenario(mesh), laplacian(_laplacian), nf(_nf), p(_p), q(_q)
+  MassMatrixGenerator(Mesh<dimension>& _mesh, const BenchmarkType _benchmarkType, const int _nf, const int _p, const int _q) :
+    mesh(_mesh), scenario(mesh), benchmarkType(_benchmarkType), nf(_nf), p(_p), q(_q)
   {
-    elementBasis = scenario.addElement(new LagrangeTriangle<0>(q));
+    elementBasis = scenario.addElement(constructBasis(q));
     elementSpace = scenario.defineFunctionSpace(elementBasis, mesh);
 
-    coefficientBasis = scenario.addElement(new LagrangeTriangle<0>(p));
+    coefficientBasis = scenario.addElement(constructBasis(p));
     coefficientSpace = scenario.defineFunctionSpace(coefficientBasis, mesh);
 
     f = scenario.defineNamedField("f", coefficientSpace);
@@ -55,16 +62,24 @@ public:
     i = scenario.defineNamedField("i", coefficientSpace);
   }
 
+  FiniteElement<dimension>* constructBasis(const int degree) const
+  {
+    if (benchmarkType == VECTOR_LAPLACIAN)
+      return new LagrangeTriangle<1>(degree);
+    else
+      return new LagrangeTriangle<0>(degree);
+  }
+
   forms::BilinearFormIntegralSum constructForm()
   {
     using namespace forms;
 
-    const LinearForm transformedBasis = (laplacian ? grad(elementBasis) : elementBasis);
+    const LinearForm transformedBasis = ((benchmarkType == VECTOR_LAPLACIAN || benchmarkType == LAPLACIAN) ? grad(elementBasis) : elementBasis);
     LinearForm trial = transformedBasis;
-    if (nf > 0) trial = trial*f;
-    if (nf > 1) trial = trial*g;
-    if (nf > 2) trial = trial*h;
-    if (nf > 3) trial = trial*i;
+    if (nf > 0) trial = trial* ((benchmarkType == VECTOR_LAPLACIAN) ? div(f) : f);
+    if (nf > 1) trial = trial* ((benchmarkType == VECTOR_LAPLACIAN) ? div(g) : g);
+    if (nf > 2) trial = trial* ((benchmarkType == VECTOR_LAPLACIAN) ? div(h) : h);
+    if (nf > 3) trial = trial* ((benchmarkType == VECTOR_LAPLACIAN) ? div(i) : i);
     if (nf > 4) CFD_EXCEPTION("Cannot generate code for more than 4 coefficient functions.");
     
     const BilinearFormIntegralSum form = B(trial, transformedBasis)*dx;
@@ -82,20 +97,22 @@ int main(int argc, char** argv)
 {
   if (argc != 6)
   {
-    std::cerr << "Usage: generator (mass_matrix|laplacian) num_functions coefficient_degree element_degree outfile" << std::endl;
+    std::cerr << "Usage: generator (mass_matrix|laplacian|vector_laplacian) num_functions coefficient_degree element_degree outfile" << std::endl;
     exit(1);
   }
   else
   {
     const std::string matType(argv[1]);
-    bool laplacian;
+    BenchmarkType benchmarkType;
 
     if (matType == "mass_matrix")
-      laplacian = false;
+      benchmarkType = MASS_MATRIX;
     else if (matType == "laplacian")
-      laplacian = true;
+      benchmarkType = LAPLACIAN;
+    else if (matType == "vector_laplacian")
+      benchmarkType = VECTOR_LAPLACIAN;
     else
-      CFD_EXCEPTION("First argument must be mass_matrix or laplacian.");
+      CFD_EXCEPTION("First argument must be mass_matrix, laplacian or vector_laplacian.");
 
     const int nf = boost::lexical_cast<int>(argv[2]);
     const int p = boost::lexical_cast<int>(argv[3]);
@@ -112,7 +129,7 @@ int main(int argc, char** argv)
       TriangularMeshBuilder meshBuilder(1.0, 1.0, maxCellArea);
       Mesh<dimension> mesh(meshBuilder.buildMesh());
     
-      MassMatrixGenerator<dimension> generator(mesh, laplacian, nf, p, q);
+      MassMatrixGenerator<dimension> generator(mesh, benchmarkType, nf, p, q);
       std::ofstream out(filename.c_str());
       generator.dumpUFC(out);
       out.close();

@@ -221,7 +221,6 @@ private:
 
     std::ostringstream source;
     source << "#include <cassert>\n";
-    source << "#include <cassert>\n";
     source << "#include <cmath>\n";
     source << "#include <ufc.h>\n\n";
 

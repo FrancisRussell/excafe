@@ -242,7 +242,15 @@ Float Expr::eval(const subst_map& map) const
 
 Expr Expr::extractPolynomials(ExtractedExpressions& extracted) const
 {
-  return expr->extractPolynomials(extracted);
+  if (isPolynomial())
+    return *this;
+  else
+    return expr->extractPolynomials(extracted);
+}
+
+bool Expr::isPolynomial() const
+{
+  return expr->isPolynomial();
 }
 
 std::set<Symbol> Expr::getSymbols() const

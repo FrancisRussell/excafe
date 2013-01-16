@@ -1,0 +1,35 @@
+This distribution contains the Excafé library.
+
+Build dependencies include:
+- An MPI compiler such as Open MPI (http://www.open-mpi.org/) (for PETSc).
+- Boost (http://www.boost.org/)
+- The Apache Portable Runtime (https://apr.apache.org/)
+- GiNaC (http://www.ginac.de/)
+- Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
+- PETSc (https://www.mcs.anl.gov/petsc/)
+- UFC (https://launchpad.net/ufc)
+
+For the steady_stokes_dolfin example:
+ - Dolfin (https://launchpad.net/dolfin)
+ - FFC (https://launchpad.net/ffc)
+
+ All the above are installable on a Debian/Ubuntu system from standard
+ packages.
+
+To build:
+ 
+If configure is not present, run ./bootstrap
+- Run:
+ 
+  ./configure
+
+  then 
+
+  make
+
+The folder 'navier_stokes' contains a coupled incompressible Navier-Stokes
+solver that simulates 2D fluid flow around a cyliner.
+
+The folder 'mass_matrix_generator_2d' contains the executable that uses Excafé
+to generate mass matrix and Laplacian operator examples for the ACM Transactions
+on Mathematical Software paper.

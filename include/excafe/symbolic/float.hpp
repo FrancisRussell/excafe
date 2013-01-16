@@ -52,6 +52,7 @@ public:
   double toDouble() const;
   void accept(NumericExpressionVisitor<Symbol>& v) const;
   Expr extractMultiplier(Rational& coeff) const;
+  bool isPolynomial() const;
   Expr extractPolynomials(ExtractedExpressions& extracted) const;
 };
 
