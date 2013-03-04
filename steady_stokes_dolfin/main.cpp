@@ -73,7 +73,7 @@ public:
 int main(int argc, char* argv[])
 {
   // Create Mesh
-  UnitSquare mesh(50,50);
+  UnitSquareMesh mesh(50,50);
 
   // Create functions for boundary conditions
   VelocityXBC velocityXBC(mesh);
@@ -107,17 +107,20 @@ int main(int argc, char* argv[])
   bcs.push_back(&velocity_y_bc);
   bcs.push_back(&pressure_bc);
 
-  VariationalProblem pde(a, L, bcs);
+  Function w(mixedSpace);
+  LinearVariationalProblem pde(a, L, w, bcs);
   
   // Solve PDE
-  Function w(mixedSpace);
-  pde.solve(w);
+  LinearVariationalSolver solver(pde);
+  solver.solve();
   Function u = w[0];
   Function p = w[1];
 
   // Plot solution
-  plot(u);
-  plot(p);
+  const boost::shared_ptr<VTKPlotter> velocityPlotter = plot(u);
+  interactive(true);
+  const boost::shared_ptr<VTKPlotter> pressurePlotter = plot(p);
+  interactive(true);
 
   // Save solution in VTK format
   File ufile_pvd("velocity.pvd");
