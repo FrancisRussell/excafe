@@ -156,7 +156,7 @@ private:
   }
 
   UFCEvaluator(const Scenario<dimension>& _scenario,
-               const excafe::detail::LocalAssemblyMatrix<dimension, expression_t>& _localAssemblyMatrix) : 
+               const excafe::detail::LocalAssemblyMatrix<dimension, expression_t>& _localAssemblyMatrix) :
     scenario(_scenario), localAssemblyMatrix(_localAssemblyMatrix)
   {
   }
@@ -183,7 +183,7 @@ private:
     // For now, we arrange fields in an arbitrary order, followed by scalars.
     BOOST_FOREACH(const Field::expr_ptr& field, fields)
       addCoefficientField(field);
-      
+
     BOOST_FOREACH(const Scalar::expr_ptr& scalar, scalars)
       addCoefficientScalar(scalar);
   }
@@ -232,7 +232,7 @@ private:
     source << std::fixed << std::setprecision(2);
     source << seconds << " seconds (wall clock).\n\n";
 
-    UFCIntegralGenerator generator(source, coefficientIndices);
+    UFCIntegralGenerator generator(source, coefficientIndices, dimension);
     generator.outputPrefix();
     optimiser.accept(generator);
     generator.outputPostfix();
@@ -301,20 +301,17 @@ private:
     }
 
     const excafe::detail::ScalarPlaceholderEvaluator<dimension> evaluator(scenario, values, cid);
-    std::transform(coefficientPlaceholders.begin(), 
+    std::transform(coefficientPlaceholders.begin(),
                    coefficientPlaceholders.end(),
-                   context.coefficientValues.get(), 
+                   context.coefficientValues.get(),
                    evaluator);
 
-    ufc::cell cell;
-    cell.topological_dimension = cell.geometric_dimension = dimension;
-    cell.coordinates = context.cellVertexPointers.get();
-
-    cellIntegral->tabulate_tensor(matrix.data(), context.coefficientPointers.get(), cell);
+    const int cell_orientation = 1;
+    cellIntegral->tabulate_tensor(matrix.data(), context.coefficientPointers.get(), context.cellVertexValues.get(), 1);
   }
 
 public:
-  static excafe::detail::LocalAssemblyMatrixEvaluator<dimension> construct(const Scenario<dimension>& scenario, 
+  static excafe::detail::LocalAssemblyMatrixEvaluator<dimension> construct(const Scenario<dimension>& scenario,
     const excafe::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix)
   {
     std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));
@@ -326,7 +323,7 @@ public:
     return excafe::detail::LocalAssemblyMatrixEvaluator<dimension>(impl);
   }
 
-  static std::string getCode(const Scenario<dimension>& scenario, 
+  static std::string getCode(const Scenario<dimension>& scenario,
     const excafe::detail::LocalAssemblyMatrix<dimension, expression_t>& localAssemblyMatrix)
   {
     std::auto_ptr<UFCEvaluator> evaluator(new UFCEvaluator(scenario, localAssemblyMatrix));

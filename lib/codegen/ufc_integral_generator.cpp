@@ -95,7 +95,7 @@ void Product::write(std::ostream& out) const
   {
     out << "/(";
     bool firstDenominator = true;
-    
+
     BOOST_FOREACH(const exp_map_t::value_type& exp, denominators)
     {
       for(int i=0; i<exp.second; ++i)
@@ -125,7 +125,8 @@ ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const exc
 ScalarPlaceholderNamer::result_type ScalarPlaceholderNamer::operator()(const excafe::detail::CellVertexComponent& c) const
 {
   std::ostringstream stream;
-  stream << generator.coordinatesName << "[" << c.getVertexID() << "][" << c.getComponent() << "]";
+  stream << generator.coordinatesName;
+  stream << "[" << c.getVertexID() << " * " << generator.geometricDimension << " + " << c.getComponent() << "]";
   return stream.str();
 }
 
@@ -239,8 +240,13 @@ std::string UFCIntegralGenerator::getClassName() const
   return stream.str();
 }
 
-UFCIntegralGenerator::UFCIntegralGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices) :
-  classID(nextClassID++), coefficientIndices(_coefficientIndices), out(_out)
+UFCIntegralGenerator::UFCIntegralGenerator(std::ostream& _out,
+  const coefficient_index_map_t& _coefficientIndices,
+  const int _geometricDimension) :
+  classID(nextClassID++),
+  coefficientIndices(_coefficientIndices),
+  out(_out),
+  geometricDimension(_geometricDimension)
 {
 }
 
@@ -260,25 +266,17 @@ void UFCIntegralGenerator::outputPrefix()
   out << "class " << getClassName() << " : public ufc::cell_integral\n";
   out << "{\n";
   out << "public:\n";
-  out << "  void tabulate_tensor(double* const " << resultName;
-  out << ", const double* const* " << coefficientsName;
-  out << ", const ufc::cell& c) const" << std::endl;
+  out << "  void tabulate_tensor(double *const " << resultName;
+  out << ", const double *const *" << coefficientsName;
+  out << ", const double *vertex_coordinates";
+  out << ", const int cell_orientation) const\n";
   out << "  {\n";
-  out << "    const double * const * " << coordinatesName << " = c.coordinates;\n\n";
+  out << "    const double *" << coordinatesName << " = vertex_coordinates;\n\n";
 }
 
 void UFCIntegralGenerator::outputPostfix()
 {
   out << "  }\n\n";
-  out << "  void tabulate_tensor(double* const A,\n";
-  out << "                       const double* const* w,\n";
-  out << "                       const ufc::cell& c,\n";
-  out << "                       unsigned int num_quadrature_points,\n";
-  out << "                       const double* const* quadrature_points,\n";
-  out << "                       const double* quadrature_weights) const\n";
-  out << "  {\n";
-  out << "    assert(0 && \"This function is not implemented!\");\n";
-  out << "  }\n";
   out << "};\n";
 }
 

@@ -77,6 +77,7 @@ private:
 
   const long classID;
   const coefficient_index_map_t coefficientIndices;
+  const int geometricDimension;
   std::ostream& out;
   std::stack<sum_t> stack;
   std::map<cse::PolynomialIndex, std::string> factorisedTermNames;
@@ -89,7 +90,7 @@ private:
   static void writeSum(std::ostream& out, const sum_t& sum);
 
 public:
-  UFCIntegralGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices);
+  UFCIntegralGenerator(std::ostream& _out, const coefficient_index_map_t& _coefficientIndices, int geometricDimension);
   void outputPrefix();
   void outputPostfix();
   void visitConstant(const float_t& s);
