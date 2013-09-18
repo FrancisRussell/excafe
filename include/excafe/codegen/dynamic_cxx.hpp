@@ -29,6 +29,7 @@ private:
   std::string mergePath(const std::string& root, const std::string& additional) const;
   std::string getTemp() const;
   apr_dso_handle_sym_t getSymbol(const std::string& name);
+  std::string getNamePrefix() const;
   std::string constructSourcePath() const;
   std::string constructObjectPath() const;
   void writeSource(const std::string& path);

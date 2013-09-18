@@ -10,6 +10,7 @@
 #include <apr_file_io.h>
 #include <apr_dso.h>
 #include <apr_thread_proc.h>
+#include <apr_user.h>
 #include <excafe/config.h>
 #include <excafe/exception.hpp>
 #include <excafe/util/apr_pool.hpp>
@@ -27,7 +28,7 @@ using util::APRPool;
 
 long DynamicCXX::nextID = 0;
 
-DynamicCXX::DynamicCXX(const std::string& _code) : 
+DynamicCXX::DynamicCXX(const std::string& _code) :
   id(nextID++), sourcePath(constructSourcePath()), objectPath(constructObjectPath()),
   compiled(false), code(_code), dsoHandle(NULL)
 {
@@ -53,7 +54,7 @@ void DynamicCXX::compile()
   compiled = true;
   writeSource(sourcePath);
 
-  const char* args[] = 
+  const char* args[] =
     {"c++", "-O2", "-shared", "-fPIC", sourcePath.c_str(), "-o", objectPath.c_str(), NULL};
 
   APRPool pool;
@@ -63,7 +64,7 @@ void DynamicCXX::compile()
   APRManager::checkSuccess(apr_procattr_cmdtype_set(attr, APR_PROGRAM_PATH));
 
   apr_proc_t process;
-  APRManager::checkSuccess(apr_proc_create(&process, args[0], args, NULL, attr, pool)); 
+  APRManager::checkSuccess(apr_proc_create(&process, args[0], args, NULL, attr, pool));
 
   int status;
   apr_exit_why_e why;
@@ -100,7 +101,7 @@ apr_dso_handle_sym_t DynamicCXX::getSymbol(const std::string& name)
   return symbol;
 }
 
-template<typename T> 
+template<typename T>
 static T convertHandle(const apr_dso_handle_sym_t symbol)
 {
   // This function peforms the conversion between function pointers and
@@ -117,7 +118,7 @@ static T convertHandle(const apr_dso_handle_sym_t symbol)
   return converted;
 }
 
-template<> 
+template<>
 apr_dso_handle_sym_t convertHandle(const apr_dso_handle_sym_t symbol)
 {
   return symbol;
@@ -128,7 +129,7 @@ void* DynamicCXX::getData(const std::string& name)
   return convertHandle<void*>(getSymbol(name));
 }
 
-DynamicCXX::function_t DynamicCXX::getFunction(const std::string& name) 
+DynamicCXX::function_t DynamicCXX::getFunction(const std::string& name)
 {
   return convertHandle<function_t>(getSymbol(name));
 }
@@ -143,17 +144,33 @@ std::string DynamicCXX::mergePath(const std::string& root, const std::string& ad
   return path;
 }
 
+std::string DynamicCXX::getNamePrefix() const
+{
+  std::ostringstream prefixStream;
+  prefixStream << "excafe_generated";
+
+#ifdef APR_HAS_USER
+  apr_uid_t uid;
+  apr_gid_t gid;
+
+  apr_uid_current(&uid, &gid, classPool);
+  prefixStream << "_" << uid;
+#endif
+
+  return prefixStream.str();
+}
+
 std::string DynamicCXX::constructSourcePath() const
 {
   std::ostringstream nameStream;
-  nameStream << "excafe_generated_cxx_" << id << ".cpp";
+  nameStream << getNamePrefix() << "_cxx_" << id << ".cpp";
   return mergePath(getTemp(), nameStream.str());
 }
 
 std::string DynamicCXX::constructObjectPath() const
 {
   std::ostringstream nameStream;
-  nameStream << "excafe_generated_lib_" << id << ".so";
+  nameStream << getNamePrefix() << "_lib_" << id << ".so";
   return mergePath(getTemp(), nameStream.str());
 }
 
