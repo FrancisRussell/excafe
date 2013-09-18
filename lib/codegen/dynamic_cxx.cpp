@@ -150,11 +150,14 @@ std::string DynamicCXX::getNamePrefix() const
   prefixStream << "excafe_generated";
 
 #ifdef APR_HAS_USER
+  APRPool pool;
   apr_uid_t uid;
   apr_gid_t gid;
 
-  apr_uid_current(&uid, &gid, classPool);
-  prefixStream << "_" << uid;
+  const apr_status_t result = apr_uid_current(&uid, &gid, pool);
+
+  if (result == APR_SUCCESS)
+    prefixStream << "_" << uid;
 #endif
 
   return prefixStream.str();
