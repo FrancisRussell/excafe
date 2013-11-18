@@ -21,6 +21,7 @@ private:
   static const std::string inputName;
   static const std::string resultNameLocal;
   static const std::string inputNameLocal;
+  static const std::string numVectorsName;
 
   std::ostream& out;
   std::stack<sum_t> stack;

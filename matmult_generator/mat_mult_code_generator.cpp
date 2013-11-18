@@ -13,6 +13,7 @@ using namespace excafe;
 const std::string MatMultCodeGenerator::factorisedTermPrefix("subterm");
 const std::string MatMultCodeGenerator::resultNameLocal("b_local");
 const std::string MatMultCodeGenerator::inputNameLocal("x_local");
+const std::string MatMultCodeGenerator::numVectorsName("count");
 
 const std::string MatMultCodeGenerator::resultName("b");
 const std::string MatMultCodeGenerator::inputName("x");
@@ -80,7 +81,7 @@ MatMultCodeGenerator::MatMultCodeGenerator(
 void MatMultCodeGenerator::visitOriginalTerm(const unsigned index)
 {
   std::ostringstream stream;
-  stream << resultNameLocal << "[" << index << "]";
+  stream << resultNameLocal << "[" << index << " * " << numVectorsName << "]";
   pushProduct(stream.str());
 }
 
@@ -91,7 +92,7 @@ void MatMultCodeGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index
 
 void MatMultCodeGenerator::postOriginalTerm(const unsigned index)
 {
-  out << "    " << resultNameLocal << "[" << index << "] = ";
+  out << "    " << resultNameLocal << "[" << index << " * " << numVectorsName << "] = ";
 
   assert(stack.size() == 1);
   const sum_t sum = stack.top(); stack.pop();
@@ -124,7 +125,7 @@ void MatMultCodeGenerator::visitConstant(const integer_t& s)
 void MatMultCodeGenerator::visitVariable(const variable_t& var)
 {
   std::ostringstream nameStream;
-  nameStream << inputNameLocal << "[" << var.index << "]";
+  nameStream << inputNameLocal << "[" << var.index << " * " << numVectorsName << "]";
   pushProduct(nameStream.str());
 }
 
@@ -182,13 +183,13 @@ void MatMultCodeGenerator::outputPrefix()
 
   out << "#include <stddef.h>" << std::endl;
   out << std::endl;
-  out << "void frgmv(const double *" << inputName << ", double *" << resultName << ", const size_t count)" << std::endl;
+  out << "void frgmv(const double *" << inputName << ", double *" << resultName << ", const size_t " << numVectorsName << ")" << std::endl;
   out << "{" << std::endl;
   out << "  size_t " << loopIndex << " = 0;" << std::endl;
   out << "  for (; " << loopIndex << " < count; ++" << loopIndex << ")" << std::endl;
   out << "  {" << std::endl;
-  out << "    const double *" << inputNameLocal << " = " << inputName << " + index * " << inputVectorLength << ";" << std::endl;
-  out << "    double *" << resultNameLocal << " = " << resultName << " + index * " << outputVectorLength << ";" << std::endl;
+  out << "    const double *" << inputNameLocal << " = " << inputName << " + index;" << std::endl;
+  out << "    double *" << resultNameLocal << " = " << resultName << " + index;" << std::endl;
 }
 
 void MatMultCodeGenerator::outputPostfix()
