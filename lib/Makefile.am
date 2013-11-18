@@ -16,7 +16,7 @@ capture/assembly/cell_vertex_component.cpp capture/assembly/basis_coefficient.cp
 capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propagation_rules.cpp \
 util/type_info.cpp util/timer.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
-util/apr_manager.cpp util/apr_pool.cpp \
+codegen/product.cpp util/apr_manager.cpp util/apr_pool.cpp \
 capture/assembly/generic_symbol.cpp \
 mp/integer.cpp mp/rational.cpp mp/float.cpp mp/cln_conversions.cpp
 

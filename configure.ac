@@ -86,6 +86,7 @@ AC_CONFIG_FILES([navier_stokes/Makefile])
 AC_CONFIG_FILES([heat/Makefile])
 AC_CONFIG_FILES([mass_matrix_generator_2d/Makefile])
 AC_CONFIG_FILES([steady_stokes_dolfin/Makefile])
+AC_CONFIG_FILES([matmult_generator/Makefile])
 AC_CONFIG_FILES([lib/Makefile])
 AC_CONFIG_FILES([tests/Makefile])
 AC_OUTPUT

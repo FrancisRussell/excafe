@@ -2,6 +2,7 @@
 #define EXCAFE_CODEGEN_UFC_INTEGRAL_GENERATOR_HPP
 
 #include "codegen_fwd.hpp"
+#include "product.hpp"
 #include <excafe/exception.hpp>
 #include <excafe/util/lazy_copy.hpp>
 #include <excafe/capture/assembly/scalar_placeholder.hpp>
@@ -26,40 +27,6 @@ namespace excafe
 namespace codegen
 {
 
-namespace detail
-{
-
-class Product
-{
-private:
-  typedef mp::Float numeric_t;
-  typedef std::map<std::string, int> exp_map_t;
-  typedef util::LazyCopy<exp_map_t> lazy_exp_map_t;
-
-  numeric_t coefficient;
-  lazy_exp_map_t exponents;
-
-public:
-  Product() : coefficient(1.0)
-  {
-  }
-
-  Product(const std::string& v) : coefficient(1.0)
-  {
-    ++(*exponents)[v];
-  }
-
-  Product(const numeric_t& v) : coefficient(v)
-  {
-  }
-
-  Product pow(const int exponent) const;
-  Product& operator*=(const Product& p);
-  void write(std::ostream& out) const;
-};
-
-}
-
 class UFCIntegralGenerator : public cse::FactorisedExpressionVisitor<excafe::detail::ScalarPlaceholder>
 {
 public:
@@ -67,7 +34,7 @@ public:
 
 private:
   friend class detail::ScalarPlaceholderNamer;
-  typedef util::LazyCopy< std::vector<detail::Product> > sum_t;
+  typedef util::LazyCopy< std::vector<Product> > sum_t;
 
   static const std::string factorisedTermPrefix;
   static const std::string resultName;
@@ -82,8 +49,8 @@ private:
   std::stack<sum_t> stack;
   std::map<cse::PolynomialIndex, std::string> factorisedTermNames;
 
-  void pushProduct(const detail::Product& p);
-  detail::Product popProduct();
+  void pushProduct(const Product& p);
+  Product popProduct();
   std::string getName(const cse::PolynomialIndex& i);
   std::size_t getFieldIndex(const Field::expr_ptr& f) const;
   std::size_t getScalarIndex(const Scalar::expr_ptr& s) const;

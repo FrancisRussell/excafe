@@ -1,5 +1,6 @@
 #include <excafe/codegen/codegen_fwd.hpp>
 #include <excafe/codegen/ufc_integral_generator.hpp>
+#include <excafe/codegen/product.hpp>
 #include <excafe/exception.hpp>
 #include <excafe/util/lazy_copy.hpp>
 #include <excafe/capture/assembly/scalar_placeholder.hpp>
@@ -31,87 +32,6 @@ namespace codegen
 
 namespace detail
 {
-
-Product Product::pow(const int exponent) const
-{
-  Product result;
-  result.coefficient = mp::pow(coefficient, exponent);
-
-  BOOST_FOREACH(const exp_map_t::value_type& exp, *exponents)
-    (*result.exponents)[exp.first] = exp.second*exponent;
-
-  return result;
-}
-
-Product& Product::operator*=(const Product& p)
-{
-  coefficient *= p.coefficient;
-  BOOST_FOREACH(const exp_map_t::value_type& exp, *p.exponents)
-    (*exponents)[exp.first] += exp.second;
-
-  return *this;
-}
-
-void Product::write(std::ostream& out) const
-{
-  exp_map_t numerators, denominators;
-
-  BOOST_FOREACH(const exp_map_t::value_type& exp, *exponents)
-  {
-    if (exp.second > 0)
-      numerators.insert(exp);
-    else
-      denominators.insert(exp_map_t::value_type(exp.first, -exp.second));
-  }
-
-  const bool isUnitCoefficient = (coefficient == 1.0 || coefficient == -1.0);
-  bool firstNumerator = true;
-
-  if (numerators.empty() || !isUnitCoefficient)
-  {
-    firstNumerator = false;
-    //out << std::setprecision(25) << coefficientAsDouble;
-    out << coefficient;
-  }
-  else
-  {
-    out << (coefficient < 0.0 ? "-" : "");
-  }
-
-  BOOST_FOREACH(const exp_map_t::value_type& exp, numerators)
-  {
-    for(int i=0; i<exp.second; ++i)
-    {
-      if (!firstNumerator)
-        out << "*";
-      else
-        firstNumerator = false;
-
-      out << exp.first;
-    }
-  }
-
-  if (!denominators.empty())
-  {
-    out << "/(";
-    bool firstDenominator = true;
-
-    BOOST_FOREACH(const exp_map_t::value_type& exp, denominators)
-    {
-      for(int i=0; i<exp.second; ++i)
-      {
-        if (!firstDenominator)
-          out << "*";
-        else
-          firstDenominator = false;
-
-        out << exp.first;
-      }
-    }
-
-    out << ")";
-  }
-}
 
 ScalarPlaceholderNamer::ScalarPlaceholderNamer(const UFCIntegralGenerator& _generator) : generator(_generator)
 {
@@ -164,14 +84,14 @@ const std::string UFCIntegralGenerator::coordinatesName      = "x";
 
 long UFCIntegralGenerator::nextClassID = 0;
 
-void UFCIntegralGenerator::pushProduct(const detail::Product& p)
+void UFCIntegralGenerator::pushProduct(const Product& p)
 {
   sum_t sum;
   sum->push_back(p);
   stack.push(sum);
 }
 
-detail::Product UFCIntegralGenerator::popProduct()
+Product UFCIntegralGenerator::popProduct()
 {
   assert(!stack.empty());
 
@@ -252,7 +172,7 @@ UFCIntegralGenerator::UFCIntegralGenerator(std::ostream& _out,
 
 void UFCIntegralGenerator::writeSum(std::ostream& out, const sum_t& sum)
 {
-  for(std::vector<detail::Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
+  for(std::vector<Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
   {
     if (prodIter != sum->begin())
       out << " + ";
@@ -298,7 +218,7 @@ void UFCIntegralGenerator::visitVariable(const variable_t& var)
 
 void UFCIntegralGenerator::visitExponent(const int exponent)
 {
-  const detail::Product p = popProduct();
+  const Product p = popProduct();
   pushProduct(p.pow(exponent));
 }
 
@@ -321,10 +241,10 @@ void UFCIntegralGenerator::postProduct(const std::size_t nops)
 {
   assert(stack.size() >= nops);
 
-  detail::Product product;
+  Product product;
   for(std::size_t i=0; i<nops; ++i)
   {
-    const detail::Product subTerm = popProduct();
+    const Product subTerm = popProduct();
     product *= subTerm;
   }
 
