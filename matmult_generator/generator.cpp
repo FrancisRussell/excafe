@@ -10,6 +10,7 @@
 #include <excafe/mp/cln_conversions.hpp>
 #include <excafe/cse/cse_optimiser.hpp>
 #include <excafe/codegen/dynamic_cxx.hpp>
+#include <excafe/util/aligned_alloc.hpp>
 #include <excafe/util/timer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
@@ -21,11 +22,10 @@
 #include <boost/random/variate_generator.hpp>
 #include <cblas.h>
 
-#include <malloc.h>
-
 typedef void (*mult_function_t)(const double* x, double *b, size_t count);
 static const int BENCHMARK_VECTOR_COUNT = 500000;
 static const int REPETITIONS = 100;
+static const int ALIGNMENT = 16;
 
 template<typename T>
 class RowMajorMatrix
@@ -203,8 +203,8 @@ int main(int argc, char **argv)
     std::generate(in.begin(), in.end(), coefficientGenerator);
 
     const size_t numOutputElements = BENCHMARK_VECTOR_COUNT * mat.numRows();
-    double *outGenerated = (double*) memalign(16, sizeof(double) * numOutputElements);
-    double *outReference = (double*) memalign(16, sizeof(double) * numOutputElements);
+    double *outGenerated = (double*) excafe::util::aligned_alloc(16, sizeof(double) * numOutputElements);
+    double *outReference = (double*) excafe::util::aligned_alloc(16, sizeof(double) * numOutputElements);
     const double generatedTime = timeGenerated(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(),
       mat.getData(), &in[0], &outGenerated[0], generatedFunction);
 
@@ -216,8 +216,8 @@ int main(int argc, char **argv)
     std::cout << "BLAS dgemm execution time: " << blasTime << " seconds." << std::endl;
     std::cout << "Delta: " << computeDelta(&outReference[0], &outGenerated[0], numOutputElements) << std::endl;
 
-    free(outGenerated);
-    free(outReference);
+    excafe::util::aligned_free(outGenerated);
+    excafe::util::aligned_free(outReference);
 
     return EXIT_SUCCESS;
   }

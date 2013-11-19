@@ -14,7 +14,7 @@ capture/evaluation/evaluation_strategy.cpp capture/solve_operation.cpp \
 capture/assembly/scalar_placeholder.cpp capture/assembly/position_component.cpp \
 capture/assembly/cell_vertex_component.cpp capture/assembly/basis_coefficient.cpp \
 capture/assembly/scalar_access.cpp numeric/tensor_size.cpp capture/indices/propagation_rules.cpp \
-util/type_info.cpp util/timer.cpp numeric/factoriser.cpp \
+util/type_info.cpp util/timer.cpp util/aligned_alloc.cpp numeric/factoriser.cpp \
 numeric/factoriser_table.cpp codegen/ufc_integral_generator.cpp codegen/dynamic_cxx.cpp \
 codegen/product.cpp util/apr_manager.cpp util/apr_pool.cpp \
 capture/assembly/generic_symbol.cpp \
