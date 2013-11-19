@@ -55,7 +55,7 @@ void DynamicCXX::compile()
   writeSource(sourcePath);
 
   const char* args[] =
-    {"c++", "-O2", "-shared", "-fPIC", sourcePath.c_str(), "-o", objectPath.c_str(), NULL};
+    {"c++", "-O3", "-march=native", "-shared", "-fPIC", sourcePath.c_str(), "-o", objectPath.c_str(), NULL};
 
   APRPool pool;
 
