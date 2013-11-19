@@ -37,7 +37,7 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
     if (primes[primeIndex] != -1)
       factor = primes[primeIndex++];
     else
-      factor += 2;
+      factor = Integer::nextPrime(factor);
 
     const Integer exponent = removeFactor(value, factor);
     if (exponent > 0)
@@ -46,7 +46,7 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
       sqrtFloor = isqrt(value);
     }
   }
-  while(value != 1 && factor <= sqrtFloor);
+  while(value != 1 && factor <= sqrtFloor && !Integer::isPrime(value));
 
   // value may still contain the final prime factor
   if (value != 1)

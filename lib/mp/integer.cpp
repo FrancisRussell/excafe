@@ -232,9 +232,38 @@ void Integer::mpzInit(mpz_t& mpz) const
     mpz_mul_2exp(mpz, mpz, GMP_NUMB_BITS);
     mpz_add_ui(mpz, mpz, tp.limbs()[i]);
   }
-  
+
   if (size < 0)
     mpz_neg(mpz, mpz);
+}
+
+Integer Integer::nextPrime(const Integer& x)
+{
+  mpz_t current, next;
+  x.mpzInit(current);
+  mpz_init(next);
+
+  mpz_nextprime(next, current);
+  char *str = mpz_get_str(NULL, 10, next);
+  const Integer result(str);
+
+  void (*free_function)(void*, size_t);
+  mp_get_memory_functions(0, 0, &free_function);
+  free_function(str, strlen(str) + 1);
+
+  mpz_clear(current);
+  mpz_clear(next);
+
+  return result;
+}
+
+bool Integer::isPrime(const Integer& x, const int reps)
+{
+  mpz_t current;
+  x.mpzInit(current);
+  const bool result = mpz_probab_prime_p(current, reps);
+  mpz_clear(current);
+  return result;
 }
 
 Integer Integer::gcd(const Integer& x, const Integer& y)
@@ -465,7 +494,7 @@ Integer& Integer::operator*=(const Integer& i)
 
     result.size = negate(negative, rp.computeWidth(maxWidth));
     rp.commit();
-  
+
     swap(result);
   }
 

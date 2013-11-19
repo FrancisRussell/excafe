@@ -48,9 +48,9 @@ private:
   static const Integer ONE;
   static const Integer MINUS_ONE;
 
-  static const mp_limb_t MAX_PACKED_LIMB = boost::mpl::min< 
-      boost::mpl::integral_c<mp_limb_t, GMP_NUMB_MAX>, 
-      boost::mpl::integral_c<uintptr_t, (boost::integer_traits<uintptr_t>::const_max >> TAG_BITS)> 
+  static const mp_limb_t MAX_PACKED_LIMB = boost::mpl::min<
+      boost::mpl::integral_c<mp_limb_t, GMP_NUMB_MAX>,
+      boost::mpl::integral_c<uintptr_t, (boost::integer_traits<uintptr_t>::const_max >> TAG_BITS)>
     >::type::value;
 
   struct Header
@@ -140,7 +140,7 @@ private:
     {
       const bool packed = isPacked();
 
-      if ((packed && newAllocated > 2) 
+      if ((packed && newAllocated > 2)
           || (!packed && (newAllocated > getAllocated() || !isUnique(limbs()))))
       {
         mp_limb_t* const newLimbs = allocateLimbs(newAllocated);
@@ -312,7 +312,7 @@ private:
       mp_limb_t left = packer.limbs()[0];
       mp_limb_t right = static_cast<mp_limb_t>(absI);
 
-      if (isNegative()) 
+      if (isNegative())
         std::swap(left, right);
 
       return left < right;
@@ -326,6 +326,8 @@ private:
 public:
   void mpzInit(mpz_t& mpz) const;
 
+  static bool isPrime(const Integer& x, int reps = 25);
+  static Integer nextPrime(const Integer& x);
   static Integer gcd(const Integer& x, const Integer& y);
   static Integer lcm(const Integer& x, const Integer& y);
 
