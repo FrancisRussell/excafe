@@ -5,14 +5,27 @@
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 #include <excafe/numeric/excafe_expression.hpp>
 #include <excafe/mp/cln_conversions.hpp>
 #include <excafe/cse/cse_optimiser.hpp>
+#include <excafe/codegen/dynamic_cxx.hpp>
+#include <excafe/util/timer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <cln/cln.h>
 #include "mat_mult_code_generator.hpp"
 #include "vector_entry.hpp"
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <cblas.h>
+
+#include <malloc.h>
+
+typedef void (*mult_function_t)(const double* x, double *b, size_t count);
+static const int BENCHMARK_VECTOR_COUNT = 500000;
+static const int REPETITIONS = 100;
 
 template<typename T>
 class RowMajorMatrix
@@ -79,7 +92,48 @@ public:
   {
     return data[row * cols + col];
   }
+
+  const double *getData() const
+  {
+    return &data[0];
+  }
 };
+
+static double timeGenerated(const int m, const int n, const int k, const double *mat, const double* in, double *out,
+  const mult_function_t func)
+{
+  excafe::util::Timer timer;
+  timer.start();
+  for(int rep = 0; rep < REPETITIONS; ++rep)
+    func(in, out, n);
+  timer.stop();
+
+  return timer.getSeconds() / REPETITIONS;
+}
+
+static double timeBLAS(const int m, const int n, const int k, const double *mat, const double* in, double *out)
+{
+  excafe::util::Timer timer;
+  timer.start();
+  for(int rep = 0; rep < REPETITIONS; ++rep)
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, 1.0, mat, k, in, n, 0.0, out, n);
+  timer.stop();
+
+  return timer.getSeconds() / REPETITIONS;
+}
+
+static double computeDelta(const double* a, const double *b, const size_t size)
+{
+  double delta = 0.0;
+
+  for(size_t i = 0; i < size; ++i)
+  {
+    const double diff = a[i] - b[i];
+    delta += diff * diff;
+  }
+
+  return std::sqrt(delta);
+}
 
 int main(int argc, char **argv)
 {
@@ -107,12 +161,41 @@ int main(int argc, char **argv)
       polys.push_back(poly);
     }
 
+    std::ostringstream codeStream;
     excafe::cse::CSEOptimiser<VectorEntry> optimiser(polys.begin(), polys.end());
-    MatMultCodeGenerator generator(std::cout, mat.numCols(), mat.numRows());
+    MatMultCodeGenerator generator(codeStream, mat.numCols(), mat.numRows());
+    generator.output(optimiser);
 
-    generator.outputPrefix();
-    optimiser.accept(generator);
-    generator.outputPostfix();
+    std::cout << codeStream.str() << std::endl;
+
+    excafe::codegen::DynamicCXX dynamicCXX(codeStream.str());
+    dynamicCXX.compileAndLoad();
+
+    mult_function_t generatedFunction = reinterpret_cast<mult_function_t>(dynamicCXX.getFunction("frgmv"));
+
+    std::vector<double> in(BENCHMARK_VECTOR_COUNT * mat.numCols());
+    typedef boost::uniform_real<> coeff_distribution_type;
+    typedef boost::variate_generator<boost::mt19937&, coeff_distribution_type> coeff_gen_type;
+    boost::mt19937 rng;
+    coeff_gen_type coefficientGenerator(rng, coeff_distribution_type(-1.0, 1.0));
+    std::generate(in.begin(), in.end(), coefficientGenerator);
+
+    const size_t numOutputElements = BENCHMARK_VECTOR_COUNT * mat.numRows();
+    double *outGenerated = (double*) memalign(16, sizeof(double) * numOutputElements);
+    double *outReference = (double*) memalign(16, sizeof(double) * numOutputElements);
+    const double generatedTime = timeGenerated(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(),
+      mat.getData(), &in[0], &outGenerated[0], generatedFunction);
+
+    std::cout << "Generated code execution time: " << generatedTime << " seconds." << std::endl;
+
+    const double blasTime =
+      timeBLAS(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(), mat.getData(), &in[0], &outReference[0]);
+
+    std::cout << "BLAS dgemm execution time: " << blasTime << " seconds." << std::endl;
+    std::cout << "Delta: " << computeDelta(&outReference[0], &outGenerated[0], numOutputElements) << std::endl;
+
+    free(outGenerated);
+    free(outReference);
 
     return EXIT_SUCCESS;
   }

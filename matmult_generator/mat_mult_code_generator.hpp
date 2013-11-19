@@ -22,10 +22,12 @@ private:
   static const std::string resultNameLocal;
   static const std::string inputNameLocal;
   static const std::string numVectorsName;
+  static const std::string loopIndex;
 
   std::ostream& out;
   std::stack<sum_t> stack;
   std::map<excafe::cse::PolynomialIndex, std::string> factorisedTermNames;
+  bool generateSSE;
 
   const size_t inputVectorLength;
   const size_t outputVectorLength;
@@ -33,12 +35,14 @@ private:
   void pushProduct(const excafe::codegen::Product& p);
   excafe::codegen::Product popProduct();
   std::string getName(const excafe::cse::PolynomialIndex& i);
-  static void writeSum(std::ostream& out, const sum_t& sum);
+  void writeSum(std::ostream& out, const sum_t& sum);
+
+  void outputPrefix();
+  void outputInfix();
+  void outputPostfix();
 
 public:
   MatMultCodeGenerator(std::ostream& _out, size_t inputVectorLength, size_t outputVectorLength);
-  void outputPrefix();
-  void outputPostfix();
   void visitConstant(const float_t& s);
   void visitConstant(const integer_t& s);
   void visitVariable(const variable_t& var);
@@ -50,6 +54,18 @@ public:
   void visitFactorisedTerm(const excafe::cse::PolynomialIndex& index);
   void postOriginalTerm(const unsigned index);
   void postFactorisedTerm(const excafe::cse::PolynomialIndex& index);
+
+  template<typename FactorisedExpression>
+  void output(const FactorisedExpression& e)
+  {
+    outputPrefix();
+    generateSSE = true;
+    e.accept(*this);
+    outputInfix();
+    generateSSE = false;
+    e.accept(*this);
+    outputPostfix();
+  }
 };
 
 #endif

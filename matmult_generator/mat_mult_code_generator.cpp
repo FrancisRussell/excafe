@@ -14,6 +14,8 @@ const std::string MatMultCodeGenerator::factorisedTermPrefix("subterm");
 const std::string MatMultCodeGenerator::resultNameLocal("b_local");
 const std::string MatMultCodeGenerator::inputNameLocal("x_local");
 const std::string MatMultCodeGenerator::numVectorsName("count");
+const std::string MatMultCodeGenerator::loopIndex("index");
+
 
 const std::string MatMultCodeGenerator::resultName("b");
 const std::string MatMultCodeGenerator::inputName("x");
@@ -63,12 +65,31 @@ std::string MatMultCodeGenerator::getName(const cse::PolynomialIndex& i)
 
 void MatMultCodeGenerator::writeSum(std::ostream& out, const sum_t& sum)
 {
-  for(std::vector<codegen::Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
+  if (generateSSE)
   {
-    if (prodIter != sum->begin())
-      out << " + ";
+    for(size_t count = 1; count < sum->size(); ++count)
+      out << "_mm_add_pd(";
 
-    prodIter->write(out);
+    for(std::vector<codegen::Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
+    {
+      if (prodIter != sum->begin())
+        out << ", ";
+
+      prodIter->writeSSE(out);
+
+      if (prodIter != sum->begin())
+        out << ")";
+    }
+  }
+  else
+  {
+    for(std::vector<codegen::Product>::const_iterator prodIter = sum->begin(); prodIter != sum->end(); ++prodIter)
+    {
+      if (prodIter != sum->begin())
+        out << " + ";
+
+      prodIter->write(out);
+    }
   }
 }
 
@@ -82,7 +103,11 @@ void MatMultCodeGenerator::visitOriginalTerm(const unsigned index)
 {
   std::ostringstream stream;
   stream << resultNameLocal << "[" << index << " * " << numVectorsName << "]";
-  pushProduct(stream.str());
+
+  if (generateSSE)
+    pushProduct(std::string("_mm_load_pd(&") + stream.str() + ")");
+  else
+    pushProduct(stream.str());
 }
 
 void MatMultCodeGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index)
@@ -92,18 +117,31 @@ void MatMultCodeGenerator::visitFactorisedTerm(const cse::PolynomialIndex& index
 
 void MatMultCodeGenerator::postOriginalTerm(const unsigned index)
 {
-  out << "    " << resultNameLocal << "[" << index << " * " << numVectorsName << "] = ";
+  if (generateSSE)
+    out << "      _mm_store_pd(&" << resultNameLocal << "[" << index << " * " << numVectorsName << "], ";
+  else
+    out << "      " << resultNameLocal << "[" << index << " * " << numVectorsName << "] = ";
 
   assert(stack.size() == 1);
   const sum_t sum = stack.top(); stack.pop();
   writeSum(out, sum);
 
-  out << ";" << std::endl;
+  if (generateSSE)
+    out << ");" << std::endl;
+  else
+    out << ";" << std::endl;
 }
 
 void MatMultCodeGenerator::postFactorisedTerm(const cse::PolynomialIndex& index)
 {
-  out << "    const double " << getName(index) << " = ";
+  if (generateSSE)
+  {
+    out << "      const __m128d " << getName(index) << " = ";
+  }
+  else
+  {
+    out << "      const double " << getName(index) << " = ";
+  }
 
   assert(stack.size() == 1);
   const sum_t sum = stack.top(); stack.pop();
@@ -125,7 +163,15 @@ void MatMultCodeGenerator::visitConstant(const integer_t& s)
 void MatMultCodeGenerator::visitVariable(const variable_t& var)
 {
   std::ostringstream nameStream;
+
+  if (generateSSE)
+    nameStream << "_mm_load_pd(&";
+
   nameStream << inputNameLocal << "[" << var.index << " * " << numVectorsName << "]";
+
+  if (generateSSE)
+    nameStream << ")";
+
   pushProduct(nameStream.str());
 }
 
@@ -179,17 +225,45 @@ void MatMultCodeGenerator::postProduct(const std::size_t nops)
 
 void MatMultCodeGenerator::outputPrefix()
 {
-  const std::string loopIndex = "index";
-
   out << "#include <stddef.h>" << std::endl;
+  out << "#include <stdint.h>" << std::endl;
+  out << "#include <stdio.h>" << std::endl;
+  out << "#ifdef __SSE2__" << std::endl;
+  out << "#include <emmintrin.h>" << std::endl;
+  out << "#endif" << std::endl;
+  out << std::endl;
+  out << "#ifdef __cplusplus" << std::endl;
+  out << "extern \"C\"" << std::endl;
+  out << "{" << std::endl;
+  out << "void frgmv(const double*, double*, size_t);" << std::endl;
+  out << "}" << std::endl;
+  out << "#endif" << std::endl;
   out << std::endl;
   out << "void frgmv(const double *" << inputName << ", double *" << resultName << ", const size_t " << numVectorsName << ")" << std::endl;
   out << "{" << std::endl;
   out << "  size_t " << loopIndex << " = 0;" << std::endl;
-  out << "  for (; " << loopIndex << " < count; ++" << loopIndex << ")" << std::endl;
+  out << "#ifdef __SSE2__" << std::endl;
+  out << "  if ((((uintptr_t) " << inputName << " | (uintptr_t) " << resultName << ") & 15) == 0 && " << numVectorsName << " % 2 == 0)" << std::endl;
   out << "  {" << std::endl;
-  out << "    const double *" << inputNameLocal << " = " << inputName << " + index;" << std::endl;
-  out << "    double *" << resultNameLocal << " = " << resultName << " + index;" << std::endl;
+  out << "    for (; " << loopIndex << " + 1 < " << numVectorsName << "; " << loopIndex << " += 2)" << std::endl;
+  out << "    {" << std::endl;
+  out << "      const double *" << inputNameLocal << " = " << inputName << " + index;" << std::endl;
+  out << "      double *" << resultNameLocal << " = " << resultName << " + index;" << std::endl;
+}
+
+void MatMultCodeGenerator::outputInfix()
+{
+  out << "    }" << std::endl;
+  out << "  }" << std::endl;
+  out << "#endif" << std::endl;
+  out << "  if (" << loopIndex << " < " << numVectorsName << ")" << std::endl;
+  out << "    fprintf(stderr, \"Warning: using non-SSE2 implementation\\n\");" << std::endl;
+  out << std::endl;
+  out << "  for (; " << loopIndex << " < " << numVectorsName << "; ++" << loopIndex << ")" << std::endl;
+  out << "  {" << std::endl;
+  out << "      const double *" << inputNameLocal << " = " << inputName << " + index;" << std::endl;
+  out << "      double *" << resultNameLocal << " = " << resultName << " + index;" << std::endl;
+
 }
 
 void MatMultCodeGenerator::outputPostfix()

@@ -24,6 +24,10 @@ private:
   numeric_t coefficient;
   lazy_exp_map_t exponents;
 
+  void write(std::ostream& out, bool sse) const;
+  std::string negate(const std::string& exp, bool sse) const;
+  std::string constructPositiveProduct(const exp_map_t& exps, bool sse) const;
+
 public:
   Product() : coefficient(1.0)
   {
@@ -41,6 +45,7 @@ public:
   Product pow(const int exponent) const;
   Product& operator*=(const Product& p);
   void write(std::ostream& out) const;
+  void writeSSE(std::ostream& out) const;
 };
 
 }
