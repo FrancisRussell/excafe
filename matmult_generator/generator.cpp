@@ -203,8 +203,8 @@ int main(int argc, char **argv)
     std::generate(in.begin(), in.end(), coefficientGenerator);
 
     const size_t numOutputElements = BENCHMARK_VECTOR_COUNT * mat.numRows();
-    double *outGenerated = (double*) excafe::util::aligned_alloc(16, sizeof(double) * numOutputElements);
-    double *outReference = (double*) excafe::util::aligned_alloc(16, sizeof(double) * numOutputElements);
+    double *outGenerated = (double*) excafe::util::aligned_alloc(ALIGNMENT, sizeof(double) * numOutputElements);
+    double *outReference = (double*) excafe::util::aligned_alloc(ALIGNMENT, sizeof(double) * numOutputElements);
     const double generatedTime = timeGenerated(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(),
       mat.getData(), &in[0], &outGenerated[0], generatedFunction);
 
