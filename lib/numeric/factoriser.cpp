@@ -1,4 +1,5 @@
 #include <vector>
+#include <map>
 #include <excafe/numeric/factoriser.hpp>
 #include <excafe/mp/integer.hpp>
 
@@ -8,6 +9,10 @@ namespace excafe
 std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
 {
   using namespace mp;
+
+  const std::map<mp::Integer, std::vector<Factoriser::power_t> >::const_iterator cacheIter = cache.find(n);
+  if (cacheIter != cache.end())
+    return cacheIter->second;
 
   std::vector< std::pair<Integer, Integer> > result;
   Integer value = n;
@@ -32,7 +37,8 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
   // Factorise using known primes from table, then revert to using odd numbers.
   std::size_t primeIndex = 0;
   Integer factor = 0;
-  do
+  bool finished = Integer::isPrime(value);
+  while(!finished && value != 1 && factor <= sqrtFloor)
   {
     if (primes[primeIndex] != -1)
       factor = primes[primeIndex++];
@@ -44,14 +50,15 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
     {
       result.push_back(power_t(factor, exponent));
       sqrtFloor = isqrt(value);
+      finished = Integer::isPrime(value);
     }
   }
-  while(value != 1 && factor <= sqrtFloor && !Integer::isPrime(value));
 
   // value may still contain the final prime factor
   if (value != 1)
     result.push_back(power_t(value, 1));
 
+  cache[n] = result;
   return result;
 }
 
