@@ -70,6 +70,7 @@ public:
 
       ++rows;
     }
+
     assert(data.size() == rows * cols);
   }
 
@@ -139,7 +140,14 @@ int main(int argc, char **argv)
 {
   if (argc == 2)
   {
-    std::fstream stream(argv[1]);
+    std::ifstream stream(argv[1]);
+
+    if (stream.fail())
+    {
+      std::cerr << "Failed to open " << argv[1] << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
     RowMajorMatrix<double> mat(stream);
     std::cout << "Successfully read matrix of dimensions " << mat.numRows() << " x " << mat.numCols() << "." << std::endl;
 
@@ -167,6 +175,20 @@ int main(int argc, char **argv)
     generator.output(optimiser);
 
     std::cout << codeStream.str() << std::endl;
+
+    const std::string outputFileName = std::string(argv[1]) + ".c";
+    std::ofstream outputFileStream(outputFileName.c_str());
+
+    if (outputFileStream.fail())
+    {
+      std::cerr << "Failed to open " << outputFileName << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      outputFileStream << codeStream.str();
+      outputFileStream.close();
+    }
 
     excafe::codegen::DynamicCXX dynamicCXX(codeStream.str());
     dynamicCXX.compileAndLoad();
