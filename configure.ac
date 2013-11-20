@@ -25,6 +25,8 @@ AC_CHECK_HEADERS([stdlib.h])
 
 # Check how to compile MPI
 ACX_MPI([], AC_MSG_ERROR([Unable to find MPI.]))
+CC="$MPICC"
+CXX="$MPICXX"
 
 # Check for OpenMP
 #AX_OPENMP(CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS")
@@ -39,6 +41,9 @@ CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
 AX_BOOST_UNIT_TEST_FRAMEWORK
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
+
+AX_WITH_LIBRARY(GMP, gmp.h, gmp)
+CXXFLAGS="$CXXFLAGS $GMP_CFLAGS"
 
 PKG_CHECK_MODULES([CLN], [cln])
 CXXFLAGS="$CXXFLAGS $CLN_CFLAGS"
