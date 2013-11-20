@@ -42,8 +42,11 @@ AX_BOOST_UNIT_TEST_FRAMEWORK
 
 AC_CHECK_LIB(triangle, triangulate, [], AC_MSG_ERROR([Unable to find libtriangle.]))
 
-AX_WITH_LIBRARY(GMP, gmp.h, gmp)
+AX_WITH_LIBRARY(gmp, gmp.h, gmp)
 CXXFLAGS="$CXXFLAGS $GMP_CFLAGS"
+
+AX_WITH_LIBRARY(petsc, petsc.h, petsc)
+CXXFLAGS="$CXXFLAGS $PETSC_CFLAGS"
 
 PKG_CHECK_MODULES([CLN], [cln])
 CXXFLAGS="$CXXFLAGS $CLN_CFLAGS"

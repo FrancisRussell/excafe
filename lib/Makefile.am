@@ -33,5 +33,4 @@ symbolic/abs.cpp symbolic/extracted_expressions.cpp
 
 libsimplecfd_la_CXXFLAGS = -I/usr/include/petsc -I$(top_srcdir)/include
 libsimplecfd_la_LIBADD = libcse.la libsymbolic.la
-libsimplecfd_la_LDFLAGS = -ltriangle -lpetscts -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -lX11 \
-                          -lm -lblas -llapack ${GMP_LIBS} ${CLN_LIBS} ${GINAC_LIBS} ${APR1_LIBS}
+libsimplecfd_la_LDFLAGS = -ltriangle -lm ${PETSC_LIBS} ${GMP_LIBS} ${CLN_LIBS} ${GINAC_LIBS} ${APR1_LIBS}
