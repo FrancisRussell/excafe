@@ -37,8 +37,8 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
   // Factorise using known primes from table, then revert to using odd numbers.
   std::size_t primeIndex = 0;
   Integer factor = 0;
-  bool finished = Integer::isPrime(value);
-  while(!finished && value != 1 && factor <= sqrtFloor)
+  bool finished = Integer::isPrime(value) || value == 1;
+  while(!finished && factor <= sqrtFloor)
   {
     if (primes[primeIndex] != -1)
       factor = primes[primeIndex++];
@@ -50,7 +50,7 @@ std::vector<Factoriser::power_t> Factoriser::factor(const mp::Integer& n)
     {
       result.push_back(power_t(factor, exponent));
       sqrtFloor = isqrt(value);
-      finished = Integer::isPrime(value);
+      finished = Integer::isPrime(value) || value == 1;
     }
   }
 
