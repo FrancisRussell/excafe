@@ -1,6 +1,6 @@
 # SYNOPSIS
 #
-#   AX_WITH_LIBRARY(NAME, HEADER, LIBNAME)
+#   AX_WITH_LIBRARY(NAME, HEADER, LIBNAME, ["optional"|"required"])
 #
 # DESCRIPTION 
 #
@@ -48,6 +48,11 @@ AC_DEFUN([AX_WITH_LIBRARY],
   saved_CPPFLAGS="$CPPFLAGS"
   saved_LDFLAGS="$LDFLAGS"
 
+  AS_IF([test "$4" = "optional"], [optional="yes"],
+        [test "$4" = "required"], [optional=""],
+        [test -z "$4"],           [optional=""],
+        [AC_MSG_ERROR([Unrecognised value ["]$4["], should be "optional", "required" or unspecified.])])
+
   include_directives="-I/usr/include/$1 -I/usr/local/include/$1"
 
   AS_IF([test -n "$location"],[
@@ -68,9 +73,20 @@ AC_DEFUN([AX_WITH_LIBRARY],
       AS_TR_SH(AS_TR_CPP($1))_CFLAGS="$include_directives"
       AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_CFLAGS)
       AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_LIBS)
+      [HAVE_]AS_TR_SH(AS_TR_CPP($1))=1
+      AC_DEFINE([HAVE_]AS_TR_SH(AS_TR_CPP($1)), 1, [Defined if $1 is available.])
+      AC_MSG_NOTICE([Found $1.])
       ],
-      [AC_MSG_ERROR([Unable to find library $3.])])
-  ], [AC_MSG_ERROR([Unable to find header $2.])])
+      AS_IF([test -z "$optional"], 
+       AC_MSG_ERROR([Unable to find library $3.]), 
+       AC_MSG_NOTICE([Unable to find library $3 so compiling without $1 support.])
+       ))
+  ],
+    AS_IF([test -z "$optional"], 
+       AC_MSG_ERROR([Unable to find header $2.]), 
+       AC_MSG_NOTICE([Unable to find header $2 so compiling without $1 support.])
+       )
+  )
 
   CFLAGS="$saved_CFLAGS"
   CPPFLAGS="$saved_CPPFLAGS"
