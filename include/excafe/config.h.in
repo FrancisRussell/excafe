@@ -1,4 +1,4 @@
-/* include/simple_cfd/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/excafe/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* C++ compiler that Excafe will use at run-time. */
 #undef EXCAFE_CXX_COMPILER
@@ -6,11 +6,14 @@
 /* define if the Boost library is available */
 #undef HAVE_BOOST
 
-/* define if the Boost::Filesystem library is available */
-#undef HAVE_BOOST_FILESYSTEM
+/* define if the Boost::Unit_Test_Framework library is available */
+#undef HAVE_BOOST_UNIT_TEST_FRAMEWORK
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Defined if gmp is available */
+#undef HAVE_GMP
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -23,6 +26,12 @@
 
 /* Define if you have the MPI library. */
 #undef HAVE_MPI
+
+/* Defined if papi is available */
+#undef HAVE_PAPI
+
+/* Defined if petsc is available */
+#undef HAVE_PETSC
 
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW

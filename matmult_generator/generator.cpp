@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cassert>
 #include <algorithm>
+#include <excafe/config.h>
 #include <excafe/numeric/excafe_expression.hpp>
 #include <excafe/mp/cln_conversions.hpp>
 #include <excafe/cse/cse_optimiser.hpp>
@@ -17,10 +18,15 @@
 #include <cln/cln.h>
 #include "mat_mult_code_generator.hpp"
 #include "vector_entry.hpp"
+#include "event_set.hpp"
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <cblas.h>
+
+#ifdef HAVE_PAPI
+#include <papiStdEventDefs.h>
+#endif
 
 typedef void (*mult_function_t)(const double* x, double *b, size_t count);
 static const int BENCHMARK_VECTOR_COUNT = 500000;
@@ -101,24 +107,47 @@ public:
 };
 
 static double timeGenerated(const int m, const int n, const int k, const double *mat, const double* in, double *out,
-  const mult_function_t func)
+  EventSet *es, const mult_function_t func)
 {
   excafe::util::Timer timer;
+
+  if (es != NULL)
+    es->start();
   timer.start();
+
   for(int rep = 0; rep < REPETITIONS; ++rep)
     func(in, out, n);
+
   timer.stop();
+  if (es != NULL)
+  {
+    es->stop();
+    es->scale(REPETITIONS);
+  }
 
   return timer.getSeconds() / REPETITIONS;
 }
 
-static double timeBLAS(const int m, const int n, const int k, const double *mat, const double* in, double *out)
+static double timeBLAS(const int m, const int n, const int k, const double *mat, const double* in, double *out,
+  EventSet *es)
 {
   excafe::util::Timer timer;
+
+  if (es != NULL)
+    es->start();
+
   timer.start();
+
   for(int rep = 0; rep < REPETITIONS; ++rep)
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, 1.0, mat, k, in, n, 0.0, out, n);
+
   timer.stop();
+
+  if (es != NULL)
+  {
+    es->stop();
+    es->scale(REPETITIONS);
+  }
 
   return timer.getSeconds() / REPETITIONS;
 }
@@ -205,16 +234,41 @@ int main(int argc, char **argv)
     const size_t numOutputElements = BENCHMARK_VECTOR_COUNT * mat.numRows();
     double *outGenerated = (double*) excafe::util::aligned_alloc(ALIGNMENT, sizeof(double) * numOutputElements);
     double *outReference = (double*) excafe::util::aligned_alloc(ALIGNMENT, sizeof(double) * numOutputElements);
-    const double generatedTime = timeGenerated(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(),
-      mat.getData(), &in[0], &outGenerated[0], generatedFunction);
 
-    std::cout << "Generated code execution time: " << generatedTime << " seconds." << std::endl;
+    EventSet *eventSetGeneratedPtr = NULL;
+    EventSet *eventSetBLASPtr = NULL;
+
+#ifdef HAVE_PAPI
+    const int events[] = {PAPI_DP_OPS , PAPI_TOT_CYC};
+    EventSet eventSetGenerated(events, sizeof(events) / sizeof(events[0]));
+    EventSet eventSetBLAS(events, sizeof(events) / sizeof(events[0]));
+    eventSetGeneratedPtr = &eventSetGenerated;
+    eventSetBLASPtr = &eventSetBLAS;
+#endif
+
+    std::cout << "Times for " << BENCHMARK_VECTOR_COUNT << " input vectors." << std::endl;
+    std::cout << "Performance counter frequencies scaled to single vector." << std::endl << std::endl;
+    const double generatedTime = timeGenerated(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(),
+      mat.getData(), &in[0], &outGenerated[0], eventSetGeneratedPtr, generatedFunction);
+   std::cout << "Generated code execution time: " << generatedTime << " seconds." << std::endl;
+
+#ifdef HAVE_PAPI
+   eventSetGenerated.scale(BENCHMARK_VECTOR_COUNT);
+   eventSetGenerated.printCounts(std::cout, true);
+   std::cout << std::endl;
+#endif
 
     const double blasTime =
-      timeBLAS(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(), mat.getData(), &in[0], &outReference[0]);
-
+      timeBLAS(mat.numRows(), BENCHMARK_VECTOR_COUNT, mat.numCols(), mat.getData(), &in[0], &outReference[0], eventSetBLASPtr);
     std::cout << "BLAS dgemm execution time: " << blasTime << " seconds." << std::endl;
-    std::cout << "Delta: " << computeDelta(&outReference[0], &outGenerated[0], numOutputElements) << std::endl;
+
+#ifdef HAVE_PAPI
+   eventSetBLAS.scale(BENCHMARK_VECTOR_COUNT);
+   eventSetBLAS.printCounts(std::cout, true);
+   std::cout << std::endl;
+#endif
+
+    std::cout << "Delta between results: " << computeDelta(&outReference[0], &outGenerated[0], numOutputElements) << std::endl;
 
     excafe::util::aligned_free(outGenerated);
     excafe::util::aligned_free(outReference);

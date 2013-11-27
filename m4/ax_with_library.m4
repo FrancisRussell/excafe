@@ -63,6 +63,8 @@ AC_DEFUN([AX_WITH_LIBRARY],
   CFLAGS="$CFLAGS $include_directives"
   CPPFLAGS="$CPPFLAGS $include_directives"
 
+  [HAVE_]AS_TR_SH(AS_TR_CPP($1))=0
+
   AC_CHECK_HEADER($2, [
     AC_CHECK_LIB($3, [main], [
       AS_IF([test -n "$location"], [
@@ -87,6 +89,8 @@ AC_DEFUN([AX_WITH_LIBRARY],
        AC_MSG_NOTICE([Unable to find header $2 so compiling without $1 support.])
        )
   )
+
+  AC_SUBST([HAVE_]AS_TR_SH(AS_TR_CPP($1)))
 
   CFLAGS="$saved_CFLAGS"
   CPPFLAGS="$saved_CPPFLAGS"
