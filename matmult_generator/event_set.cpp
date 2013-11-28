@@ -42,6 +42,8 @@ void EventSet::init()
 
   eventSet = PAPI_NULL;
   PAPI_CHECK(PAPI_create_eventset(&eventSet));
+  PAPI_CHECK(PAPI_assign_eventset_component(eventSet, 0));
+  PAPI_CHECK(PAPI_set_multiplex(eventSet));
 }
 
 EventSet::EventSet()

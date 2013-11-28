@@ -239,7 +239,9 @@ int main(int argc, char **argv)
     EventSet *eventSetBLASPtr = NULL;
 
 #ifdef HAVE_PAPI
-    const int events[] = {PAPI_DP_OPS , PAPI_TOT_CYC};
+    const int events[] = {PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, PAPI_L2_ICM,
+      PAPI_DP_OPS , PAPI_TOT_CYC, PAPI_STL_ICY, PAPI_TOT_INS};
+
     EventSet eventSetGenerated(events, sizeof(events) / sizeof(events[0]));
     EventSet eventSetBLAS(events, sizeof(events) / sizeof(events[0]));
     eventSetGeneratedPtr = &eventSetGenerated;
