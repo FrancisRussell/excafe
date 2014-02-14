@@ -22,7 +22,7 @@ PETScKrylovSolver::PETScKrylovSolver() : rtol(PETSC_DEFAULT), atol(PETSC_DEFAULT
 
   ierr = KSPCreate(PETSC_COMM_SELF, &ksp);
   checkError(ierr);
-  
+
   ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
   checkError(ierr);
 
@@ -69,6 +69,8 @@ std::string PETScKrylovSolver::getConvergedReason() const
 
   switch(reason)
   {
+    case KSP_CONVERGED_RTOL_NORMAL:     return "KSP_CONVERGED_RTOL_NORMAL";
+    case KSP_CONVERGED_ATOL_NORMAL:     return "KSP_CONVERGED_ATOL_NORMAL";
     case KSP_CONVERGED_RTOL:            return "KSP_CONVERGED_RTOL";
     case KSP_CONVERGED_ATOL:            return "KSP_CONVERGED_ATOL";
     case KSP_CONVERGED_ITS:             return "KSP_CONVERGED_ITS";
@@ -83,7 +85,7 @@ std::string PETScKrylovSolver::getConvergedReason() const
     case KSP_DIVERGED_BREAKDOWN_BICG:   return "KSP_DIVERGED_BREAKDOWN_BICG";
     case KSP_DIVERGED_NONSYMMETRIC:     return "KSP_DIVERGED_NONSYMMETRIC";
     case KSP_DIVERGED_INDEFINITE_PC:    return "KSP_DIVERGED_INDEFINITE_PC";
-    case KSP_DIVERGED_NAN:              return "KSP_DIVERGED_NAN";
+    case KSP_DIVERGED_NANORINF:         return "KSP_DIVERGED_NANORINF";
     case KSP_DIVERGED_INDEFINITE_MAT:   return "KSP_DIVERGED_INDEFINITE_MAT";
     case KSP_CONVERGED_ITERATING:       return "KSP_CONVERGED_ITERATING";
     default:                            return "Unknown reason";
@@ -126,20 +128,20 @@ void PETScKrylovSolver::setAbsoluteTolerance(const double t)
   updateTolerances();
 }
 
-template<typename DestroyFunction> 
+template<typename DestroyFunction>
 PetscErrorCode KSPDestroyWrapper(DestroyFunction func, KSP& ksp)
 {
   BOOST_STATIC_ASSERT(sizeof(DestroyFunction) == 0);
   return 0;
 }
 
-template<> 
+template<>
 PetscErrorCode KSPDestroyWrapper(PetscErrorCode (*func)(KSP*), KSP& ksp)
 {
   return func(&ksp);
 }
 
-template<> 
+template<>
 PetscErrorCode KSPDestroyWrapper(PetscErrorCode (*func)(KSP), KSP& ksp)
 {
   return func(ksp);

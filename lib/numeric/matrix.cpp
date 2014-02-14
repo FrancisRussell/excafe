@@ -82,7 +82,7 @@ PETScVector PETScMatrix::trans_mult(const PETScVector& v) const
 PETScMatrix PETScMatrix::trans_mult(const PETScMatrix& b) const
 {
   Mat c;
-  const PetscErrorCode ierr = MatMatMultTranspose(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, 1.0, &c);
+  const PetscErrorCode ierr = MatMatTransposeMult(m, b.getPETScHandle(), MAT_INITIAL_MATRIX, 1.0, &c);
   checkError(ierr);
   return PETScMatrix(c);
 }
@@ -130,21 +130,21 @@ void PETScMatrix::zeroRow(const int row, const double diagonal)
 
 // Handle PETSc API change between 3.1 and 3.2.
 
-template<typename ZeroFunction> 
+template<typename ZeroFunction>
 PetscErrorCode ZeroRowsWrapper(ZeroFunction func, Mat& mat, const unsigned numRows, const int* const rows, const double diag)
 {
   BOOST_STATIC_ASSERT(sizeof(ZeroFunction) == 0);
   return 0;
 }
 
-template<> 
+template<>
 PetscErrorCode ZeroRowsWrapper(PetscErrorCode (*func)(Mat, PetscInt, const PetscInt*, PetscScalar, Vec, Vec),
     Mat& mat, const unsigned numRows, const int* const rows, const double diag)
 {
   return func(mat, numRows, rows, diag, PETSC_NULL, PETSC_NULL);
 }
 
-template<> 
+template<>
 PetscErrorCode ZeroRowsWrapper(PetscErrorCode (*func)(Mat, PetscInt, const PetscInt*, PetscScalar),
     Mat& mat, const unsigned numRows, const int* const rows, const double diag)
 {
@@ -223,20 +223,20 @@ PETScVector PETScMatrix::getLumpedDiagonal() const
 
 // Handle PETSc API change between 3.1 and 3.2.
 
-template<typename DestroyFunction> 
+template<typename DestroyFunction>
 PetscErrorCode MatDestroyWrapper(DestroyFunction func, Mat& m)
 {
   BOOST_STATIC_ASSERT(sizeof(DestroyFunction) == 0);
   return 0;
 }
 
-template<> 
+template<>
 PetscErrorCode MatDestroyWrapper(PetscErrorCode (*func)(Mat*), Mat& m)
 {
   return func(&m);
 }
 
-template<> 
+template<>
 PetscErrorCode MatDestroyWrapper(PetscErrorCode (*func)(Mat), Mat& m)
 {
   return func(m);
