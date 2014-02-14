@@ -111,19 +111,25 @@ static double timeGenerated(const int m, const int n, const int k, const double 
 {
   excafe::util::Timer timer;
 
+#ifdef HAVE_PAPI
   if (es != NULL)
     es->start();
+#endif
+
   timer.start();
 
   for(int rep = 0; rep < REPETITIONS; ++rep)
     func(in, out, n);
 
   timer.stop();
+
+#ifdef HAVE_PAPI
   if (es != NULL)
   {
     es->stop();
     es->scale(REPETITIONS);
   }
+#endif
 
   return timer.getSeconds() / REPETITIONS;
 }
@@ -133,8 +139,10 @@ static double timeBLAS(const int m, const int n, const int k, const double *mat,
 {
   excafe::util::Timer timer;
 
+#ifdef HAVE_PAPI
   if (es != NULL)
     es->start();
+#endif
 
   timer.start();
 
@@ -143,11 +151,13 @@ static double timeBLAS(const int m, const int n, const int k, const double *mat,
 
   timer.stop();
 
+#ifdef HAVE_PAPI
   if (es != NULL)
   {
     es->stop();
     es->scale(REPETITIONS);
   }
+#endif
 
   return timer.getSeconds() / REPETITIONS;
 }
@@ -240,7 +250,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_PAPI
     const int events[] = {PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, PAPI_L2_ICM,
-      PAPI_DP_OPS , PAPI_TOT_CYC, PAPI_STL_ICY, PAPI_TOT_INS};
+      PAPI_DP_OPS , PAPI_TOT_CYC, PAPI_STL_ICY, PAPI_TOT_INS, PAPI_TLB_DM, PAPI_TLB_IM};
 
     EventSet eventSetGenerated(events, sizeof(events) / sizeof(events[0]));
     EventSet eventSetBLAS(events, sizeof(events) / sizeof(events[0]));
