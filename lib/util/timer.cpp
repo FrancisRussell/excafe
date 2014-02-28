@@ -1,5 +1,5 @@
 #include <excafe/util/timer.hpp>
-#include <sys/time.h>
+#include <time.h>
 #include <cstddef>
 
 namespace excafe
@@ -8,7 +8,7 @@ namespace excafe
 namespace util
 {
 
-Timer::Timer() : running(false), seconds(0), microseconds(0)
+Timer::Timer() : running(false), seconds(0), nanoseconds(0)
 {
 }
 
@@ -17,7 +17,7 @@ void Timer::start()
   if (!running)
   {
     running = true;
-    gettimeofday(&begin, NULL);
+    clock_gettime(CLOCK_MONOTONIC, &begin);
   }
 }
 
@@ -27,34 +27,34 @@ void Timer::stop()
   {
     running = false;
 
-    timeval end;
-    gettimeofday(&end, NULL);
+    timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
     seconds += end.tv_sec - begin.tv_sec;
-    microseconds += end.tv_usec - begin.tv_usec;
+    nanoseconds += end.tv_nsec - begin.tv_nsec;
 
-    adjustMicroseconds();
+    adjustNanoseconds();
   }
 }
 
-void Timer::adjustMicroseconds()
+void Timer::adjustNanoseconds()
 {
-  while(microseconds < 0)
+  while(nanoseconds < 0)
   {
-    microseconds += million;
+    nanoseconds += billion;
     --seconds;
   }
 
-  while(microseconds >= million)
+  while(nanoseconds >= billion)
   {
-    microseconds -= million;
+    nanoseconds -= billion;
     ++seconds;
   }
 }
 
 double Timer::getSeconds() const
 {
-  return static_cast<double>(seconds) + static_cast<double>(microseconds)/million;
+  return static_cast<double>(seconds) + static_cast<double>(nanoseconds)/billion;
 }
 
 long Timer::getIntegerSeconds() const
@@ -64,7 +64,7 @@ long Timer::getIntegerSeconds() const
 
 double Timer::getFractionalSeconds() const
 {
-  return static_cast<double>(microseconds)/million;
+  return static_cast<double>(nanoseconds)/billion;
 }
 
 }

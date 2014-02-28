@@ -1,7 +1,7 @@
 #ifndef EXCAFE_UTIL_TIMER_HPP
 #define EXCAFE_UTIL_TIMER_HPP
 
-#include <sys/time.h>
+#include <time.h>
 
 namespace excafe
 {
@@ -12,14 +12,14 @@ namespace util
 class Timer
 {
 private:
-  static const long million = 1000000;
+  static const long billion = 1000000000l;
 
   bool running;
-  timeval begin;
+  timespec begin;
   long seconds;
-  long microseconds;
+  long nanoseconds;
 
-  void adjustMicroseconds();
+  void adjustNanoseconds();
 
 public:
   Timer();
