@@ -34,7 +34,7 @@ void EventSet::handlePAPIError(const int error, const char *const file, const in
 
 void EventSet::init()
 {
-  if (!PAPI_is_initialized())
+  if (PAPI_is_initialized() == PAPI_NOT_INITED)
   {
     PAPI_CHECK(PAPI_library_init(PAPI_VER_CURRENT));
     PAPI_CHECK(PAPI_multiplex_init());
