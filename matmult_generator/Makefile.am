@@ -9,6 +9,6 @@ generator_LDFLAGS=-lblas
 
 if HAVE_PAPI
 generator_SOURCES += event_set.cpp
-generator_LDFLAGS += ${PAPI_LIBS}
+generator_LDFLAGS += ${PAPI_LDFLAGS} ${PAPI_LDLIBS}
 endif
 

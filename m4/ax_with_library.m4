@@ -5,7 +5,8 @@
 # DESCRIPTION 
 #
 #   Checks for the supplied library name and header and sets environment
-#   variables and calls AC_SUBST for $NAME_LIBS, $NAME_CFLAGS if found.
+#   variables and calls AC_SUBST for $NAME_LDFLAGS, $NAME_LDLIBS and
+#   $NAME_CFLAGS if found.
 #
 # LICENSE
 #
@@ -68,13 +69,16 @@ AC_DEFUN([AX_WITH_LIBRARY],
   AC_CHECK_HEADER($2, [
     AC_CHECK_LIB($3, [main], [
       AS_IF([test -n "$location"], [
-        AS_TR_SH(AS_TR_CPP($1))_LIBS="-L$location/lib -l$3"
+        AS_TR_SH(AS_TR_CPP($1))_LDFLAGS="-L$location/lib"
+        AS_TR_SH(AS_TR_CPP($1))_LDLIBS="-l$3"
       ], [
-        AS_TR_SH(AS_TR_CPP($1))_LIBS="-l$3"
+        AS_TR_SH(AS_TR_CPP($1))_LDFLAGS=""
+        AS_TR_SH(AS_TR_CPP($1))_LDLIBS="-l$3"
       ])
       AS_TR_SH(AS_TR_CPP($1))_CFLAGS="$include_directives"
       AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_CFLAGS)
-      AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_LIBS)
+      AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_LDFLAGS)
+      AC_SUBST(AS_TR_SH(AS_TR_CPP($1))_LDLIBS)
       [HAVE_]AS_TR_SH(AS_TR_CPP($1))=1
       AC_DEFINE([HAVE_]AS_TR_SH(AS_TR_CPP($1)), 1, [Defined if $1 is available.])
       AC_MSG_NOTICE([Found $1.])
@@ -96,6 +100,3 @@ AC_DEFUN([AX_WITH_LIBRARY],
   CPPFLAGS="$saved_CPPFLAGS"
   LDFLAGS="$saved_LDFLAGS"
 ])
-
-
-
