@@ -5,7 +5,7 @@ AC_PREREQ(2.61)
 AC_INIT(excafe, 0.1, fpr02@doc.ic.ac.uk)
 AC_CONFIG_SRCDIR([navier_stokes/solver.cpp])
 AC_CONFIG_HEADER([include/excafe/config.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
 CXXFLAGS="-O2 -Wall -pedantic -Wno-long-long"
